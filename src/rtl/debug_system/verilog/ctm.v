@@ -49,7 +49,7 @@ module ctm(/*AUTOARG*/
    parameter DBG_NOC_PH_DEST_WIDTH = `FLIT16_DEST_WIDTH;
    parameter DBG_NOC_PH_CLASS_WIDTH = `PACKET16_CLASS_WIDTH;
    localparam DBG_NOC_PH_ID_WIDTH = DBG_NOC_DATA_WIDTH - DBG_NOC_PH_DEST_WIDTH - DBG_NOC_PH_CLASS_WIDTH;
-   parameter DBG_NOC_VCHANNELS = `DBG_NOC_VCHANNELS;
+   parameter DBG_NOC_VCHANNELS = 'hx;
 
    // number of debug module
    parameter DEBUG_MODULE_COUNT = 'hx;

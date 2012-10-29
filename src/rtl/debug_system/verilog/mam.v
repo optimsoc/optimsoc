@@ -22,6 +22,11 @@
  *
  * Memory Access Module (MAM)
  *
+ * This module gives write access to a memory through the Debug NoC.
+ *
+ * All communication uses the configuration virtual channel
+ * (DBG_NOC_CONF_VCHANNEL).
+ *
  * (c) 2013 by the author(s)
  *
  * Author(s):
@@ -52,7 +57,10 @@ module mam(
    parameter DBG_NOC_FLIT_TYPE_WIDTH = `FLIT16_TYPE_WIDTH;
    localparam DBG_NOC_FLIT_WIDTH = DBG_NOC_DATA_WIDTH + DBG_NOC_FLIT_TYPE_WIDTH;
    parameter DBG_NOC_PH_DEST_WIDTH = `FLIT16_DEST_WIDTH;
+
    parameter DBG_NOC_VCHANNELS = 1;
+   parameter DBG_NOC_TRACE_VCHANNEL = 0;
+   parameter DBG_NOC_CONF_VCHANNEL = 0;
 
    // size of the configuration memory (16 bit words)
    localparam CONF_MEM_SIZE = 2;
@@ -129,6 +137,7 @@ module mam(
    wire [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_conf_out_flit;
    wire [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_data_out_flit;
 
+   wire dbgnoc_conf_in_valid;
    reg dbgnoc_dat_in_ready;
    wire dbgnoc_conf_in_ready;
 
@@ -189,17 +198,17 @@ module mam(
                        .dbgnoc_out_rts  (dbgnoc_conf_out_rts),
                        .dbgnoc_out_valid(dbgnoc_conf_out_valid),
                        .dbgnoc_out_flit (dbgnoc_conf_out_flit[DBG_NOC_FLIT_WIDTH-1:0]),
+                       .dbgnoc_in_valid (dbgnoc_conf_in_valid),
+                       .dbgnoc_in_ready (dbgnoc_conf_in_ready),
 
                        /*AUTOINST*/
                        // Outputs
-                       .dbgnoc_in_ready (dbgnoc_conf_in_ready),       // Templated
                        .conf_mem_flat_out(conf_mem_flat_out),    // Templated
                        .conf_mem_flat_in_ack(conf_mem_flat_in_ack), // Templated
                        // Inputs
                        .clk             (clk),                   // Templated
                        .rst             (rst),                   // Templated
                        .dbgnoc_in_flit  (dbgnoc_in_flit),        // Templated
-                       .dbgnoc_in_valid (dbgnoc_in_valid),       // Templated
                        .conf_mem_flat_in(conf_mem_flat_in),      // Templated
                        .conf_mem_flat_in_valid(conf_mem_flat_in_valid)); // Templated
 
@@ -220,14 +229,22 @@ module mam(
                        .out_valid(mem_write_fifo_out_valid));
 
    // Debug NoC multiplexing between configuration and main functionality
-   assign dbgnoc_conf_out_ready = dbgnoc_conf_out_cts & dbgnoc_out_ready;
-   assign dbgnoc_out_valid = dbgnoc_conf_out_valid | dbgnoc_data_out_valid;
+   assign dbgnoc_conf_out_ready = dbgnoc_conf_out_cts & dbgnoc_out_ready[DBG_NOC_CONF_VCHANNEL];
+   assign dbgnoc_out_valid = {DBG_NOC_VCHANNELS{1'b0}} |
+                             (dbgnoc_conf_out_valid << DBG_NOC_CONF_VCHANNEL) |
+                             (dbgnoc_data_out_valid << DBG_NOC_CONF_VCHANNEL);
+
    assign dbgnoc_out_flit = (dbgnoc_conf_out_valid ? dbgnoc_conf_out_flit : dbgnoc_data_out_flit);
-   assign dbgnoc_in_ready = dbgnoc_dat_in_ready & dbgnoc_conf_in_ready & mem_write_fifo_in_ready;
+   assign dbgnoc_in_ready = {DBG_NOC_VCHANNELS{1'b0}} |
+                            ((dbgnoc_dat_in_ready &
+                              dbgnoc_conf_in_ready &
+                              mem_write_fifo_in_ready)
+                             << DBG_NOC_CONF_VCHANNEL);
+   assign dbgnoc_conf_in_valid = dbgnoc_in_valid[DBG_NOC_CONF_VCHANNEL];
 
    // we currently don't send any data from the main module
    assign dbgnoc_data_out_valid = 1'b0;
-   assign dbgnoc_data_out_flit = 18'b0;
+   assign dbgnoc_data_out_flit = {DBG_NOC_FLIT_WIDTH{1'b0}};
 
    // Tie unused Wishbone output ports to GND
    assign wb_bte_o = 2'b0;

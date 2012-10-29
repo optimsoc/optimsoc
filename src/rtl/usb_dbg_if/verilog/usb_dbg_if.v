@@ -22,7 +22,15 @@
  *
  * This is the Debug NoC <-> USB interface.
  *
- * (c) 2012 by the author(s)
+ * The USB interface protocol used by this module has no notion of virtual
+ * channels. This means:
+ * - On the output side (FPGA -> host), all virtual channels from the Debug
+ *   NoC are serialized into one channel
+ * - On the input side (host -> FPGA), all data is injected into the Debug
+ *   NoC on one predefined virtual channel. It can be set using the parameter
+ *   DBG_NOC_USB_VCHANNEL.
+ *
+ * (c) 2012-2013 by the author(s)
  *
  * Author(s):
  *    Michael Tempelmeier, michael.tempelmeier@tum.de
@@ -45,11 +53,11 @@ module usb_dbg_if(/*AUTOARG*/
    parameter DBG_NOC_DATA_WIDTH = `FLIT16_CONTENT_WIDTH;
    parameter DBG_NOC_FLIT_TYPE_WIDTH = `FLIT16_TYPE_WIDTH;
    localparam DBG_NOC_FLIT_WIDTH = DBG_NOC_DATA_WIDTH + DBG_NOC_FLIT_TYPE_WIDTH;
-   parameter DBG_NOC_VCHANNELS = `DBG_NOC_VCHANNELS;
+   parameter DBG_NOC_VCHANNELS = 1;
+   parameter DBG_NOC_USB_VCHANNEL = 0;
 
    parameter MAX_DBGNOC_TO_USB_PACKET_LENGTH = `MAX_DBGNOC_TO_USB_PACKET_LENGTH;
    localparam MAX_DBGNOC_TO_USB_PACKET_LENGTH_WIDTH = clog2(MAX_DBGNOC_TO_USB_PACKET_LENGTH);
-
 
    input clk_sys;
    input rst;
@@ -82,6 +90,17 @@ module usb_dbg_if(/*AUTOARG*/
    wire [DBG_NOC_DATA_WIDTH-1:0] out_data;
    wire out_ready;
    wire out_valid;
+
+   // lisnoc_vc_serializer
+   wire [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_in_flit_ser;
+   wire dbgnoc_in_ready_ser;
+   wire dbgnoc_in_valid_ser;
+
+   // lisnoc deserializer
+   wire [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_out_flit_ser;
+   wire dbgnoc_out_ready_ser;
+   wire dbgnoc_out_valid_ser;
+
 
    // EZ-USB FX2 communication interface
    fx2_usb_comm
@@ -120,9 +139,9 @@ module usb_dbg_if(/*AUTOARG*/
                    .in_usb_ready(in_ready),
 
                    // Debug NoC Interface (out)
-                   .out_noc_data(dbgnoc_out_flit),
-                   .out_noc_valid(dbgnoc_out_valid),
-                   .out_noc_ready(dbgnoc_out_ready));
+                   .out_noc_data(dbgnoc_out_flit_ser),
+                   .out_noc_valid(dbgnoc_out_valid_ser),
+                   .out_noc_ready(dbgnoc_out_ready_ser));
 
    // Debug NoC -> USB bridge
    lisnoc16_usb_from_noc
@@ -130,20 +149,48 @@ module usb_dbg_if(/*AUTOARG*/
       u_usb_from_noc(.clk(clk_sys),
                      .rst(rst),
 
+                     // control
+                     .flush_manual(1'b0),
+
                      // USB interface (out)
                      .out_usb_data(out_data),
                      .out_usb_valid(out_valid),
                      .out_usb_ready(out_ready),
 
                      // Debug NoC interface (in)
-                     .in_noc_data(dbgnoc_in_flit),
-                     .in_noc_valid(dbgnoc_in_valid),
-                     .in_noc_ready(dbgnoc_in_ready));
+                     .in_noc_data(dbgnoc_in_flit_ser),
+                     .in_noc_valid(dbgnoc_in_valid_ser),
+                     .in_noc_ready(dbgnoc_in_ready_ser));
 
-	`include "optimsoc_functions.vh"
 
+   // Debug NoC -> USB
+   // All virtual channels from the Debug NoC are serialized into one channel
+   // for USB transmission
+   lisnoc_vc_serializer
+      #(.vchannels(DBG_NOC_VCHANNELS),
+        .flit_width(DBG_NOC_FLIT_WIDTH))
+      u_vc_serializer(.clk(clk_sys),
+                      .rst(rst),
+
+                      // input: multiple virtual channels
+                      .data_mvc(dbgnoc_in_flit),
+                      .valid_mvc(dbgnoc_in_valid),
+                      .ready_mvc(dbgnoc_in_ready),
+
+                      // output: one virtual channel
+                      .data_ser(dbgnoc_in_flit_ser),
+                      .valid_ser(dbgnoc_in_valid_ser),
+                      .ready_ser(dbgnoc_in_ready_ser));
+
+   // USB -> Debug NoC
+   // All data is sent out on one virtual channel
+   assign dbgnoc_out_flit = dbgnoc_out_flit_ser;
+   assign dbgnoc_out_valid = {DBG_NOC_VCHANNELS{1'b0}} |
+                             (dbgnoc_out_valid_ser << DBG_NOC_USB_VCHANNEL);
+   assign dbgnoc_out_ready_ser = dbgnoc_out_ready[DBG_NOC_USB_VCHANNEL];
+
+   `include "optimsoc_functions.vh"
 endmodule
-
 
 //Local Variables:
 //verilog-library-directories:("./")

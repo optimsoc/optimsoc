@@ -56,7 +56,11 @@ module itm(
    parameter DBG_NOC_FLIT_TYPE_WIDTH = `FLIT16_TYPE_WIDTH;
    localparam DBG_NOC_FLIT_WIDTH = DBG_NOC_DATA_WIDTH + DBG_NOC_FLIT_TYPE_WIDTH;
    parameter DBG_NOC_PH_DEST_WIDTH = `FLIT16_DEST_WIDTH;
+
    parameter DBG_NOC_VCHANNELS = 1;
+   parameter DBG_NOC_TRACE_VCHANNEL = 0;
+   parameter DBG_NOC_CONF_VCHANNEL = 0;
+
 
    // size of the configuration memory (16 bit words)
    localparam CONF_MEM_SIZE = 6;
@@ -68,12 +72,12 @@ module itm(
 `ifdef OPTIMSOC_CLOCKDOMAINS
    input clk_cdc;
 `endif
-   
+
    // from the Global Timestamp Provider (GTP)
    input [`DBG_TIMESTAMP_WIDTH-1:0] timestamp;
 
    input [`DEBUG_ITM_PORTWIDTH-1:0] trace_port;
-   
+
    // Debug NoC interface
    output [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_out_flit;
    output [DBG_NOC_VCHANNELS-1:0] dbgnoc_out_valid;
@@ -95,7 +99,7 @@ module itm(
    wire        cpu_wb_freeze;
    assign cpu_wb_pc = trace_port[31:0];
    assign cpu_wb_freeze = trace_port[32]|sys_clk_is_halted;
-   
+
    // connection wires between the individual modules
    wire [`DBG_TIMESTAMP_WIDTH+32-1:0] uncompressed_trace;
    wire [`DBG_TIMESTAMP_WIDTH+32-1:0] uncompressed_trace_delayed;
@@ -134,6 +138,9 @@ module itm(
 
    itm_dbgnoc_if
       #(.CONF_MEM_SIZE(CONF_MEM_SIZE),
+        .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+        .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL),
+        .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
         .CORE_ID(CORE_ID))
       u_dbgnoc_if(.clk(clk),
                   .rst(rst),

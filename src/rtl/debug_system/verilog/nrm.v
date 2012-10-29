@@ -27,7 +27,6 @@
  * Author(s):
  *    Philipp Wagner, mail@philipp-wagner.com
  *    Andreas Lankes, andreas.lankes@tum.de
- *
  */
 
 `include "dbg_config.vh"
@@ -80,6 +79,8 @@ module nrm(/*AUTOARG*/
    parameter DBG_NOC_PH_CLASS_WIDTH = `PACKET16_CLASS_WIDTH;
    localparam DBG_NOC_PH_ID_WIDTH = DBG_NOC_DATA_WIDTH - DBG_NOC_PH_DEST_WIDTH - DBG_NOC_PH_CLASS_WIDTH;
    parameter DBG_NOC_VCHANNELS = 1;
+   parameter DBG_NOC_TRACE_VCHANNEL = 0;
+   parameter DBG_NOC_CONF_VCHANNEL = 0;
 
    // size of the configuration memory (16 bit words)
    localparam CONF_MEM_SIZE = 4;
@@ -130,6 +131,9 @@ module nrm(/*AUTOARG*/
    // Debug NoC interface: send trace data, send and receive config data
    nrm_dbgnoc_if
       #(.CONF_MEM_SIZE(CONF_MEM_SIZE),
+        .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+        .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL),
+        .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
         .ROUTER_ID(ROUTER_ID),
         .MONITORED_LINK_COUNT(MONITORED_LINK_COUNT),
         .STAT_DEFAULT_SAMPLE_INTERVAL(STAT_DEFAULT_SAMPLE_INTERVAL),

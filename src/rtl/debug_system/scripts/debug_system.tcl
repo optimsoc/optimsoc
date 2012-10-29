@@ -29,5 +29,6 @@ lisnoc_add_file rings/lisnoc_uni_ring.v
 lisnoc_add_file router/lisnoc_router_uni_ring.v
 lisnoc_add_file lisnoc16/lisnoc16_fifo.v
 lisnoc_add_file infrastructure/lisnoc_vc_multiplexer.v
+lisnoc_add_file infrastructure/lisnoc_vc_serializer.v
 lisnoc_add_file lisnoc16/converter/lisnoc16_converter_16to32.v
 lisnoc_add_file lisnoc16/converter/lisnoc16_converter_32to16.v

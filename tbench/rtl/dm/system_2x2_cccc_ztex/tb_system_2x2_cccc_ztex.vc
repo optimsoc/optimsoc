@@ -111,6 +111,7 @@ ${OPTIMSOC_RTL}/debug_system/verilog/mam.v
 +incdir+${LISNOC_RTL}/lisnoc16/
 ${LISNOC_RTL}/rings/lisnoc_uni_ring.v
 ${LISNOC_RTL}/router/lisnoc_router_uni_ring.v
+${LISNOC_RTL}/infrastructure/lisnoc_vc_serializer.v
 
 ${LISNOC_RTL}/lisnoc16/usb/lisnoc16_usb_from_noc.v
 ${LISNOC_RTL}/lisnoc16/usb/lisnoc16_usb_packet_buffer.v

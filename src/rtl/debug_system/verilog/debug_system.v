@@ -136,9 +136,9 @@ module debug_system(
    parameter NOC_FLIT_DATA_WIDTH = 32;
    parameter NOC_FLIT_TYPE_WIDTH = 2;
    localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH + NOC_FLIT_TYPE_WIDTH;
-
-   // TODO: only relevant for NCM
    parameter NOC_VCHANNELS = 3;
+
+   // NRM: virtual channel used for communication between NoC32 and Debug NoC
    parameter NOC_USED_VCHANNEL = 0;
 
    // Debug NoC interface (16 bit flit payload, aka lisnoc16)
@@ -148,8 +148,10 @@ module debug_system(
    parameter DBG_NOC_PH_DEST_WIDTH = `FLIT16_DEST_WIDTH;
    parameter DBG_NOC_PH_CLASS_WIDTH = `PACKET16_CLASS_WIDTH;
    localparam DBG_NOC_PH_ID_WIDTH = DBG_NOC_DATA_WIDTH - DBG_NOC_PH_DEST_WIDTH - DBG_NOC_PH_CLASS_WIDTH;
+
    parameter DBG_NOC_VCHANNELS = 1;
-   parameter DBG_NOC_USED_VCHANNEL = 0;
+   parameter DBG_NOC_TRACE_VCHANNEL = 0;
+   parameter DBG_NOC_CONF_VCHANNEL = 0;
 
    // Debug NoC router FIFO length
    parameter DBG_NOC_ROUTER_IN_FIFO_LENGTH = 2;
@@ -314,7 +316,11 @@ module debug_system(
    // Debug NoC address: `DBG_NOC_ADDR_TCM
    tcm
       #(.SYSTEM_IDENTIFIER(SYSTEM_IDENTIFIER),
-        .MODULE_COUNT(DEBUG_ITM_CORE_COUNT + DEBUG_STM_CORE_COUNT + DEBUG_NRM_COUNT + DEBUG_CTM_COUNT + DEBUG_NCM_COUNT + DEBUG_MAM_MEMORY_COUNT))
+        .MODULE_COUNT(DEBUG_ITM_CORE_COUNT + DEBUG_STM_CORE_COUNT +
+                      DEBUG_NRM_COUNT + DEBUG_CTM_COUNT + DEBUG_NCM_COUNT +
+                      DEBUG_MAM_MEMORY_COUNT),
+        .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+        .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
       u_tcm(.clk(clk),
             .rst(rst),
             .sys_clk_is_halted(sys_clk_is_halted),
@@ -342,6 +348,8 @@ module debug_system(
    // CTM
 `ifdef OPTIMSOC_DEBUG_ENABLE_CTM
    ctm
+      #(.DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+        .DEBUG_MODULE_COUNT(DEBUG_MODULE_COUNT))
       u_ctm(.clk(clk),
             .rst(rst),
 
@@ -356,7 +364,12 @@ module debug_system(
 
 `ifdef OPTIMSOC_DEBUG_ENABLE_NCM
    ncm
-      #(.LISNOC32_EXT_IF_ADDR(OPTIMSOC_DEBUG_NCM_ID))
+      #(.LISNOC32_EXT_IF_ADDR(OPTIMSOC_DEBUG_NCM_ID),
+        .NOC_USED_VCHANNEL(NOC_USED_VCHANNEL),
+        .NOC_VCHANNELS(NOC_VCHANNELS),
+        .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+        .DBG_NOC_DATA_VCHANNEL(DBG_NOC_DATA_VCHANNEL),
+        .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
    u_ncm(.clk(clk),
          .rst(rst),
          .sys_clk_is_halted(sys_clk_is_halted),
@@ -432,14 +445,16 @@ module debug_system(
  `endif // !`ifdef OPTIMSOC_CLOCKDOMAINS
 `endif
 
-   genvar                          i;
+   genvar i;
+
 `ifdef OPTIMSOC_DEBUG_ENABLE_ITM
    generate
       for (i=0;i<DEBUG_ITM_CORE_COUNT;i=i+1) begin : gen_itm
-         // ITM for CT 0 CPU 0 (ID 0)
-         // Debug NoC address: `DBG_NOC_ADDR_DYN_START
          itm
-           #(.CORE_ID(i))
+           #(.CORE_ID(i),
+             .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+             .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+             .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
          u_itm(.clk(clk),
                .rst(rst),
  `ifdef OPTIMSOC_CLOCKDOMAINS
@@ -455,6 +470,8 @@ module debug_system(
 
                .timestamp(timestamp),
 
+               .trigger_out(), // FIXME: connect to CTM
+
                .trace_port(itm_ports_flat[(i+1)*`DEBUG_ITM_PORTWIDTH-1:i*`DEBUG_ITM_PORTWIDTH]),
                .sys_clk_is_halted (sys_clk_is_halted),
                .trigger_in (1'b0),
@@ -468,7 +485,10 @@ module debug_system(
    generate
       for (i=0;i<DEBUG_STM_CORE_COUNT;i=i+1) begin : gen_stm
          stm
-           #(.CORE_ID(i))
+           #(.CORE_ID(i),
+             .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+             .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+             .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
          u_stm(.clk(clk),
                .rst(rst),
  `ifdef OPTIMSOC_CLOCKDOMAINS
@@ -508,7 +528,10 @@ module debug_system(
 
          nrm
             #(.ROUTER_ID(i),
-              .MONITORED_LINK_COUNT(DEBUG_NRM_LINKS_PER_ROUTER))
+              .MONITORED_LINK_COUNT(DEBUG_NRM_LINKS_PER_ROUTER),
+              .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+              .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+              .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
             u_nrm(.clk(clk),
                   .rst(rst),
 
@@ -534,7 +557,10 @@ module debug_system(
    generate
       for (i = 0; i < DEBUG_MAM_MEMORY_COUNT; i = i + 1) begin : gen_mam
          mam
-            #(.MEMORY_ID(i))
+            #(.MEMORY_ID(i),
+              .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+              .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+              .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
             u_mam(.clk(clk),
                   .rst(rst),
 

@@ -53,8 +53,11 @@ module stm(
    parameter DBG_NOC_FLIT_TYPE_WIDTH = `FLIT16_TYPE_WIDTH;
    localparam DBG_NOC_FLIT_WIDTH = DBG_NOC_DATA_WIDTH + DBG_NOC_FLIT_TYPE_WIDTH;
    parameter DBG_NOC_PH_DEST_WIDTH = `FLIT16_DEST_WIDTH;
-   parameter DBG_NOC_VCHANNELS = 1;
 
+   parameter DBG_NOC_VCHANNELS = 1;
+   parameter DBG_NOC_TRACE_VCHANNEL = 0;
+   parameter DBG_NOC_CONF_VCHANNEL = 0;
+   
    // size of the configuration memory (16 bit words)
    localparam CONF_MEM_SIZE = 2;
 
@@ -127,6 +130,9 @@ module stm(
 
    stm_dbgnoc_if
       #(.CONF_MEM_SIZE(CONF_MEM_SIZE),
+        .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+        .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL),
+        .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
         .CORE_ID(CORE_ID))
       u_dbgnoc_if(.clk(clk),
                   .rst(rst),

@@ -39,7 +39,8 @@ module tcm(/*AUTOARG*/
    dbgnoc_out_flit, dbgnoc_out_valid, dbgnoc_in_ready, cpu_stall,
    cpu_reset, start_cpu,
    // Inputs
-   clk, rst, sys_clk_is_halted, dbgnoc_out_ready, dbgnoc_in_flit, dbgnoc_in_valid
+   clk, rst, sys_clk_is_halted, dbgnoc_out_ready, dbgnoc_in_flit,
+   dbgnoc_in_valid
    );
 
    // unique system identifier, used by the host software
@@ -54,7 +55,8 @@ module tcm(/*AUTOARG*/
    parameter DBG_NOC_PH_DEST_WIDTH = `FLIT16_DEST_WIDTH;
    parameter DBG_NOC_PH_CLASS_WIDTH = `PACKET16_CLASS_WIDTH;
    localparam DBG_NOC_PH_ID_WIDTH = DBG_NOC_DATA_WIDTH - DBG_NOC_PH_DEST_WIDTH - DBG_NOC_PH_CLASS_WIDTH;
-   parameter DBG_NOC_VCHANNELS = `DBG_NOC_VCHANNELS;
+   parameter DBG_NOC_VCHANNELS = 'hx;
+   parameter DBG_NOC_CONF_VCHANNEL = 'hx;
 
    localparam CONF_MEM_SIZE = 8;
 
@@ -98,13 +100,36 @@ module tcm(/*AUTOARG*/
       end
    endgenerate
 
-   //dbg performance counter
+   // dbg performance counter
    reg [31:0] halted_sys_clk_counter;
    reg [31:0] sys_clk_counter;
 
+   // vchannel support
+   wire       dbgnoc_conf_out_valid;
+   assign dbgnoc_out_valid = {DBG_NOC_VCHANNELS{1'b0}} |
+                             dbgnoc_conf_out_valid << DBG_NOC_CONF_VCHANNEL;
 
+   wire       dbgnoc_conf_out_ready;
+   assign dbgnoc_conf_out_ready = dbgnoc_out_ready[DBG_NOC_CONF_VCHANNEL];
+
+   wire       dbgnoc_conf_in_valid;
+   assign dbgnoc_conf_in_valid = dbgnoc_in_valid[DBG_NOC_CONF_VCHANNEL];
+
+   wire       dbgnoc_conf_in_ready;
+   // select DBG_NOC_CONF_VCHANNEL ...
+   wire [DBG_NOC_VCHANNELS-1:0] dbgnoc_conf_mask;
+   assign dbgnoc_conf_mask = 1'b1 << DBG_NOC_CONF_VCHANNEL;
+   // ... and discard flits on all other vchannels
+   wire [DBG_NOC_VCHANNELS-1:0] dbgnoc_others_in_ready;
+   assign dbgnoc_others_in_ready = {DBG_NOC_VCHANNELS{1'b1}} & ~dbgnoc_conf_mask;
+   assign dbgnoc_in_ready =  dbgnoc_others_in_ready |
+                             (dbgnoc_conf_in_ready << DBG_NOC_CONF_VCHANNEL);
 
    /* dbgnoc_conf_if AUTO_TEMPLATE(
+      .dbgnoc_out_valid(dbgnoc_conf_out_valid),
+      .dbgnoc_out_ready(dbgnoc_conf_out_ready),
+      .dbgnoc_in_valid(dbgnoc_conf_in_valid),
+      .dbgnoc_in_ready(dbgnoc_conf_in_ready),
       .\(.*\)(\1), // suppress explict port widths
     ); */
    dbgnoc_conf_if
@@ -114,16 +139,16 @@ module tcm(/*AUTOARG*/
                        /*AUTOINST*/
                        // Outputs
                        .dbgnoc_out_flit (dbgnoc_out_flit),       // Templated
-                       .dbgnoc_out_valid(dbgnoc_out_valid),      // Templated
-                       .dbgnoc_in_ready (dbgnoc_in_ready),       // Templated
+                       .dbgnoc_out_valid(dbgnoc_conf_out_valid), // Templated
+                       .dbgnoc_in_ready (dbgnoc_conf_in_ready),  // Templated
                        .conf_mem_flat_out(conf_mem_flat_out),    // Templated
                        .conf_mem_flat_in_ack(conf_mem_flat_in_ack), // Templated
                        // Inputs
                        .clk             (clk),                   // Templated
                        .rst             (rst),                   // Templated
-                       .dbgnoc_out_ready(dbgnoc_out_ready),      // Templated
+                       .dbgnoc_out_ready(dbgnoc_conf_out_ready), // Templated
                        .dbgnoc_in_flit  (dbgnoc_in_flit),        // Templated
-                       .dbgnoc_in_valid (dbgnoc_in_valid),       // Templated
+                       .dbgnoc_in_valid (dbgnoc_conf_in_valid),  // Templated
                        .conf_mem_flat_in(conf_mem_flat_in),      // Templated
                        .conf_mem_flat_in_valid(conf_mem_flat_in_valid)); // Templated
 
@@ -165,14 +190,14 @@ module tcm(/*AUTOARG*/
             cpu_reset <= 0;
          end
 
-         //bit 3: request current values of dbg performance counters
+         // bit 3: request current values of dbg performance counters
          if ((conf_mem_out[3] >> 3) & 16'h1) begin
             // write current values to the configuration register...
             conf_mem_in[4] <= halted_sys_clk_counter[31:16];
             conf_mem_in[5] <= halted_sys_clk_counter[15:0];
             conf_mem_in[6] <= sys_clk_counter[31:16];
             conf_mem_in[7] <= sys_clk_counter[15:0];
-            //... and reset counters
+            // reset counters
             halted_sys_clk_counter <= 32'h0;
             sys_clk_counter <= 32'h0;
          end else begin
@@ -193,19 +218,17 @@ module tcm(/*AUTOARG*/
                // overflow! ... keep values
                sys_clk_counter <= sys_clk_counter;
                halted_sys_clk_counter <= halted_sys_clk_counter;
-            end // else: !if((halted_sys_clk_counter != {32{1'b1}}) && (sys_clk_counter != {32{1'b1}}))
+            end
 
-         end // else: !if((conf_mem_out[4] >>3) & 16'h1)
+         end
 
-         //bit 4: starts cpu
+         // bit 4: starts cpu
          if ((conf_mem_out[3] >> 4) & 16'h1) begin
             start_cpu <= 1;
          end else begin
             start_cpu <= 0;
          end
-         
 
-         
          // reset config register (only writes to this register are possible)
          // we ignore the conf_mem_in_ack signal here since writing the register
          // again through the debug interface should trigger the same action

@@ -158,6 +158,7 @@ add_file -verilog "$LISNOC_RTL/rings/lisnoc_uni_ring.v"
 add_file -verilog "$LISNOC_RTL/router/lisnoc_router_uni_ring.v"
 add_file -verilog "$LISNOC_RTL/lisnoc16/lisnoc16_fifo.v"
 add_file -verilog "$LISNOC_RTL/infrastructure/lisnoc_vc_multiplexer.v"
+add_file -verilog "$LISNOC_RTL/infrastructure/lisnoc_vc_serializer.v"
 add_file -verilog "$LISNOC_RTL/lisnoc16/converter/lisnoc16_converter_16to32.v"
 add_file -verilog "$LISNOC_RTL/lisnoc16/converter/lisnoc16_converter_32to16.v"
 

@@ -70,16 +70,6 @@
 `define DBG_NOC_ADDR_DYN_START 5'd2
 // note: the max. address is 2^DBG_NOC_PH_DEST_WIDTH-1, currently set to 31
 
-// number of virtual channels in the Debug NoC
-`define DBG_NOC_VCHANNELS 1
-
-/*
- * The used virtual channel in the Debug NoC.
- * Currently, all communication is done through the same virtual channel.
- * TODO: Use different virtual channels for control and data messages?
- */
-`define DBG_NOC_USED_VIRTUAL_CHANNEL 0
-
 // register read request
 `define DBG_NOC_CLASS_REG_READ_REQ 3'b000
 
@@ -136,4 +126,3 @@
 `define DEBUG_STM_WB_FREEZE_LSB 32
 `define DEBUG_STM_WB_INSN_MSB   31
 `define DEBUG_STM_WB_INSN_LSB    0
-

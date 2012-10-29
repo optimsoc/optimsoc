@@ -72,10 +72,9 @@ module system_2x2_cccc_ztex(
    localparam DBG_NOC_DATA_WIDTH = `FLIT16_CONTENT_WIDTH;
    localparam DBG_NOC_FLIT_TYPE_WIDTH = `FLIT16_TYPE_WIDTH;
    localparam DBG_NOC_FLIT_WIDTH = DBG_NOC_DATA_WIDTH + DBG_NOC_FLIT_TYPE_WIDTH;
-   localparam DBG_NOC_VCHANNELS = 1;
-
-   localparam DEBUG_ROUTER_COUNT = 4;
-   localparam DEBUG_ROUTER_LINKS_PER_ROUTER = 1;
+   localparam DBG_NOC_VCHANNELS = 2;
+   localparam DBG_NOC_CONF_VCHANNEL = 0;
+   localparam DBG_NOC_TRACE_VCHANNEL = 1;
 
    // Clock and resets inputs
    input clk;
@@ -293,6 +292,8 @@ module system_2x2_cccc_ztex(
 
    // USB interface
    usb_dbg_if
+      #(.DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
+        .DBG_NOC_USB_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
       u_usb(.clk_sys(clk_dbg),
             .rst(rst_sys),
 
@@ -338,6 +339,9 @@ module system_2x2_cccc_ztex(
 `endif
        .NOC_VCHANNELS                   (`VCHANNELS),
        .NOC_USED_VCHANNEL               (`VCHANNEL_LSU_REQ),
+       .DBG_NOC_VCHANNELS               (DBG_NOC_VCHANNELS),
+       .DBG_NOC_TRACE_VCHANNEL          (DBG_NOC_TRACE_VCHANNEL),
+       .DBG_NOC_CONF_VCHANNEL           (DBG_NOC_CONF_VCHANNEL),
        .SYSTEM_IDENTIFIER (16'hce75)) // FIXME: Change system identifier
       u_dbg_system(.clk                 (clk_dbg),
                    .rst                 (rst_sys),

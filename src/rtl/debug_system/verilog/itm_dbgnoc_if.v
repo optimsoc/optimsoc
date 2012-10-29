@@ -29,6 +29,7 @@
  *
  * Author(s):
  *    Philipp Wagner, mail@philipp-wagner.com
+ *    Michael Tempelmeier, michael.tempelmeier@mytum.de
  */
 
 `include "dbg_config.vh"
@@ -62,6 +63,8 @@ module itm_dbgnoc_if(/*AUTOARG*/
    localparam DBG_NOC_PH_ID_WIDTH = DBG_NOC_DATA_WIDTH - DBG_NOC_PH_DEST_WIDTH - DBG_NOC_PH_CLASS_WIDTH;
 
    parameter DBG_NOC_VCHANNELS = 1;
+   parameter DBG_NOC_TRACE_VCHANNEL = 0;
+   parameter DBG_NOC_CONF_VCHANNEL = 0;
 
    parameter CONF_MEM_SIZE = 'hx;
 
@@ -144,15 +147,34 @@ module itm_dbgnoc_if(/*AUTOARG*/
    wire dbgnoc_conf_out_rts;
    reg dbgnoc_conf_out_cts;
    wire dbgnoc_conf_out_ready;
-   assign dbgnoc_conf_out_ready = dbgnoc_conf_out_cts & dbgnoc_out_ready;
+   assign dbgnoc_conf_out_ready = dbgnoc_conf_out_cts & dbgnoc_out_ready[DBG_NOC_CONF_VCHANNEL];
 
    wire dbgnoc_conf_out_valid;
    wire dbgnoc_trace_out_valid;
-   assign dbgnoc_out_valid = dbgnoc_conf_out_valid | dbgnoc_trace_out_valid;
+   assign dbgnoc_out_valid = {DBG_NOC_VCHANNELS{1'b0}} |
+                             (dbgnoc_conf_out_valid << DBG_NOC_CONF_VCHANNEL) |
+                             (dbgnoc_trace_out_valid << DBG_NOC_TRACE_VCHANNEL);
 
    wire [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_conf_out_flit;
    wire [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_trace_out_flit;
    assign dbgnoc_out_flit = (dbgnoc_conf_out_valid ? dbgnoc_conf_out_flit : dbgnoc_trace_out_flit);
+
+   wire dbgnoc_conf_in_valid;
+   assign dbgnoc_conf_in_valid = dbgnoc_in_valid[DBG_NOC_CONF_VCHANNEL];
+
+   wire dbgnoc_conf_in_ready;
+
+   // select DBG_NOC_CONF_VCHANNEL ...
+   wire [DBG_NOC_VCHANNELS-1:0] dbgnoc_conf_mask;
+   assign dbgnoc_conf_mask = 1'b1 << DBG_NOC_CONF_VCHANNEL;
+
+   // ... and discard flits on all other vchannels
+   wire [DBG_NOC_VCHANNELS-1:0] dbgnoc_others_in_ready;
+   assign dbgnoc_others_in_ready = {DBG_NOC_VCHANNELS{1'b1}} & ~dbgnoc_conf_mask;
+
+   assign dbgnoc_in_ready =  dbgnoc_others_in_ready |
+                             (dbgnoc_conf_in_ready << DBG_NOC_CONF_VCHANNEL);
+
 
    // configuration memory
    wire [CONF_MEM_SIZE*16-1:0] conf_mem_flat_in;
@@ -170,6 +192,8 @@ module itm_dbgnoc_if(/*AUTOARG*/
 
    // configuration interface
    /* dbgnoc_conf_if AUTO_TEMPLATE(
+      .dbgnoc_in_ready(dbgnoc_conf_in_ready),
+      .dbgnoc_in_valid(dbgnoc_conf_in_valid),
       .\(.*\)(\1), // suppress explict port widths
     ); */
    dbgnoc_conf_if
@@ -182,14 +206,14 @@ module itm_dbgnoc_if(/*AUTOARG*/
 
                        /*AUTOINST*/
                        // Outputs
-                       .dbgnoc_in_ready (dbgnoc_in_ready),       // Templated
+                       .dbgnoc_in_ready (dbgnoc_conf_in_ready),  // Templated
                        .conf_mem_flat_out(conf_mem_flat_out),    // Templated
                        .conf_mem_flat_in_ack(conf_mem_flat_in_ack), // Templated
                        // Inputs
                        .clk             (clk),                   // Templated
                        .rst             (rst),                   // Templated
                        .dbgnoc_in_flit  (dbgnoc_in_flit),        // Templated
-                       .dbgnoc_in_valid (dbgnoc_in_valid),       // Templated
+                       .dbgnoc_in_valid (dbgnoc_conf_in_valid),  // Templated
                        .conf_mem_flat_in(conf_mem_flat_in),      // Templated
                        .conf_mem_flat_in_valid(conf_mem_flat_in_valid)); // Templated
 
@@ -222,11 +246,11 @@ module itm_dbgnoc_if(/*AUTOARG*/
                       .in_ready(to_output_fifo_ready),
                       .in_valid(to_output_fifo_valid),
                       .out_flit(dbgnoc_trace_out_flit),
-                      .out_ready(dbgnoc_out_ready[`DBG_NOC_USED_VIRTUAL_CHANNEL]),
+                      .out_ready(dbgnoc_out_ready[DBG_NOC_TRACE_VCHANNEL]),
                       .out_valid(dbgnoc_trace_out_valid));
 
    wire noc_out_fifo_empty;
-   assign noc_out_fifo_empty = !dbgnoc_out_valid;
+   assign noc_out_fifo_empty = !dbgnoc_trace_out_valid;
 
    always @ (posedge clk) begin
       if (rst) begin
@@ -286,7 +310,9 @@ module itm_dbgnoc_if(/*AUTOARG*/
       case (fsm_trace_to_flit_state)
          STATE_IDLE: begin
             to_output_fifo_valid = 1'b0;
-            if (dbgnoc_conf_out_rts) begin
+            // only start sending (trace or config) if all previous
+            // packets have been sent
+            if (dbgnoc_conf_out_rts && noc_out_fifo_empty) begin
                fsm_trace_to_flit_state_next = STATE_CONF;
             end else if (start_sending_trace) begin
                trace_fifo_rd_en = 1'b1;

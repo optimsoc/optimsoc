@@ -25,6 +25,11 @@
  * This module can be used as submodule inside a debug module for
  * writing/reading configuration registers over the Debug NoC.
  *
+ * This module supports only a single virtual channel, all configuration data
+ * is expected on a single virtual channel (which can be shared with other
+ * users, if required). The right virtual channel must be assigned when
+ * instantiating this module.
+ *
  * Burst read and write operations are supported, the maximum burst size is 4
  * 16-bit words.
  *
@@ -59,7 +64,6 @@ module dbgnoc_conf_if(/*AUTOARG*/
    parameter DBG_NOC_PH_DEST_WIDTH = `FLIT16_DEST_WIDTH;
    parameter DBG_NOC_PH_CLASS_WIDTH = `PACKET16_CLASS_WIDTH;
    localparam DBG_NOC_PH_ID_WIDTH = DBG_NOC_DATA_WIDTH - DBG_NOC_PH_DEST_WIDTH - DBG_NOC_PH_CLASS_WIDTH;
-   parameter DBG_NOC_VCHANNELS = `DBG_NOC_VCHANNELS;
 
    // memory configuration
    // number of 16 bit-sized configuration registers
@@ -81,11 +85,11 @@ module dbgnoc_conf_if(/*AUTOARG*/
 
    // Debug NoC interface (IN = NoC -> TCM; OUT = TCM -> NoC)
    output reg [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_out_flit;
-   output reg [DBG_NOC_VCHANNELS-1:0] dbgnoc_out_valid;
-   input [DBG_NOC_VCHANNELS-1:0] dbgnoc_out_ready;
+   output reg dbgnoc_out_valid;
+   input dbgnoc_out_ready;
    input [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_in_flit;
-   input [DBG_NOC_VCHANNELS-1:0] dbgnoc_in_valid;
-   output reg [DBG_NOC_VCHANNELS-1:0] dbgnoc_in_ready;
+   input dbgnoc_in_valid;
+   output reg dbgnoc_in_ready;
 
    // we are ready to send on the output port; waiting for dbgnoc_out_ready
    output reg dbgnoc_out_rts;
@@ -251,20 +255,33 @@ module dbgnoc_conf_if(/*AUTOARG*/
             dbgnoc_out_valid = 1;
 
             dbgnoc_out_rts = 1;
-            fsm_state_next = STATE_REPLY_REG_READ_PAYLOAD;
+            if (dbgnoc_out_ready) begin
+               fsm_state_next = STATE_REPLY_REG_READ_PAYLOAD;
+            end else begin
+               fsm_state_next = STATE_REPLY_REG_READ_HEADER;
+            end
          end
 
          STATE_REPLY_REG_READ_PAYLOAD: begin
             if (reg_read_burst_length == 0) begin
                dbgnoc_out_flit[`FLIT16_TYPE_MSB:`FLIT16_TYPE_LSB] = `FLIT16_TYPE_LAST;
 
-               dbgnoc_out_rts = 0;
-               fsm_state_next = STATE_WAIT_FOR_REQUEST;
+               if (dbgnoc_out_ready) begin
+                  dbgnoc_out_rts = 0;
+                  fsm_state_next = STATE_WAIT_FOR_REQUEST;
+               end else begin
+                  dbgnoc_out_rts = 1;
+                  fsm_state_next = STATE_REPLY_REG_READ_PAYLOAD;
+               end
             end else begin
                dbgnoc_out_flit[`FLIT16_TYPE_MSB:`FLIT16_TYPE_LSB] = `FLIT16_TYPE_PAYLOAD;
 
                dbgnoc_out_rts = 1;
-               fsm_state_next = STATE_REPLY_REG_READ_PAYLOAD;
+               if (dbgnoc_out_ready) begin
+                  fsm_state_next = STATE_REPLY_REG_READ_PAYLOAD;
+               end else begin
+                  fsm_state_next = STATE_REPLY_REG_READ_PAYLOAD;
+               end
             end
 
             if (reg_rdwr_addr >= MEM_SIZE) begin
@@ -277,8 +294,11 @@ module dbgnoc_conf_if(/*AUTOARG*/
                dbgnoc_out_flit[`FLIT16_CONTENT_MSB:`FLIT16_CONTENT_LSB] = conf_mem[reg_rdwr_addr];
             end
             dbgnoc_out_valid = 1;
-
-            burst_goto_next = 1;
+            if (dbgnoc_out_ready) begin
+               burst_goto_next = 1;
+            end else begin
+               burst_goto_next = 0;
+            end
          end
 
          STATE_DO_REG_WRITE: begin
