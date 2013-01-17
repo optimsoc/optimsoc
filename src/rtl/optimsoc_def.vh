@@ -1,4 +1,0 @@
-
-`define OPTIMSOC_VC_DMAREQ  0
-`define OPTIMSOC_VC_DMARESP 1
-`define OPTIMSOC_VC_SYNC    2

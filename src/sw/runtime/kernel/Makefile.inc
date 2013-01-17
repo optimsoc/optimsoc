@@ -1,2 +1,0 @@
-ARCH=optimsoc
-CFLAGS = -I .
