@@ -1,0 +1,36 @@
+
+module bootrom(/*AUTOARG*/
+   // Outputs
+   wb_dat_o, wb_ack_o, wb_err_o, wb_rty_o,
+   // Inputs
+   clk, rst, wb_adr_i, wb_dat_i, wb_cyc_i, wb_stb_i, wb_sel_i
+   );
+
+   input clk;
+   input rst;
+
+   input [31:0] wb_adr_i;
+   input [31:0] wb_dat_i;
+   input        wb_cyc_i;
+   input        wb_stb_i;
+   input [3:0]  wb_sel_i;
+   output reg [31:0] wb_dat_o;
+   output reg    wb_ack_o;
+   output        wb_err_o;
+   output        wb_rty_o;
+
+   always @(posedge clk) begin
+      wb_ack_o <= wb_stb_i & ~wb_ack_o;
+   end
+
+   assign wb_err_o = 1'b0;
+   assign wb_rty_o = 1'b0;
+
+   always @(*) begin
+      case(wb_adr_i[7:2])
+`include "bootrom_code.v"
+        default: wb_dat_o = 32'hx;
+      endcase
+   end
+
+endmodule // bootrom
