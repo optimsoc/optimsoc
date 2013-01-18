@@ -56,6 +56,8 @@ module tb_compute_tile();
 
    always clk = #1.25 ~clk;
 
+   wire termination;
+   
    /* trace_monitor AUTO_TEMPLATE(
     .enable  (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze),
     .wb_pc   (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc),
@@ -66,10 +68,14 @@ module tb_compute_tile();
     .if_valid_pos ('0),
     .ctrl_done_en ('0),
     .ctrl_done_pos ('0),
+    .termination  (termination),
+    .termination_all (termination),
     ); */
    trace_monitor
      #(.stdout_filename("stdout"),.tracefile_filename("trace"))
    u_mon0(/*AUTOINST*/
+          // Outputs
+          .termination                  (termination),           // Templated
           // Inputs
           .clk                          (clk),
           .enable                       (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze), // Templated
@@ -80,7 +86,8 @@ module tb_compute_tile();
           .if_valid_en                  ('0),                    // Templated
           .if_valid_pos                 ('0),                    // Templated
           .ctrl_done_en                 ('0),                    // Templated
-          .ctrl_done_pos                ('0));                   // Templated
+          .ctrl_done_pos                ('0),                    // Templated
+          .termination_all              (termination));          // Templated
    
 endmodule // tb_system_2x2_ccmc
 

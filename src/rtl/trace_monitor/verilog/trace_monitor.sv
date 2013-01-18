@@ -29,9 +29,11 @@
  */
 
 module trace_monitor(/*AUTOARG*/
+   // Outputs
+   termination,
    // Inputs
    clk, enable, wb_pc, wb_insn, r3, supv, if_valid_en, if_valid_pos,
-   ctrl_done_en, ctrl_done_pos
+   ctrl_done_en, ctrl_done_pos, termination_all
    );
 
    parameter string id = "";
@@ -40,6 +42,12 @@ module trace_monitor(/*AUTOARG*/
    parameter trans_width = 2;
    parameter stdout_filename = "stdout";
    parameter tracefile_filename = "trace";
+
+   // The trace monitor terminates the simulation when a configured
+   // number of trace monitors has seen the termination command. The
+   // number of trace monitors that track processors is defined by
+   // this parameter
+   parameter term_cross_num = 1;
    
    input clk;
    input enable;
@@ -54,6 +62,11 @@ module trace_monitor(/*AUTOARG*/
    input        ctrl_done_en;
    input [trans_width-1:0]      ctrl_done_pos;
 
+   // This trace monitor wants to terminate
+   output reg                   termination;
+   // Signals of all termination requests of all monitors
+   input [term_cross_num-1:0]   termination_all;
+   
    reg [31:0]   cur_pos;
    integer      count;
 
@@ -76,10 +89,15 @@ module trace_monitor(/*AUTOARG*/
       tracefile=$fopen(tracefile_filename);
       in_isr = 0;
       trans = 0;
-      finished = 0;      
+      finished = 0;
+      termination = 0;
    end
 
    always @(posedge clk) begin
+      if (&{termination_all}) begin
+         $finish();
+      end
+      
       if (enable) begin
          if (enable_trace) begin
             if ( (cur_pos + 4 == wb_pc ) || (cur_pos == wb_pc) ) begin
@@ -101,7 +119,7 @@ module trace_monitor(/*AUTOARG*/
               end             
               16'h0001: begin
                  $display("Terminate @%x",wb_pc);
-                 $finish();
+                 termination = 1;
               end
               16'h0004: begin
                  // simprint
