@@ -5,7 +5,7 @@ extern const unsigned short optimsoc_hostlink;
 extern const unsigned int optimsoc_mainmem_size;
 
 extern const unsigned int optimsoc_compute_tile_num;
-extern const unsigned int optimsoc_compute_tiles[3];
+extern const unsigned int optimsoc_compute_tiles[];
 
 // Maximum packet size in flits
 extern const unsigned int optimsoc_noc_maxpacketsize;

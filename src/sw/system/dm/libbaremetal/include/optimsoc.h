@@ -40,4 +40,14 @@ static inline unsigned int optimsoc_get_tileid() {
 	return optimsoc_tileid;
 }
 
+// Get the number of compute tiles
+int optimsoc_ctnum();
+
+// This gives the rank in the set of compute tiles.
+// For example in a system where a compute tile is at position 0 and
+// one at position 3, they will get this output
+//  tile 0 -> ctrank 0
+//  tile 3 -> ctrank 1
+int optimsoc_ctrank();
+
 #endif

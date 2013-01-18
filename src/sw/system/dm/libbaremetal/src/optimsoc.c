@@ -2,6 +2,8 @@
 #include "utils.h"
 #include "int.h"
 
+#include <sysconfig.h>
+
 struct {
 	unsigned int dma_present;
 	unsigned int mp_simple_present;
@@ -24,6 +26,26 @@ void optimsoc_init(optimsoc_conf *conf) {
 	}
 
 	//dma_init();
+}
+
+// Get the number of compute tiles
+int optimsoc_ctnum() {
+	return optimsoc_compute_tile_num;
+}
+
+// This gives the rank in the set of compute tiles.
+// For example in a system where a compute tile is at position 0 and
+// one at position 3, they will get this output
+//  tile 0 -> ctrank 0
+//  tile 3 -> ctrank 1
+int optimsoc_ctrank() {
+	for (int i=0;i<optimsoc_compute_tile_num;i++) {
+		printf("%d: %d (%p)\n",i,optimsoc_compute_tiles[i],&optimsoc_compute_tiles);
+		if (optimsoc_compute_tiles[i]==optimsoc_tileid) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 unsigned int time(unsigned int x) {
