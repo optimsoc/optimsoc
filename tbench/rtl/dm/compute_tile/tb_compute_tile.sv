@@ -82,11 +82,6 @@ module tb_compute_tile();
           .wb_pc                        (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
           .wb_insn                      (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
           .r3                           (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
-          .supv                         (u_compute_tile.u_core0.u_cpu.or1200_cpu.supv), // Templated
-          .if_valid_en                  ('0),                    // Templated
-          .if_valid_pos                 ('0),                    // Templated
-          .ctrl_done_en                 ('0),                    // Templated
-          .ctrl_done_pos                ('0),                    // Templated
           .termination_all              (termination));          // Templated
    
 endmodule // tb_system_2x2_ccmc

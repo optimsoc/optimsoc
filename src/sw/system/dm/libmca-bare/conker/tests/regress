@@ -1,0 +1,74 @@
+#!/usr/bin/env perl
+# -- -*-perl-*-a
+#
+
+
+use FindBin;
+use lib "$FindBin::RealBin/../scripts";
+use lib "$FindBin::RealBin/../share";
+use Data::Dumper;
+use File::Basename;
+use rdriver;
+use File::Temp "tempfile";
+#use Math::BigInt lib => 'GMP';
+use Cwd;
+
+
+
+my $echo = "../src/tc_echo";
+my $fury = "../src/tc_fury";
+my $overlap = "../src/tc_overlap";
+my $testnum = 0;
+my $num_sends = 100;
+
+my @tests = (
+       make_test ("$echo"."_pthread -i 4 -n $num_sends -p"),
+       make_test ("$echo"."_pthread -i 2 -n $num_sends -m"),
+       make_test ("$echo"."_pthread -i 4 -n $num_sends -s"),
+       make_test ("$fury"."_pthread -n $num_sends -p"),
+       make_test ("$fury"."_pthread -n $num_sends -m"),
+       make_test ("$fury"."_pthread -n $num_sends -s"),
+       make_test ("$overlap"."_pthread -n $num_sends -p"),
+       make_test ("$overlap"."_pthread -n $num_sends -m"),
+       make_test ("$echo"."_fork -i 4 -n $num_sends -p"),
+       make_test ("$echo"."_fork -i 2 -n $num_sends -m"),
+       make_test ("$echo"."_fork -i 4 -n $num_sends -s"),
+       make_test ("$fury"."_fork -n $num_sends -p"),
+       make_test ("$fury"."_fork -n $num_sends -m"),
+       make_test ("$fury"."_fork -n $num_sends -s"),
+       make_test ("$overlap"."_fork -n $num_sends -p"),
+       make_test ("$overlap"."_fork -n $num_sends -m"),
+);
+
+sub make_test {
+  my $t = shift;
+  $t =~ s/\.c//;
+  $testnum++;
+  my $outfile = "tmp_".$testnum.".out";
+  
+  return {
+	  cmd => "./$t  &> $outfile",
+	  stdio => 1,
+	  checker => sub { check_ipcclean(); },
+	  temps => [],
+	 };
+}
+
+foreach my $t (@test_list) {
+  my %h;
+  #next if ($t =~ /pkt5/); #skip this test for now
+  push @tests,make_test($t);
+}
+
+sub check_ipcclean {
+  my @lines = `ipcclean`;
+  foreach (@lines) {
+    if (/resource\(s\) deleted/) {
+      die "  Test FAILED: found unfreed resources - test did not clean up properly\n";
+    }
+  }
+}
+
+
+doTest(\@tests);
+

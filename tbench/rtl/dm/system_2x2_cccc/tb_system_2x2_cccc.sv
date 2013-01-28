@@ -34,13 +34,21 @@ module tb_system_2x2_cccc();
     .supv    (u_system.u_ct@.u_core0.u_cpu.or1200_cpu.supv),
     .termination (termination[@]),
     .termination_all (termination),
-    .if_valid_en ('0),
-    .if_valid_pos ('0),
-    .ctrl_done_en ('0),
-    .ctrl_done_pos ('0),
+    // Parameters
+    .id (@),
+    .enable_trace (0),
+    .tracefile_filename (""),
+    .stdout_filename ("stdout.@"),
+    .term_cross_num (4),
     ); */
    trace_monitor
-     #(.stdout_filename("stdout.0"),.tracefile_filename("trace.0"),.term_cross_num(4))
+     #(/*AUTOINSTPARAM*/
+       // Parameters
+       .id                              (0),                     // Templated
+       .enable_trace                    (0),                     // Templated
+       .stdout_filename                 ("stdout.0"),            // Templated
+       .tracefile_filename              (""),                    // Templated
+       .term_cross_num                  (4))                     // Templated
    u_mon0(/*AUTOINST*/
           // Outputs
           .termination                  (termination[0]),        // Templated
@@ -50,15 +58,16 @@ module tb_system_2x2_cccc();
           .wb_pc                        (u_system.u_ct0.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
           .wb_insn                      (u_system.u_ct0.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
           .r3                           (u_system.u_ct0.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
-          .supv                         (u_system.u_ct0.u_core0.u_cpu.or1200_cpu.supv), // Templated
-          .if_valid_en                  ('0),                    // Templated
-          .if_valid_pos                 ('0),                    // Templated
-          .ctrl_done_en                 ('0),                    // Templated
-          .ctrl_done_pos                ('0),                    // Templated
           .termination_all              (termination));          // Templated
    
    trace_monitor
-     #(.stdout_filename("stdout.1"),.tracefile_filename("trace.1"),.term_cross_num(4))
+     #(/*AUTOINSTPARAM*/
+       // Parameters
+       .id                              (1),                     // Templated
+       .enable_trace                    (0),                     // Templated
+       .stdout_filename                 ("stdout.1"),            // Templated
+       .tracefile_filename              (""),                    // Templated
+       .term_cross_num                  (4))                     // Templated
    u_mon1(/*AUTOINST*/
           // Outputs
           .termination                  (termination[1]),        // Templated
@@ -68,15 +77,16 @@ module tb_system_2x2_cccc();
           .wb_pc                        (u_system.u_ct1.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
           .wb_insn                      (u_system.u_ct1.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
           .r3                           (u_system.u_ct1.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
-          .supv                         (u_system.u_ct1.u_core0.u_cpu.or1200_cpu.supv), // Templated
-          .if_valid_en                  ('0),                    // Templated
-          .if_valid_pos                 ('0),                    // Templated
-          .ctrl_done_en                 ('0),                    // Templated
-          .ctrl_done_pos                ('0),                    // Templated
           .termination_all              (termination));          // Templated
 
    trace_monitor
-     #(.stdout_filename("stdout.2"),.tracefile_filename("trace.2"),.term_cross_num(4))
+     #(/*AUTOINSTPARAM*/
+       // Parameters
+       .id                              (2),                     // Templated
+       .enable_trace                    (0),                     // Templated
+       .stdout_filename                 ("stdout.2"),            // Templated
+       .tracefile_filename              (""),                    // Templated
+       .term_cross_num                  (4))                     // Templated
    u_mon2(/*AUTOINST*/
           // Outputs
           .termination                  (termination[2]),        // Templated
@@ -86,15 +96,16 @@ module tb_system_2x2_cccc();
           .wb_pc                        (u_system.u_ct2.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
           .wb_insn                      (u_system.u_ct2.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
           .r3                           (u_system.u_ct2.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
-          .supv                         (u_system.u_ct2.u_core0.u_cpu.or1200_cpu.supv), // Templated
-          .if_valid_en                  ('0),                    // Templated
-          .if_valid_pos                 ('0),                    // Templated
-          .ctrl_done_en                 ('0),                    // Templated
-          .ctrl_done_pos                ('0),                    // Templated
           .termination_all              (termination));          // Templated
    
    trace_monitor
-     #(.stdout_filename("stdout.3"),.tracefile_filename("trace.3"),.term_cross_num(4))
+     #(/*AUTOINSTPARAM*/
+       // Parameters
+       .id                              (3),                     // Templated
+       .enable_trace                    (0),                     // Templated
+       .stdout_filename                 ("stdout.3"),            // Templated
+       .tracefile_filename              (""),                    // Templated
+       .term_cross_num                  (4))                     // Templated
    u_mon3(/*AUTOINST*/
           // Outputs
           .termination                  (termination[3]),        // Templated
@@ -104,11 +115,6 @@ module tb_system_2x2_cccc();
           .wb_pc                        (u_system.u_ct3.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
           .wb_insn                      (u_system.u_ct3.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
           .r3                           (u_system.u_ct3.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
-          .supv                         (u_system.u_ct3.u_core0.u_cpu.or1200_cpu.supv), // Templated
-          .if_valid_en                  ('0),                    // Templated
-          .if_valid_pos                 ('0),                    // Templated
-          .ctrl_done_en                 ('0),                    // Templated
-          .ctrl_done_pos                ('0),                    // Templated
           .termination_all              (termination));          // Templated
    
 endmodule // tb_system_2x2_ccmc

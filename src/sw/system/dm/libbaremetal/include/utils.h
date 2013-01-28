@@ -75,4 +75,12 @@ inline void arch_disable_dcache(unsigned int *cache_state) {
     mtspr(SPR_SR,mfspr(SPR_SR) & ~SPR_SR_DCE);
 }
 
+static inline int extract_bits(unsigned int x, unsigned int msb,unsigned int lsb) {
+	return ((x>>lsb) & ~(~0 << (msb-lsb+1)));
+}
+
+static inline void set_bits(unsigned int *x,unsigned int v,unsigned int msb,unsigned int lsb) {
+	*x = (((~0 << (msb+1) | ~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
+}
+
 #endif

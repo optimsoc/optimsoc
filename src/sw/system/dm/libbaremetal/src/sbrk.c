@@ -7,7 +7,6 @@
 
 #include <errno.h>
 #include <sys/types.h>
-#include "printf.h"
 #include "utils.h"
 
 extern caddr_t _end;

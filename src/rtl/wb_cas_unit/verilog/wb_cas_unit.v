@@ -1,23 +1,35 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    23:13:58 07/11/2010 
-// Design Name: 
-// Module Name:    wb_exclusive_adapter 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+/**
+ * This file is part of OpTiMSoC.
+ * 
+ * OpTiMSoC is free hardware: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as 
+ * published by the Free Software Foundation, either version 3 of 
+ * the License, or (at your option) any later version.
+ *
+ * As the LGPL in general applies to software, the meaning of
+ * "linking" is defined as using the OpTiMSoC in your projects at
+ * the external interfaces.
+ * 
+ * OpTiMSoC is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * =================================================================
+ * 
+ * This is the compare-and-swap (CAS) unit as instantiated between the
+ * processor and the bus. It is accessed via memory mapped registers
+ * and performs the CAS operation.
+ * 
+ * (c) 2009-2013 by the author(s)
+ * 
+ * Author(s):
+ *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
+ */
+
 module wb_cas_unit(
     input clk_i,
     input rst_i,
@@ -75,8 +87,8 @@ wb_cas_fsm cas_fsm(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .core_adr_i(fsm_core_adr_i),
-	 .core_dat_i(fsm_core_dat_i),
-	 .core_sel_i(fsm_core_sel_i),
+         .core_dat_i(fsm_core_dat_i),
+         .core_sel_i(fsm_core_sel_i),
     .core_we_i(fsm_core_we_i),
     .core_cyc_i(fsm_core_cyc_i),
     .core_stb_i(fsm_core_stb_i),
@@ -123,5 +135,5 @@ assign wb_bus_dat_o = bypass ? wb_core_dat_i : fsm_bus_dat_o;
 assign wb_bus_we_o  = bypass ? wb_core_we_i  : fsm_bus_we_o;
    assign wb_bus_bte_o = bypass ? wb_core_bte_i : 2'b00;
    assign wb_bus_cti_o = bypass ? wb_core_cti_i : 3'b000;
-									
+                                                                        
 endmodule

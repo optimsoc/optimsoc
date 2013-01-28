@@ -20,7 +20,7 @@
  * 
  * =================================================================
  * 
- * This is the generic router toplevel.
+ * The trace monitor is used to collect data during RTL simulation.
  * 
  * (c) 2012-2013 by the author(s)
  * 
@@ -32,14 +32,12 @@ module trace_monitor(/*AUTOARG*/
    // Outputs
    termination,
    // Inputs
-   clk, enable, wb_pc, wb_insn, r3, supv, if_valid_en, if_valid_pos,
-   ctrl_done_en, ctrl_done_pos, termination_all
+   clk, enable, wb_pc, wb_insn, r3, termination_all
    );
 
-   parameter string id = "";
+   parameter id = 0;
    parameter enable_trace=0;
 
-   parameter trans_width = 2;
    parameter stdout_filename = "stdout";
    parameter tracefile_filename = "trace";
 
@@ -55,13 +53,6 @@ module trace_monitor(/*AUTOARG*/
    input [31:0] wb_insn;
    input [31:0] r3;
 
-   input        supv;
-
-   input        if_valid_en;
-   input [trans_width-1:0]      if_valid_pos;
-   input        ctrl_done_en;
-   input [trans_width-1:0]      ctrl_done_pos;
-
    // This trace monitor wants to terminate
    output reg                   termination;
    // Signals of all termination requests of all monitors
@@ -74,22 +65,14 @@ module trace_monitor(/*AUTOARG*/
 
    reg              is_newline;
 
-   reg [31:0]       schedule_which;
-   reg              in_isr;
-
-   integer          trans;
-   integer          finished;
-   
-   
    initial begin
       cur_pos = 32'h0000_0000;
       count = 0;
       is_newline = 1;
       stdout=$fopen(stdout_filename);
-      tracefile=$fopen(tracefile_filename);
-      in_isr = 0;
-      trans = 0;
-      finished = 0;
+      if (enable_trace) begin
+         tracefile=$fopen(tracefile_filename);
+      end
       termination = 0;
    end
 
@@ -118,7 +101,7 @@ module trace_monitor(/*AUTOARG*/
                  // ignore..
               end             
               16'h0001: begin
-                 $display("Terminate @%x",wb_pc);
+                 $display("[%t,%0d] Terminate @%x",$time,id,wb_pc);
                  termination = 1;
               end
               16'h0004: begin
@@ -135,7 +118,7 @@ module trace_monitor(/*AUTOARG*/
                  end
               end // case: 16'h0004
               default: begin
-                 $display("[%t] Event %x: %x",$time,wb_insn[15:0],r3);
+                 $display("[%t,%0d] Event %x: %x",$time,id,wb_insn[15:0],r3);
               end
             endcase
          end

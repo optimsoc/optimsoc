@@ -1,0 +1,8 @@
+mcapi.o: ../src/mcapi.c ../include/mcapi.h ../include/mca.h \
+ ../include/mca_impl_spec.h ../include/mcapi_impl_spec.h ../include/mca.h \
+ ../include/mcapi_trans.h ../include/mcapi_impl_spec.h \
+ ../include/mca_config.h
+mcapi_trans_simple.o: ../src/mcapi_trans_simple/mcapi_trans_simple.c \
+ ../include/mcapi.h ../include/mca.h ../include/mca_impl_spec.h \
+ ../include/mcapi_impl_spec.h ../include/mca.h ../include/mca_config.h \
+ ../include/mcapi_trans.h ../include/mcapi_impl_spec.h

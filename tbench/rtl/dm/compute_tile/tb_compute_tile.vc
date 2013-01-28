@@ -5,6 +5,7 @@
 +incdir+${OPTIMSOC_RTL}/or1200mp/verilog/
 +incdir+${OPTIMSOC_RTL}/bootrom/verilog
 +incdir+${OPTIMSOC_RTL}/noclsu/verilog
++incdir+.
 
 +define+OPTIMSOC_CTRAM_PLAIN
 +define+OR1200_BOOT_ADR="32'h0000_0100"

@@ -1,0 +1,133 @@
+2010-02-01  Michele Reese  <michele.reese@freescale.com>
+	* To analyze the regression suite for coverage analysis:
+
+	* compile for coverage using gcov: run autogen with the
+	--enable-coverage option.  
+
+	* gcov creates the following two types of output files: 1).gcno is
+	created at compile time and contains the basic block and line number
+	information that gcov will use. 2).gcda is created at runtime and
+	contains the summary of the lines executed.
+	
+	* To profile: Run gcov each of the *.gcda (one for each .o file).
+	It will write out a *.gcov text file that you can then examine.
+
+	
+2008-05-01  Michele Reese  <michele.reese@freescale.com>
+
+	* src/mcapi.c (mcapi_test): 
+	We now check if mcapi_status is valid and non-null before setting
+	EPARAM.  For our implementation, the only way valid_status will
+	return false is if mcapi_status == NULL in which case we can't set
+	EPARAM.  
+
+	* c-setup.m4
+	Added --enable-coverage option to compile with gcov options.  gcov
+	will accumulate coverage data over multiple runs so what you want
+	to do is 1) compile with --enable-coverage 2) run the regression
+	3) run gcov on each of the object files:
+		cd mcapi/src/mcapi_trans/mcapi_trans_sm/mrapi
+		gcov libmcapi_la-mcapi.gcda  
+		gcov libmcapi_la-transport_sm.gcda  
+		gcov libmcapi_la-transport_sm_mrapi.gcda
+		
+
+2008-04-30  Michele Reese  <michele.reese@freescale.com>
+	* Fixed includes so that mcapi.h is only included by mcapi.c.
+	This required moving the status_flags and a few defines down into
+	mcapi_datatypes.h.
+
+	* Changed blocking msg send/recv and pkt send/recv functions in
+	the transport layer to use the non-blocking versions together with
+	the wait (all calls are done in the transport layer - we do not go
+	up to the mcapi layer).  This makes the code more symmetric but
+	also means that instead of one lock for the entire function, we
+	now require two (one for the non-blocking send/recv and one for
+	the wait).
+
+2008-02-22  Michele Reese  <michele.reese@freescale.com>
+	* Reduced calling of getpid/gettid in access_database_pre/post
+	functions.  We still call get_private_data_index if check=true and
+	the debug level is > 5.  We do this to make sure locking/unlocking
+	is balanced.  As a further optimization, the private_data_index
+	could be cached in the handles.  
+	
+2008-02-15  Michele Reese  <michele.reese@freescale.com>
+	* Added new function mcapi_trans_compact_queue because we needed
+	to not only compact the queue for a pop from the head, but also
+	when check_receive_request is called and we are removing from
+	indices other than the head.  Also fixed managment of num_requests
+	so that it gets decremented by check_receive_request.  pkt5 now
+	passes and has been added to the regression.  Additional unit
+	tests to follow.
+
+	* fixed bug in dprintf where we were calling printf instead of the
+	variatic vprintf.  This caused the formats to be broken because
+	the va_list wasn't handled correctly.
+
+	* changed default in c-setup.m4 to non-optimized (-O0).
+
+2008-02-15  Michele Reese  <michele.reese@freescale.com>
+	* fixed bug in get_endpoint where the implementation of valid_node
+	was checking if the node existed in our database rather than if
+	the node number was a valid node number (which for us is always
+	true).  Now get_endpoint blocks until the endpoint (and of course
+	the node that the endpoint will be created on) exists.
+
+	* fixed bug in mcapi_trans_initialize where we weren't locking the
+	database early enough so it was possible for multiple nodes to be
+	setting up the shared memory and calling memset (gulp) on the
+	database.  Now as as soon as the semaphore is created we lock it
+	and then go about setting up shared memory and the database if
+	they don't already exist.
+
+	* changed dprintf to mcapi_dprintf to avoid library conflicts.
+	
+2008-02-13  Michele Reese  <michele.reese@freescale.com>
+
+        * changed datatypes.h to mcapi_datatypes.h
+	* added c-setup.m4 macro for enable-opt, etc. option handling
+	* added dprintf and --enable-debug build option to reduce noise.
+	* changed library name from libMcapi to libmcapi. 
+	* fixed bug in get_endpoint where we were checking valid_port instead
+	of valid_port_num.  
+
+2008-01-09  Michele Reese  <michele.reese@freescale.com>
+
+	* src/mcapi_trans/mcapi_trans_sm/transport_sm.c: 
+	Eliminated extra copy by making the queue entry in the endpoints
+	receive queue just be a pointer to a buffer entry.  It used to be
+	it's own separate buffer that we copied out of and into the buffer
+	entry for pkt receives.  Now all sends (scalar, message and
+	packet) put their data into a buffer entry and the queue entry
+	just points to this buffer.  Message and scalar receives copy
+	the data out and into the user buffer/scalar and mark the buffer
+	as free.  Packet receives give the pointer back to the user and
+	leave the buffer marked in_use until the user calls packet free. 
+
+2007-12-21  Michele Reese  <michele.reese@freescale.com>
+
+	* src/mcapi_trans/mcapi_trans_sm/transport_sm.c: 
+	Discovered a nasty bug: in a pthreaded app we thread-switched
+	between popping a queue element and updating num_elements.  This
+	caused the queue to throw an assetion since num_elements was
+	incorrect.  We now lock the database for reads (used to just lock
+	it for writes).  All functions that access the database must call
+	the pre/post hooks correctly.  Also, added transport_sm_yield so
+	that we can unlock and lock around the yield if necessary.  Added
+	test msg3.
+
+2007-12-19  Michele Reese  <michele.reese@freescale.com>
+
+	* src/mcapi_trans/mcapi_trans_sm/transport_sm.c: 
+	Added code for scalars.
+	Added tests: msg2,msg3 and scl1.
+
+2007-12-11  Michele Reese  <michele.reese@freescale.com>
+
+	* src/mcapi_trans/mrapi/transport_sm.c: 
+	Added code for nodes,endpoints,channels,messages and packets.
+	Added tests: node1,endpt1,msg1 and pkt1.
+
+2007-08-27  Michele Reese  <michele.reese@freescale.com>
+        * Initial implementation.

@@ -28,8 +28,9 @@
 // Public License along with this source; if not, download it   
 // from http://www.opencores.org/lgpl.shtml
 
+// synthesis translate_off
 `include "timescale.v"
-
+// synthesis translate_on
 
 // Automatically generated on: 10-01-2012 16:47:02
 

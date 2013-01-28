@@ -4,7 +4,7 @@
 #include "utils.h"
 
 #include "spr-defs.h"
-#include "printf.h"
+#include <stdio.h>
 #include "mutex.h"
 #include "sysconfig.h"
 

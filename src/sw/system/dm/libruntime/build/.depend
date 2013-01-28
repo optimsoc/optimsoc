@@ -1,0 +1,14 @@
+scheduler.o: ../src/scheduler.c ../src/list.h ../src/thread.h \
+ ../src/context.h ../src/list.h ../src/scheduler.h ../src/runtime.h \
+ ../src/report.h
+runtime.o: ../src/runtime.c ../src/scheduler.h ../src/list.h \
+ ../src/thread.h ../src/context.h ../src/list.h ../src/context.h
+list.o: ../src/list.c ../src/list.h
+thread.o: ../src/thread.c ../src/thread.h ../src/context.h ../src/list.h \
+ ../src/report.h ../src/scheduler.h ../src/list.h
+malloc_lock.o: ../src/libc/malloc_lock.c
+malloc.o: ../src/libc/malloc.c
+mallocr.o: ../src/libc/mallocr.c
+ctx_replace.o: ../src/ctx_replace.S ../src/spr-defs.h
+yield_switchctx.o: ../src/yield_switchctx.S ../src/spr-defs.h \
+ ../src/macros.h

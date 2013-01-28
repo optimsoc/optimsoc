@@ -12,7 +12,7 @@ OBJECTS_C=exceptions.o \
           sbrk.o     \
           dma.o \
           mp_simple.o \
-          printf.o \
+          lcd.o \
           optimsoc.o
                               
 OBJECTS=$(OBJECTS_C)

@@ -2,16 +2,13 @@
 // Mostly taken from ORPSoC
 
 #include "int.h" // User interrupt handler header
-#include "printf.h"
+#include <stdio.h>
 #include "utils.h"
+#include <assert.h>
 
 #define STR_EXCEPTION_OCCURED " exception occured.\n"
 
-// The exception stack is always saved at address 0x4
-// The addresses below 0x100 are reserved.
-// TODO: When we activate the other cores, this has
-//       to be private!
-const unsigned int *exception_stack = (unsigned int*) 0x4;
+const unsigned int *exception_stack;
 
 char *exception_strings[] = {
   "An unknown",             // 0

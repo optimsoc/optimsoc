@@ -1,4 +1,36 @@
+/**
+ * This file is part of OpTiMSoC.
+ * 
+ * OpTiMSoC is free hardware: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as 
+ * published by the Free Software Foundation, either version 3 of 
+ * the License, or (at your option) any later version.
+ *
+ * As the LGPL in general applies to software, the meaning of
+ * "linking" is defined as using the OpTiMSoC in your projects at
+ * the external interfaces.
+ * 
+ * OpTiMSoC is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * =================================================================
+ * 
+ * This is the network adapter for compute tiles. It is configurable to
+ * contain different elements, e.g. message passing or DMA.
+ * 
+ * (c) 2012-2013 by the author(s)
+ * 
+ * Author(s):
+ *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
+ */
+
 `include "lisnoc_def.vh"
+`include "optimsoc_def.vh"
 
 module networkadapter_ct(/*AUTOARG*/
    // Outputs
@@ -11,10 +43,10 @@ module networkadapter_ct(/*AUTOARG*/
    wbs_sel_i, wbs_stb_i, wbs_we_i, wbs_cab_i, wbs_cti_i, wbs_bte_i
    );
 
-   parameter noc_xdim = 4;
-   parameter noc_ydim = 4;
+   parameter noc_xdim = `OPTIMSOC_XDIM;
+   parameter noc_ydim = `OPTIMSOC_YDIM;
    
-   parameter vchannels = 3;
+   parameter vchannels = `VCHANNELS;
 
    parameter tileid = 0;
 
@@ -27,9 +59,9 @@ module networkadapter_ct(/*AUTOARG*/
    parameter conf_mp_simple = 1;
    parameter conf_dma       = 1;
    
-   parameter vc_mp_simple = 0;
-   parameter vc_dma_req   = 1;
-   parameter vc_dma_resp  = 2;
+   parameter vc_mp_simple = `VCHANNEL_MPSIMPLE;
+   parameter vc_dma_req   = `VCHANNEL_DMA_REQ;
+   parameter vc_dma_resp  = `VCHANNEL_DMA_RESP;
    
    input clk, rst;
 
@@ -81,6 +113,7 @@ module networkadapter_ct(/*AUTOARG*/
 
    assign mod_in_valid = noc_in_valid;
    assign noc_in_ready = mod_in_ready;
+   
    generate
       genvar              v;
       for (v=0;v<vchannels;v=v+1) begin
@@ -196,98 +229,106 @@ module networkadapter_ct(/*AUTOARG*/
                .wb_cyc_i                (wbs_cyc_i & sselect[IFMPSIMPLE]), // Templated
                .wb_stb_i                (wbs_stb_i & sselect[IFMPSIMPLE]), // Templated
                .wb_dat_i                (wbs_dat_i));            // Templated
-   
 
-                                   
-   
-   /* lisnoc_dma AUTO_TEMPLATE(
-    .noc_in_req_ready (mod_in_ready[vc_dma_req]),
-    .noc_in_req_valid (mod_in_valid[vc_dma_req]),
-    .noc_in_req_flit  (mod_in_flit[vc_dma_req][noc_flit_width-1:0]),
-    .noc_in_resp_ready (mod_in_ready[vc_dma_resp]),
-    .noc_in_resp_valid (mod_in_valid[vc_dma_resp]),
-    .noc_in_resp_flit  (mod_in_flit[vc_dma_resp][noc_flit_width-1:0]),
-    .noc_out_req_ready (mod_out_ready[vc_dma_req]),
-    .noc_out_req_valid (mod_out_valid[vc_dma_req]),
-    .noc_out_req_flit  (mod_out_flit[vc_dma_req][noc_flit_width-1:0]),
-    .noc_out_resp_ready (mod_out_ready[vc_dma_resp]),
-    .noc_out_resp_valid (mod_out_valid[vc_dma_resp]),
-    .noc_out_resp_flit  (mod_out_flit[vc_dma_resp][noc_flit_width-1:0]),
-    .wb_if_cyc_i    (wbs_cyc_i & sselect[IFDMA]),
-    .wb_if_stb_i    (wbs_stb_i & sselect[IFDMA]),
-    .wb_if_dat_o    (wbif_dat_o[IFDMA]),
-    .wb_if_ack_o    (wbif_ack_o[IFDMA]),
-    .wb_if_rty_o    (wbif_rty_o[IFDMA]),
-    .wb_if_err_o    (wbif_err_o[IFDMA]),
-    .wb_if_\(.*\)   (wbs_\1),
-    .wb_\(.*\)      (wbm_\1),
-    .irq            (irq[0]),
-    ); */
-   
-   lisnoc_dma
-     #(.tileid(tileid))
-   u_dma(/*AUTOINST*/
-         // Outputs
-         .noc_in_req_ready              (mod_in_ready[vc_dma_req]), // Templated
-         .noc_in_resp_ready             (mod_in_ready[vc_dma_resp]), // Templated
-         .noc_out_req_flit              (mod_out_flit[vc_dma_req][noc_flit_width-1:0]), // Templated
-         .noc_out_req_valid             (mod_out_valid[vc_dma_req]), // Templated
-         .noc_out_resp_flit             (mod_out_flit[vc_dma_resp][noc_flit_width-1:0]), // Templated
-         .noc_out_resp_valid            (mod_out_valid[vc_dma_resp]), // Templated
-         .wb_if_dat_o                   (wbif_dat_o[IFDMA]),     // Templated
-         .wb_if_ack_o                   (wbif_ack_o[IFDMA]),     // Templated
-         .wb_if_err_o                   (wbif_err_o[IFDMA]),     // Templated
-         .wb_if_rty_o                   (wbif_rty_o[IFDMA]),     // Templated
-         .wb_adr_o                      (wbm_adr_o),             // Templated
-         .wb_dat_o                      (wbm_dat_o),             // Templated
-         .wb_cyc_o                      (wbm_cyc_o),             // Templated
-         .wb_stb_o                      (wbm_stb_o),             // Templated
-         .wb_sel_o                      (wbm_sel_o),             // Templated
-         .wb_we_o                       (wbm_we_o),              // Templated
-         .wb_cab_o                      (wbm_cab_o),             // Templated
-         .wb_cti_o                      (wbm_cti_o),             // Templated
-         .wb_bte_o                      (wbm_bte_o),             // Templated
-         .irq                           (irq[0]),                // Templated
-         // Inputs
-         .clk                           (clk),
-         .rst                           (rst),
-         .noc_in_req_flit               (mod_in_flit[vc_dma_req][noc_flit_width-1:0]), // Templated
-         .noc_in_req_valid              (mod_in_valid[vc_dma_req]), // Templated
-         .noc_in_resp_flit              (mod_in_flit[vc_dma_resp][noc_flit_width-1:0]), // Templated
-         .noc_in_resp_valid             (mod_in_valid[vc_dma_resp]), // Templated
-         .noc_out_req_ready             (mod_out_ready[vc_dma_req]), // Templated
-         .noc_out_resp_ready            (mod_out_ready[vc_dma_resp]), // Templated
-         .wb_if_adr_i                   (wbs_adr_i),             // Templated
-         .wb_if_dat_i                   (wbs_dat_i),             // Templated
-         .wb_if_cyc_i                   (wbs_cyc_i & sselect[IFDMA]), // Templated
-         .wb_if_stb_i                   (wbs_stb_i & sselect[IFDMA]), // Templated
-         .wb_if_we_i                    (wbs_we_i),              // Templated
-         .wb_dat_i                      (wbm_dat_i),             // Templated
-         .wb_ack_i                      (wbm_ack_i));            // Templated
+   generate
+      if (conf_dma) begin
+         /* lisnoc_dma AUTO_TEMPLATE(
+          .noc_in_req_ready (mod_in_ready[vc_dma_req]),
+          .noc_in_req_valid (mod_in_valid[vc_dma_req]),
+          .noc_in_req_flit  (mod_in_flit[vc_dma_req][noc_flit_width-1:0]),
+          .noc_in_resp_ready (mod_in_ready[vc_dma_resp]),
+          .noc_in_resp_valid (mod_in_valid[vc_dma_resp]),
+          .noc_in_resp_flit  (mod_in_flit[vc_dma_resp][noc_flit_width-1:0]),
+          .noc_out_req_ready (mod_out_ready[vc_dma_req]),
+          .noc_out_req_valid (mod_out_valid[vc_dma_req]),
+          .noc_out_req_flit  (mod_out_flit[vc_dma_req][noc_flit_width-1:0]),
+          .noc_out_resp_ready (mod_out_ready[vc_dma_resp]),
+          .noc_out_resp_valid (mod_out_valid[vc_dma_resp]),
+          .noc_out_resp_flit  (mod_out_flit[vc_dma_resp][noc_flit_width-1:0]),
+          .wb_if_cyc_i    (wbs_cyc_i & sselect[IFDMA]),
+          .wb_if_stb_i    (wbs_stb_i & sselect[IFDMA]),
+          .wb_if_dat_o    (wbif_dat_o[IFDMA]),
+          .wb_if_ack_o    (wbif_ack_o[IFDMA]),
+          .wb_if_rty_o    (wbif_rty_o[IFDMA]),
+          .wb_if_err_o    (wbif_err_o[IFDMA]),
+          .wb_if_\(.*\)   (wbs_\1),
+          .wb_\(.*\)      (wbm_\1),
+          .irq            (irq[0]),
+          ); */
+         lisnoc_dma
+           #(.tileid(tileid))
+         u_dma(/*AUTOINST*/
+               // Outputs
+               .noc_in_req_ready        (mod_in_ready[vc_dma_req]), // Templated
+               .noc_in_resp_ready       (mod_in_ready[vc_dma_resp]), // Templated
+               .noc_out_req_flit        (mod_out_flit[vc_dma_req][noc_flit_width-1:0]), // Templated
+               .noc_out_req_valid       (mod_out_valid[vc_dma_req]), // Templated
+               .noc_out_resp_flit       (mod_out_flit[vc_dma_resp][noc_flit_width-1:0]), // Templated
+               .noc_out_resp_valid      (mod_out_valid[vc_dma_resp]), // Templated
+               .wb_if_dat_o             (wbif_dat_o[IFDMA]),     // Templated
+               .wb_if_ack_o             (wbif_ack_o[IFDMA]),     // Templated
+               .wb_if_err_o             (wbif_err_o[IFDMA]),     // Templated
+               .wb_if_rty_o             (wbif_rty_o[IFDMA]),     // Templated
+               .wb_adr_o                (wbm_adr_o),             // Templated
+               .wb_dat_o                (wbm_dat_o),             // Templated
+               .wb_cyc_o                (wbm_cyc_o),             // Templated
+               .wb_stb_o                (wbm_stb_o),             // Templated
+               .wb_sel_o                (wbm_sel_o),             // Templated
+               .wb_we_o                 (wbm_we_o),              // Templated
+               .wb_cab_o                (wbm_cab_o),             // Templated
+               .wb_cti_o                (wbm_cti_o),             // Templated
+               .wb_bte_o                (wbm_bte_o),             // Templated
+               .irq                     (irq[0]),                // Templated
+               // Inputs
+               .clk                     (clk),
+               .rst                     (rst),
+               .noc_in_req_flit         (mod_in_flit[vc_dma_req][noc_flit_width-1:0]), // Templated
+               .noc_in_req_valid        (mod_in_valid[vc_dma_req]), // Templated
+               .noc_in_resp_flit        (mod_in_flit[vc_dma_resp][noc_flit_width-1:0]), // Templated
+               .noc_in_resp_valid       (mod_in_valid[vc_dma_resp]), // Templated
+               .noc_out_req_ready       (mod_out_ready[vc_dma_req]), // Templated
+               .noc_out_resp_ready      (mod_out_ready[vc_dma_resp]), // Templated
+               .wb_if_adr_i             (wbs_adr_i),             // Templated
+               .wb_if_dat_i             (wbs_dat_i),             // Templated
+               .wb_if_cyc_i             (wbs_cyc_i & sselect[IFDMA]), // Templated
+               .wb_if_stb_i             (wbs_stb_i & sselect[IFDMA]), // Templated
+               .wb_if_we_i              (wbs_we_i),              // Templated
+               .wb_dat_i                (wbm_dat_i),             // Templated
+               .wb_ack_i                (wbm_ack_i));            // Templated
+      end
+   endgenerate
 
-   /* lisnoc_router_output_arbiter AUTO_TEMPLATE(
-    .fifo_valid_i (mod_out_valid[]),
-    .fifo_ready_o (mod_out_ready[]),
-    .fifo_flit_i  (mod_out_flit_flat[vchannels*noc_flit_width-1:0]),
-    .link_valid_o (noc_out_valid[]),
-    .link_flit_o (noc_out_flit[noc_flit_width-1:0]),
-    .link_ready_i (noc_out_ready[]),
-    ); */
-   lisnoc_router_output_arbiter
-     #(.vchannels(vchannels))
-   u_arb(/*AUTOINST*/
-         // Outputs
-         .fifo_ready_o                  (mod_out_ready[(vchannels)-1:0]), // Templated
-         .link_valid_o                  (noc_out_valid[(vchannels)-1:0]), // Templated
-         .link_flit_o                   (noc_out_flit[noc_flit_width-1:0]), // Templated
-         // Inputs
-         .clk                           (clk),
-         .rst                           (rst),
-         .fifo_valid_i                  (mod_out_valid[(vchannels)-1:0]), // Templated
-         .fifo_flit_i                   (mod_out_flit_flat[vchannels*noc_flit_width-1:0]), // Templated
-         .link_ready_i                  (noc_out_ready[(vchannels)-1:0])); // Templated
+   generate
+      if (vchannels>1) begin
+         /* lisnoc_router_output_arbiter AUTO_TEMPLATE(
+          .fifo_valid_i (mod_out_valid[]),
+          .fifo_ready_o (mod_out_ready[]),
+          .fifo_flit_i  (mod_out_flit_flat[vchannels*noc_flit_width-1:0]),
+          .link_valid_o (noc_out_valid[]),
+          .link_flit_o (noc_out_flit[noc_flit_width-1:0]),
+          .link_ready_i (noc_out_ready[]),
+          ); */
+         lisnoc_router_output_arbiter
+           #(.vchannels(vchannels))
+         u_arb(/*AUTOINST*/
+               // Outputs
+               .fifo_ready_o            (mod_out_ready[(vchannels)-1:0]), // Templated
+               .link_valid_o            (noc_out_valid[(vchannels)-1:0]), // Templated
+               .link_flit_o             (noc_out_flit[noc_flit_width-1:0]), // Templated
+               // Inputs
+               .clk                     (clk),
+               .rst                     (rst),
+               .fifo_valid_i            (mod_out_valid[(vchannels)-1:0]), // Templated
+               .fifo_flit_i             (mod_out_flit_flat[vchannels*noc_flit_width-1:0]), // Templated
+               .link_ready_i            (noc_out_ready[(vchannels)-1:0])); // Templated
+      end // if (vchannels>1)
+      else begin
+         assign noc_out_valid = mod_out_valid[0];
+         assign noc_out_flit = mod_out_flit[0];
+         assign mod_out_ready[0] = noc_out_ready;
+      end // else: !if(vchannels>1)
+   endgenerate
    
-
 
 endmodule // networkadapter_ct
 

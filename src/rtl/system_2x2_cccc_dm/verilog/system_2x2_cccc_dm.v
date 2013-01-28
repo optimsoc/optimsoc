@@ -1,4 +1,5 @@
 `include "lisnoc_def.vh"
+`include "optimsoc_def.vh"
 
 module system_2x2_cccc_dm(/*AUTOARG*/
    // Inputs
@@ -13,20 +14,20 @@ module system_2x2_cccc_dm(/*AUTOARG*/
 
    localparam flit_width = noc_flit_width;
       
-   localparam vchannels = 3;
+   localparam vchannels = `VCHANNELS;
 
    parameter mem_size = 128*1024;
    
    // Flits from NoC->tiles
    wire [noc_flit_width-1:0] link_in_flit[0:3];
-   wire [vchannels-1:0] link_in_valid[0:3];
-   wire [vchannels-1:0] link_in_ready[0:3];
-
+   wire [vchannels-1:0]      link_in_valid[0:3];
+   wire [vchannels-1:0]      link_in_ready[0:3];
+   
    // Flits from tiles->NoC
    wire [noc_flit_width-1:0] link_out_flit[0:3];
-   wire [vchannels-1:0] link_out_valid[0:3];
-   wire [vchannels-1:0] link_out_ready[0:3];
-
+   wire [vchannels-1:0]      link_out_valid[0:3];
+   wire [vchannels-1:0]      link_out_ready[0:3];
+   
    /* lisnoc_mesh2x2 AUTO_TEMPLATE(
     .link\(.*\)_in_\(.*\)_.* (link_out_\2[\1][]),
     .link\(.*\)_out_\(.*\)_.* (link_in_\2[\1][]),

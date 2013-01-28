@@ -30,9 +30,10 @@
 
 #include "int.h"
 #include "utils.h"
-#include "printf.h"
+#include <stdio.h>
 #include <malloc.h>
 #include <sysconfig.h>
+#include <stdarg.h>
 
 #include <mp_simple.h>
 #include <optimsoc.h>
@@ -86,7 +87,7 @@ void optimsoc_mp_simple_inth(void* arg) {
 	// Call respective class handler
 	if (cls_handlers[class] == 0) {
 		// No handler registered, packet gets lost
-		printf("Packet of unknown class (%d) received. Drop.\n",class);
+		//printf("Packet of unknown class (%d) received. Drop.\n",class);
 		return;
 	}
 
@@ -108,3 +109,29 @@ void optimsoc_send_alive_message() {
 				(optimsoc_get_tileid() << OPTIMSOC_SRC_LSB);
 	}
 }
+
+void uart_printf(const char *fmt, ...) {
+    if (!optimsoc_has_uart) {
+        return;
+    }
+
+    char buffer[128];
+    va_list ap;
+
+    va_start(ap, fmt); /* Initialize the va_list */
+
+    vsnprintf(buffer,128,fmt, ap); /* Call vprintf */
+
+    va_end(ap); /* Cleanup the va_list */
+
+    int size = strnlen(buffer,128);
+    unsigned int msg = 0;
+    set_bits(&msg,optimsoc_uarttile,OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
+    set_bits(&msg,0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
+    set_bits(&msg,optimsoc_get_tileid(),OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
+    for (unsigned i=0;i<size;i++) {
+        set_bits(&msg,(unsigned int) buffer[i],7,0);
+        optimsoc_mp_simple_send(1,&msg);
+    }
+}
+

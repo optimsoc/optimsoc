@@ -9,3 +9,9 @@ extern const unsigned int optimsoc_compute_tiles[];
 
 // Maximum packet size in flits
 extern const unsigned int optimsoc_noc_maxpacketsize;
+
+extern const unsigned int optimsoc_has_uart;
+extern const unsigned int optimsoc_uarttile;
+
+extern const unsigned int optimsoc_uart_lcd_enable;
+

@@ -50,4 +50,11 @@ int optimsoc_ctnum();
 //  tile 3 -> ctrank 1
 int optimsoc_ctrank();
 
+int optimsoc_tilerank(unsigned int tile);
+
+// This is the reverse action of tilerank
+int optimsoc_ranktile(unsigned int rank);
+
+void uart_printf(const char *fmt, ...);
+
 #endif

@@ -1,4 +1,35 @@
+/**
+ * This file is part of OpTiMSoC.
+ * 
+ * OpTiMSoC is free hardware: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as 
+ * published by the Free Software Foundation, either version 3 of 
+ * the License, or (at your option) any later version.
+ *
+ * As the LGPL in general applies to software, the meaning of
+ * "linking" is defined as using the OpTiMSoC in your projects at
+ * the external interfaces.
+ * 
+ * OpTiMSoC is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * =================================================================
+ * 
+ * This is the compute tile for distributed memory systems.
+ * 
+ * (c) 2012 by the author(s)
+ * 
+ * Author(s):
+ *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
+ */
+
 `include "lisnoc_def.vh"
+`include "optimsoc_def.vh"
 
 module compute_tile_dm(/*AUTOARG*/
    // Outputs
@@ -10,11 +41,10 @@ module compute_tile_dm(/*AUTOARG*/
    input clk;
    input rst_cpu, rst_sys;
 
-
    parameter noc_flit_data_width = 32;
    parameter noc_flit_type_width = 2;
    localparam noc_flit_width = noc_flit_data_width+noc_flit_type_width;
-   parameter vchannels = 3;
+   parameter vchannels = `VCHANNELS;
 
    input [noc_flit_width-1:0] noc_in_flit;
    input [vchannels-1:0] noc_in_valid;

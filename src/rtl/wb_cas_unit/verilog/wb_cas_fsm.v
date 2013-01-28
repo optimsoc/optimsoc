@@ -1,23 +1,34 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    13:51:56 07/12/2010 
-// Design Name: 
-// Module Name:    wb_cas_fsm 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+/**
+ * This file is part of OpTiMSoC.
+ * 
+ * OpTiMSoC is free hardware: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as 
+ * published by the Free Software Foundation, either version 3 of 
+ * the License, or (at your option) any later version.
+ *
+ * As the LGPL in general applies to software, the meaning of
+ * "linking" is defined as using the OpTiMSoC in your projects at
+ * the external interfaces.
+ * 
+ * OpTiMSoC is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * =================================================================
+ * 
+ * This is the FSM performing the CAS operation based on the memory
+ * mapped configuration.
+ * 
+ * (c) 2009-2013 by the author(s)
+ * 
+ * Author(s):
+ *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
+ */
+
 module wb_cas_fsm(
     input clk_i,
     input rst_i,
@@ -73,80 +84,80 @@ reg we = 0;
 
 always @ (posedge clk_i)
 begin
-	if (rst_i)
-	begin
-		state <= state_00;
-		cycle <= 0;
-		strobe <= 0;
-	end
-	else 
-		(* PARALLEL_CASE*) case (state)
-			state_00: begin
-				if ( core_cyc_i & core_stb_i & core_we_i )
-					state <= state_01;
-			end
-			state_01: begin
-				state <= state_02;
-				address <= core_dat_i;
-			end
-			state_02: begin
-				if ( core_cyc_i & core_stb_i & core_we_i )
-					state <= state_03;
-			end
-			state_03: begin
-				state <= state_04;
-				compare <= core_dat_i;
-			end
-			state_04: begin
-				if ( core_cyc_i & core_stb_i & core_we_i )
-					state <= state_05;
-			end
-			state_05: begin
-				state <= state_06;
-				value <= core_dat_i;
-			end
-			state_06: begin
-				if ( core_cyc_i & core_stb_i & ~core_we_i )
-				begin
-					state <= state_07;
-					cycle <= 1;
-					strobe <= 1;
-				end
-			end
-			state_07: begin
-				if ( bus_ack_i )
-				begin
-					strobe <= 0;
-					old_value <= bus_dat_i;
-					if ( bus_dat_i == compare )
-					begin
-						state <= state_08;
-					end
-					else
-					begin
-						state <= state_10;
-						cycle <= 0;
-					end
-				end
-			end
-			state_08: begin
-				we <= 1;
-				strobe <= 1;
-				state <= state_09;
-			end
-			state_09: begin
-				if (bus_ack_i)
-				begin
-					strobe <= 0;
-					cycle <= 0;
-					we <= 0;
-					state <= state_10;
-				end
-			end
-			state_10: begin
-				state <= state_00;				
-			end
-		endcase
+        if (rst_i)
+        begin
+                state <= state_00;
+                cycle <= 0;
+                strobe <= 0;
+        end
+        else 
+                (* PARALLEL_CASE*) case (state)
+                        state_00: begin
+                                if ( core_cyc_i & core_stb_i & core_we_i )
+                                        state <= state_01;
+                        end
+                        state_01: begin
+                                state <= state_02;
+                                address <= core_dat_i;
+                        end
+                        state_02: begin
+                                if ( core_cyc_i & core_stb_i & core_we_i )
+                                        state <= state_03;
+                        end
+                        state_03: begin
+                                state <= state_04;
+                                compare <= core_dat_i;
+                        end
+                        state_04: begin
+                                if ( core_cyc_i & core_stb_i & core_we_i )
+                                        state <= state_05;
+                        end
+                        state_05: begin
+                                state <= state_06;
+                                value <= core_dat_i;
+                        end
+                        state_06: begin
+                                if ( core_cyc_i & core_stb_i & ~core_we_i )
+                                begin
+                                        state <= state_07;
+                                        cycle <= 1;
+                                        strobe <= 1;
+                                end
+                        end
+                        state_07: begin
+                                if ( bus_ack_i )
+                                begin
+                                        strobe <= 0;
+                                        old_value <= bus_dat_i;
+                                        if ( bus_dat_i == compare )
+                                        begin
+                                                state <= state_08;
+                                        end
+                                        else
+                                        begin
+                                                state <= state_10;
+                                                cycle <= 0;
+                                        end
+                                end
+                        end
+                        state_08: begin
+                                we <= 1;
+                                strobe <= 1;
+                                state <= state_09;
+                        end
+                        state_09: begin
+                                if (bus_ack_i)
+                                begin
+                                        strobe <= 0;
+                                        cycle <= 0;
+                                        we <= 0;
+                                        state <= state_10;
+                                end
+                        end
+                        state_10: begin
+                                state <= state_00;                              
+                        end
+                endcase
 end
 
 assign core_ack_o = (state == state_01) | (state == state_03) | (state == state_05) | (state == state_10);

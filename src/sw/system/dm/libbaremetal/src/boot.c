@@ -29,12 +29,16 @@
  */
 
 #include <utils.h>
+#include <assert.h>
+
+extern char* printbuffer;
 
 // The bootcode goes to a special section (@0x1000)
 void _optimsoc_dm_boot() __attribute__ ((section(".bootload")));
 
 extern unsigned int _end;
 extern void main();
+extern const unsigned int *exception_stack;
 
 void _optimsoc_dm_boot() {
 #ifdef PAGING
@@ -60,6 +64,10 @@ void _optimsoc_dm_boot() {
 		while (REG32(0xe0201054)==0) {}
 	}
 #endif
+
+	// Set the exception stack that is used by the exception functions
+	exception_stack = (unsigned int*) ((unsigned int)malloc(4096) + 4092);
+	assert(exception_stack!=0);
 
 	main();
 }
