@@ -200,11 +200,9 @@ int main(int argc, char **argv)
 		    // Get address
 		    if (i+1 < argc)
 		      {
-			uint32_t tmp_addr_hex, hex_used = 0, tmp_addr_dec, dec_used = 0;
+			uint32_t tmp_addr_hex, hex_used = 0, tmp_addr_dec = 0;
 			if (sscanf(argv[i+1], "0x%x", &tmp_addr_hex) == 1)
 			  hex_used = 1;
-			else if (sscanf(argv[i+1], "%d", &tmp_addr_dec) == 1)
-			  dec_used = 1;
 			else
 			  {
 			    fprintf(stderr, 

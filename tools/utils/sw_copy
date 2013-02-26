@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# sw_copy <system> <application>
+
+if [ $# -lt 2 ]; then
+   echo "Usage: sw_copy <system> <application>"
+   echo "  where:"
+   echo "    <system> is either dm, pgas or sm"
+   echo "    <application> is an application, e.g. baremetal/hello_simple"
+   exit
+fi
+
+cp -r ${OPTIMSOC}/src/sw/system/$1/apps/$2 .
