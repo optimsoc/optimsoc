@@ -4,9 +4,8 @@ __DYNAMIC  =  0;
 
 MEMORY
 {
-	vectors : ORIGIN = 0, LENGTH = 0x1000
-	bootload : ORIGIN = 0x1000, LENGTH = 0x1000
-	ram     : ORIGIN = 0x2000, LENGTH = (128K - 0x2000)
+	vectors : ORIGIN = 0, LENGTH = 0x2000
+	ram     : ORIGIN = 0x2000, LENGTH = (${MEMSIZE} - 0x2000)
 }
 
 
@@ -14,8 +13,8 @@ MEMORY
  * Allocate the stack to be at the top of memory, since the stack
  * grows down.
  */
-PROVIDE (stack = 128K - 4);
-PROVIDE (_stack = 128K - 4);
+PROVIDE (stack = ${MEMSIZE} - 4);
+PROVIDE (_stack = ${MEMSIZE} - 4);
 
 SECTIONS
 {	
@@ -23,10 +22,6 @@ SECTIONS
 	{	
 		*(.vectors)
 	} > vectors
-	.bootload :
-	{
-		*(.bootload)
-	} > bootload
 	.text : {
 		_stext = .;
 		*(.text)

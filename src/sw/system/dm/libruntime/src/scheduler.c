@@ -1,5 +1,8 @@
 #include <exceptions.h>
-#include <utils.h>
+#include <or1k-support.h>
+
+#include <runtimeconfig.h>
+
 #include "list.h"
 #include "thread.h"
 #include "scheduler.h"
@@ -18,15 +21,12 @@ thread_t active_thread;
 
 extern const unsigned int runtime_config_terminate_on_empty_readyq;
 
-void exit(int i) {
-
-}
-
 void idle_thread_func() {
 	while (1) { }
 }
 
 void scheduler_tick() {
+    runtime_report_schedulertick();
 	/* save context */
 	memcpy(active_thread->ctx, exception_ctx, sizeof(struct arch_thread_ctx_t));
 
@@ -57,6 +57,8 @@ void scheduler_suspendcurrent() {
 
 void scheduler_init() {
 	_exceptions_add_handler(5,&scheduler_tick);
+
+	or1k_timer_init(optimsoc_ticks);
 
 	wait_q = list_init(0);
 	ready_q= list_init(0);
@@ -106,7 +108,8 @@ void schedule() {
 	context_set(active_thread->ctx);
 
 	/* activate timer */
-	enable_timer();
+    or1k_timer_reset();
+    or1k_timer_enable();
 }
 
 
@@ -121,7 +124,7 @@ void scheduler_thread_exit() {
 
 	if (!all_threads->head) {
 		if (runtime_config_terminate_on_empty_readyq) {
-			or32exit(0);
+			exit(0);
 		}
 	}
 

@@ -1,4 +1,4 @@
-BASE=../../..
+BASE=$(OPTIMSOC)/src/sw/system/dm
 PROGRAM=fibonacci
 
-include ../Makefile.inc
+include $(BASE)/apps/mtapi/Makefile.inc

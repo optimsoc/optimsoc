@@ -10,8 +10,6 @@
 
 #include "mtapi.h"
 #include "mtapi_optimsoc_spec.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 void fibonacciActionFunction (
 	MTAPI_IN void* args,

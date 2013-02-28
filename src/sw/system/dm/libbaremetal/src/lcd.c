@@ -1,7 +1,7 @@
 #include <mp_simple.h>
 #include <sysconfig.h>
 #include <optimsoc.h>
-#include <utils.h>
+#include <or1k-support.h>
 
 int lcd_init() {
     unsigned int buffer = 0;
@@ -18,6 +18,8 @@ int lcd_init() {
             optimsoc_mp_simple_send(1,&buffer);
         }
     }
+
+    return 0;
 }
 
 int lcd_set(unsigned int row,unsigned int col,char c) {
@@ -35,4 +37,5 @@ int lcd_set(unsigned int row,unsigned int col,char c) {
         optimsoc_mp_simple_send(1,&buffer);
     }
 
+    return 0;
 }

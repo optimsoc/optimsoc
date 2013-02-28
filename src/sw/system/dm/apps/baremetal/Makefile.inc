@@ -1,8 +1,13 @@
 
 all: $(PROGRAM).elf $(PROGRAM).dis $(PROGRAM).bin $(PROGRAM).vmem
-     
+
 $(PROGRAM).elf: $(PROGRAM).o sysconfig.o link.ld
-	or32-elf-gcc -Wall -nostartfiles -mor32-newlib -lc -lgcc $(PROGRAM).o sysconfig.o -o $@ $(BASE)/libbaremetal/crt0.o $(BASE)/libbaremetal/vectors.o $(BASE)/libbaremetal/libbaremetal.a -T link.ld -e 256
+	or32-elf-gcc -Wall -nostartfiles -nostdlib \
+	$(OPTIMSOC_NEWLIB)/lib/crt0.o \
+	$(PROGRAM).o sysconfig.o -o $@ \
+	$(BASE)/libbaremetal/libbaremetal.a \
+	-L $(OPTIMSOC_NEWLIB)/lib/ -lc -loptimsoc -lc -lgcc \
+	-T link.ld -e 256
 
 sysconfig.o: ../sysconfig.c
 	or32-elf-gcc -O0 -std=gnu99 -c -o $@ $^

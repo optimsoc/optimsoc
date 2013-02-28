@@ -1,4 +1,4 @@
-BASE=../../..
+BASE=$(OPTIMSOC)/src/sw/system/dm
 PROGRAM=threads
 
-include ../Makefile.inc
+include $(BASE)/apps/runtime/Makefile.inc

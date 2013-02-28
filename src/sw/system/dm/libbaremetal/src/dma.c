@@ -28,8 +28,8 @@
  *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
  */
 
-#include <malloc.h>
-#include "utils.h"
+#include <or1k-support.h>
+#include <stdlib.h>
 
 #include "dma.h"
 
@@ -48,6 +48,8 @@ struct dma_slot {
 };
 
 struct dma_slot *dma_slots[DMA_SLOTS];
+
+extern void arch_disable_irq_dma();
 
 void dma_init() {
   unsigned int s;

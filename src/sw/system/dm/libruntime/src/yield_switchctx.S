@@ -1,5 +1,5 @@
 #include <spr-defs.h>
-#include <macros.h>
+#include <or1k-asm-macros.h>
 
 #define PC     0x0
 #define GPR(x) (x<<2)

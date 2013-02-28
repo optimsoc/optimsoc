@@ -25,7 +25,7 @@ memsizestr=`or32-elf-objdump -s -j .rodata --start-address=$start --stop-address
 memsize=`echo "ibase=16;obase=A;$memsizestr" | bc`
 
 # Copy input
-cp ${BASE}/apps/baremetal/link.ld.in link.ld
+cp ${BASE}/apps/mtapi/link.ld.in link.ld
 
 # Replace ${MEMSIZE} with actual memory size
 sed -i "s/\${MEMSIZE}/$memsize/g" link.ld

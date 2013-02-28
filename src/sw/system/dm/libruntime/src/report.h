@@ -8,8 +8,7 @@
 #ifndef REPORT_H_
 #define REPORT_H_
 
-#include <utils.h>
-
+#include <optimsoc.h>
 
 #define OPTIMSOC_NOP_RTS_STATUS              0x200
 #define OPTIMSOC_NOP_RTS_CREATETHREAD_FNC    0x201
@@ -22,9 +21,9 @@
 #define OPTIMSOC_NOP_RTS_SCHEDULER_YIELD     0x208
 #define OPTIMSOC_NOP_RTS_SCHEDULER_SUSPEND   0x209
 #define OPTIMSOC_NOP_RTS_SCHEDULER_RESUME    0x20a
-#define OPTIMSOC_NOP_RTS_THREAD_JOINWAIT     0x20c
-#define OPTIMSOC_NOP_RTS_THREAD_EXIT         0x20d
-#define OPTIMSOC_NOP_RTS_THREAD_JOINSIGNAL   0x20e
+#define OPTIMSOC_NOP_RTS_THREAD_JOINWAIT     0x20b
+#define OPTIMSOC_NOP_RTS_THREAD_EXIT         0x20c
+#define OPTIMSOC_NOP_RTS_THREAD_JOINSIGNAL   0x20d
 
 
 static inline void runtime_report_schedulertick() {

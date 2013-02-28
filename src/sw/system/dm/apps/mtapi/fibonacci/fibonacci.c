@@ -5,174 +5,227 @@
  *      Author: ga49qez
  */
 #include "fibonacci.h"
-#include <utils.h>
+#include "utils.h"
+#include "optimsoc.h"
 
-static mtapi_action_hndl_t fibonacciAction;
+#include <stdlib.h>
+#include <stdio.h>
+
 static mtapi_task_id_t tID = 0;
+static thread_t mainThread;
 
 void fibonacciActionFunction (
-	MTAPI_IN void* args,
-	MTAPI_IN mtapi_size_t arg_size,
-	MTAPI_OUT void* result_buffer,
-	MTAPI_IN mtapi_size_t result_buffer_size,
-	MTAPI_IN void* node_local_data,
-	MTAPI_IN mtapi_size_t node_local_data_size,
-	mtapi_task_context_t* task_context)
+  MTAPI_IN void* args,
+  MTAPI_IN mtapi_size_t arg_size,
+  MTAPI_OUT void* result_buffer,
+  MTAPI_IN mtapi_size_t result_buffer_size,
+  MTAPI_IN void* node_local_data,
+  MTAPI_IN mtapi_size_t node_local_data_size,
+  mtapi_task_context_t* task_context)
 {
-	mtapi_task_hndl_t task;
-	mtapi_status_t status;
+  mtapi_job_hndl_t jobHndl;
+  mtapi_task_hndl_t taskHndl;
+  mtapi_group_hndl_t groupHndl = { MTAPI_GROUP_NONE };
+  mtapi_status_t status;
 
-	int n;
-	int* result;
-	int x, y, a, b;
+  int n;
+  int* result;
+  int x, y, a, b;
 
-	/* check argument size (1 integer) */
-	if (arg_size != sizeof(int)) {
-		printf("wrong size of arguments!\n");
-/*
- *		mtapi_context_status_set(task_context, MTAPI_ERR_ARGSIZE, &status);
- *			MTAPI_CHECK_STATUS(status);
- */
-		return;
-	}
+  /* check argument size (1 integer) */
+  if (arg_size != sizeof(int)) {
+    printf("wrong size of arguments!\n");
+    mtapi_context_status_set(task_context, MTAPI_ERR_ARG_SIZE, &status);
+    MTAPI_CHECK_STATUS("context set 1", status, MTAPI_TRUE);
+    return;
+  }
 
-	/* cast arguments to the desired type */
-	n = *(int *)args;
+  /* cast arguments to the desired type */
+  n = *(int *)args;
 
-	/* check if result buffer is of interest for the caller */
-	if (result_buffer == MTAPI_NULL) {
-/*
- *		mtapi_context_status_set(task_context, MTAPI_ERR_RESULTSIZE, &status);
- *		MTAPI_CHECK_STATUS(status);
- */
-	} else {
-		if (result_buffer_size == sizeof(int)) {
-			result = (int *)result_buffer;
-		} else {
-			printf("wrong size of result buffer\n");
-/*
- *			mtapi_context_status_set(task_context, MTAPI_ERR_RESULTSIZE,
- *				&status);
- *			MTAPI_CHECK_STATUS(status);
- */
-			return;
-		}
-	}
+  /* check if result buffer is of interest for the caller */
+  if (result_buffer == MTAPI_NULL) {
+    mtapi_context_status_set(task_context, MTAPI_ERR_RESULT_SIZE, &status);
+    MTAPI_CHECK_STATUS("context set 2", status, MTAPI_TRUE);
+  } else {
+    if (result_buffer_size == sizeof(int)) {
+      result = (int *)result_buffer;
+    } else {
+      printf("wrong size of result buffer\n");
+      mtapi_context_status_set(task_context, MTAPI_ERR_RESULT_SIZE, &status);
+      MTAPI_CHECK_STATUS("context set 3", status, MTAPI_TRUE);
+      return;
+    }
+  }
 
-	/* calculate */
-	if (n < 2)
-		*result = n;
-	else {
+  /* calculate */
+  if (n < 2)
+    *result = n;
+  else {
 
-		/* first recursive call spawned as task (x = fib(n-1);) */
-		a = n - 1;
-		/* start task */
-		OPTIMSOC_REPORT(0x801,a);
-		task = mtapi_task_start (
-			tID++,					/* Optional task id */
-			&fibonacciAction,					/* Action handles */
-			1,									/* Number of action handles */
-			(void *)&a,							/* Arguments */
-			sizeof(int),						/* Size of arguments */
-			(void *)&x,							/* Result buffer */
-			sizeof(int),						/* Size of result buffer */
-			MTAPI_DEFAULT_TASK_ATTRIBUTES,		/* Task attributes */
-			MTAPI_GROUP_NONE,					/* Optional Task group */
-			&status
-			);
-		MTAPI_CHECK_STATUS ("task start", status, MTAPI_TRUE);
-		OPTIMSOC_REPORT(0x802,a);
+    jobHndl = mtapi_job_get(
+        FIBONACCI_ACTION_01,            /* Job id */
+        0,                              /* Domain id */
+        &status
+        );
+    MTAPI_CHECK_STATUS ("job get", status, MTAPI_TRUE);
 
-		/* second recursive call can be called directly (y = fib(n-2);) */
-		b = n - 2;
-		fibonacciActionFunction (&b, sizeof(int), &y, sizeof(int),
-								 MTAPI_NULL, 0, task_context);
+    /* first recursive call spawned as taskHndl (x = fib(n-1);) */
+    a = n - 1;
+    /* start taskHndl */
+    taskHndl = mtapi_task_start (
+      tID++,                        /* Optional taskHndl id */
+      jobHndl,                      /* Action handles */
+      (void *)&a,                   /* Arguments */
+      sizeof(int),                  /* Size of arguments */
+      (void *)&x,                   /* Result buffer */
+      sizeof(int),                  /* Size of result buffer */
+      MTAPI_DEFAULT_TASK_ATTRIBUTES,/* Task attributes */
+      groupHndl,                    /* Optional Task group */
+      &status
+      );
+    MTAPI_CHECK_STATUS ("taskHndl start", status, MTAPI_TRUE);
 
-		/* wait for results */
-		mtapiRT_TaskInfo_t* taskInfo  = (mtapiRT_TaskInfo_t*) task->task_descriptor;
-		OPTIMSOC_REPORT(0x701,task_context->task_id);
-		OPTIMSOC_REPORT(0x702,taskInfo->context->task_id);
-		mtapi_task_wait (task, MTAPI_INFINITE, &status);
-		MTAPI_CHECK_STATUS ("task wait", status, MTAPI_TRUE);
+    /* second recursive call can be called directly (y = fib(n-2);) */
+    b = n - 2;
+    fibonacciActionFunction (&b, sizeof(int), &y, sizeof(int),
+                 MTAPI_NULL, 0, task_context);
 
-		*result = x + y;
-	}
+    /* wait for results */
+    mtapi_task_wait (taskHndl, MTAPI_INFINITE, &status);
+    MTAPI_CHECK_STATUS ("taskHndl wait1", status, MTAPI_TRUE);
+
+    *result = x + y;
+  }
 }
 
 int fibonacci ( int n,
-				int domain_id,
-				int node_id ) {
-	mtapi_task_hndl_t task;
-	mtapi_status_t status;
+        int domain_id,
+        int node_id ) {
+  mtapi_action_hndl_t actionHndl;
+  mtapi_task_hndl_t taskHndl;
+  mtapi_job_hndl_t jobHndl;
+  mtapi_group_hndl_t groupHndl = { MTAPI_GROUP_NONE };
+  mtapi_status_t status;
 
-	int result;
+  int result;
 
-	/* create fibonacci action */
-	fibonacciAction = mtapi_action_create (
-		FIBONACCI_ACTION_01,				/* Action id */
-		(fibonacciActionFunction),			/* Action function */
-		MTAPI_NULL,							/* No shared data */
-		0,									/* Length of shared data */
-		MTAPI_DEFAULT_ACTION_ATTRIBUTES,	/* Action attributes */
-		&status
-		);
-	MTAPI_CHECK_STATUS ("action create", status, MTAPI_TRUE);
+  /* create fibonacci action */
+  actionHndl = mtapi_action_create (
+    FIBONACCI_ACTION_01,              /* Job id */
+    (fibonacciActionFunction),        /* Action function */
+    MTAPI_NULL,                       /* No shared data */
+    0,                                /* Length of shared data */
+    MTAPI_DEFAULT_ACTION_ATTRIBUTES,  /* Action attributes */
+    &status
+    );
+  MTAPI_CHECK_STATUS ("action create", status, MTAPI_TRUE);
 
-	/* start task */
-	task = mtapi_task_start (
-		tID++,								/* Optional task id */
-		&fibonacciAction,					/* Action handles */
-		1,									/* Number of action handles */
-		(void *)&n,							/* Arguments */
-		sizeof(int),						/* Size of arguments */
-		(void *)&result,					/* Result buffer */
-		sizeof(int),						/* Size of result buffer */
-		MTAPI_DEFAULT_TASK_ATTRIBUTES,		/* Task attributes */
-		MTAPI_GROUP_NONE,					/* Optional Task group */
-		&status
-		);
-	MTAPI_CHECK_STATUS ("task start", status, MTAPI_TRUE);
+  jobHndl = mtapi_job_get(
+      FIBONACCI_ACTION_01,            /* Job id */
+      domain_id,                      /* Domain id */
+      &status
+      );
+  MTAPI_CHECK_STATUS ("job get", status, MTAPI_TRUE);
 
-	/* wait for completion */
-	mtapi_task_wait (task, MTAPI_INFINITE, &status);
-	MTAPI_CHECK_STATUS ("task wait", status, MTAPI_TRUE);
+  /* start taskHndl */
+  taskHndl = mtapi_task_start (
+    tID++,                            /* Optional taskHndl id */
+    jobHndl,                          /* Job handle */
+    (void *)&n,                       /* Arguments */
+    sizeof(int),                      /* Size of arguments */
+    (void *)&result,                  /* Result buffer */
+    sizeof(int),                      /* Size of result buffer */
+    MTAPI_DEFAULT_TASK_ATTRIBUTES,    /* Task attributes */
+    groupHndl,                        /* Optional Task group */
+    &status
+    );
+  MTAPI_CHECK_STATUS ("taskHndl start", status, MTAPI_TRUE);
 
-	return result;
+  /* wait for completion */
+  mtapi_task_wait (taskHndl, MTAPI_INFINITE, &status);
+  MTAPI_CHECK_STATUS ("taskHndl wait2", status, MTAPI_TRUE);
+
+  return result;
+}
+
+void wakeUpFunction (
+  MTAPI_IN void* args,
+  MTAPI_IN mtapi_size_t arg_size,
+  MTAPI_OUT void* result_buffer,
+  MTAPI_IN mtapi_size_t result_buffer_size,
+  MTAPI_IN void* node_local_data,
+  MTAPI_IN mtapi_size_t node_local_data_size,
+  mtapi_task_context_t* task_context)
+{
+  thread_resume(mainThread);
+}
+
+void fibonacci_helper_1 ( ) {
+  mtapi_task_hndl_t task;
+  mtapi_status_t status;
+
+  /* create fibonacci action */
+  mtapi_action_create (
+    FIBONACCI_ACTION_02,              /* Action id */
+    (fibonacciActionFunction),        /* Action function */
+    MTAPI_NULL,                       /* No shared data */
+    0,                                /* Length of shared data */
+    MTAPI_DEFAULT_ACTION_ATTRIBUTES,  /* Action attributes */
+    &status
+    );
+  MTAPI_CHECK_STATUS ("action create", status, MTAPI_TRUE);
+
+  /* create wake up function */
+  mtapi_action_create (
+    WAKE_UP_FUNCTION,                 /* Action id */
+    (wakeUpFunction),                 /* Action function */
+    MTAPI_NULL,                       /* No shared data */
+    0,                                /* Length of shared data */
+    MTAPI_DEFAULT_ACTION_ATTRIBUTES,  /* Action attributes */
+    &status
+    );
+  MTAPI_CHECK_STATUS ("action create", status, MTAPI_TRUE);
+
+  thread_suspend();
 }
 
 
 void init() {
 
-	mtapi_info_t info;
-	mtapi_status_t status;
-	int result, n, domain, node;
+  mtapi_info_t info;
+  mtapi_status_t status;
+  int result, n, domain, node;
+  mtapi_action_hndl_t action;
+  mtapi_task_hndl_t task;
 
-	/* check arguments */
-	/*if (argc != 3) {
-		printf ("Wrong number of arguments (should be 3 ints)!\n");
-		return -1;
-	}
-	n = atoi (&argv[0]);
-	domain = atoi(&argv[1]);
-	node = atoi(&argv[2]);*/
-	n = 10;
-	domain = 1;
-	node = 1;
+  n = 3;
+  domain = optimsoc_get_tileid();
+  node = optimsoc_get_tileid();
 
-	/* initialize MTAPI */
-	mtapi_initialize (
-		domain,							/* Domain id */
-		node,							/* Node id */
-		MTAPI_DEFAULT_NODE_ATTRIBUTES,	/* Node attributes */
-		&info,							/* MTAPI info */
-		&status							/* MTAPI status */
-		);
-	MTAPI_CHECK_STATUS("mtapi init", status, MTAPI_TRUE);
+  mainThread = thread_self();
 
-	result = fibonacci (n, domain, node);
+  /* initialize MTAPI */
+  mtapi_initialize (
+    domain,                           /* Domain id */
+    node,                             /* Node id */
+    MTAPI_DEFAULT_NODE_ATTRIBUTES,    /* Node attributes */
+    &info,                            /* MTAPI info */
+    &status                           /* MTAPI status */
+    );
+  MTAPI_CHECK_STATUS("mtapi init", status, MTAPI_TRUE);
 
-	OPTIMSOC_REPORT(0x777,result);
+  if (node == 0)   {
+    result = fibonacci(n, domain, node);
+    OPTIMSOC_REPORT(0x777,result);
+  }
+  else  {
+    fibonacci_helper_1();
+  }
 
-	/* print result */
-	printf ("result: %i\n", result);
+  mtapi_finalize( &status );
+  MTAPI_CHECK_STATUS("mtapi finalize", status, MTAPI_TRUE);
+
+  /* print result */
+  printf ("result: %i\n", result);
 }

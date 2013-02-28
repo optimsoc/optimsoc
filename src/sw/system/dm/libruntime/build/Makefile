@@ -1,4 +1,4 @@
-OR32_CFLAGS = $(CFLAGS) -std=gnu99 -O2 -Wall -I ../src -I ../../libbaremetal/include
+OR32_CFLAGS = $(CFLAGS) -std=gnu99 -O2 -Wall -I ../include -I ../src -I ../../libbaremetal/include -I $(OPTIMSOC_NEWLIB)/include
 	
 all: ../libruntime.a
 
@@ -7,10 +7,7 @@ DEPFILE=.depend
 OBJECTS_C=scheduler.o  \
           runtime.o    \
           list.o       \
-          thread.o     \
-          libc/malloc_lock.o \
-          libc/malloc.o \
-          libc/mallocr.o 
+          thread.o
                               
 OBJECTS_ASM=ctx_replace.o \
             yield_switchctx.o
@@ -22,7 +19,7 @@ SRCS_LIBC=$(OBJECTS_LIBC:%.o=../src/libc/%.c)
 SRCS_ASM=$(OBJECTS_ASM:%.o=../src/%.S)
 
 dep:
-	or32-elf-gcc -I ../src -MM $(SRCS_C) $(SRCS_ASM) > $(DEPFILE)
+	or32-elf-gcc -I ../src -I $(OPTIMSOC_NEWLIB)/include -MM $(SRCS_C) $(SRCS_ASM) > $(DEPFILE)
 
 ../libruntime.a: $(OBJECTS)
 	or32-elf-ar cru $@ $^

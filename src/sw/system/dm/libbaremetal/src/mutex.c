@@ -8,7 +8,7 @@
 #include "mutex.h"
 #include "cas.h"
 
-#include "utils.h"
+#include <or1k-support.h>
 
 void mutex_init(mutex_t *lock) {
   lock->lock = 0;

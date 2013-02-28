@@ -28,15 +28,17 @@
  *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
  */
 
-#include "int.h"
-#include "utils.h"
+#include <int.h>
+#include <or1k-support.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <sysconfig.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <mp_simple.h>
 #include <optimsoc.h>
+
+#include <stdlib.h>
 
 // Local buffer for the simple message passing
 unsigned int* optimsoc_mp_simple_buffer;
@@ -45,69 +47,74 @@ unsigned int* optimsoc_mp_simple_buffer;
 void (*cls_handlers[OPTIMSOC_CLASS_NUM])(unsigned int*,int);
 
 void optimsoc_mp_simple_init() {
-	// Register interrupt
-	int_add(3,&optimsoc_mp_simple_inth,0);
-	int_enable(3);
+    // Register interrupt
+    int_add(3,&optimsoc_mp_simple_inth,0);
+    int_enable(3);
 
-	// Reset class handler
-	for (int i=0;i<OPTIMSOC_CLASS_NUM;i++) {
-		cls_handlers[i] = 0;
-	}
+    // Reset class handler
+    for (int i=0;i<OPTIMSOC_CLASS_NUM;i++) {
+        cls_handlers[i] = 0;
+    }
 
-	// Allocate buffer
-	optimsoc_mp_simple_buffer = malloc(optimsoc_noc_maxpacketsize*4);
+    // Allocate buffer
+    optimsoc_mp_simple_buffer = malloc(optimsoc_noc_maxpacketsize*4);
 }
 
 void optimsoc_mp_simple_addhandler(unsigned int class,
-		void (*hnd)(unsigned int*,int)) {
-	cls_handlers[class] = hnd;
+        void (*hnd)(unsigned int*,int)) {
+    cls_handlers[class] = hnd;
 }
 
 void optimsoc_mp_simple_inth(void* arg) {
-	// Store message in buffer
-	// Get size
-	int size = REG32(OPTIMSOC_MPSIMPLE_RECV);
+    while (1) {
+        // Store message in buffer
+        // Get size
+        int size = REG32(OPTIMSOC_MPSIMPLE_RECV);
 
-	// Abort and drop if message cannot be stored
-	if (optimsoc_noc_maxpacketsize<size) {
-		printf("FATAL: not sufficent buffer space. Drop packet\n");
-		for (int i=0;i<size;i++) {
-			REG32(OPTIMSOC_MPSIMPLE_RECV);
-		}
-	} else {
-		for (int i=0;i<size;i++) {
-			optimsoc_mp_simple_buffer[i] = REG32(OPTIMSOC_MPSIMPLE_RECV);
-		}
-	}
+        if (size==0) {
+            // There are no further messages in the buffer
+            break;
+        } else if (optimsoc_noc_maxpacketsize<size) {
+            // Abort and drop if message cannot be stored
+            printf("FATAL: not sufficent buffer space. Drop packet\n");
+            for (int i=0;i<size;i++) {
+                REG32(OPTIMSOC_MPSIMPLE_RECV);
+            }
+        } else {
+            for (int i=0;i<size;i++) {
+                optimsoc_mp_simple_buffer[i] = REG32(OPTIMSOC_MPSIMPLE_RECV);
+            }
+        }
 
-	// Extract class
-	int class = (optimsoc_mp_simple_buffer[0] >> OPTIMSOC_CLASS_LSB) // Shift to position
-    		& ((1<<(OPTIMSOC_CLASS_MSB-OPTIMSOC_CLASS_LSB+1))-1); // and mask other remain
+        // Extract class
+        int class = (optimsoc_mp_simple_buffer[0] >> OPTIMSOC_CLASS_LSB) // Shift to position
+    		                & ((1<<(OPTIMSOC_CLASS_MSB-OPTIMSOC_CLASS_LSB+1))-1); // and mask other remain
 
-	// Call respective class handler
-	if (cls_handlers[class] == 0) {
-		// No handler registered, packet gets lost
-		//printf("Packet of unknown class (%d) received. Drop.\n",class);
-		return;
-	}
+        // Call respective class handler
+        if (cls_handlers[class] == 0) {
+            // No handler registered, packet gets lost
+            //printf("Packet of unknown class (%d) received. Drop.\n",class);
+            continue;
+        }
 
-	cls_handlers[class](optimsoc_mp_simple_buffer,size);
+        cls_handlers[class](optimsoc_mp_simple_buffer,size);
+    }
 }
 
 void optimsoc_mp_simple_send(unsigned int size,unsigned int *buf) {
-	REG32(OPTIMSOC_MPSIMPLE_SEND) = size;
-	for (int i=0;i<size;i++) {
-		REG32(OPTIMSOC_MPSIMPLE_SEND) = buf[i];
-	}
+    REG32(OPTIMSOC_MPSIMPLE_SEND) = size;
+    for (int i=0;i<size;i++) {
+        REG32(OPTIMSOC_MPSIMPLE_SEND) = buf[i];
+    }
 }
 
 void optimsoc_send_alive_message() {
-	if (optimsoc_has_hostlink) {
-		unsigned int buffer;
-		buffer = (optimsoc_hostlink << OPTIMSOC_DEST_LSB) |
-				(1 << OPTIMSOC_CLASS_LSB) |
-				(optimsoc_get_tileid() << OPTIMSOC_SRC_LSB);
-	}
+    if (optimsoc_has_hostlink) {
+        unsigned int buffer;
+        buffer = (optimsoc_hostlink << OPTIMSOC_DEST_LSB) |
+                (1 << OPTIMSOC_CLASS_LSB) |
+                (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB);
+    }
 }
 
 void uart_printf(const char *fmt, ...) {

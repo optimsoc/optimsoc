@@ -28,8 +28,8 @@
  *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
  */
 
-#include "spr-defs.h"
-#include "utils.h"
+#include <spr-defs.h>
+#include <or1k-support.h>
 
 unsigned int cas(unsigned int address,unsigned int compare,unsigned int value) {
 	// disable interrupts
