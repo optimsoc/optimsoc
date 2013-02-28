@@ -52,19 +52,19 @@
 `include "or1200_defines.v"
 
 module or1200_genpc(
-	// Clock and reset
-	clk, rst,
+        // Clock and reset
+        clk, rst,
 
-	// External i/f to IC
-	icpu_adr_o, icpu_cycstb_o, icpu_sel_o, icpu_tag_o,
-	icpu_rty_i, icpu_adr_i,
+        // External i/f to IC
+        icpu_adr_o, icpu_cycstb_o, icpu_sel_o, icpu_tag_o,
+        icpu_rty_i, icpu_adr_i,
 
-	// Internal i/f
-	pre_branch_op, branch_op, except_type, except_prefix,
-	id_branch_addrtarget, ex_branch_addrtarget, muxed_b, operand_b, 
-	flag, flagforw, ex_branch_taken, except_start,
-	epcr, spr_dat_i, spr_pc_we, genpc_refetch,
-	genpc_freeze, no_more_dslot, lsu_stall
+        // Internal i/f
+        pre_branch_op, branch_op, except_type, except_prefix,
+        id_branch_addrtarget, ex_branch_addrtarget, muxed_b, operand_b, 
+        flag, flagforw, ex_branch_taken, except_start,
+        epcr, spr_dat_i, spr_pc_we, genpc_refetch,
+        genpc_freeze, no_more_dslot, lsu_stall
 );
 
 //
@@ -74,61 +74,61 @@ module or1200_genpc(
 //
 // Clock and reset
 //
-input				clk;
-input				rst;
+input                           clk;
+input                           rst;
 
 //
 // External i/f to IC
 //
-output	[31:0]			icpu_adr_o;
-output				icpu_cycstb_o;
-output	[3:0]			icpu_sel_o;
-output	[3:0]			icpu_tag_o;
-input				icpu_rty_i;
-input	[31:0]			icpu_adr_i;
+output  [31:0]                  icpu_adr_o;
+output                          icpu_cycstb_o;
+output  [3:0]                   icpu_sel_o;
+output  [3:0]                   icpu_tag_o;
+input                           icpu_rty_i;
+input   [31:0]                  icpu_adr_i;
 
 //
 // Internal i/f
 //
 input   [`OR1200_BRANCHOP_WIDTH-1:0]    pre_branch_op;
-input	[`OR1200_BRANCHOP_WIDTH-1:0]	branch_op;
-input	[`OR1200_EXCEPT_WIDTH-1:0]	except_type;
-input					except_prefix;
-input	[31:2]			id_branch_addrtarget;
-input	[31:2]			ex_branch_addrtarget;
-input	[31:0]			muxed_b;
-input	[31:0]			operand_b;
-input				flag;
-input				flagforw;
-output				ex_branch_taken;
-input				except_start;
-input	[31:0]			epcr;
-input	[31:0]			spr_dat_i;
-input				spr_pc_we;
-input				genpc_refetch;
-input				genpc_freeze;
-input				no_more_dslot;
-input				lsu_stall;
+input   [`OR1200_BRANCHOP_WIDTH-1:0]    branch_op;
+input   [`OR1200_EXCEPT_WIDTH-1:0]      except_type;
+input                                   except_prefix;
+input   [31:2]                  id_branch_addrtarget;
+input   [31:2]                  ex_branch_addrtarget;
+input   [31:0]                  muxed_b;
+input   [31:0]                  operand_b;
+input                           flag;
+input                           flagforw;
+output                          ex_branch_taken;
+input                           except_start;
+input   [31:0]                  epcr;
+input   [31:0]                  spr_dat_i;
+input                           spr_pc_we;
+input                           genpc_refetch;
+input                           genpc_freeze;
+input                           no_more_dslot;
+input                           lsu_stall;
 
 parameter boot_adr = `OR1200_BOOT_ADR;
 //
 // Internal wires and regs
 //
-reg	[31:2]			pcreg_default;
-reg				pcreg_select;
-reg	[31:2]			pcreg;
-reg	[31:0]			pc;
+reg     [31:2]                  pcreg_default;
+reg                             pcreg_select;
+reg     [31:2]                  pcreg;
+reg     [31:0]                  pc;
 // Set in event of jump or taken branch   
-reg				ex_branch_taken;
-reg				genpc_refetch_r;
-reg				wait_lsu;
+reg                             ex_branch_taken;
+reg                             genpc_refetch_r;
+reg                             wait_lsu;
 
    //
    // Address of insn to be fecthed
    //
    assign icpu_adr_o = !no_more_dslot & !except_start & !spr_pc_we 
-		       & (icpu_rty_i | genpc_refetch) ? 
-		       icpu_adr_i : {pc[31:2], 1'b0, ex_branch_taken|spr_pc_we};
+                       & (icpu_rty_i | genpc_refetch) ? 
+                       icpu_adr_i : {pc[31:2], 1'b0, ex_branch_taken|spr_pc_we};
 
    //
    // Control access to IC subsystem
@@ -164,105 +164,105 @@ reg				wait_lsu;
    // IC.
    //
    always @(pcreg or ex_branch_addrtarget or flag or branch_op or except_type
-	    or except_start or operand_b or epcr or spr_pc_we or spr_dat_i or 
-	    except_prefix) 
+            or except_start or operand_b or epcr or spr_pc_we or spr_dat_i or 
+            except_prefix) 
      begin
-	casez ({spr_pc_we, except_start, branch_op}) // synopsys parallel_case
-	  {2'b00, `OR1200_BRANCHOP_NOP}: begin
-	     pc = {pcreg + 30'd1, 2'b0};
-	     ex_branch_taken = 1'b0;
-	  end
-	  {2'b00, `OR1200_BRANCHOP_J}: begin
+        casez ({spr_pc_we, except_start, branch_op}) // synopsys parallel_case
+          {2'b00, `OR1200_BRANCHOP_NOP}: begin
+             pc = {pcreg + 30'd1, 2'b0};
+             ex_branch_taken = 1'b0;
+          end
+          {2'b00, `OR1200_BRANCHOP_J}: begin
 `ifdef OR1200_VERBOSE
-	     // synopsys translate_off
-	     $display("%t: BRANCHOP_J: pc <= ex_branch_addrtarget %h"
-		      , $time, ex_branch_addrtarget);
-	     // synopsys translate_on
+             // synopsys translate_off
+             $display("%t: BRANCHOP_J: pc <= ex_branch_addrtarget %h"
+                      , $time, ex_branch_addrtarget);
+             // synopsys translate_on
 `endif
-	     pc = {ex_branch_addrtarget, 2'b00};
-	     ex_branch_taken = 1'b1;
-	  end
-	  {2'b00, `OR1200_BRANCHOP_JR}: begin
+             pc = {ex_branch_addrtarget, 2'b00};
+             ex_branch_taken = 1'b1;
+          end
+          {2'b00, `OR1200_BRANCHOP_JR}: begin
 `ifdef OR1200_VERBOSE
-	     // synopsys translate_off
-	     $display("%t: BRANCHOP_JR: pc <= operand_b %h", 
-		      $time, operand_b);
-	     // synopsys translate_on
+             // synopsys translate_off
+             $display("%t: BRANCHOP_JR: pc <= operand_b %h", 
+                      $time, operand_b);
+             // synopsys translate_on
 `endif
-	     pc = operand_b;
-	     ex_branch_taken = 1'b1;
-	  end
-	  {2'b00, `OR1200_BRANCHOP_BF}:
-	    if (flag) begin
+             pc = operand_b;
+             ex_branch_taken = 1'b1;
+          end
+          {2'b00, `OR1200_BRANCHOP_BF}:
+            if (flag) begin
 `ifdef OR1200_VERBOSE
-	       // synopsys translate_off
-	       $display("%t: BRANCHOP_BF: pc <= ex_branch_addrtarget %h", 
-			$time, ex_branch_addrtarget);
-	       // synopsys translate_on
+               // synopsys translate_off
+               $display("%t: BRANCHOP_BF: pc <= ex_branch_addrtarget %h", 
+                        $time, ex_branch_addrtarget);
+               // synopsys translate_on
 `endif
-	       pc = {ex_branch_addrtarget, 2'b00};
-	       ex_branch_taken = 1'b1;
-	    end
-	    else begin
+               pc = {ex_branch_addrtarget, 2'b00};
+               ex_branch_taken = 1'b1;
+            end
+            else begin
 `ifdef OR1200_VERBOSE
-	       // synopsys translate_off
-	       $display("%t: BRANCHOP_BF: not taken", $time);
-	       // synopsys translate_on
+               // synopsys translate_off
+               $display("%t: BRANCHOP_BF: not taken", $time);
+               // synopsys translate_on
 `endif
-	       pc = {pcreg + 30'd1, 2'b0};
-	       ex_branch_taken = 1'b0;
-	    end
-	  {2'b00, `OR1200_BRANCHOP_BNF}:
-	    if (flag) begin
+               pc = {pcreg + 30'd1, 2'b0};
+               ex_branch_taken = 1'b0;
+            end
+          {2'b00, `OR1200_BRANCHOP_BNF}:
+            if (flag) begin
 `ifdef OR1200_VERBOSE
-	       // synopsys translate_off
-	       $display("%t: BRANCHOP_BNF: not taken", $time);
-	       // synopsys translate_on
+               // synopsys translate_off
+               $display("%t: BRANCHOP_BNF: not taken", $time);
+               // synopsys translate_on
 `endif
-	       pc = {pcreg + 30'd1, 2'b0};
-	       ex_branch_taken = 1'b0;
-	    end
-	    else begin
+               pc = {pcreg + 30'd1, 2'b0};
+               ex_branch_taken = 1'b0;
+            end
+            else begin
 `ifdef OR1200_VERBOSE
-	       // synopsys translate_off
-	       $display("%t: BRANCHOP_BNF: pc <= ex_branch_addrtarget %h", 
-			$time, ex_branch_addrtarget);
-	       // synopsys translate_on
+               // synopsys translate_off
+               $display("%t: BRANCHOP_BNF: pc <= ex_branch_addrtarget %h", 
+                        $time, ex_branch_addrtarget);
+               // synopsys translate_on
 `endif
-	       pc = {ex_branch_addrtarget, 2'b00};
-	       ex_branch_taken = 1'b1;
-	    end
-	  {2'b00, `OR1200_BRANCHOP_RFE}: begin
+               pc = {ex_branch_addrtarget, 2'b00};
+               ex_branch_taken = 1'b1;
+            end
+          {2'b00, `OR1200_BRANCHOP_RFE}: begin
 `ifdef OR1200_VERBOSE
-	     // synopsys translate_off
-	     $display("%t: BRANCHOP_RFE: pc <= epcr %h", 
-		      $time, epcr);
-	     // synopsys translate_on
+             // synopsys translate_off
+             $display("%t: BRANCHOP_RFE: pc <= epcr %h", 
+                      $time, epcr);
+             // synopsys translate_on
 `endif
-	     pc = epcr;
-	     ex_branch_taken = 1'b1;
-	  end
-	  {2'b01, 3'b???}: begin
+             pc = epcr;
+             ex_branch_taken = 1'b1;
+          end
+          {2'b01, 3'b???}: begin
 `ifdef OR1200_VERBOSE
-	     // synopsys translate_off
-	     $display("Starting exception: %h.", except_type);
-	     // synopsys translate_on
+             // synopsys translate_off
+             $display("Starting exception: %h.", except_type);
+             // synopsys translate_on
 `endif
-	     pc = {(except_prefix ? 
-		    `OR1200_EXCEPT_EPH1_P : `OR1200_EXCEPT_EPH0_P), 
-		   except_type, `OR1200_EXCEPT_V};
-	     ex_branch_taken = 1'b1;
-	  end
-	  default: begin
+             pc = {(except_prefix ? 
+                    `OR1200_EXCEPT_EPH1_P : `OR1200_EXCEPT_EPH0_P), 
+                   except_type, `OR1200_EXCEPT_V};
+             ex_branch_taken = 1'b1;
+          end
+          default: begin
 `ifdef OR1200_VERBOSE
-	     // synopsys translate_off
-	     $display("l.mtspr writing into PC: %h.", spr_dat_i);
-	     // synopsys translate_on
+             // synopsys translate_off
+             $display("l.mtspr writing into PC: %h.", spr_dat_i);
+             // synopsys translate_on
 `endif
-	     pc = spr_dat_i;
-	     ex_branch_taken = 1'b0;
-	  end
-	endcase
+             pc = spr_dat_i;
+             ex_branch_taken = 1'b0;
+          end
+        endcase
      end
 
    // select async. value for pcreg after reset - PC jumps to the address selected
@@ -275,22 +275,22 @@ reg				wait_lsu;
    always @(posedge clk or `OR1200_RST_EVENT rst)
      // default value 
      if (rst == `OR1200_RST_VALUE) begin
-	pcreg_default <=  (boot_adr >>2) - 4;
-	pcreg_select <=  1'b1;// select async. value due to reset state
+        pcreg_default <= boot_adr[31:2] - 4;
+        pcreg_select <=  1'b1;// select async. value due to reset state
      end
    // selected value (different from default) is written into FF after
    // reset state
      else if (pcreg_select) begin
-	// dynamic value can only be assigned to FF out of reset! 
-	pcreg_default <=  pcreg_boot[31:2];	
-	pcreg_select <=  1'b0;		// select FF value 
+        // dynamic value can only be assigned to FF out of reset! 
+        pcreg_default <=  pcreg_boot[31:2];     
+        pcreg_select <=  1'b0;          // select FF value 
      end
      else if (spr_pc_we) begin
-	pcreg_default <=  spr_dat_i[31:2];
+        pcreg_default <=  spr_dat_i[31:2];
      end
      else if (no_more_dslot | except_start | !genpc_freeze & !icpu_rty_i 
-	      & !genpc_refetch) begin
-	pcreg_default <=  pc[31:2];
+              & !genpc_refetch) begin
+        pcreg_default <=  pc[31:2];
      end
 
    always @(pcreg_boot or pcreg_default or pcreg_select)

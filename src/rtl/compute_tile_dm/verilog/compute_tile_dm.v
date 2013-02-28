@@ -260,7 +260,7 @@ module compute_tile_dm(/*AUTOARG*/
     .wb_\(.*\) (bussl_\1[0][]),
     ); */
    ct_ram
-      #(.aw(18),
+      #(.aw($clog2(mem_size)),
         .dw(32),
         .mem_size(mem_size),
         .memory_file(mem_file))
@@ -271,7 +271,7 @@ module compute_tile_dm(/*AUTOARG*/
             .wb_rty_o                   (bussl_rty_o[0]),        // Templated
             .wb_dat_o                   (bussl_dat_o[0][31:0]),  // Templated
             // Inputs
-            .wb_adr_i                   (bussl_adr_i[0][17:0]),  // Templated
+            .wb_adr_i                   (bussl_adr_i[0][($clog2(mem_size))-1:0]), // Templated
             .wb_bte_i                   (bussl_bte_i[0][1:0]),   // Templated
             .wb_cti_i                   (bussl_cti_i[0][2:0]),   // Templated
             .wb_cyc_i                   (bussl_cyc_i[0]),        // Templated

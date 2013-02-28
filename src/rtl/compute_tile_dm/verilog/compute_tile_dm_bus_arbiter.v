@@ -103,7 +103,9 @@ module compute_tile_dm_bus_arbiter(clk, rst, req, gnt);
         if(req[1]) next_state = grant1;
              
             end
-
+          default: begin
+             
+          end
         endcase
    end
 

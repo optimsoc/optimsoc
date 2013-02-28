@@ -195,6 +195,15 @@ reg	[dw-1:0]		do_b;
       set_gpr = 0;
       
    endfunction // set_gpr
+
+   wire [31:0] 			mem_array [0:31]  /* verilator public */;
+
+   always @(*) begin
+      integer i;
+      for (i=0;i<31;i=i+1) begin
+	 mem_array[i] = mem[(i+1)*32-1:i*32];
+      end
+   end
 `endif //  `ifdef verilator
    
 //

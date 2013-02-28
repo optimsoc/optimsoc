@@ -87,7 +87,7 @@ module trace_monitor(/*AUTOARG*/
                count++;
             end else begin
                if (count>0) begin
-                  $fwrite(tracefile,"[%0t] %0d, %08x",$time,count,wb_pc);
+                  $fwrite(tracefile,"[%0t] %0d, %08x\n",$time,count,wb_pc);
                   $fflush(tracefile);
                   count <= 0;
                end

@@ -104,7 +104,18 @@ module ct_ram(/*AUTOARG*/
           .adr_i                        (adr[aw-3:0]),           // Templated
           .we_i                         (wb_we_i & wb_ack_o),    // Templated
           .dat_i                        (wb_dat_i[31:0]));        // Templated
-
+`elsif OPTIMSOC_CTRAM_PLAINBETTER
+   bram_infer
+     #(.dw(dw),.aw(aw),.mem_size(mem_size))
+   memory(/*AUTOINST*/
+          // Outputs
+          .dat_o                        (wb_dat_o[31:0]),        // Templated
+          // Inputs
+          .clk_i                        (wb_clk_i),              // Templated
+          .sel_i                        (wb_sel_i[3:0]),         // Templated
+          .adr_i                        (adr[aw-3:0]),           // Templated
+          .we_i                         (wb_we_i & wb_ack_o),    // Templated
+          .dat_i                        (wb_dat_i[31:0]));        // Templated
 `elsif OPTIMSOC_CTRAM_XILINXBRAM
    /* ct_ram_xilinxbram_virtex5 AUTO_TEMPLATE(
     .clk_i (wb_clk_i),

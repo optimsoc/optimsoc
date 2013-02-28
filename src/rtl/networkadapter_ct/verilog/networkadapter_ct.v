@@ -209,7 +209,7 @@ module networkadapter_ct(/*AUTOARG*/
     ); */
    
    lisnoc_mp_simple_wb
-     #(.noc_data_width(32),.noc_type_width(2),.size_width(4))
+     #(.noc_data_width(32),.noc_type_width(2),.fifo_depth(16))
    u_mp_simple(/*AUTOINST*/
                // Outputs
                .noc_out_flit            (mod_out_flit[vc_mp_simple][noc_flit_width-1:0]), // Templated

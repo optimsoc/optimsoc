@@ -1,0 +1,79 @@
+<module name="compute_tile_dm" implements="tile_dm">
+ <parameter name="num_cores" default="1" type="integer" />
+ <parameter name="mem_size" default="32768" type="integer" />
+ <parameter name="id" default="0" type="string"/>
+
+ <template name="compute_tile_dm.vt" output="compute_tile_dm.v" />
+ <file name="${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm.v" />
+ <file name="${OPTIMSOC_RTL}/or1200_module/verilog/or1200_module.v" />
+ <file name="${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm.v" />
+ <file name="${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm_bus.v" />
+ <file name="${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm_bus_arbiter.v" />
+ <file name="${OPTIMSOC_RTL}/ct_ram/verilog/ct_ram.v" />
+ <file name="${OPTIMSOC_RTL}/ct_ram/verilog/ct_ram_plain.v" />
+ <file name="${OPTIMSOC_RTL}/bootrom/verilog/bootrom.v" />
+ <file name="${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_unit.v" />
+ <file name="${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_fsm.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_top.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_wb_biu.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_immu_top.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_immu_tlb.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_ic_top.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_ic_fsm.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_ic_ram.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_ic_tag.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_dmmu_top.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_dmmu_tlb.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_dc_top.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_dc_fsm.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_dc_ram.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_dc_tag.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_qmem_top.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_sb.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_du.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_pic.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_tt.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_pm.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_cpu.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_genpc.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_if.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_ctrl.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_rf.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_operandmuxes.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_alu.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_mult_mac.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_sprs.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_lsu.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_wbmux.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_freeze.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_except.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_cfgr.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_spram.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_dpram.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_gmultp2_32x32.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_mem2reg.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_reg2mem.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_spram_32_bw.v" />
+ <file name="${OPTIMSOC_RTL}/or1200mp/verilog/or1200_fpu.v" />
+ <file name="${OPTIMSOC_RTL}/networkadapter_ct/verilog/networkadapter_ct.v" />
+ <file name="${OPTIMSOC_RTL}/networkadapter_ct/verilog/networkadapter_conf.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma_target.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma_initiator.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma_initiator_wbreq.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma_initiator_nocreq.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma_initiator_nocresp.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma_request_table.v" />
+ <file name="${LISNOC_RTL}/dma/lisnoc_dma_wbinterface.v" />
+ <file name="${LISNOC_RTL}/mp_simple/lisnoc_mp_simple.v" />
+ <file name="${LISNOC_RTL}/mp_simple/lisnoc_mp_simple_wb.v" />
+ <file name="${LISNOC_RTL}/lisnoc_arb_rr.v" />
+ <file name="${LISNOC_RTL}/infrastructure/lisnoc_packet_buffer.v" />
+
+
+ <includedir path="${OPTIMSOC_RTL}/or1200_module/verilog" />
+ <includedir path="${LISNOC_RTL}/dma" />
+ <includedir path="${OPTIMSOC_RTL}/or1200mp/verilog/" />
+ <includedir path="${OPTIMSOC_RTL}/debug_system/verilog/" />
+ <includedir path="${OPTIMSOC_RTL}/bootrom/verilog/" />
+</module>
