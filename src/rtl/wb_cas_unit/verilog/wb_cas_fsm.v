@@ -91,7 +91,7 @@ begin
                 strobe <= 0;
         end
         else 
-                (* PARALLEL_CASE*) case (state)
+          case (state)
                         state_00: begin
                                 if ( core_cyc_i & core_stb_i & core_we_i )
                                         state <= state_01;
@@ -157,6 +157,8 @@ begin
                         state_10: begin
                                 state <= state_00;                              
                         end
+            default:
+              state <= state_00;
                 endcase
 end
 
