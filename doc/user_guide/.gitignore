@@ -1,0 +1,7 @@
+*.aux
+*.log
+*.out
+*.toc
+*.pdf
+*.xml
+html/

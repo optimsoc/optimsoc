@@ -1,0 +1,27 @@
+This folder contains documentation for OpTiMSoC.
+
+Currently, the following documentation is available:
+- OpTiMSoC User Guide (in the folder user_guide)
+
+The documentation is written in LaTeX. It needs to be transformed into PDF or
+HTML for easier reading. For this task, a Makefile is added to each
+documentation folder.
+
+But first, install all required tools:
+- a LaTeX distribution (e.g. texlive)
+- LaTeXML (for HTML output)
+
+On Debian/Ubuntu, the following command should install all prerequisites:
+$> sudo apt-get install latexml texlive-latex-recommended
+
+To build the documentation, change into the documentation folder and run make.
+
+Example: Building the User Guide
+$> cd user_guide
+$> make
+
+After building, you can view the user_guide.pdf in your preferred PDF viewer
+or run
+$> firefox html/user_guide.xhtml
+to open the User Guide in HTML format in Firefox.
+

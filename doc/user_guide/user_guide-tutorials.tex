@@ -1,0 +1,275 @@
+\chapter{Tutorials}
+\label{chap:tutorials}
+
+The best way to get started with OpTiMSoC after you've prepared your system as
+described in the previous chapter is to follow some of our tutorials. They are
+written with two goals in mind: to introduce some of the basic concepts and
+nomenclature of many-core SoC, and to show you how those are implemented and
+can be used in OpTiMSoC.
+
+Some of the tutorials (especially the first ones) build on top of each other,
+so it's recommended to do them in order. Simply stop if you think you know
+enough to implement your own ideas!
+
+\section{Compute Tile and Software}
+
+It is a good starting point to simulate a single compute tile of a
+distributed memory system. Therefore a simple testbench is included
+and demonstrates the general simulation approach and gives an insight
+in the software building process.
+
+Simulating only a single compute tile is essentially an OpenRISC core
+plus memory and the network adapter, where all I/O of the network
+adapter is not functional in this test case. It can therefore only be
+used to simulate local software.
+
+You can find this example in \verb|tbench/rtl/dm/compute_tile|. You
+need to have Modelsim installed before you run:
+
+\begin{verbatim}
+> make build
+\end{verbatim}
+
+The output should be as follows:
+
+\begin{verbatim}
+Model Technology ModelSim SE-64 vlog 10.1b Compiler 2012.04 Apr 26 2012
+-- Compiling module tb_compute_tile
+-- Compiling module trace_monitor
+[..]
+-- Compiling module lisnoc_mp_simple
+-- Compiling module lisnoc_mp_simple_wb
+
+Top level modules:
+	tb_compute_tile
+\end{verbatim}
+
+In case you see errors check that the environment variables are set
+correctly.
+
+\medskip
+The testbench can now be started in the Modelsim user interface or can
+be executed in command line mode using \verb|make sim|, but there is
+no software loaded to the memory, what results in a warning:
+
+\begin{verbatim}
+# ** Warning: (vsim-7) Failed to open readmem file "ct.vmem" in read mode.
+\end{verbatim}
+
+The simulations always expect vmem files that initialize the memories.
+This needs to be generated from the compiled source code. Before you
+build your own software you will need the support libraries. You can
+find all system software and example codes in
+\verb|src/sw/system/dm/|.
+
+In the system software folder you will find the \verb|libbaremetal|
+library. Go to the \verb|build| directory of the library and
+\verb|make| it. The code should compile without errors and warnings.
+
+The library contains many necessary functions, the boot code and
+helper macros. Two versions are build: \verb|libbaremetal.a| is the
+normal distributed memory baremetal software and
+\verb|libbaremetal-paging.a| is required when the local tile memory
+needs to be initialized from global memory, e.g., on an FPGA. This
+will later be extended to support smaller tile memories and do page
+swapping etc. This partially works, but an alternative approach to
+initialization and paging is described below with the PGAS system.
+
+When you link the library to your own code, you need to link some
+external symbols as described in \verb|sysconfig.h|. Those are
+definitions specific to a certain system instance, such as the
+dimensions, the presence of I/O, the distribution of compute
+ressources, etc.
+
+Therefore you will always need to link your system-specific
+\verb|sysconfig.o| to the library and your application objects, what
+we will describe in the following. The \verb|sysconfig.c| can be found
+as part of the compute tile testbench
+(\verb|${OPTIMSOC}/tbench/rtl/dm/compute_tile|) under \verb|sw|.
+
+To build a simple ``Hello World'' example, simply switch to \verb|sw|.
+The example application can be found in the software path. You should
+copy the whole path
+
+\begin{verbatim}
+> cp -r ${OPTIMSOC}/src/sw/system/dm/apps/baremetal/hello_simple sw/
+\end{verbatim}
+
+Inside the \verb|hello_simple| folder you can find the
+\verb|hello_simple.c| and the \verb|Makefile|. Now \verb|make| the
+example. This will automatically also build the sysconfig.o and link
+all together to the elf file. Furthermore some other files are build:
+
+\begin{itemize}
+\item \verb|hello_world.dis| is the disassembly of the file
+\item \verb|hello_world.bin| is the elf file als loaded binary file
+\item \verb|hello_world.vmem| is a textual copy of the binary file
+\end{itemize}
+
+(Note: If the latter is not build, ensure you have \verb|bin2vmem| in
+your \verb|PATH|, see
+\ref{sec:getstarted-requirements-crosscompiler}).
+
+You can now run the example. First go back to the compute tile
+testbench main folder. Before the simulation warned that
+\verb|ct.vmem| cannot be found. Therefore we simply link the software
+to this filename
+
+\begin{verbatim}
+> ln -s sw/hello_simple/hello_simple.vmem ct.vmem
+\end{verbatim}
+
+If you now run the software (\verb|make sim|), the simulation should
+terminate with:
+
+\begin{verbatim}
+# Terminate @00001140
+\end{verbatim}
+
+\verb|0x1140| is the program counter (can vary depending on your cross
+compiler version) the simulation terminated. This is correct behavior
+and will be explained below. Furthermore you will find a file called
+\verb|stdout| which shows the actual output:
+
+\begin{verbatim}
+[            42900000] Hello World!
+\end{verbatim}
+
+The \verb|[..]| part is the time stamp. But how does the actual
+printf-output get there when there is no UART or similar?
+
+OpTiMSoC software (especially in future releases) makes excessive use
+of a tricky part of the OpenRISC ISA. The ``no operation'' instruction
+\verb|l.nop| has a paramter \verb|K| in assembly. This can be used for
+simulation purposes. It can be used for instrumentation, tracing or
+special purposes as writing characters with minimal intrusion or
+simulation termination.
+
+The termination is forced with \verb|l.nop 0x1|. If you have a look at
+the disassembly \verb|hello_simple.dis| at instruction \verb|0x1140|
+(see above) you exactly find this instruction. The actual action is
+then done with the trace monitor.
+
+With this method you can simply provide constants to your simulation
+environments. For variables this method is extended by putting data in
+further registers (often \verb|r3|). This still is minimally intrusive
+and allows you to trace values. The printf is also done that way (see
+\verb|utils.c| in \verb|libbaremetal|):
+
+\begin{verbatim}
+void sim_putc(unsigned char c) {
+  asm("l.addi\tr3,%0,0": :"r" (c));
+  asm("l.nop %0": :"K" (NOP_PUTC));
+}
+\end{verbatim}
+
+This function is called from printf as write function. The trace
+monitor captures theses characters and puts them to the stdout file.
+
+You can easily add your own ``reports'' usind a macro defined in
+\verb|utils.h|:
+
+\begin{verbatim}
+#define OPTIMSOC_REPORT(id,v)        \
+   asm("l.addi\tr3,%0,0": :"r" (v) : "r3"); \
+   asm("l.nop %0": :"K" (id));
+\end{verbatim}
+
+This feature is used extensively by future OpTiMSoC software.
+
+\section{Simulate Small 2x2 Distributed Memory System}
+
+Next you might want to build an actual multicore system. You can find
+such a system in \verb|tbench/rtl/dm| directory as
+\verb|system_2x2_cccc|. The nomenclature in all pre-packed systems
+first denotes the dimensions and then the instantiated tiles, here
+\verb|cccc| as four compute tiles.
+
+When you switch to this directory, you can build the system using
+\verb|make|. In the following build the \verb|hello_simple| software
+identical to the description above. After running \verb|make sim| you
+will find the files \verb|stdout.0| to \verb|stdout.3|, each
+containing ``Hello World''.
+
+There is a second ``hello world'' example available:
+\verb|hello_simplemp|. This program uses the simple message passing
+facilities of the network adapter to send messages. In that example
+all cores send a message to core 0, that prints a message when
+receiving the packets. When all cores sent their messags, the core
+acknowledges this by printing its own ``Hello World'' message.
+
+Finally, a real world example is given by \verb|heat|. Copy this
+example similar as above (do not forget to link the correct ct.vmem at
+all time!). This example calculates the heat distribution in a
+distributed manner. The cores coordinate their boundary regions by
+sending messages around.
+
+%\section{MCAPI Example}
+%
+%libmcapi
+%
+%pingpong beispiel
+
+\section{The Look Inside: Introducing the Debug System}
+
+In the previous tutorials you have seen some software running on a simple
+OpTiMSoC system. Until now, you have only seen the output of the applications,
+not how it works on the inside.
+
+This problem is one of the major problems in embedded systems: you cannot
+easily look inside (especially as soon as you run on real hardware as opposed
+to simulation). In more technical terms, the system's observability is
+limited. A common way to overcome this is to add a debug and diagnosis
+infrastructure to the SoC which transfers data from the system to the outside
+world, usually to a PC of a developer.
+
+OpTiMSoC also comes with an extensive debug system. In this section, we'll have
+a look at this system, how it works and how you can use it to debug your
+applications. But before diving into the details, we'll have a short discussion
+of the basics which are necesssary to understand the system.
+
+Many developers know debugging from their daily work. Most of the time it
+involves running a program inside a debugger like GDB or Microsoft Visual
+Studio, setting a breakpoint at the right line of code, and stepping through the
+program from there on, running one instruction (or one line of code) at a time.
+
+This technique is what we call run-control debugging. While it works great for
+single-threaded programs, it cannot easily be applied to debugging parallel
+software running on possibly heterogenous many-core SoC. Instead, our solution
+is solely based on tracing, i.e. collecting information from the system while
+it is running and then being able to look at this data later to figure out the
+root cause of a problem.
+
+The debug system consists of two main parts: the hardware part runs on the
+OpTiMSoC system itself and collects all data. The other part runs on a
+developer's PC (often also called host PC) and controls the debugging process
+and displays the collected data. Both parts are connected using either a USB
+connection (e.g. when running on the ZTEX boards), or a TCP connection (when
+running OpTiMSoC in ModelSim).
+
+% TODO: Add debug example as soon as code is part of the repository
+
+
+\section{PGAS System}
+
+% problem: memory größe
+
+% pgas system bauen und simulieren
+
+\section{UART I/O}
+
+% problem: auf dem FPGA kein report-printf
+
+% andere sysconfig
+
+% UART tile
+
+\section{XUPV5 Simulation}
+
+% Funktionale simulation
+
+\section{XUPV5 Synthesis}
+
+% Synthese auf XUPV5, 2x2\_cmuc
+
+% Erklären wie Speicher initialisieren und bauen
