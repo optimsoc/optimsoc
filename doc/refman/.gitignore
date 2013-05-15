@@ -1,0 +1,8 @@
+/auto/
+/html/
+*.aux
+/*.log
+/*.out
+/*.toc
+/*.xml
+/*.pdf
