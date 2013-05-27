@@ -1,1 +1,0 @@
-TH	OpType	NumHops	OpSize	OpCount	AvgTime

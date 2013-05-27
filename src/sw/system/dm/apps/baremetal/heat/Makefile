@@ -1,4 +1,4 @@
-BASE=$(OPTIMSOC)/src/sw/system/dm
 PROGRAM=heat
 
-include $(BASE)/apps/baremetal/Makefile.inc
+BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-system-dm-baremetal)
+include $(BUILDSCRIPTS)/Makefile.inc

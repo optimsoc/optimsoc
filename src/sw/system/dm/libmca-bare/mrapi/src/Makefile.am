@@ -1,3 +1,0 @@
-SUBDIRS = mrapi_impl 
-
-

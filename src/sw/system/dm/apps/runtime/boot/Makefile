@@ -1,4 +1,4 @@
-BASE=../../..
 PROGRAM=boot
 
-include ../Makefile.inc
+BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-system-dm-runtime)
+include $(BUILDSCRIPTS)/Makefile.inc

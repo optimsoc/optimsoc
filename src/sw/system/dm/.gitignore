@@ -1,2 +1,9 @@
-.cproject
-.project
+aclocal.m4
+build
+build-aux
+configure
+/include/
+/lib/
+/share/
+Makefile.in
+autom4te.cache

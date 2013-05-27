@@ -1,4 +1,4 @@
-#include <thread.h>
+#include <optimsoc-runtime.h>
 
 void t0f(void *arg) {
     thread_suspend();

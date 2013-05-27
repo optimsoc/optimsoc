@@ -1,0 +1,48 @@
+OR32-CC ?= @OR32-CC@
+OR32-OBJDUMP ?= @OR32-OBJDUMP@
+OR32-OBJCOPY ?= @OR32-OBJCOPY@
+
+BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-system-dm-baremetal)
+
+all: $(PROGRAM).elf $(PROGRAM).dis $(PROGRAM).bin $(PROGRAM).vmem
+pgas: $(PROGRAM)-pgas.bin $(PROGRAM)-pgas.vmem
+
+LIBS = $(shell pkg-config --libs --static optimsoc-system-dm-baremetal)
+INCS = $(shell pkg-config --cflags optimsoc-system-dm-baremetal)
+ifdef ENABLE_MCAPI
+LIBS += $(shell pkg-config --libs --static optimsoc-mcapi-simple-bare)
+INCS += $(shell pkg-config --cflags optimsoc-mcapi-simple-bare)
+endif
+
+$(PROGRAM)-pgas.bin: $(PROGRAM).bin
+	@PROGRAM=$(PROGRAM) $(BUILDSCRIPTS)/create_pgas_binary.sh
+
+$(PROGRAM).elf: $(PROGRAM).o optimsoc-sysconfig.o link.ld
+	$(OR32-CC) -Wall -nostartfiles -nostdlib \
+	$(OPTIMSOC_NEWLIB)/lib/crt0.o \
+	$(PROGRAM).o optimsoc-sysconfig.o -o $@ \
+	$(LIBS) \
+	-L $(OPTIMSOC_NEWLIB)/lib/ -lc -loptimsoc -lc -lgcc \
+	-T link.ld -e 256
+
+optimsoc-sysconfig.o: ../optimsoc-sysconfig.c
+	$(OR32-CC) -O0 -c -o $@ $^
+
+link.ld: $(BUILDSCRIPTS)/link.ld.in optimsoc-sysconfig.o
+	@echo "Generate linker script"
+	@BUILDSCRIPTS=$(BUILDSCRIPTS) $(BUILDSCRIPTS)/create_linker_script.sh
+
+%.dis: %.elf
+	$(OR32-OBJDUMP) -D $^ > $@
+
+%.vmem: %.bin 
+	bin2vmem $^ > $@
+
+%.bin: %.elf 
+	$(OR32-OBJCOPY) -O binary $^ $@
+
+%.o: %.c
+	$(OR32-CC) -O0 -std=gnu99 -c $(INCS) -I $(OPTIMSOC_NEWLIB)/include -o $@ $^
+
+clean:
+	rm -f *.o *.elf *.bin *.vmem *.dis link.ld

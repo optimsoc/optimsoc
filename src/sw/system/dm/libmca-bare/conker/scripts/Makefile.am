@@ -1,1 +1,0 @@
-EXTRA_DIST = display_threads.pl echo_log_template.txt  fury_log_template.txt  log_file_template.txt  overlap_log_template.txt echo_experiment.pl fury_experiment.pl clean.pl fury_experiment.sh overlap_experiment.sh echo_experiment.sh rdriver.pm  regress_utils.pm

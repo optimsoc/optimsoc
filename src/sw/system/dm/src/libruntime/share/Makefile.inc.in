@@ -1,0 +1,51 @@
+OR32-CC ?= @OR32-CC@
+OR32-OBJDUMP ?= @OR32-OBJDUMP@
+OR32-OBJCOPY ?= @OR32-OBJCOPY@
+
+BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-system-dm-runtime)
+
+all: $(PROGRAM).elf $(PROGRAM).dis $(PROGRAM).bin $(PROGRAM).vmem
+pgas: $(PROGRAM)-pgas.bin $(PROGRAM)-pgas.vmem
+
+LIBS = $(shell pkg-config --libs --static optimsoc-system-dm-runtime)
+INCS = $(shell pkg-config --cflags optimsoc-system-dm-runtime)
+ifdef ENABLE_MCAPI
+LIBS += $(shell pkg-config --libs --static optimsoc-mcapi-simple-runtime)
+INCS += $(shell pkg-config --cflags optimsoc-mcapi-simple-runtime)
+endif
+
+$(PROGRAM)-pgas.bin: $(PROGRAM).bin
+	@PROGRAM=$(PROGRAM) sh $(BUILDSCRIPTS)/create_pgas_binary.sh 
+
+$(PROGRAM).elf: $(PROGRAM).o optimsoc-sysconfig.o runtimeconfig.o link.ld
+	$(OR32-CC) -Wall -nostartfiles -nostdlib \
+	$(OPTIMSOC_NEWLIB)/lib/crt0.o \
+	$(PROGRAM).o optimsoc-sysconfig.o runtimeconfig.o -o $@ \
+	$(LIBS) \
+	-L $(OPTIMSOC_NEWLIB)/lib/ -lc -loptimsoc -lc -lgcc \
+	-T link.ld -e 256
+
+optimsoc-sysconfig.o: ../optimsoc-sysconfig.c
+	$(OR32-CC) -O0 -c -o $@ $^
+
+runtimeconfig.o: ../runtimeconfig.c
+	$(OR32-CC) -O0 -c -o $@ $^
+
+link.ld: $(BUILDSCRIPTS)/link.ld.in optimsoc-sysconfig.o
+	@echo "Generate linker script"
+	@BUILDSCRIPTS=$(BUILDSCRIPTS) sh $(BUILDSCRIPTS)/create_linker_script.sh	
+
+%.dis: %.elf
+	$(OR32-OBJDUMP) -D $^ > $@
+
+%.vmem: %.bin 
+	bin2vmem $^ > $@
+
+%.bin: %.elf 
+	$(OR32-OBJCOPY) -O binary $^ $@
+
+%.o: %.c
+	$(OR32-CC) -O0 -std=gnu99 -c $(INCS) -o $@ $^
+
+clean:
+	rm -f *.o *.elf *.bin *.vmem *.dis link.ld

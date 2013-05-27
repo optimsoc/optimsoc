@@ -1,4 +1,4 @@
-PROGRAM=hello_simple
+PROGRAM=et_rar
 
 BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-system-dm-baremetal)
 include $(BUILDSCRIPTS)/Makefile.inc

@@ -1,0 +1,13 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+datadir=@datadir@
+buildscriptdir=${datadir}/build/runtime
+
+Name: Optimsoc Runtime
+Description: OpTiMSoC runtime system libraries
+Version: 0.1
+Requires.private: optimsoc-system-dm-baremetal
+Cflags: -I${prefix}/include
+Libs: -L${libdir} -lruntime
+

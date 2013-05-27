@@ -31,7 +31,8 @@
 #include <stdio.h> // For printf
 
 #include <optimsoc.h>
-#include <utils.h>
+#include <or1k-support.h>
+#include <optimsoc-baremetal.h>
 #include <assert.h>
 
 // In this example every rank except 0 sends a simple message to rank 0.
@@ -64,6 +65,8 @@ void recv(unsigned int *buffer,int len) {
 void main() {
     // Initialize optimsoc library
     optimsoc_init(0);
+    optimsoc_mp_simple_init();
+    or1k_enable_interrupts();
 
     // Add handler for received messages (of class 0)
     optimsoc_mp_simple_addhandler(0,&recv);
@@ -79,7 +82,7 @@ void main() {
         printf("Received all messages. Hello World!\n",rank,optimsoc_ctnum());
     } else {
         // The message is a one flit packet
-        unsigned int buffer[1] = { 0 };
+        uint32_t buffer[1] = { 0 };
 
         // Set destination (tile 0)
         set_bits(&buffer[0],0,OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
@@ -91,7 +94,7 @@ void main() {
         set_bits(&buffer[0],optimsoc_ranktile(rank),OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
 
         // Send the message
-        optimsoc_mp_simple_send(1,buffer);
+        optimsoc_mp_simple_send(1,(uint32_t*) buffer);
     }
 }
 
