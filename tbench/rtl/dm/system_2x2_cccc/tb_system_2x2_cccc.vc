@@ -5,6 +5,7 @@
 +incdir+${OPTIMSOC_RTL}/or1200mp/verilog/
 +incdir+${OPTIMSOC_RTL}/bootrom/verilog
 +incdir+${OPTIMSOC_RTL}/noclsu/verilog
++incdir+${OPTIMSOC_RTL}/debug_system/verilog
 +incdir+.
 
 +define+OPTIMSOC_CTRAM_PLAIN
@@ -73,10 +74,12 @@ ${OPTIMSOC_RTL}/or1200mp/verilog/or1200_fpu.v
 
 ${LISNOC_RTL}/meshs/lisnoc_mesh2x2.v
 
+${LISNOC_RTL}/lisnoc_arb_prio_rr.v
 ${LISNOC_RTL}/router/lisnoc_router_2dgrid.v
 ${LISNOC_RTL}/router/lisnoc_router.v
 ${LISNOC_RTL}/router/lisnoc_fifo.v
 ${LISNOC_RTL}/router/lisnoc_router_arbiter.v
+${LISNOC_RTL}/router/lisnoc_router_arbiter_prio.v
 ${LISNOC_RTL}/router/lisnoc_router_input.v
 ${LISNOC_RTL}/router/lisnoc_router_input_route.v
 ${LISNOC_RTL}/router/lisnoc_router_output.v

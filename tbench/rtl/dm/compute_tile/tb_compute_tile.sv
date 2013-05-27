@@ -76,6 +76,34 @@ module tb_compute_tile();
                      .noc_out_ready     (noc_out_ready[VCHANNELS-1:0]),
                      .cpu_stall         (cpu_stall));
 
+   wire termination;
+
+   /* trace_monitor AUTO_TEMPLATE(
+    .enable  (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze),
+    .wb_pc   (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc),
+    .wb_insn (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn),
+    .r3      (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]),
+    .supv    (u_compute_tile.u_core0.u_cpu.or1200_cpu.supv),
+    .termination  (termination),
+    .termination_all (termination),
+    ); */
+   trace_monitor
+      #(.STDOUT_FILENAME("stdout"),
+        .TRACEFILE_FILENAME("trace"),
+        .ENABLE_TRACE(1))
+      u_mon0(/*AUTOINST*/
+             // Outputs
+             .termination               (termination),           // Templated
+             // Inputs
+             .clk                       (clk),
+             .enable                    (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze), // Templated
+             .wb_pc                     (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
+             .wb_insn                   (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
+             .r3                        (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
+             .termination_all           (termination));           // Templated
+
+
+
    initial begin
       clk = 1'b1;
       rst_sys = 1'b1;
@@ -90,35 +118,7 @@ module tb_compute_tile();
 
    always clk = #1.25 ~clk;
 
-   wire termination;
-
-   /* trace_monitor AUTO_TEMPLATE(
-    .enable  (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze),
-    .wb_pc   (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc),
-    .wb_insn (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn),
-    .r3      (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]),
-    .supv    (u_compute_tile.u_core0.u_cpu.or1200_cpu.supv),
-    .if_valid_en ('0),
-    .if_valid_pos ('0),
-    .ctrl_done_en ('0),
-    .ctrl_done_pos ('0),
-    .termination  (termination),
-    .termination_all (termination),
-    ); */
-   trace_monitor
-     #(.stdout_filename("stdout"),.tracefile_filename("trace"))
-   u_mon0(/*AUTOINST*/
-          // Outputs
-          .termination                  (termination),           // Templated
-          // Inputs
-          .clk                          (clk),
-          .enable                       (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze), // Templated
-          .wb_pc                        (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
-          .wb_insn                      (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
-          .r3                           (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
-          .termination_all              (termination));           // Templated
-
-endmodule // tb_system_2x2_ccmc
+endmodule
 
 // Local Variables:
 // verilog-library-directories:("." "../../../../src/rtl/*/verilog")

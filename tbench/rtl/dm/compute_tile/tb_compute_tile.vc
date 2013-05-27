@@ -5,6 +5,7 @@
 +incdir+${OPTIMSOC_RTL}/or1200mp/verilog/
 +incdir+${OPTIMSOC_RTL}/bootrom/verilog
 +incdir+${OPTIMSOC_RTL}/noclsu/verilog
++incdir+${OPTIMSOC_RTL}/debug_system/verilog
 +incdir+.
 
 +define+OPTIMSOC_CTRAM_PLAIN
