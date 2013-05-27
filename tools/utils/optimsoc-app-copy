@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# sw_copy <system> <application>
-
 if [ $# -lt 2 ]; then
-   echo "Usage: sw_copy <system> <application>"
+   echo "Usage: optimsoc-app-copy <system> <application>"
    echo "  where:"
-   echo "    <system> is either dm, pgas or sm"
+   echo "    <system> is either dm (or sm in future)"
    echo "    <application> is an application, e.g. baremetal/hello_simple"
    exit
 fi

@@ -1,0 +1,30 @@
+#!/usr/bin/python
+
+import sys
+import os
+
+if len(sys.argv)<5:
+    print "Usage: pgas <binfile> <pgas_size> <count> <outbinfile>"
+    print "    where:"
+    print "       <binfile> is the single binary file"
+    print "       <pgas_size> is the size per partition"
+    print "       <count> is the number of partitions"
+    print "       <outbinfile> is the partitioned binary file"
+    exit()
+
+size = int(sys.argv[2])
+count = int(sys.argv[3])
+
+fsize = os.path.getsize(sys.argv[1])
+
+if (fsize>size):
+    print "Input (%d) exceeds pgas size (%d)" % (fsize,size)
+    exit()
+
+dat = open(sys.argv[1],"rb").read()
+
+out = open(sys.argv[4],"wb")
+
+for i in range(count):
+    out.seek(i*size)
+    out.write(dat)

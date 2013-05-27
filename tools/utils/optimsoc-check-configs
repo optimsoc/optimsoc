@@ -1,0 +1,93 @@
+#!/usr/bin/python
+
+import os
+import re
+import sys
+
+if not hasattr(sys.stdout,"isatty"):
+    colors = False
+elif not sys.stdout.isatty():
+    colors = False
+else:
+    colors = True
+
+def check(symbols,file):
+    present = symbols.keys()
+    f = open(file)
+    sys.stdout.write("++ check "+os.path.join(dirname,"optimsoc-sysconfig.c")+" ")
+    error = False    
+    for l in f:
+        text = []
+        m = re.search("const\s+([\w_\s]+) (_optimsoc.*)\s+=",l)
+        if m:
+            sym = m.group(2)
+            type = m.group(1).strip()
+            if sym in symbols:
+                present.remove(sym)
+                if type != symbols[sym]:
+                    if colors:
+                        text.append("\033[91m")
+                    text.append("[ERR] Incorrect type for %s, is %s, expected %s\n" %(sym,type,symbols[sym]))
+                    error = True
+                    if colors:
+                        text.append("\033[0m")
+            else:
+                if colors:
+                    text.append("\033[93m")
+                text.append("[WARN] Variable %s not in symbols" % m.group(2))
+                if colors:
+                    text.append("\033[0m")
+    for s in present:
+        if colors:
+            text.append("\033[91m")
+        text.append("[ERR] Variable %s not defined\n" % s)
+        error = True
+        if colors:
+            text.append("\033[0m")
+
+    if error:
+        if colors:
+            sys.stdout.write("\033[91m")
+        sys.stdout.write("fail")
+        if colors:
+            sys.stdout.write("\033[0m")
+        sys.stdout.write("\n")
+        for l in text:
+            sys.stdout.write(l)
+    else:
+        if colors:
+            sys.stdout.write("\033[92m")
+        sys.stdout.write("ok")
+        if colors:
+            sys.stdout.write("\033[0m")
+        sys.stdout.write("\n")
+
+        
+    
+
+if not "OPTIMSOC" in os.environ:
+    print "Cannot find OPTIMSOC environment"
+    exit(1)
+
+if not "OPTIMSOC_NEWLIB" in os.environ:
+    print "Cannot find OpTiMSoC newlib"
+    exit(1)
+
+symbols = {}
+f = open(os.path.join(os.environ["OPTIMSOC_NEWLIB"],"include/optimsoc-sysconfig.h"))
+for l in f:
+    m = re.search("extern\s*const\s*([\w_\s]+) (_optimsoc.*)\s*;",l)
+    if m:
+        symbols[m.group(2)] = m.group(1).strip()
+
+if colors:
+    print "\033[94m"
+print "[INFO] ** DEFINED SYMBOLS"
+for s in symbols:
+    print "[INFO]",s,"of type",symbols[s]
+if colors:
+    print "\033[0m"
+
+for dirname,subdirs,files in os.walk(os.environ["OPTIMSOC"]):
+    if "optimsoc-sysconfig.c" in files:
+        check(symbols,os.path.join(dirname,"optimsoc-sysconfig.c"))
