@@ -34,11 +34,10 @@
 // Assign virtual channels to services
 `define VCHANNEL_LSU_REQ   'x
 `define VCHANNEL_LSU_RESP  'x
-`define VCHANNEL_DMA_REQ  0
-`define VCHANNEL_DMA_RESP 1
-`define VCHANNEL_MPSIMPLE 2
+`define VCHANNEL_DMA_REQ   0
+`define VCHANNEL_DMA_RESP  1
+`define VCHANNEL_MPSIMPLE  2
 
-`define OPTIMSOC_XDIM 2
-`define OPTIMSOC_YDIM 2
+`define OPTIMSOC_XDIM 1
+`define OPTIMSOC_YDIM 1
 
-`define OPTIMSOC_MEMORYID  'x
