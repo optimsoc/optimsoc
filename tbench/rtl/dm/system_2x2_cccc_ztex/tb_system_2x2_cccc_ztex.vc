@@ -2,33 +2,42 @@
 +incdir+${OPTIMSOC_RTL}
 +incdir+${OPTIMSOC_RTL}/or1200_module/verilog
 +incdir+${LISNOC_RTL}/dma
++incdir+${OPTIMSOC}/syn/dm/system_2x2_cccc_ztex/
 +incdir+${OPTIMSOC_RTL}/or1200mp/verilog/
-+incdir+${OPTIMSOC_RTL}/bootrom/verilog
-+incdir+${OPTIMSOC_RTL}/noclsu/verilog
-+incdir+${OPTIMSOC_RTL}/debug_system/verilog
-+incdir+.
++incdir+${OPTIMSOC_RTL}/debug_system/verilog/
++incdir+${OPTIMSOC_RTL}/bootrom/verilog/
 
+// override definition in optimsoc_def.vh
 +define+OPTIMSOC_SRAM_IMPLEMENTATION="\"PLAIN\""
-+define+OR1200_BOOT_ADR="32'h0000_0100"
 
 +initmem+0
++initreg+0
 
-tb_system_2x2_cccc.sv
+tb_system_2x2_cccc_ztex.sv
 
-${OPTIMSOC_RTL}/trace_monitor/verilog/trace_monitor.sv
-${OPTIMSOC_RTL}/debug_system/verilog/mam_wb_adapter.v
+${OPTIMSOC}/syn/dm/system_2x2_cccc_ztex/system_2x2_cccc_ztex.v
+${OPTIMSOC}/syn/dm/system_2x2_cccc_ztex/fifo_usb_dual.v
+${OPTIMSOC}/syn/dm/system_2x2_cccc_ztex/fifo_usb_to_noc.v
 
+${OPTIMSOC_RTL}/usb_dbg_if/verilog/usb_dbg_if.v
+${OPTIMSOC_RTL}/usb_dbg_if/verilog/fx2_usb_comm.v
+
+${OPTIMSOC_RTL}/clockmanager/verilog/clockmanager_ztex115.v
 ${OPTIMSOC_RTL}/system_2x2_cccc_dm/verilog/system_2x2_cccc_dm.v
+${OPTIMSOC_RTL}/debug_system/verilog/debug_system.v
+
 ${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm.v
 ${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm_bus.v
 ${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm_bus_arbiter.v
 ${OPTIMSOC_RTL}/bootrom/verilog/bootrom.v
-${OPTIMSOC_RTL}/sram/verilog/wb_sram_sp.v
-${OPTIMSOC_RTL}/sram/verilog/wb2sram.v
-${OPTIMSOC_RTL}/sram/verilog/sram_sp.v
-${OPTIMSOC_RTL}/sram/verilog/sram_sp_impl_plain.v
 ${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_unit.v
 ${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_fsm.v
+
+${OPTIMSOC_RTL}/sram/verilog/wb_sram_sp.v
+${OPTIMSOC_RTL}/sram/verilog/sram_sp.v
+${OPTIMSOC_RTL}/sram/verilog/wb2sram.v
+${OPTIMSOC_RTL}/sram/verilog/sram_sp_impl_plain.v
+${OPTIMSOC_RTL}/sram/verilog/sram_sp_impl_xilinx_spartan6.v
 
 ${OPTIMSOC_RTL}/or1200_module/verilog/or1200_module.v
 
@@ -75,6 +84,39 @@ ${OPTIMSOC_RTL}/or1200mp/verilog/or1200_spram_32_bw.v
 ${OPTIMSOC_RTL}/or1200mp/verilog/or1200_fpu.v
 
 
+// debug system
+${OPTIMSOC_RTL}/debug_system/verilog/global_timestamp_provider.v
+${OPTIMSOC_RTL}/debug_system/verilog/dbgnoc_conf_if.v
+${OPTIMSOC_RTL}/debug_system/verilog/tcm.v
+${OPTIMSOC_RTL}/debug_system/verilog/ctm.v
+${OPTIMSOC_RTL}/debug_system/verilog/itm.v
+${OPTIMSOC_RTL}/debug_system/verilog/itm_dbgnoc_if.v
+${OPTIMSOC_RTL}/debug_system/verilog/debug_data_sr.v
+${OPTIMSOC_RTL}/debug_system/verilog/itm_trace_collector.v
+${OPTIMSOC_RTL}/debug_system/verilog/itm_trace_compression.v
+${OPTIMSOC_RTL}/debug_system/verilog/itm_trace_qualificator.v
+${OPTIMSOC_RTL}/debug_system/verilog/stm.v
+${OPTIMSOC_RTL}/debug_system/verilog/stm_data_sr.v
+${OPTIMSOC_RTL}/debug_system/verilog/stm_trace_collector.v
+${OPTIMSOC_RTL}/debug_system/verilog/stm_dbgnoc_if.v
+${OPTIMSOC_RTL}/debug_system/verilog/nrm.v
+${OPTIMSOC_RTL}/debug_system/verilog/nrm_statistics_collector.v
+${OPTIMSOC_RTL}/debug_system/verilog/nrm_link_statistics_collector.v
+${OPTIMSOC_RTL}/debug_system/verilog/nrm_dbgnoc_if.v
+${OPTIMSOC_RTL}/debug_system/verilog/nrm_qualificator.v
+${OPTIMSOC_RTL}/debug_system/verilog/mam_wb_adapter.v
+${OPTIMSOC_RTL}/debug_system/verilog/mam.v
+
+// LISNoC parts required by the debug system
++incdir+${LISNOC_RTL}/lisnoc16/
+${LISNOC_RTL}/rings/lisnoc_uni_ring.v
+${LISNOC_RTL}/router/lisnoc_router_uni_ring.v
+
+${LISNOC_RTL}/lisnoc16/usb/lisnoc16_usb_from_noc.v
+${LISNOC_RTL}/lisnoc16/usb/lisnoc16_usb_packet_buffer.v
+${LISNOC_RTL}/lisnoc16/usb/lisnoc16_usb_to_noc.v
+//${LISNOC_RTL}/lisnoc16/usb/lisnoc16_usb.v
+
 ${LISNOC_RTL}/meshs/lisnoc_mesh2x2.v
 
 ${LISNOC_RTL}/lisnoc_arb_prio_rr.v
@@ -100,9 +142,11 @@ ${LISNOC_RTL}/dma/lisnoc_dma_initiator_nocreq.v
 ${LISNOC_RTL}/dma/lisnoc_dma_initiator_nocresp.v
 ${LISNOC_RTL}/dma/lisnoc_dma_request_table.v
 ${LISNOC_RTL}/dma/lisnoc_dma_wbinterface.v
-${LISNOC_RTL}/lisnoc_arb_rr.v
 
 ${LISNOC_RTL}/mp_simple/lisnoc_mp_simple.v
 ${LISNOC_RTL}/mp_simple/lisnoc_mp_simple_wb.v
 
+${LISNOC_RTL}/lisnoc_arb_rr.v
+
+${XILINX_ISE}/verilog/src/glbl.v
 -y ${OPTIMSOC_RTL}/or1200mp/verilog/
