@@ -1,10 +1,11 @@
 OR32-CC ?= @OR32-CC@
 OR32-OBJDUMP ?= @OR32-OBJDUMP@
 OR32-OBJCOPY ?= @OR32-OBJCOPY@
+CFLAGS ?= -O0 -std=gnu99 -Wall
 
 BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-system-dm-baremetal)
 
-all: $(PROGRAM).elf $(PROGRAM).dis $(PROGRAM).bin $(PROGRAM).vmem
+all: $(PROGRAM).elf $(PROGRAM).dis $(PROGRAM).bin $(PROGRAM).vmem check-size
 pgas: $(PROGRAM)-pgas.bin $(PROGRAM)-pgas.vmem
 
 LIBS = $(shell pkg-config --libs --static optimsoc-system-dm-baremetal)
@@ -14,26 +15,29 @@ LIBS += $(shell pkg-config --libs --static optimsoc-mcapi-simple-bare)
 INCS += $(shell pkg-config --cflags optimsoc-mcapi-simple-bare)
 endif
 
+OTHER_OBJS = $(OTHER_SRCS:.c=.o)
+
 $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 	@PROGRAM=$(PROGRAM) $(BUILDSCRIPTS)/create_pgas_binary.sh
 
-$(PROGRAM).elf: $(PROGRAM).o optimsoc-sysconfig.o link.ld
-	$(OR32-CC) -Wall -nostartfiles -nostdlib \
+$(PROGRAM).elf: $(PROGRAM).o $(OTHER_OBJS) optimsoc-sysconfig.o link.ld
+	$(OR32-CC) $(CFLAGS) -nostartfiles -nostdlib \
 	$(OPTIMSOC_NEWLIB)/lib/crt0.o \
-	$(PROGRAM).o optimsoc-sysconfig.o -o $@ \
+	$(PROGRAM).o $(OTHER_OBJS) optimsoc-sysconfig.o -o $@ \
 	$(LIBS) \
 	-L $(OPTIMSOC_NEWLIB)/lib/ -lc -loptimsoc -lc -lgcc \
+	$(LD_ADD) \
 	-T link.ld -e 256
 
 optimsoc-sysconfig.o: ../optimsoc-sysconfig.c
-	$(OR32-CC) -O0 -c -o $@ $^
+	$(OR32-CC) $(CFLAGS) -c -o $@ $^
 
 link.ld: $(BUILDSCRIPTS)/link.ld.in optimsoc-sysconfig.o
 	@echo "Generate linker script"
 	@BUILDSCRIPTS=$(BUILDSCRIPTS) $(BUILDSCRIPTS)/create_linker_script.sh
 
 %.dis: %.elf
-	$(OR32-OBJDUMP) -D $^ > $@
+	$(OR32-OBJDUMP) -D -S $^ > $@
 
 %.vmem: %.bin 
 	bin2vmem $^ > $@
@@ -42,7 +46,11 @@ link.ld: $(BUILDSCRIPTS)/link.ld.in optimsoc-sysconfig.o
 	$(OR32-OBJCOPY) -O binary $^ $@
 
 %.o: %.c
-	$(OR32-CC) -O0 -std=gnu99 -c $(INCS) -I $(OPTIMSOC_NEWLIB)/include -o $@ $^
+	$(OR32-CC) $(CFLAGS) -c $(INCS) -I $(OPTIMSOC_NEWLIB)/include -o $@ $^
 
 clean:
 	rm -f *.o *.elf *.bin *.vmem *.dis link.ld
+
+check-size: $(PROGRAM).bin optimsoc-sysconfig.o
+	OR32_OBJDUMP=$(OR32-OBJDUMP) $(BUILDSCRIPTS)/check_program_size.sh optimsoc-sysconfig.o $(PROGRAM).bin
+

@@ -16,12 +16,14 @@ scriptdir = $(datadir)/build/baremetal
 script_DATA = share/create_linker_script.sh \
               share/link.ld.in \
               share/Makefile.inc \
-              share/create_pgas_binary.sh
+              share/create_pgas_binary.sh \
+              share/check_program_size.sh
 
 # install the scripts with executable permissions
 install-data-hook:
 	chmod +x $(DESTDIR)$(scriptdir)/create_linker_script.sh
 	chmod +x $(DESTDIR)$(scriptdir)/create_pgas_binary.sh
+	chmod +x $(DESTDIR)$(scriptdir)/check_program_size.sh
 
 # prepare pkg-config file
 share/%.pc: share/%.pc.in Makefile

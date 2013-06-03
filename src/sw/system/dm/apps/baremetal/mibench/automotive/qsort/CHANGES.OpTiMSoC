@@ -1,0 +1,16 @@
+The following changes were done in comparison to the original MiBench 
+distribution to adapt the testbench for OpTiMSoC.
+
+- Removed files: COMPILE, runme_small.sh, runme_large.sh
+- Moved the original Makefile to Makefile.host
+  Run it with
+  $> make -f Makefile.host 
+  to get a reference output to compare OpTiMSoC to.
+- Created new Makefile for OpTiMSoC, utilizing only the small data set
+- Instead of reading the input from the command line the input_small.dat
+  file is compiled into the binary.
+  The added script dat2h.sh can be used to create a suitable C include
+  file if the input data is changed.
+- NOTE: The large data set has not been adapted, even though the files are
+  left in the distribution.
+

@@ -1,0 +1,12 @@
+The following changes were done in comparison to the original MiBench 
+distribution to adapt the testbench for OpTiMSoC.
+
+- Removed files: COMPILE, runme_small.sh, runme_large.sh
+- Moved the original Makefile to Makefile.host
+  Run it with
+  $> make -f Makefile.host
+  to get a reference output to compare OpTiMSoC to.
+- Created new Makefile for OpTiMSoC, utilizing only the small data set
+- Removed iterations command line argument from bitcnts.c, instead hardcoding
+  the number of iterations to 75000, equal to the small benchmark.
+
