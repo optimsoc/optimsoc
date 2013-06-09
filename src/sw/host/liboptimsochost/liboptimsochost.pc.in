@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: liboptimsochost
+Description: OpTiMSoC host communication library
+Version: @VERSION@
+Libs: -L${libdir} -loptimsochost
+Libs.private:
+Cflags: -I${includedir}

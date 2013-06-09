@@ -1,0 +1,7 @@
+.dirstamp
+.deps/
+.libs/
+*.la
+*.lo
+liboptimsoc.pc
+test-liboptimsoc

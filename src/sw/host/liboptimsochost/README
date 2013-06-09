@@ -1,0 +1,34 @@
+OpTiMSoC host library
+=====================
+
+liboptimsoc connects the PC host with an OpTiMSoC system using the USB
+interface of the debug system.
+
+An example command-line application is included to show some basic features
+of the library and serve as basis for own applications.
+
+Dependencies
+------------
+- libusb 1.0 (*not* libusb 0.1!)
+- doxygen (optional, only for API documentation)
+
+To install all dependencies onDebian/Ubuntu, run
+$> apt-get install libusb-1.0.0-dev doxygen
+
+Building
+--------
+$> ./autogen.sh
+$> ./configure --enable-logging --enable-debug --enable-examples
+$> make
+
+You can now run the example in the examples directory or install 
+liboptimsoc with
+$> make install
+
+Documentation
+-------------
+To build the API documentation with Doxygen, simply run
+$> cd doc && make apidoc
+
+The output is available in HTML format in doc/html. Open the index.html file
+with any browser to see the documentation.
