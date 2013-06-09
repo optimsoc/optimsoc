@@ -1,36 +1,43 @@
 /**
  * This file is part of OpTiMSoC.
- * 
+ *
  * OpTiMSoC is free hardware: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 3 of 
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
  *
  * As the LGPL in general applies to software, the meaning of
  * "linking" is defined as using the OpTiMSoC in your projects at
  * the external interfaces.
- * 
+ *
  * OpTiMSoC is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public 
+ * You should have received a copy of the GNU Lesser General Public
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * =================================================================
- * 
+ *
  * This is a wrapper module for the OpenRISC processor that adds
  * the compare-and-swap (CAS) unit on the data port to allow for atomic
  * accesses to data elements.
- * 
+ *
  * (c) 2009-2013 by the author(s)
- * 
+ *
  * Author(s):
  *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
  */
 
-module or1200_module (/*AUTOARG*/
+module or1200_module (
+`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
+                      trace_itm,
+`endif
+`ifdef OPTIMSOC_DEBUG_ENABLE_STM
+                      trace_stm,
+`endif
+   /*AUTOARG*/
    // Outputs
    dbg_lss_o, dbg_is_o, dbg_wp_o, dbg_bp_o, dbg_dat_o, dbg_ack_o,
    iwb_cyc_o, iwb_adr_o, iwb_stb_o, iwb_we_o, iwb_sel_o, iwb_dat_o,
@@ -43,7 +50,7 @@ module or1200_module (/*AUTOARG*/
    dwb_dat_i
    );
 
-   parameter id = 0;
+   parameter ID = 0;
 
    input          clk_i;
    input          bus_clk_i;
@@ -97,6 +104,14 @@ module or1200_module (/*AUTOARG*/
    output [1:0]    dwb_bte_o;
    output [2:0]    dwb_cti_o;
 
+`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
+   output [`DEBUG_ITM_PORTWIDTH-1:0] trace_itm;
+`endif
+
+`ifdef OPTIMSOC_DEBUG_ENABLE_STM
+   output [`DEBUG_STM_PORTWIDTH-1:0] trace_stm;
+`endif
+
    wire            core_ack_i;  // normal termination
    wire            core_err_i;  // termination w/ error
    wire            core_rty_i;  // termination w/ retry
@@ -109,18 +124,6 @@ module or1200_module (/*AUTOARG*/
    wire [31:0]     core_dat_o;  // output data bus
    wire [1:0]      core_bte_o;
    wire [2:0]      core_cti_o;
-
-`ifdef TRACING
-   or1200_trace #(.id("core")) u_trace( .clk(clk_i) );
-   initial u_trace.file = $fopen("trace");
-   assign u_trace.wb_pc = u_cpu.or1200_cpu.or1200_except.wb_pc;
-   assign u_trace.wb_freeze = u_cpu.or1200_cpu.or1200_except.wb_freeze;
-   assign u_trace.wb_insn = u_cpu.or1200_cpu.wb_insn;
-   genvar          i;
-   for (i=0;i<32;i=i+1) begin
-     assign u_trace.rf[i] = u_cpu.or1200_cpu.or1200_rf.rf_a.mem[i];
-   end
-`endif
 
    /* or1200_top AUTO_TEMPLATE(
     .pm_clksd_o      (),
@@ -139,9 +142,10 @@ module or1200_module (/*AUTOARG*/
     .dwb_rst_i       (bus_rst_i),
     .dwb_\(.*\)      (core_\1[]),
     .clmode_i        (2'b00),
+    .sig_tick (),
     ); */
 
-   or1200_top #(.dw(32),.aw(32),.ppic_ints(20),.coreid(id))
+   or1200_top #(.dw(32),.aw(32),.ppic_ints(20),.coreid(ID))
    u_cpu(
 `ifdef OR1200_WB_CAB
          .iwb_cab_o                     (iwb_cab_o),
@@ -151,6 +155,15 @@ module or1200_module (/*AUTOARG*/
           .mbist_so_o   (mbist_so_o),
           .mbist_si_i   (mbist_si_i)
           .mbist_ctrl_i (mbist_ctrl_i[`OR1200_MBIST_CTRL_WIDTH-1:0]),
+`endif
+`ifdef OR1200_MP_COREID_AS_PORT
+         .coreid_i                      (ID),
+`endif
+`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
+         .trace_itm                     (trace_itm[`DEBUG_ITM_PORTWIDTH-1:0]),
+`endif
+`ifdef OPTIMSOC_DEBUG_ENABLE_STM
+         .trace_stm                     (trace_stm[`DEBUG_STM_PORTWIDTH-1:0]),
 `endif
           /*AUTOINST*/
          // Outputs
@@ -185,7 +198,7 @@ module or1200_module (/*AUTOARG*/
          .pm_cpu_gate_o                 (),                      // Templated
          .pm_wakeup_o                   (),                      // Templated
          .pm_lvolt_o                    (),                      // Templated
-         .sig_tick                      (),
+         .sig_tick                      (),                      // Templated
          // Inputs
          .clk_i                         (clk_i),
          .rst_i                         (rst_i),
@@ -209,7 +222,7 @@ module or1200_module (/*AUTOARG*/
          .dbg_we_i                      (dbg_we_i),
          .dbg_adr_i                     (dbg_adr_i[31:0]),
          .dbg_dat_i                     (dbg_dat_i[31:0]),
-         .pm_cpustall_i                 (1'b0));                         // Templated
+         .pm_cpustall_i                 (1'b0));                  // Templated
 
    /* wb_cas_unit AUTO_TEMPLATE(
     .clk_i          (bus_clk_i),
@@ -246,53 +259,11 @@ module or1200_module (/*AUTOARG*/
                       .wb_bus_dat_i     (dwb_dat_i[31:0]),       // Templated
                       .wb_bus_ack_i     (dwb_ack_i),             // Templated
                       .wb_bus_rty_i     (dwb_rty_i),             // Templated
-                      .wb_bus_err_i     (dwb_err_i));            // Templated
-
-   wire snoop_ack;
-   wire snoop_we;
-   wire [31:0] snoop_adr;
-
-/* -----\/----- EXCLUDED -----\/-----
-   /-* wb_llsc_unit AUTO_TEMPLATE(
-    .clk_i          (bus_clk_i),
-    .rst_i          (bus_rst_i),
-    .wb_core_\(.*\)_i (core_\1_o[]),
-    .wb_core_\(.*\)_o (core_\1_i[]),
-    .wb_bus_\(.*\)  (dwb_\1[]),
-    ); *-/
-   wb_llsc_unit u_llcs (/-*AUTOINST*-/
-                        // Outputs
-                        .wb_core_dat_o  (core_dat_i[31:0]),
-                        .wb_core_ack_o  (core_ack_i),
-                        .wb_core_rty_o  (core_rty_i),
-                        .wb_core_err_o  (core_err_i),
-                        .wb_bus_dat_o   (dwb_dat_o[31:0]),
-                        .wb_bus_adr_o   (dwb_adr_o[31:0]),
-                        .wb_bus_sel_o   (dwb_sel_o[3:0]),
-                        .wb_bus_we_o    (dwb_we_o),
-                        .wb_bus_cyc_o   (dwb_cyc_o),
-                        .wb_bus_stb_o   (dwb_stb_o),
-                        // Inputs
-                        .clk_i          (bus_clk_i),
-                        .rst_i          (bus_rst_i),
-                        .wb_core_dat_i  (core_dat_o[31:0]),
-                        .wb_core_adr_i  (core_adr_o[31:0]),
-                        .wb_core_sel_i  (core_sel_o[3:0]),
-                        .wb_core_we_i   (core_we_o),
-                        .wb_core_cyc_i  (core_cyc_o),
-                        .wb_core_stb_i  (core_stb_o),
-                        .wb_bus_dat_i   (dwb_dat_i[31:0]),
-                        .wb_bus_ack_i   (dwb_ack_i),
-                        .wb_bus_rty_i   (dwb_rty_i),
-                        .wb_bus_err_i   (dwb_err_i),
-                        .snoop_ack      (snoop_ack),
-                        .snoop_we       (snoop_we),
-                        .snoop_adr      (snoop_adr[31:0]));
- -----/\----- EXCLUDED -----/\----- */
+                      .wb_bus_err_i     (dwb_err_i));             // Templated
 
 endmodule // or1200_module
 
 // Local Variables:
-// verilog-library-directories:("." "../../or1200/verilog/" "../../wb_llsc_unit/verilog" "../../wb_cas_unit/verilog")
+// verilog-library-directories:("." "../../*/verilog/")
 // verilog-auto-inst-param-value: t
 // End:

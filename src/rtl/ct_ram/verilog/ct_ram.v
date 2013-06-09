@@ -30,6 +30,7 @@
  *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
  */
 
+// TODO: Check if Xilinx5 bram needs registered or unregistered adress
 
 module ct_ram(/*AUTOARG*/
    // Outputs
@@ -40,13 +41,12 @@ module ct_ram(/*AUTOARG*/
    );
 
    // Memory parameters
-   /* data width (word size) */
-   parameter dw = 32;
-   /* address width */
-   parameter aw = 23;
    /* memory size in Bytes */
    parameter mem_size  = 'hx;
-
+   /* data width (word size) */
+   localparam dw = 32;
+   /* address width */
+   parameter aw = clog2(mem_size);
 
    parameter memory_file = "sram.vmem";
 
@@ -69,6 +69,7 @@ module ct_ram(/*AUTOARG*/
 
    //reg [aw-1:2] wb_adr_i_r;
    reg [aw-1:0] adr;
+   reg [aw-1:0] adr_r;
 
    // Register to indicate if the cycle is a Wishbone B3-registered feedback
    // type access
@@ -89,7 +90,7 @@ module ct_ram(/*AUTOARG*/
     .clk_i (wb_clk_i),
     .dat_o (wb_dat_o[]),
     .sel_i (wb_sel_i[]),
-    .adr_i (adr[aw-3:0]),
+    .adr_i (adr_r[aw-3:0]),
     .we_i  (wb_we_i & wb_ack_o),
     .dat_i (wb_dat_i[]),
     ); */
@@ -101,7 +102,7 @@ module ct_ram(/*AUTOARG*/
           // Inputs
           .clk_i                        (wb_clk_i),              // Templated
           .sel_i                        (wb_sel_i[3:0]),         // Templated
-          .adr_i                        (adr[aw-3:0]),           // Templated
+          .adr_i                        (adr_r[aw-3:0]),           // Templated
           .we_i                         (wb_we_i & wb_ack_o),    // Templated
           .dat_i                        (wb_dat_i[31:0]));        // Templated
 `elsif OPTIMSOC_CTRAM_PLAINBETTER
@@ -114,15 +115,16 @@ module ct_ram(/*AUTOARG*/
           .clk_i                        (wb_clk_i),              // Templated
           .sel_i                        (wb_sel_i[3:0]),         // Templated
           .adr_i                        (adr[aw-3:0]),           // Templated
+          .adr_i_r                      (adr_r[aw-3:0]),           // Templated
           .we_i                         (wb_we_i & wb_ack_o),    // Templated
           .dat_i                        (wb_dat_i[31:0]));        // Templated
-`elsif OPTIMSOC_CTRAM_XILINXBRAM
+`elsif OPTIMSOC_CTRAM_XILINXBRAM_VIRTEX5
    /* ct_ram_xilinxbram_virtex5 AUTO_TEMPLATE(
     .clk_i (wb_clk_i),
     .rst_i (wb_rst_i),
     .dat_o (wb_dat_o[]),
     .sel_i (wb_sel_i[]),
-    .adr_i ({adr[aw-1:2],2'b00}),
+    .adr_i ({adr_r[aw-1:2],2'b00}),
     .we_i  (wb_we_i & wb_ack_o),
     .dat_i (wb_dat_i[]),
     ); */
@@ -135,11 +137,31 @@ module ct_ram(/*AUTOARG*/
           .clk_i                        (wb_clk_i),              // Templated
           .rst_i                        (wb_rst_i),              // Templated
           .sel_i                        (wb_sel_i[3:0]),         // Templated
-          .adr_i                        ({adr[aw-1:2],2'b00}),   // Templated
+          .adr_i                        ({adr_r[aw-1:2],2'b00}),   // Templated
           .we_i                         (wb_we_i & wb_ack_o),    // Templated
           .dat_i                        (wb_dat_i[31:0]));       // Templated
-`elsif OPTIMSOC_CTRAM_WIRES
-   // wiring will be done per hyperconnect in top level
+`elsif OPTIMSOC_CTRAM_XILINXBRAM_SPARTAN6
+   /* ct_ram_xilinxbram_virtex5 AUTO_TEMPLATE(
+    .clk_i (wb_clk_i),
+    .rst_i (wb_rst_i),
+    .dat_o (wb_dat_o[]),
+    .sel_i (wb_sel_i[]),
+    .adr_i ({adr_r[aw-1:2],2'b00}),
+    .we_i  (wb_we_i & wb_ack_o),
+    .dat_i (wb_dat_i[]),
+    ); */
+  ct_ram_xilinxbram_spartan6
+    #(.dw(dw),.aw(aw),.mem_size(mem_size))
+   memory(/*AUTOINST*/
+          // Outputs
+          .dat_o                        (wb_dat_o[31:0]),        // Templated
+          // Inputs
+          .clk_i                        (wb_clk_i),              // Templated
+          .rst_i                        (wb_rst_i),              // Templated
+          .sel_i                        (wb_sel_i[3:0]),         // Templated
+          .adr_i                        ({adr[aw-1:2],2'b00}),   // Templated
+          .we_i                         (wb_we_i),    // Templated
+          .dat_i                        (wb_dat_i[31:0]));       // Templated   
 `else // !`ifdef OPTIMSOC_CTRAM_PLAIN
    // synthesis translate_off
    $display("Set an OpTiMSoC compute tile RAM implementation.");
@@ -168,23 +190,23 @@ module ct_ram(/*AUTOARG*/
      if (wb_rst_i) begin
        burst_adr_counter = 0;
      end else begin
-       burst_adr_counter = adr;
+       burst_adr_counter = adr_r;
         if (wb_b3_trans_start)
           burst_adr_counter = {2'b00,wb_adr_i[aw-1:2]};
         else if ((wb_cti_i_r == 3'b010) & wb_ack_o & wb_b3_trans)
           // Incrementing burst
           begin
              if (wb_bte_i_r == 2'b00) // Linear burst
-               burst_adr_counter = adr + 1;
+               burst_adr_counter = adr_r + 1;
              if (wb_bte_i_r == 2'b01) // 4-beat wrap burst
-               burst_adr_counter[1:0] = adr[1:0] + 1;
+               burst_adr_counter[1:0] = adr_r[1:0] + 1;
              if (wb_bte_i_r == 2'b10) // 8-beat wrap burst
-               burst_adr_counter[2:0] = adr[2:0] + 1;
+               burst_adr_counter[2:0] = adr_r[2:0] + 1;
              if (wb_bte_i_r == 2'b11) // 16-beat wrap burst
-               burst_adr_counter[3:0] = adr[3:0] + 1;
+               burst_adr_counter[3:0] = adr_r[3:0] + 1;
           end // if ((wb_cti_i_r == 3'b010) & wb_ack_o_r)
         else if (!wb_ack_o & wb_b3_trans)
-          burst_adr_counter = adr;
+          burst_adr_counter = adr_r;
      end
 
 
@@ -197,16 +219,23 @@ module ct_ram(/*AUTOARG*/
 
    assign using_burst_adr = wb_b3_trans;
 
-   assign burst_access_wrong_wb_adr = (using_burst_adr & (adr != {2'b00,wb_adr_i[aw-1:2]}));
+   assign burst_access_wrong_wb_adr = (using_burst_adr & (adr_r != {2'b00,wb_adr_i[aw-1:2]}));
+
+   // Address logic
+   always@(*)
+     if (using_burst_adr)
+       adr = burst_adr_counter;
+     else if (wb_cyc_i & wb_stb_i)
+       adr = {2'b00,wb_adr_i[aw-1:2]};
+     else
+       adr = adr_r;
 
    // Address registering logic
    always@(posedge wb_clk_i)
      if(wb_rst_i)
-       adr <= 0;
-     else if (using_burst_adr)
-       adr <= burst_adr_counter;
-     else if (wb_cyc_i & wb_stb_i)
-       adr <= {2'b00,wb_adr_i[aw-1:2]};
+       adr_r <= 0;
+     else 
+       adr_r <= adr;
 
    assign wb_rty_o = 0;
 
@@ -288,6 +317,6 @@ module ct_ram(/*AUTOARG*/
      random_ack_negate = 0;
 `endif
 
-
+   `include "optimsoc_functions.vh"
 
 endmodule

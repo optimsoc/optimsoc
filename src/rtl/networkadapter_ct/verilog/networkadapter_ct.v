@@ -1,30 +1,30 @@
 /**
  * This file is part of OpTiMSoC.
- * 
+ *
  * OpTiMSoC is free hardware: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 3 of 
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
  *
  * As the LGPL in general applies to software, the meaning of
  * "linking" is defined as using the OpTiMSoC in your projects at
  * the external interfaces.
- * 
+ *
  * OpTiMSoC is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public 
+ * You should have received a copy of the GNU Lesser General Public
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * =================================================================
- * 
+ *
  * This is the network adapter for compute tiles. It is configurable to
  * contain different elements, e.g. message passing or DMA.
- * 
+ *
  * (c) 2012-2013 by the author(s)
- * 
+ *
  * Author(s):
  *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
  */
@@ -32,7 +32,13 @@
 `include "lisnoc_def.vh"
 `include "optimsoc_def.vh"
 
-module networkadapter_ct(/*AUTOARG*/
+module networkadapter_ct(
+`ifdef OPTIMSOC_CLOCKDOMAINS
+ `ifdef OPTIMSOC_CDC_DYNAMIC
+                         cdc_conf, cdc_enable,
+ `endif
+`endif
+                         /*AUTOARG*/
    // Outputs
    noc_in_ready, noc_out_flit, noc_out_valid, wbm_adr_o, wbm_cyc_o,
    wbm_dat_o, wbm_sel_o, wbm_stb_o, wbm_we_o, wbm_cab_o, wbm_cti_o,
@@ -45,12 +51,13 @@ module networkadapter_ct(/*AUTOARG*/
 
    parameter noc_xdim = `OPTIMSOC_XDIM;
    parameter noc_ydim = `OPTIMSOC_YDIM;
-   
+
    parameter vchannels = `VCHANNELS;
 
    parameter tileid = 0;
 
    parameter dma_generate_interrupt = 1;
+   parameter dma_entries = 4;
 
    parameter noc_data_width = 32;
    parameter noc_type_width = 2;
@@ -58,11 +65,11 @@ module networkadapter_ct(/*AUTOARG*/
 
    parameter conf_mp_simple = 1;
    parameter conf_dma       = 1;
-   
+
    parameter vc_mp_simple = `VCHANNEL_MPSIMPLE;
    parameter vc_dma_req   = `VCHANNEL_DMA_REQ;
    parameter vc_dma_resp  = `VCHANNEL_DMA_RESP;
-   
+
    input clk, rst;
 
    input [noc_flit_width-1:0]  noc_in_flit;
@@ -85,7 +92,7 @@ module networkadapter_ct(/*AUTOARG*/
    input                 wbm_rty_i;
    input                 wbm_err_i;
    input [31:0]          wbm_dat_i;
-   
+
    input [31:0]          wbs_adr_i;
    input                 wbs_cyc_i;
    input [31:0]          wbs_dat_i;
@@ -100,8 +107,21 @@ module networkadapter_ct(/*AUTOARG*/
    output                wbs_err_o;
    output [31:0]         wbs_dat_o;
 
-   output [1:0]          irq;
-      
+   /*
+    *  +---+-..-+----+
+    *  |   dma  | mp |
+    *  +---+-..-+----+
+    * dma_entries 1  (0)
+    */
+   output [dma_entries:0]          irq;
+
+`ifdef OPTIMSOC_CLOCKDOMAINS
+ `ifdef OPTIMSOC_CDC_DYNAMIC
+   output [2:0]          cdc_conf;
+   output                cdc_enable;
+ `endif
+`endif
+
    wire [vchannels-1:0] mod_out_ready;
    wire [vchannels-1:0] mod_out_valid;
    wire [noc_flit_width-1:0] mod_out_flit[0:vchannels-1];
@@ -113,7 +133,7 @@ module networkadapter_ct(/*AUTOARG*/
 
    assign mod_in_valid = noc_in_valid;
    assign noc_in_ready = mod_in_ready;
-   
+
    generate
       genvar              v;
       for (v=0;v<vchannels;v=v+1) begin
@@ -121,7 +141,7 @@ module networkadapter_ct(/*AUTOARG*/
          assign mod_out_flit_flat[(v+1)*noc_flit_width-1:v*noc_flit_width] = mod_out_flit[v];
       end
    endgenerate
-   
+
    // The different interfaces at the bus slave
    //  slave 0: configuration
    //           NABASE + 0x000000
@@ -134,7 +154,7 @@ module networkadapter_ct(/*AUTOARG*/
    localparam IFCONF     = 0;
    localparam IFMPSIMPLE = 1;
    localparam IFDMA      = 2;
-   
+
    reg [IFSLAVES-1:0] sselect;
    always @(*) begin
       sselect[IFCONF]     = (wbs_adr_i[21:20] == 2'b00);
@@ -163,14 +183,16 @@ module networkadapter_ct(/*AUTOARG*/
    assign wbs_dat_o = sselect[IFCONF] ? wbif_dat_o[IFCONF] :
                       sselect[IFMPSIMPLE] ? wbif_dat_o[IFMPSIMPLE] :
                       sselect[IFDMA] ? wbif_dat_o[IFDMA] : wbif_dat_o[IFCONF];
-   
+
 
    /* networkadapter_conf AUTO_TEMPLATE(
-    .data (wbif_dat_o[IFCONF]),
-    .ack  (wbif_ack_o[IFCONF]),
-    .rty  (wbif_rty_o[IFCONF]),
-    .err  (wbif_err_o[IFCONF]),
-    .adr  (wbs_adr_i[15:0]),
+    .data   (wbif_dat_o[IFCONF]),
+    .ack    (wbif_ack_o[IFCONF]),
+    .rty    (wbif_rty_o[IFCONF]),
+    .err    (wbif_err_o[IFCONF]),
+    .adr    (wbs_adr_i[15:0]),
+    .we     (wbs_cyc_i & wbs_stb_i & wbs_we_i),
+    .data_i (wbs_dat_i),
     ); */
 
    networkadapter_conf
@@ -178,20 +200,31 @@ module networkadapter_ct(/*AUTOARG*/
        .noc_xdim(noc_xdim),.noc_ydim(noc_ydim),
        .mp_simple_present(conf_mp_simple),
        .dma_present(conf_dma))
-   u_conf(/*AUTOINST*/
+   u_conf(
+`ifdef OPTIMSOC_CLOCKDOMAINS
+ `ifdef OPTIMSOC_CDC_DYNAMIC
+          .cdc_conf                     (cdc_conf[2:0]),
+          .cdc_enable                   (cdc_enable),
+ `endif
+`endif
+          /*AUTOINST*/
           // Outputs
           .data                         (wbif_dat_o[IFCONF]),    // Templated
           .ack                          (wbif_ack_o[IFCONF]),    // Templated
           .rty                          (wbif_rty_o[IFCONF]),    // Templated
           .err                          (wbif_err_o[IFCONF]),    // Templated
           // Inputs
-          .adr                          (wbs_adr_i[15:0]));      // Templated
-   
-   
+          .clk                          (clk),
+          .rst                          (rst),
+          .adr                          (wbs_adr_i[15:0]),       // Templated
+          .we                           (wbs_cyc_i & wbs_stb_i & wbs_we_i), // Templated
+          .data_i                       (wbs_dat_i));            // Templated
+
+
    // just wire them statically for the moment
    assign wbif_rty_o[IFMPSIMPLE] = 1'b0;
    assign wbif_err_o[IFMPSIMPLE] = 1'b0;
-   
+
    /* lisnoc_mp_simple_wb AUTO_TEMPLATE(
     .noc_out_flit  (mod_out_flit[vc_mp_simple][]),
     .noc_out_valid (mod_out_valid[vc_mp_simple]),
@@ -205,9 +238,9 @@ module networkadapter_ct(/*AUTOARG*/
     .wb_dat_o     (wbif_dat_o[IFMPSIMPLE]),
     .wb_adr_i     (wbs_adr_i[5:0]),
     .wb_\(.*\)      (wbs_\1),
-    .irq          (irq[1]),
+    .irq          (irq[0]),
     ); */
-   
+
    lisnoc_mp_simple_wb
      #(.noc_data_width(32),.noc_type_width(2),.fifo_depth(16))
    u_mp_simple(/*AUTOINST*/
@@ -217,7 +250,7 @@ module networkadapter_ct(/*AUTOARG*/
                .noc_in_ready            (mod_in_ready[vc_mp_simple]), // Templated
                .wb_dat_o                (wbif_dat_o[IFMPSIMPLE]), // Templated
                .wb_ack_o                (wbif_ack_o[IFMPSIMPLE]), // Templated
-               .irq                     (irq[1]),                // Templated
+               .irq                     (irq[0]),                // Templated
                // Inputs
                .clk                     (clk),
                .rst                     (rst),
@@ -253,10 +286,10 @@ module networkadapter_ct(/*AUTOARG*/
           .wb_if_err_o    (wbif_err_o[IFDMA]),
           .wb_if_\(.*\)   (wbs_\1),
           .wb_\(.*\)      (wbm_\1),
-          .irq            (irq[0]),
+          .irq            (irq[dma_entries:1]),
           ); */
          lisnoc_dma
-           #(.tileid(tileid))
+           #(.tileid(tileid),.table_entries(dma_entries))
          u_dma(/*AUTOINST*/
                // Outputs
                .noc_in_req_ready        (mod_in_ready[vc_dma_req]), // Templated
@@ -278,7 +311,7 @@ module networkadapter_ct(/*AUTOARG*/
                .wb_cab_o                (wbm_cab_o),             // Templated
                .wb_cti_o                (wbm_cti_o),             // Templated
                .wb_bte_o                (wbm_bte_o),             // Templated
-               .irq                     (irq[0]),                // Templated
+               .irq                     (irq[dma_entries:1]),    // Templated
                // Inputs
                .clk                     (clk),
                .rst                     (rst),
@@ -328,7 +361,7 @@ module networkadapter_ct(/*AUTOARG*/
          assign mod_out_ready[0] = noc_out_ready;
       end // else: !if(vchannels>1)
    endgenerate
-   
+
 
 endmodule // networkadapter_ct
 
