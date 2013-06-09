@@ -1,0 +1,28 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
+
+project(optimsocgui)
+SET (VERSION_MAJOR "0")
+SET (VERSION_MINOR "1")
+SET (VERSION_PATCH "0")
+SET (VERSION_SUFFIX "pre")
+SET (PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_SUFFIX})
+
+SET(CMAKE_VERBOSE_MAKEFILE OFF)
+
+# include our own cmake module files
+SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
+
+# check for Qt
+SET (QT_MT_REQUIRED TRUE)
+SET (QT_MIN_VERSION "4.6.2")
+FIND_PACKAGE(Qt4 REQUIRED)
+
+include(${QT_USE_FILE})
+
+# Check for liboptimsoc
+FIND_PACKAGE(Liboptimsochost REQUIRED)
+
+add_subdirectory(src)
+#add_subdirectory(doc)
+
+MESSAGE(STATUS "OpTiMSoC GUI ${PROJECT_VERSION} will be built to install into ${CMAKE_INSTALL_PREFIX}")

@@ -1,0 +1,24 @@
+OpTiMSoC GUI
+============
+
+Building
+--------
+
+$> mkdir build
+$> cd build
+$> cmake ..
+$> make
+
+For a debug build, replace the cmake command above with
+$> cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+For faster builds, you can also invoke make with the -jn argument, 
+replace "n" with the number of parallel build jobs (e.g. -j2 on a 
+dual-core machine).
+
+Development
+-----------
+
+Main development is done using Qt Creator. Simply open the CMakeLists.txt 
+in this directory in Qt Creator and start coding.
+

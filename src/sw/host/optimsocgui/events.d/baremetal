@@ -1,0 +1,24 @@
+# This is an event description file. Those files contain lines of
+# event descriptions. Comments can be added as lines starting with #.
+#
+# Event definitions look like:
+# <id>:<format>:<size>:<color>:<text>
+#
+# id: The unique 16 bit identifier of the event. Accepted are either
+#     integer values or hexadecimal values started with '0x'.
+# format: Described the parameters of an event by their type. The
+#         formats will be accordingly replaced in <text>.
+#         Allowed: empty or a sequence of
+#          d: decimal value
+#          u: unsigned decimal value
+#          x: hexadecimal value
+#          f: float value
+#          c: character
+#          s: string
+# size: Size in pixels, can be empty (default: 3)
+# color: HTML color code, can be empty (default: 000000)
+# text: The text shown in the GUI. %<id> placeholders are used for
+#       each element of the <format> sequence.
+
+0x100:uux:1:666666:MPSimple send\ndest: %1\nsize: %2\nbuffer: %3
+0x102:uuu:1:666666:MPSimple receive\nsrc: %1\nclass: %2\nsize: %3
