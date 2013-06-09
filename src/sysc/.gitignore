@@ -1,0 +1,22 @@
+*.o
+.deps/
+.libs/
+Makefile
+Makefile.in
+/aclocal.m4
+/autom4te.cache
+/build-aux
+/config.*
+/configure
+/libtool
+/stamp-h1
+/INSTALL
+/*.pc
+
+# build and install directories
+/build
+/lib
+
+# Eclipse project files
+/.project
+/.cproject
