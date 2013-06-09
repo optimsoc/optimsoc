@@ -1,0 +1,55 @@
+Firmware for the ZTEX USB-FPGA Module 1.15
+==========================================
+
+This is a basic firmware for the Cypress EZ-USB FX2 chip to enable 
+communication between the OpTiMSoC debug system and a host computer using
+the USB interface.
+
+It has been tested on the ZTEX USB-FPGA Modules 1.15b and 1.15d.
+
+Building
+--------
+
+To compile this firmware, the ZTEX EZ-USB FX2 SDK is necessary, available at
+http://www.ztex.de/downloads/#firmware_kit
+Unpack the SDK and set the ZTEX_INCLUDE environment variable to the
+include-directory and add the bin-directory to your PATH. 
+
+You also need the Small Device C Compiler (SDCC), which is often available 
+from your distribution's packet repository.
+
+Then call "make" to build the firmware.
+
+On Debian/Ubuntu, the following commands will give you a working firmware
+build:
+$> # assuming you're in the directory where you found this README
+$> apt-get install sdcc
+$> wget http://www.ztex.de/downloads/ztex-120412.tar.bz2
+$> tar -xf ztex-120412.tar.bz2
+$> export ZTEX_INCLUDE=`pwd`/ztex/include 
+$> export PATH=`pwd`/ztex/bin:$PATH
+$> make
+
+
+Flashing
+--------
+
+After building the firmware, you need to flash it to the ZTEX board. Connect
+the board to your PC (and only one board at the time), and run
+$> make flash
+to copy the firmware to the board.
+
+If you get any permission denied errors, you might need to adjust your udev 
+rules to allow access to the USB device for regular users, or just run the
+make flash command as root (or any other user that has access to the device). 
+
+To check if the firmware loaded successfully, run
+$> lsusb -vd 221a:0100 | grep 'iProduct\|iManufacturer'
+  iManufacturer           1 TUM LIS
+  iProduct                2 OpTiMSoC - ZTEX USB 1.15
+
+If you get output as shown above, the device has been successfully flashed
+and you can now use e.g. optimsoc_cli to connect to the device. The firmware
+is permanently stored in the EEPROM and does not need to be re-flashed after
+the device has been powered down.
+
