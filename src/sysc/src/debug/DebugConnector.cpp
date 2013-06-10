@@ -49,8 +49,8 @@
 #define TRACETYPE_ITM 0
 #define TRACETYPE_STM 1
 
-DebugConnector::DebugConnector(sc_module_name nm) :
-        sc_module(nm), m_connectionfd(-1), m_port(22000)
+DebugConnector::DebugConnector(sc_module_name nm, uint16_t systemid) :
+        sc_module(nm), m_systemid(systemid), m_connectionfd(-1), m_port(22000)
 {
     SC_THREAD(connection);
 }
@@ -166,7 +166,6 @@ void DebugConnector::handleMessage(int type, uint8_t *payload,
 {
     uint8_t *buf;
     uint16_t *buf_short;
-    uint16_t systemid = 0xdead;
     int rv;
 
     switch (type) {
@@ -178,8 +177,8 @@ void DebugConnector::handleMessage(int type, uint8_t *payload,
         buf[3] = 0xad; // version (lo)
         buf[4] = ((uint16_t) m_debugModules.size()) >> 8; // num of debug modules (hi)
         buf[5] = ((uint16_t) m_debugModules.size()) & 0xff; // num of debug modules (lo)
-        buf[6] = systemid >> 8;   // system id (hi)
-        buf[7] = systemid & 0xff; // system id (lo)
+        buf[6] = m_systemid >> 8;   // system id (hi)
+        buf[7] = m_systemid & 0xff; // system id (lo)
         rv = write(m_connectionfd, buf, 8);
         free(buf);
         if (rv != 8) {

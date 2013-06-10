@@ -1,7 +1,7 @@
 #include "VerilatedDebugConnector.h"
 
-VerilatedDebugConnector::VerilatedDebugConnector(sc_module_name nm) :
-        DebugConnector(nm)
+VerilatedDebugConnector::VerilatedDebugConnector(sc_module_name nm, uint16_t systemid) :
+        DebugConnector(nm, systemid)
 {
 }
 

@@ -14,7 +14,8 @@ public:
     sc_out<bool> rst_sys;
     sc_out<bool> rst_cpu;
 
-    SC_CTOR(VerilatedDebugConnector);
+    VerilatedDebugConnector(sc_module_name nm, uint16_t systemid);
+    typedef DebugConnector SC_CURRENT_USER_MODULE;
 
     void start();
     void stop();

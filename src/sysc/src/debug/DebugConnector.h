@@ -54,7 +54,9 @@ public:
      *
      * The constructor initializes its SystemC thread.
      */
-    SC_CTOR(DebugConnector);
+    DebugConnector(sc_module_name nm, uint16_t systemid);
+    typedef DebugConnector SC_CURRENT_USER_MODULE;
+
 
     /**
      * TCP connection thread
@@ -116,6 +118,7 @@ protected:
 private:
     int m_port; /*!< Port of the TCP connection. */
     int m_connectionfd; /*!< The socket of the TCP connection. */
+    uint16_t m_systemid; /*!< ID of the system. */
 
     /** Vector of registered debug modules */
     std::vector<DebugModule*> m_debugModules;
