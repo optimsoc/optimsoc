@@ -11,23 +11,75 @@ OpTiMSoC is based on LISNoC, an open source Network-on-Chip and other
 open source hardware components. In future, this set of components
 will be continuously extended and you can easily integrate your own
 components. A variety of target platforms, such as FPGA boards,
-emulation platforms and simulations will in the future be supported.
+emulation platforms and simulations will be supported.
 
-This chapter will give an insight on the plans and roadmap of OpTiMSoC
-and finally give an overview of what is contained in the current
-release.
+For a general introduction about the project goals and elements of
+OpTiMSoC please refer to our permanently updated preprint on
+ArXiv.org\footnote{\url{http://arxiv.org/abs/1304.5081}}.
 
-\section{Library Elements}
-tbd
+\medskip
 
-\section{Target Platforms}
-tbd
+This document documents the projects from a user point of view.
+Starting with the description of how to get and install OpTiMSoC it
+describes the different kinds of simulation or syntheses systems
+currently supported by OpTiMSoC in the style of step-by-step
+tutorials.
 
-\section{Software Support}
-tbd
+In the following, we will give you a short overview of the different
+components that are part of OpTiMSoC. 
+%With each of them you will find
+%a reference box (\referencebox{Component}). This box will be used
+%throughout the user guide to highlight that a section covers this
+%component.
 
-\section{Platform Generator}
-tbd
+\subsection*{OpTiMSoC Toolchain}
 
-\section{Current Release}
-tbd
+The toolchain of OpTiMSoC currently consists of the standard OpenRISC
+crosscompiler and a newlib libc port (based on the OpenRISC newlib)
+plus a few small utility programs and scripts.
+
+You will need to have it installed in most cases as it is necessary to
+build all the software running on the OpTiMSoC systems.  
+
+\subsection*{System Libraries}
+
+The system libraries provide all functionalities of the OpTiMSoC
+platforms to the applications. This includes hardware drivers, runtime
+support, communication APIs and task management APIs.
+
+\subsection*{RTL Simulation}
+
+In case you are developing hardware in OpTiMSoC, RTL simulation is the
+starting point of development. Beside this, RTL simulation is used to
+execute small pieces of software for testing or development of drivers
+and the runtime system.
+
+Unfortunately, we do not know of any high-quality open source RTL
+simulation tool, so that we here rely on commercial EDA tools. At the
+moment this is Mentor's Modelsim.
+
+\subsection*{Verilator}
+
+Verilator is an open source tool that compiles Verilog code to SystemC
+and allows users without a commercial RTL simulator license to run
+system simulations.
+
+\subsection*{Synthesis}
+
+Currently we focus on FPGA synthesis for Xilinx FPGA. There will
+always be a supported board that can be used with the free Xilinx
+WebPack, but in general you will of course need a Xilinx license for
+this.
+
+Beside Xilinx tools, we also support Synopsys Synplify as this a more
+sophisticated synthesis tool.
+
+\subsection*{Host Software}
+
+Host software is needed for control and diagnosis/debug of the running
+systems. 
+
+\subsection*{Host GUI}
+
+A graphical user interface provides easy control and observability of
+the running systems.

@@ -1,8 +1,5 @@
-\chapter{Installation}
-\label{chap:getstarted}
-
-\section{Requirements}
-\label{sec:getstarted-requirements}
+\chapter{Installation \& Configuration}
+\label{chap:installation}
 
 Before you get started with OpTiMSoC you should notice that external
 tools and libraries might be required that are in some cases
@@ -11,90 +8,399 @@ university with access to many EDA tools, we aim to always provide
 tool flows and support for open and free tools, but especially when it
 comes to synthesis such alternatives are even not available.
 
-\subsection{Cross Compiler}
-\label{sec:getstarted-requirements-crosscompiler}
+\section{Prerequisites}
 
-You will need the \verb|or32-elf-gcc| cross compiler to compile your
-code for the OpenRISC processor. Precompiled libraries can currently
-be found here:
-\url{http://opencores.org/or1k/OpenRISC_GNU_tool_chain}. This release
-has been tested with the current snapshot:
+Throughout this document some packages are required in your linux
+distribution. OpTiMSoC should principally work on all common linux
+distributions. In case you encounter problems in your system we highly
+encourage you to contact the OpTiMSoC maintainers to fix these
+problems. Nevertheless, we recommend Ubuntu 12.04 LTS as development
+system and can ensure OpTiMSoC will work on it as we also work on it.
+In the following we will refer to Ubuntu/Debian commands to install
+packages, that will run under Ubuntu 12.04 LTS.
 
-\url{ftp://ocuser:ocuser@openrisc.opencores.org/toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}
+Independent of the components you plan to use, you will need some
+packages to be installed:
 
-Alternatively, you will need to build the cross compiler manually (can
-take some hours).
+\begin{verbatim}
+$> sudo apt-get -y install git g++ python
+\end{verbatim}
 
+\section{Get OpTiMSoC}
+
+OpTiMSoC does not come as an installation package, but is distributed
+as a git\footnote{http://www.git-scm.org} repository. Inside this
+repository (plus some external dependencies) you will need to compile
+and build some tools and libraries which is described later in this
+chapter.
+
+Before you get started, you should clone the LISNoC and OpTiMSoC
+repository:
+
+\begin{verbatim}
+$> git clone http://lis.ei.tum.de/git/lisnoc.git
+$> git clone http://lis.ei.tum.de/git/optimsoc.git
+\end{verbatim}
+
+After cloning you will have the main branch at its latest state. This
+should in general work then, but to ensure you are on a certain
+release you can set the state of the repository accordingly.
+
+You can list all releases:
+
+\begin{verbatim}
+$> git tag
+\end{verbatim}
+
+The release tags have the form \texttt{rel\emph{yyyymmdd}} where
+\texttt{\emph{yyyy}} is the year, \texttt{\emph{mm}} is the month and
+\texttt{\emph{dd}} is the day of the release.
+
+You can set each of the repositories to a certain release, e.g.,
+
+\begin{alltt}
+\$> git checkout rel\emph{yyyymmdd}
+\end{alltt}
+
+As a starter, it is recommended that you set your repositories to the
+latest release, which is always available as \texttt{rel-current}:
+
+\begin{alltt}
+\$> git checkout rel-current
+\end{alltt}
+
+For all work with OpTiMSoC you will need to have both repositories
+available. There is no installation procedure but everything is
+installed and developed in place at the moment. You will therefore
+need to set a few environment variables:
+
+\begin{alltt}
+LISNOC = \emph{/path/to/lisnoc/clone}
+LISNOC_RTL = \$\{OPTIMSOC\}/rtl
+
+OPTIMSOC = \emph{/path/to/optimsoc/clone}
+OPTIMSOC_RTL = \$\{OPTIMSOC\}/src/rtl
+OPTIMSOC_SYSC = \$\{OPTIMSOC\}/src/sysc
+\end{alltt}
+
+It is most convenient to set them in your \verb|.bashrc| (or similar).
+There are also bash scripts available in the base folders of both
+LISNoC and OpTiMSoC, that you need to source at the base folder of
+each of them:
+
+\begin{alltt}
+\$> source source.sh
+\end{alltt}
+
+With the environment variables set, you can start using OpTiMSoC.
+
+\section{OpTiMSoC Toolchain}
+
+The toolchain of OpTiMSoC currently consists of the standard OpenRISC
+crosscompiler and a newlib port (based on the OpenRISC newlib) plus a
+few small utility programs and scripts.
+
+\subsection{Prerequisites}
+
+In Ubuntu 12.04 LTS (and of course anywhere else) you will need
+libgmp, install
+
+\begin{verbatim}
+$> sudo apt-get install libgmp3c2
+\end{verbatim}
+
+\subsection{Compiler and C Library}
+
+In most cases you will not need to build the entire toolchain from
+scratch, because three options are available:
+
+\begin{itemize}
+\item Download the entire toolchain
+\item Build the newlib with your OpenRISC toolchain
+\item Build everything from scratch 
+\end{itemize}
+
+
+\subsubsection{Option 1: Download the entire toolchain}
+First of all you need the OpenRISC crosscompiler. There are many
+options available to get it or build it\footnote{\url{http://opencores.org/or1k/OpenRISC_GNU_tool_chain}}. The most simple
+approach is to download the prepacked
+library\footnote{\url{ftp://ocuser:ocuser@openrisc.opencores.org/toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}
+Mirror: \url{http://lis.ei.tum.de/pub-download/mirror/opencores/openrisc-toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}} and extract it
+to \verb|/opt|.
+
+
+\begin{verbatim}
+$> cd /opt
+$> sudo -s
+$> tar -xjf openrisc-toolchain-ocsvn-rev789.tar.bz2
+\end{verbatim}
+
+Next you need our prepacked newlib library. Download the current
+version\footnote{\url{}} and extract it to \verb|/opt|.
+
+Set environment (e.g., in \verb|~/.bashrc|):
+
+\begin{alltt}
+export PATH=/opt/openrisc/toolchain/bin:\$\{PATH\}
+export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+\end{alltt}
+
+\subsubsection{Option 2: Build newlib for OpTiMSoC}
+
+Clone the development from the repository to a directory suitable for
+you:
+
+\begin{verbatim}
+$> git clone http://lis.ei.tum.de/git/optimsoc-toolchain.git
+\end{verbatim}
+
+Go to the newlib directory:
+
+\begin{verbatim}
+$> cd optimsoc-toolchain/newlib-1.18.0
+\end{verbatim}
+
+Create a build directory and configure and build in there (the target
+directory is recommended to be at \verb|/opt/newlib/optimsoc|):
+
+\begin{verbatim}
+$> mkdir build; cd build
+$> ../configure --target=optimsoc --prefix=/opt/newlib/optimsoc \
+    CC_FOR_TARGET=or32-elf-gcc AR_FOR_TARGET=or32-elf-ar \
+    RANLIB_FOR_TARGET=or32-elf-ranlib
+$> make
+$> make install
+\end{verbatim}
+
+Set environment (e.g., in \verb|~/.bashrc|):
+
+\begin{verbatim}
+export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+\end{verbatim}
+
+
+\subsubsection{Option 3: Build the whole toolchain}
+
+In one of the next releases we will have machine support, e.g.,
+\verb|or32-elf-gcc -moptimsoc|.
+
+\subsection{Additional Scripts}
 You will need an additional script \verb|bin2vmem| to initialize the
 memory during simulation. It is distributed with ORPSoC and also
 available in the OpTiMSoC repository under \verb|tools/utils|. Just
 compile it
 
 \begin{verbatim}
-> gcc -o bin2vmem bin2vmem.c
+$> make
 \end{verbatim}
 
 and install it somewhere in your PATH.
 
-\subsection{Simulation Tools}
+\subsection{Configuration}
 
-\begin{itemize}
-\item Mentor Modelsim (tested with 10.1 and later)
-\end{itemize}
+After you installed the toolchain and compiled additional scripts, you
+need to enable them in your system. When you followed the steps above
+you will have to add the environment variables as (example for bash):
 
-\subsection{Synthesis Tools}
+\begin{alltt}
+# OpTiMSoC toolchain
+export PATH=/opt/openrisc/toolchain/bin:\$\{PATH\}
+export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+\end{alltt}
 
-\begin{itemize}
-\item Synopsys FPGA Synthesis (Synplify), tested with F-2012.03 and
-  later
-\item Xilinx ISE, tested with 13.4 and later
-\end{itemize}
+\section{SystemC, Verilator and SystemC Libraries}
 
-\section{LISNoC}
+SystemC\footnote{\url{http://www.systemc.org}} is used as simulation
+library for both full system simulation based on Verilator and in
+future for abstracted simulations. You will therefore need to
+download, compile and install SystemC.
 
-LISNoC is the Network-on-Chip implementation OpTiMSoC builds on. You
-can find LISNoC at \url{http://www.lisnoc.org}. The source code is
-available from a git repository.
+In case you want to run the Verilator-based simulation examples or
+develop software using the Verilator-based simulation, you will need
+to download and compile Verilator too.
 
-This document is written to match the tagged commit available in the
-repository. You need to create a local copy of the repository (line
-1). It is recommended that you switch to the tag this document is
-tested with (line 2):
+In the following the installation to \verb|/opt| is assumed, change
+the folder if necessary.
 
-\begin{verbatim}
-> git clone http://lis.ei.tum.de/git/lisnoc.git
-> cd lisnoc; git checkout rel20130128
-\end{verbatim}
+\subsection{SystemC}
 
-Two environment variables are needed in the following: \verb|LISNOC|
-and \verb|LISNOC_RTL|. You should either set them in your environment
-or start your session by sourcing a script in the LISNoC toplevel:
+First you need to register at the SystemC website and download the
+SystemC package (\verb|systemc-2.3.0.tgz|). For installation create
+the base folder and build directory:
 
-\begin{verbatim}
-> source source.sh
-\end{verbatim}
+\begin{alltt}
+\$> sudo mkdir /opt/systemc
+\$> sudo mkdir /opt/systemc/2.3.0
+\$> sudo mkdir /opt/systemc/build
+\end{alltt}
 
-\section{OpTiMSoC}
+Copy the gzip file from above to the build dir, become superuser, move
+there and extract it:
 
-OpTiMSoC itself is a repository that contains all modules and software
-required to work with OpTiMSoC except LISNoC. The current version and
-updated information on OpTiMSoC can be found at the OpTiMSoC website:
-\url{http://www.optimsoc.org}.
+\begin{alltt}
+\$> sudo cp systemc-2.3.0.tgz /opt/systemc/build
+\$> sudo -s
+\$> cd /opt/systemc/build
+\$> tar -xzf systemc-2.3.0.tgz
+\end{alltt}
 
-The sources are again available as git repository. Again, you need to
-create a local copy of the repository (line 1) and it is recommended that
-you switch to the tag this document is tested with (line 2):
+Create a build object directory, configure in there, build, install,
+done!
 
-\begin{verbatim}
-> git clone http://lis.ei.tum.de/git/optimsoc.git
-> cd optimsoc; git checkout rel20130128
-\end{verbatim}
+\begin{alltt}
+\$> cd systemc-2.3.0
+\$> mkdir objdir
+\$> cd objdir
+\$> ../configure --prefix=/opt/systemc/2.3.0
+\$> make
+\$> make install
+\end{alltt}
 
-Again, two environment variables are needed: \verb|OPTIMSOC| and
-\verb|OPTIMSOC_RTL|. As for LISNoC, you should either set them in your
-environment or start your session by sourcing a script in the OpTiMSoC
-toplevel folder:
+You will now find SystemC in \verb|/opt/systemc/2.3.0|.
 
-\begin{verbatim}
-> source source.sh
-\end{verbatim}
+\subsection{Verilator}
+
+First clone the Verilator repository in \verb|/opt|.
+
+\begin{alltt}
+\$> sudo -s
+\$> cd /opt
+\$> git clone http://git.veripool.org/git/verilator
+\end{alltt}
+
+Switch to the Verilator directory, prepare the build in place and make:
+
+\begin{alltt}
+\$> cd verilator
+\$> aclocal
+\$> autoconf
+\$> ./configure
+\$> make
+\end{alltt}
+
+\subsection{Configuration}
+
+You will need the following environment variables (e.g., in bash):
+
+\begin{alltt}
+# SystemC environment
+export SYSTEMC=/opt/systemc/2.3.0
+export SYSTEMC_INCLUDE=\$\{SYSTEMC\}/include
+
+# Verilator environment
+export VERILATOR\_ROOT=/opt/verilator
+export PATH=\$\{VERILATOR_ROOT\}/bin:\$\{PATH\}
+\end{alltt}
+
+\section{System Software}
+
+The system software consist of the libraries itself, some demo and
+benchmark applications plus the build infrastructure for them and your
+own application. The system libraries and the build infrastructure for
+applications are build in the following and installed in place.
+
+The applications themselves are not pre-built, but are compiled for a
+specific platform (e.g., in the tutorials) as they depend on the
+platform specifics (captured in \verb|optimsoc-sysconfig.c|) which are
+part of the software link process.
+
+The installation of the system software starts in the base folder
+(relative to the OpTiMSoC root) \verb|src/sw/system/dm|.
+
+Autotools are used to check your platform and generate the configure
+and the Makefiles:
+
+\begin{alltt}
+\$> ./autogen.sh
+\end{alltt}
+
+The rest of the installation is straight forward. As installation
+target it is currently recommended to install it in place meaning the
+libraries will be found in \verb|src/sw/system/dm/lib| etc. In future
+a unified global installation is envisioned, but for the moment that
+keeps stuff clear.
+
+To perform the installation run:
+
+\begin{alltt}
+\$> mkdir build
+\$> cd build
+\$> ../configure CFLAGS='-g -O0' --prefix=`pwd`/.. --host=or32-elf \textbackslash
+    CC=or32-elf-gcc
+\$> make
+\$> make install
+\end{alltt}
+
+Configuration may fail when you did not set the \verb|OPTIMSOC_NEWLIB|
+environment variable.
+
+After you have finished the installation, your future software builds
+need to know about the libraries. This is automatically done using
+pkgconfig. To let pkgconfig now where to find the OpTiMSoC libraries,
+set the environment variable:
+
+\begin{alltt}
+export PKG_CONFIG_PATH=\$\{OPTIMSOC\}/src/sw/system/dm/share/pkgconfig
+\end{alltt}
+
+or to your installation path accordingly.
+
+\section{Host Software}
+
+The host software allows you to communicate with the system for
+control and debugging/diagnosis. \verb|liboptimsochost| is the basic
+library, which also has a command line interface. A graphical user
+interface complements this for easier visualization of the system.
+
+\subsection{liboptimsochost}
+
+The library resides in \verb|src/sw/host/liboptimsochost|. We
+recommend to run the installation in place. First run autotools to
+generate configure and Makefiles:
+
+\begin{alltt}
+\$> ./autogen.sh
+\end{alltt}
+
+Then build, make and install:
+
+\begin{alltt}
+\$> mkdir build
+\$> cd build
+\$> ../configure --prefix=`pwd`/../ --enable-examples
+\$> make
+\$> make install
+\end{alltt}
+
+\section{Configuration Summary}
+
+Check that you have the following environment variables set at this
+point (or a subset depending on your requirements):
+
+\begin{alltt}
+LISNOC = \emph{/path/to/lisnoc/clone}
+LISNOC_RTL = \$\{OPTIMSOC\}/rtl
+
+OPTIMSOC = \emph{/path/to/optimsoc/clone}
+OPTIMSOC_RTL = \$\{OPTIMSOC\}/src/rtl
+OPTIMSOC_SYSC = \$\{OPTIMSOC\}/src/sysc
+
+
+# OpTiMSoC toolchain
+export PATH=/opt/openrisc/toolchain/bin:\$\{PATH\}
+export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+
+# SystemC environment
+export SYSTEMC=/opt/systemc/2.3.0
+export SYSTEMC_INCLUDE=\$\{SYSTEMC\}/include
+
+# Verilator environment
+export VERILATOR\_ROOT=/opt/verilator
+export PATH=\$\{VERILATOR_ROOT\}/bin:\$\{PATH\}
+
+# System software
+export PKG_CONFIG_PATH=\$\{OPTIMSOC\}/src/sw/system/dm/share/pkgconfig
+
+
+\end{alltt}

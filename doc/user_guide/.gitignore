@@ -4,4 +4,5 @@
 *.toc
 *.pdf
 *.xml
-html/
+/html/
+/auto/
