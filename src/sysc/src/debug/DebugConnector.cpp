@@ -24,7 +24,8 @@
 #define TRACETYPE_ITM 0
 #define TRACETYPE_STM 1
 
-DebugConnector::DebugConnector(sc_module_name nm) : sc_module(nm)
+DebugConnector::DebugConnector(sc_module_name nm) :
+        sc_module(nm), m_connectionfd(-1), m_port(22000)
 {
     SC_THREAD(connection);
 }
@@ -34,18 +35,34 @@ void DebugConnector::registerDebugModule(DebugModule *mod)
     m_debugModules.push_back(mod);
 }
 
-void DebugConnector::sendTrace(DebugModule *mod, char *data, unsigned int size)
+bool DebugConnector::sendTrace(DebugModule *mod, TracePacket &packet)
 {
+    size_t bufsize = packet.getRawPacketSize() + 6;
     uint16_t mod_address = mod->getAddress();
-    uint8_t *buffer = (uint8_t*) malloc(size + 6);
-    buffer[0] = size + 6;
+    uint8_t *buffer = (uint8_t*) calloc(bufsize, sizeof(uint8_t));
+    buffer[0] = bufsize;
     buffer[1] = MSGTYPE_TRACE;
     buffer[2] = mod->getType();
     buffer[3] = 0; // unused
     buffer[4] = mod_address >> 8;
     buffer[5] = mod_address & 0xff;
-    memcpy(&buffer[6], data, size);
-    assert(write(m_connectionfd, buffer, size + 6) == size + 6);
+
+    const uint8_t* data = packet.getRawPacket();
+    for (int i = 0; i < packet.getRawPacketSize(); i++) {
+        buffer[i+6] = data[i];
+    }
+    int rv = write(m_connectionfd, buffer, bufsize);
+    free(buffer);
+
+    if (rv == -1) {
+        cerr << "An error occurred during sending: " << strerror(errno);
+        return false;
+    } else if (rv != bufsize) {
+        cerr << "Only " << rv << " bytes written, " << bufsize << " bytes "
+                "expected." << endl;
+        return false;
+    }
+    return true;
 }
 
 void DebugConnector::connection()
@@ -55,8 +72,6 @@ void DebugConnector::connection()
 
     int m_listenfd;
     struct sockaddr_in m_servaddr, m_cliaddr;
-
-    m_port = 22000;
 
     m_listenfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -127,6 +142,7 @@ void DebugConnector::handleMessage(int type, uint8_t *payload,
     uint8_t *buf;
     uint16_t *buf_short;
     uint16_t systemid = 0xdead;
+    int rv;
 
     switch (type) {
     case MSGTYPE_SYSDISCOVER:
@@ -139,8 +155,12 @@ void DebugConnector::handleMessage(int type, uint8_t *payload,
         buf[5] = ((uint16_t) m_debugModules.size()) & 0xff; // num of debug modules (lo)
         buf[6] = systemid >> 8;   // system id (hi)
         buf[7] = systemid & 0xff; // system id (lo)
-        write(m_connectionfd, buf, 8);
+        rv = write(m_connectionfd, buf, 8);
         free(buf);
+        if (rv != 8) {
+            cerr << "handleMessage(type = MSGTYPE_SYSDISCOVER): Only " << rv
+                 << "Bytes written, 8 expected." << endl;
+        }
         break;
     case MSGTYPE_SYSENUMERATE:
         // do system enumeration
@@ -148,21 +168,31 @@ void DebugConnector::handleMessage(int type, uint8_t *payload,
         buf[0] = 6 * m_debugModules.size() + 2;
         buf[1] = MSGTYPE_SYSENUMERATE;
         buf_short = (uint16_t*) &buf[2];
-        for (uint16_t i = 0; i < m_debugModules.size(); i++) {
+        int i;
+        for (i = 0; i < m_debugModules.size(); i++) {
             buf_short[i*3+0] = i;
             buf_short[i*3+1] = m_debugModules[i]->getType();
             buf_short[i*3+2] = m_debugModules[i]->getVersion();
         }
-        write(m_connectionfd, buf, 6 * m_debugModules.size() + 2);
+        rv = write(m_connectionfd, buf, 6 * m_debugModules.size() + 2);
         free(buf);
+        if (rv != 6 * m_debugModules.size() + 2) {
+            cerr << "handleMessage(type = MSGTYPE_SYSENUMERATE): Only " << rv
+                 << "Bytes written, " << (6 * m_debugModules.size() + 2)
+                 << " expected." << endl;
+        }
         break;
     case MSGTYPE_SYSSTART:
         start();
         buf = (uint8_t*) malloc(2);
         buf[0] = 2;
         buf[1] = MSGTYPE_SYSSTART;
-        write(m_connectionfd, buf, 2);
+        rv = write(m_connectionfd, buf, 2);
         free(buf);
+        if (rv != 2) {
+            cerr << "handleMessage(type = MSGTYPE_SYSSTART): Only " << rv
+                 << "Bytes written, 2 expected." << endl;
+        }
         break;
     case MSGTYPE_MODSEND:
         uint16_t smaddress;
@@ -184,8 +214,12 @@ void DebugConnector::handleMessage(int type, uint8_t *payload,
         buf[1] = MSGTYPE_MODSEND;
         buf[2] = sresponse >> 8;
         buf[3] = sresponse & 0xff;
-        write(m_connectionfd, buf, 4);
+        rv = write(m_connectionfd, buf, 4);
         free(buf);
+        if (rv != 4) {
+            cerr << "handleMessage(type = MSGTYPE_MODSEND): Only " << rv
+                 << "Bytes written, 4 expected." << endl;
+        }
         break;
     default:
         cout << "unhandled debug request" << endl;

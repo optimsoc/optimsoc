@@ -2,8 +2,10 @@
 #define DEBUGCONNECTOR_H_
 
 #include <systemc.h>
-#include "DebugModule.h"
 #include <vector>
+
+#include "DebugModule.h"
+#include "TracePacket.h"
 
 /**
  * @defgroup debug Debugging Infrastructure
@@ -53,14 +55,14 @@ public:
      *
      * This function can be called by the debug modules to send trace events
      * via the TCP connection. It does not care about the actual trace event
-     * itself, but is called with raw data. This data is packaged in a
-     * MSGTYPE_TRACE type packet and delivered via the tcp connection.
+     * itself, only the raw data from the TracePacket is used and and packaged
+     * in a MSGTYPE_TRACE type packet and delivered via the TCP connection.
      *
-     * \param mod  The sending module
-     * \param data The (serialized) trace event
-     * \param size The size of the (serialized) trace event
+     * \param mod    The sending module
+     * \param packet The trace packet to send
+     * \return operation successful?
      */
-    void sendTrace(DebugModule* mod, char *data, unsigned int size);
+    bool sendTrace(DebugModule *mod, TracePacket &packet);
 
 protected:
     /**

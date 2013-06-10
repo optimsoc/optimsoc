@@ -30,7 +30,9 @@ AM_LDFLAGS = $(SYSTEMC_LDFLAGS)
 liboptimsocsysc_la_SOURCES =\
     debug/DebugConnector.cpp \
     debug/VerilatedDebugConnector.cpp \
-    debug/VerilatedSTM.cpp
-
+    debug/VerilatedSTM.cpp \
+    debug/TracePacket.cpp
+    
 liboptimsocsysc_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 liboptimsocsysc_la_CPPFLAGS = $(AM_CPPFLAGS)
+

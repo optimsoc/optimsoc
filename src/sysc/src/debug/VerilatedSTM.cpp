@@ -1,10 +1,11 @@
 #include "VerilatedSTM.h"
 
 #include "DebugConnector.h"
+#include "TracePacket.h"
 
 #define STM_VERSION 0
 
-struct stm_trace
+class STMTracePacket : public TracePacket
 {
 public:
     uint32_t coreid;
@@ -12,30 +13,30 @@ public:
     uint16_t id;
     uint32_t value;
 
-    stm_trace()
+    STMTracePacket() : coreid(0), timestamp(0), id(0), value(0)
     {
-        m_data = new char[getSize()];
-        assert(m_data != 0);
+        m_rawPacket = (uint8_t*)calloc(getRawPacketSize(), sizeof(uint8_t));
     }
 
-    int getSize()
+    size_t getRawPacketSize() const
     {
-        return 4 + 4 + 2 + 4;
+        return sizeof(coreid) + sizeof(timestamp) + sizeof(id) +
+               sizeof(value);
     }
-    char* getPacket()
+
+protected:
+    void refreshRawPacketData()
     {
-        memcpy(&m_data[0], (void*) &coreid, 4);
-        memcpy(&m_data[4], (void*) &timestamp, 4);
-        memcpy(&m_data[8], (void*) &id, 2);
-        memcpy(&m_data[10], (void*) &value, 4);
-        return m_data;
+        memcpy(&m_rawPacket[0], (void*) &coreid, 4);
+        memcpy(&m_rawPacket[4], (void*) &timestamp, 4);
+        memcpy(&m_rawPacket[8], (void*) &id, 2);
+        memcpy(&m_rawPacket[10], (void*) &value, 4);
     }
-private:
-    char *m_data;
 };
 
 VerilatedSTM::VerilatedSTM(sc_module_name name, DebugConnector *dbgconn) :
-        DebugModule(name, dbgconn)
+        DebugModule(name, dbgconn), m_wb_insn(NULL), m_wb_freeze(NULL),
+        m_coreid(0), m_r3(NULL)
 {
     SC_METHOD(monitor);
     sensitive << clk.neg();
@@ -63,8 +64,8 @@ uint16_t VerilatedSTM::read(uint16_t address, uint16_t *size, char** data)
 
 void VerilatedSTM::monitor()
 {
-    struct stm_trace trace;
-    trace.coreid = m_coreid;
+    STMTracePacket packet;
+    packet.coreid = m_coreid;
     if (*m_wb_freeze != 0) {
         return;
     }
@@ -73,10 +74,10 @@ void VerilatedSTM::monitor()
         uint32_t val = *m_r3;
 
         if (K > 0) {
-            trace.timestamp = sc_time_stamp().value() / 1000;
-            trace.id = K;
-            trace.value = val;
-            m_dbgconn->sendTrace(this, trace.getPacket(), trace.getSize());
+            packet.timestamp = sc_time_stamp().value() / 1000;
+            packet.id = K;
+            packet.value = val;
+            m_dbgconn->sendTrace(this, packet);
         }
     }
 }
