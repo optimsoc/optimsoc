@@ -50,7 +50,6 @@ AC_CONFIG_FILES([
         src/libbaremetal/Makefile
         src/libruntime/Makefile
         src/libmcapi/Makefile
-        src/libmtapi/Makefile
 ])
 
 AC_OUTPUT
