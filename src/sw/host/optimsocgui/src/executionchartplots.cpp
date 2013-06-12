@@ -228,7 +228,8 @@ void ExecutionChartPlotCore::readEventsFromPath(QString path)
     QStringList flist = dir.entryList();
 
     for (QStringList::iterator it = flist.begin(); it != flist.end(); ++it ) {
-        readEventsFromFile(path+"/"+*it);
+        if ((*it != ".") && (*it != "..") && (it->right(1) != "~" ))
+            readEventsFromFile(path+"/"+*it);
     }
 }
 
