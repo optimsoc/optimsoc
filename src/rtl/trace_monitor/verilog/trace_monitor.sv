@@ -122,6 +122,12 @@ module trace_monitor(/*AUTOARG*/
                     is_newline <= 0;
                  end
               end // case: 16'h0004
+              16'h0023: begin
+                 case (wb_pc[11:8])
+                   1: $display("[%t, %0d] Software reset", $time, ID);
+                   default: $display("[%t, %0d] Exception #%d occured", $time, ID, wb_pc[11:8]);
+                 endcase
+              end
               default: begin
                  $display("[%t, %0d] Event 0x%x: 0x%x", $time, ID, wb_insn[15:0], r3);
               end
