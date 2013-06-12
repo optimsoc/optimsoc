@@ -29,7 +29,8 @@
  */
 
 #include <optimsoc.h>
-#include <utils.h>
+#include <optimsoc-baremetal.h>
+#include <or1k-support.h>
 
 #include <assert.h>
 #include <stdio.h>  // For printf
@@ -142,14 +143,18 @@ void recv(unsigned int *buffer,int len);
 void barrier();
 
 // Here we go..
-void main() {
+int main() {
     // Initialize the OpTiMSoC library
     optimsoc_init(0);
+
+    optimsoc_mp_simple_init();
 
     // Add a handler for class 0 packets to the mpsimple message passing
     // driver. The driver will execute recv (see definition above) each
     // time a packet arrives.
     optimsoc_mp_simple_addhandler(0,&recv);
+
+    or1k_enable_interrupts();
 
     // Determine my rank and total number
     rank = optimsoc_ctrank();
@@ -159,9 +164,17 @@ void main() {
     xcount = workshare[total-1][0];
     ycount = workshare[total-1][1];
 
+    // Define tracing
+    optimsoc_trace_definesection(0,"initialization");
+    optimsoc_trace_definesection(1,"compute");
+    optimsoc_trace_definesection(2,"update");
+    optimsoc_trace_definesection(3,"barrier");
+
+    optimsoc_trace_section(0);
+
     // If this rank is not part of the grid, just quit..
     if (rank >= xcount*ycount)
-        return;
+        return -1;
 
     // Determine this ranks column and row
     col = rank % xcount;
@@ -233,7 +246,7 @@ void main() {
             printf("\n");
         }
     }
-    return;
+    return 0;
 }
 
 // The heat function does the actual processing and communication
@@ -307,6 +320,7 @@ void heat() {
         printf("\n");
 #endif
 
+        optimsoc_trace_section(1);
         printf("Start iteration %d\n",n);
 
         // Calculate all new elements based on the previous values
@@ -316,14 +330,16 @@ void heat() {
                         matrix[other][POS(x+1,y)] +
                         matrix[other][POS(x,y-1)] +
                         matrix[other][POS(x,y+1)]);
-        printf("Finished iteration %d\n");
+        printf("Finished iteration %d\n", n);
+
+        optimsoc_trace_section(2);
 
         // Now we send the results to the other ranks
         if (!topbound) {
             // If one is above us
 
             // Message buffer
-            unsigned int buffer[3];
+            uint32_t buffer[3];
 
             // Assemble the header
             // Find tile id
@@ -350,7 +366,7 @@ void heat() {
 
         if (!bottombound) {
             // Same as above to the rank below this one
-            unsigned int buffer[3];
+            uint32_t buffer[3];
             set_bits(&buffer[0],optimsoc_ranktile(rank+xcount),OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
             set_bits(&buffer[0],0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
             set_bits(&buffer[0],rank,OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
@@ -365,7 +381,7 @@ void heat() {
 
         if (!leftbound) {
             // Same as above to the rank left of this one
-            unsigned int buffer[3];
+            uint32_t buffer[3];
             set_bits(&buffer[0],optimsoc_ranktile(rank-1),OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
             set_bits(&buffer[0],0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
             set_bits(&buffer[0],rank,OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
@@ -380,7 +396,7 @@ void heat() {
 
         if (!rightbound) {
             // Same as above to the rank right of this one
-            unsigned int buffer[3];
+            uint32_t buffer[3];
             set_bits(&buffer[0],optimsoc_ranktile(rank+1),OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
             set_bits(&buffer[0],0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
             set_bits(&buffer[0],rank,OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
@@ -394,7 +410,10 @@ void heat() {
         }
 
         // Wait for all other ranks to reach this point
+        optimsoc_trace_section(3);
+
         barrier();
+
 
         // Change matrices
         // (1-0=1, 1-1=0)
@@ -414,7 +433,7 @@ void heat() {
         // the other ranks send their results to rank 0
 
         // The buffer contains the message described above
-        unsigned int buffer[4];
+        uint32_t buffer[4];
 
         // Assemble header
         // Destination is rank 0
@@ -533,7 +552,7 @@ void barrier() {
 
         for (int i=1;i<xcount*ycount;i++) {
             // Send message to all ranks
-            unsigned int buffer = 0;
+            uint32_t buffer = 0;
             // Assemble header
             set_bits(&buffer,i,OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
             set_bits(&buffer,0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
@@ -543,7 +562,7 @@ void barrier() {
         }
     } else {
         // Send message to rank 0
-        unsigned int buffer = 0;
+        uint32_t buffer = 0;
         // Assemble header
         set_bits(&buffer,0,OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
         set_bits(&buffer,0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
