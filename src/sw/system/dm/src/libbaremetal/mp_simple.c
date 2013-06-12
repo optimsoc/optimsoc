@@ -37,6 +37,11 @@
 
 #include <stdlib.h>
 
+#define OPTIMSOC_TRACE_MPSIMPLE_SEND          0x100
+#define OPTIMSOC_TRACE_MPSIMPLE_SEND_FINISHED 0x101
+#define OPTIMSOC_TRACE_MPSIMPLE_RECV          0x102
+#define OPTIMSOC_TRACE_MPSIMPLE_RECV_FINISHED 0x103
+
 // Local buffer for the simple message passing
 unsigned int* optimsoc_mp_simple_buffer;
 
@@ -97,11 +102,19 @@ void optimsoc_mp_simple_inth(void* arg) {
             continue;
         }
 
+        OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV,(optimsoc_mp_simple_buffer[0]>>OPTIMSOC_SRC_LSB)&0x1f);
+        OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV,class);
+        OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV,size);
         cls_handlers[class](optimsoc_mp_simple_buffer,size);
+        OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV_FINISHED,0);
     }
 }
 
 void optimsoc_mp_simple_send(unsigned int size, uint32_t *buf) {
+    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_SEND,buf[0]>>OPTIMSOC_DEST_LSB);
+    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_SEND,size);
+    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_SEND,buf);
+
     int restore = optimsoc_critical_begin();
     REG32(OPTIMSOC_MPSIMPLE_SEND) = size;
     for (int i=0;i<size;i++) {
