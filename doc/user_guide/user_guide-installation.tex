@@ -373,6 +373,37 @@ Then build, make and install:
 \$> make install
 \end{alltt}
 
+To make it available to the debug software you need to point the
+linker to the installation path:
+
+\begin{alltt}
+\$> export LD_LIBRARY_PATH=\$\{OPTIMSOC\}/src/sw/host/liboptimsochost/lib:\$\{LD_LIBRARY_PATH\}
+\end{alltt}
+
+\subsection{Graphical User Interface}
+
+The graphical user interface resides in
+\verb|src/sw/host/optimsocgui|. Again we recommend installing it in
+place. Instead of autotools we use cmake here as it better integrates
+with the Qt toolchain (which is used for the GUI).
+
+To build it:
+
+\begin{alltt}
+\$> mkdir build
+\$> cd build
+\$> cmake -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/.. ..
+\$> make
+\$> make install
+\end{alltt}
+
+Afterwards you will find \verb|optimsocgui| in
+\verb|src/sw/host/optimsocgui/bin|. You should add this to your PATH:
+
+\begin{alltt}
+\$> export PATH=\$\{OPTIMSOC\}/src/sw/host/optimsocgui/bin:\$PATH
+\end{alltt}
+
 \section{Configuration Summary}
 
 Check that you have the following environment variables set at this
@@ -401,6 +432,12 @@ export PATH=\$\{VERILATOR_ROOT\}/bin:\$\{PATH\}
 
 # System software
 export PKG_CONFIG_PATH=\$\{OPTIMSOC\}/src/sw/system/dm/share/pkgconfig
+
+# Host library
+export LD_LIBRARY_PATH=\$\{OPTIMSOC\}/src/sw/host/liboptimsochost/lib:\$\{LD_LIBRARY_PATH\}
+
+# GUI
+export PATH=\$\{OPTIMSOC\}/src/sw/host/optimsocgui/bin:\$\{PATH\}
 
 
 \end{alltt}
