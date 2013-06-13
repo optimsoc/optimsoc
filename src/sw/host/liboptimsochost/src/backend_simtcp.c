@@ -179,7 +179,7 @@ int ob_simtcp_new(struct optimsoc_backend_ctx **ctx,
     *ctx = c;
 
     c->hostname = "localhost";
-    c->port = 23000;
+    c->port = 22000;
 
     // Search options for non-default options
     int i;
