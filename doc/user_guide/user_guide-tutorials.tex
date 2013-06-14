@@ -1,17 +1,17 @@
 \chapter{Tutorials}
 \label{chap:tutorials}
 
-The best way to get started with OpTiMSoC after you've prepared your system as
-described in the previous chapter is to follow some of our tutorials. They are
-written with two goals in mind: to introduce some of the basic concepts and
-nomenclature of many-core SoC, and to show you how those are implemented and
-can be used in OpTiMSoC.
+The best way to get started with OpTiMSoC after you've prepared your
+system as described in the previous chapter is to follow some of our
+tutorials. They are written with two goals in mind: to introduce some
+of the basic concepts and nomenclature of manycore SoC, and to show
+you how those are implemented and can be used in OpTiMSoC.
 
-Some of the tutorials (especially the first ones) build on top of each other,
-so it's recommended to do them in order. Simply stop if you think you know
-enough to implement your own ideas!
+Some of the tutorials (especially the first ones) build on top of each
+other, so it's recommended to do them in order. Simply stop if you
+think you know enough to implement your own ideas!
 
-\section{Compute Tile and Software}
+\section{RTL Simulation: Compute Tile and Software}
 
 It is a good starting point to simulate a single compute tile of a
 distributed memory system. Therefore a simple testbench is included
@@ -82,17 +82,17 @@ dimensions, the presence of I/O, the distribution of compute
 ressources, etc.
 
 Therefore you will always need to link your system-specific
-\verb|sysconfig.o| to the library and your application objects, what
-we will describe in the following. The \verb|sysconfig.c| can be found
-as part of the compute tile testbench
-(\verb|${OPTIMSOC}/tbench/rtl/dm/compute_tile|) under \verb|sw|.
+\verb|optimsoc-sysconfig.o| to the library and your application
+objects, what we will describe in the following. The
+\verb|optimsoc-sysconfig.c| can be found as part of the compute tile
+testbench (\verb|tbench/rtl/dm/compute_tile|) under \verb|sw|.
 
 To build a simple ``Hello World'' example, simply switch to \verb|sw|.
 The example application can be found in the software path. You should
 copy the whole path
 
 \begin{verbatim}
-> cp -r ${OPTIMSOC}/src/sw/system/dm/apps/baremetal/hello_simple sw/
+$> optimsoc-app-link dm baremetal/hello_simple
 \end{verbatim}
 
 Inside the \verb|hello_simple| folder you can find the
@@ -123,20 +123,21 @@ If you now run the software (\verb|make sim|), the simulation should
 terminate with:
 
 \begin{verbatim}
-# Terminate @00001140
+# [               52500, 0] Software reset
+# [            57480000, 0] Terminated at address 0x00008080
 \end{verbatim}
 
-\verb|0x1140| is the program counter (can vary depending on your cross
+\verb|0x00008080| is the program counter (can vary depending on your cross
 compiler version) the simulation terminated. This is correct behavior
 and will be explained below. Furthermore you will find a file called
 \verb|stdout| which shows the actual output:
 
 \begin{verbatim}
-[            42900000] Hello World!
+[            51185000, 0] Hello World!
 \end{verbatim}
 
-The \verb|[..]| part is the time stamp. But how does the actual
-printf-output get there when there is no UART or similar?
+The \verb|[..]| part is the time stamp and core id. But how does the
+actual printf-output get there when there is no UART or similar?
 
 OpTiMSoC software (especially in future releases) makes excessive use
 of a tricky part of the OpenRISC ISA. The ``no operation'' instruction
@@ -146,7 +147,7 @@ special purposes as writing characters with minimal intrusion or
 simulation termination.
 
 The termination is forced with \verb|l.nop 0x1|. If you have a look at
-the disassembly \verb|hello_simple.dis| at instruction \verb|0x1140|
+the disassembly \verb|hello_simple.dis| at instruction \verb|0x8080|
 (see above) you exactly find this instruction. The actual action is
 then done with the trace monitor.
 
@@ -154,7 +155,7 @@ With this method you can simply provide constants to your simulation
 environments. For variables this method is extended by putting data in
 further registers (often \verb|r3|). This still is minimally intrusive
 and allows you to trace values. The printf is also done that way (see
-\verb|utils.c| in \verb|libbaremetal|):
+newlib):
 
 \begin{verbatim}
 void sim_putc(unsigned char c) {
@@ -166,18 +167,19 @@ void sim_putc(unsigned char c) {
 This function is called from printf as write function. The trace
 monitor captures theses characters and puts them to the stdout file.
 
-You can easily add your own ``reports'' usind a macro defined in
-\verb|utils.h|:
+You can easily add your own ``traces'' using a macro defined in
+\verb|optimsoc.h|:
 
 \begin{verbatim}
-#define OPTIMSOC_REPORT(id,v)        \
+#define OPTIMSOC_TRACE(id,v)                \
    asm("l.addi\tr3,%0,0": :"r" (v) : "r3"); \
    asm("l.nop %0": :"K" (id));
 \end{verbatim}
 
-This feature is used extensively by future OpTiMSoC software.
+This feature is used extensively by current and future OpTiMSoC software.
 
-\section{Simulate Small 2x2 Distributed Memory System}
+\section{Going Multicore: Simulate Small 2x2 Distributed Memory
+  System}
 
 Next you might want to build an actual multicore system. You can find
 such a system in \verb|tbench/rtl/dm| directory as
@@ -198,17 +200,55 @@ all cores send a message to core 0, that prints a message when
 receiving the packets. When all cores sent their messags, the core
 acknowledges this by printing its own ``Hello World'' message.
 
-Finally, a real world example is given by \verb|heat|. Copy this
+The simulation should output:
+
+\begin{verbatim}
+# [               52500, 0] Software reset
+# [               52500, 1] Software reset
+# [               52500, 2] Software reset
+# [               52500, 3] Software reset
+# [            46585000, 1] Event 0x0100: 0x00000000
+# [            46617500, 1] Event 0x0100: 0x00000001
+# [            46627500, 2] Event 0x0100: 0x00000000
+# [            46652500, 1] Event 0x0100: 0x000fffec
+# [            46660000, 2] Event 0x0100: 0x00000001
+# [            46670000, 3] Event 0x0100: 0x00000000
+# [            46695000, 2] Event 0x0100: 0x000fffec
+# [            46702500, 3] Event 0x0100: 0x00000001
+# [            46737500, 3] Event 0x0100: 0x000fffec
+# [            47272500, 0] Exception # 8 occured
+# [            48292500, 1] Terminated at address 0x0000dd5c
+# [            48335000, 2] Terminated at address 0x0000dd5c
+# [            48377500, 3] Terminated at address 0x0000dd5c
+# [            48835000, 0] Event 0x0102: 0x00000001
+# [            48867500, 0] Event 0x0102: 0x00000000
+# [            48895000, 0] Event 0x0102: 0x00000001
+# [            65855000, 0] Event 0x0103: 0x00000000
+# [            66337500, 0] Event 0x0102: 0x00000002
+# [            66352500, 0] Event 0x0102: 0x00000000
+# [            66360000, 0] Event 0x0102: 0x00000001
+# [            75940000, 0] Event 0x0103: 0x00000000
+# [            76420000, 0] Event 0x0102: 0x00000003
+# [            76435000, 0] Event 0x0102: 0x00000000
+# [            76442500, 0] Event 0x0102: 0x00000001
+# [            85920000, 0] Event 0x0103: 0x00000000
+# [           100387500, 0] Terminated at address 0x0000dd5c
+\end{verbatim}
+
+After each core is reset they start their execution and after a
+certain time emit events. We will have a more detailed view on the
+events in the remaining tutorial. For the moment, you should know that
+the \verb|0x100| events describe that the processors send their
+messages. \verb|Exception # 8| is the interrupt exception, that occurs
+when data arrives at the network adapter. Core 0 then receives all of
+the messages (event \verb|0x102|).
+
+Finally, a real world example is given by \verb|heat|. Link this
 example similar as above (do not forget to link the correct ct.vmem at
 all time!). This example calculates the heat distribution in a
 distributed manner. The cores coordinate their boundary regions by
-sending messages around.
-
-%\section{MCAPI Example}
-%
-%libmcapi
-%
-%pingpong beispiel
+sending messages around. With the debug infrastructure below the trace
+events will be much easier to understand.
 
 \section{The Look Inside: Introducing the Debug System}
 
@@ -245,18 +285,76 @@ OpTiMSoC system itself and collects all data. The other part runs on a
 developer's PC (often also called host PC) and controls the debugging process
 and displays the collected data. Both parts are connected using either a USB
 connection (e.g. when running on the ZTEX boards), or a TCP connection (when
-running OpTiMSoC in ModelSim).
+running OpTiMSoC in simulations).
 
-% TODO: Add debug example as soon as code is part of the repository
+\section{Verilator: Compiled Verilog simulation}
 
+At the moment running ``verilated'' simulations is the best supported
+way of observing the system traces. We will therefore run the examples
+from before using a verilated simulation and observing the system in
+the graphical user interface.
 
-\section{PGAS System}
+In the following we will have a look at building such a system and how
+to observe it with the GUI. In \verb|tbench/verilator/dm| you find
+systems identical to the RTL simulation. We will directly start with
+the \verb|system_2x2_cccc|. In the base folder you should simply make
+it:
+
+\begin{alltt}
+\$> make
+\end{alltt}
+
+The command will first generate the verilated version of the 2x2
+system. Finally it builds the toplevel files and links to
+\verb|tb_system_2x2_cccc| and \verb|tb_system_2x2_cccc-vcd|. The
+latter generates a full VCD trace file of the hardware, which is
+much slower and also easily takes up tens of GB.
+
+Similar to the steps described above you will need to build the
+software, e.g., the heat example. Again you need to link the
+\verb|vmem| file. Now start the simulation:
+
+\begin{alltt}
+\$> ./tb_system_2x2_cccc
+\end{alltt}
+
+It will start a debug server and wait for connections:
+
+\begin{alltt}
+
+             SystemC 2.3.0-ASI --- Feb 11 2013 12:54:17
+        Copyright (c) 1996-2012 by all Contributors,
+        ALL RIGHTS RESERVED
+
+Listening on port 22000
+\end{alltt}
+
+In another console now start the OpTiMSoC GUI:
+
+\begin{alltt}
+\$> optimsocgui
+\end{alltt}
+
+In the first dialog window you need to set the debug backend to
+\emph{Simulation TCP Interface} and proceed then. After the GUI
+started you need to connect using \emph{Target
+  System}$\rightarrow$\emph{Connect}. The system view should change to
+a 2x2 system.
+
+The last step is to run the system by \emph{Target
+  System}$\rightarrow$\emph{Start CPUs}. The execution trace on the
+bottom of the window will start showing execution sections and events.
+By moving the mouse over the section you will find the description of
+the section. Similarly for the events you find a short description of
+the event.
+
+% \section{PGAS System}
 
 % problem: memory größe
 
 % pgas system bauen und simulieren
 
-\section{UART I/O}
+% \section{UART I/O}
 
 % problem: auf dem FPGA kein report-printf
 
@@ -264,11 +362,11 @@ running OpTiMSoC in ModelSim).
 
 % UART tile
 
-\section{XUPV5 Simulation}
+% \section{XUPV5 Simulation}
 
 % Funktionale simulation
 
-\section{XUPV5 Synthesis}
+% \section{XUPV5 Synthesis}
 
 % Synthese auf XUPV5, 2x2\_cmuc
 
