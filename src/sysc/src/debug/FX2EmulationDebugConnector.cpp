@@ -62,7 +62,7 @@ void FX2EmulationDebugConnector::interface()
 
 void FX2EmulationDebugConnector::handler()
 {
-    int port = 32000;
+    int port = 23000;
     int listenfd, connfd;
     int nready;
     fd_set rset, allset;
@@ -159,7 +159,7 @@ void FX2EmulationDebugConnector::handler()
 
 void FX2EmulationDebugConnector::ctrlhandler()
 {
-    int port = 32001;
+    int port = 23001;
     int listenfd, connfd;
     int nready;
     fd_set rset, allset;
