@@ -89,7 +89,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // XXX: Disable instruction trace dock until it contains data
     m_ui->instructionTraceDockWidget->hide();
 
-
+    connect(m_hwif, SIGNAL(softwareTraceReceived(uint,uint,uint,uint)),
+            this, SLOT(addSoftwareTraceToStdout(uint,uint,uint,uint)));
 
     // software trace display
     m_swTraceModel = new QStandardItemModel(0, 4, this);
@@ -245,4 +246,29 @@ void MainWindow::addSoftwareTraceToModel(unsigned int core_id,
 
 
     m_swTraceModel->appendRow(items);
+}
+
+void MainWindow::addSoftwareTraceToStdout(unsigned int core_id,
+                                          unsigned int timestamp,
+                                          unsigned int id,
+                                          unsigned int value)
+{
+    if (id==0x4) {
+        QChar character(value);
+
+        if (m_stdoutcollector.size() <= core_id) {
+            m_stdoutcollector.resize(core_id+1);
+        }
+
+        if (m_stdoutcollector[core_id].length() == 0) {
+            m_stdoutcollector[core_id] = QString("[%1, %2 ns] %3").arg(core_id).arg(timestamp).arg(character);
+        } else if (character != '\n') {
+            m_stdoutcollector[core_id] += character;
+        }
+
+        if (character == '\n') {
+            m_ui->stdoutTextEdit->appendPlainText(m_stdoutcollector[core_id]);
+            m_stdoutcollector[core_id] = "";
+        }
+    }
 }

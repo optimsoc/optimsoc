@@ -58,6 +58,8 @@ private:
     QStandardItemModel *m_traceModel;
     QStandardItemModel *m_swTraceModel;
 
+    QVector<QString> m_stdoutcollector;
+
 public slots:
     void showAboutDialog();
     void showConnectionStatus(HardwareInterface::ConnectionStatus oldStatus,
@@ -67,6 +69,8 @@ public slots:
                          unsigned int pc, int count);
     void addSoftwareTraceToModel(unsigned int core_id, unsigned int timestamp,
                                  unsigned int id, unsigned int value);
+    void addSoftwareTraceToStdout(unsigned int core_id, unsigned int timestamp,
+                                  unsigned int id, unsigned int value);
     void configure();
 };
 
