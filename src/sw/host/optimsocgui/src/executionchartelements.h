@@ -50,13 +50,13 @@ public:
     ExecutionChartSection(QObject *parent, double scale,
                           unsigned int baseline, unsigned int height,
                           unsigned int from, unsigned int to,
-                          unsigned int id, QString text);
+                          int id, QString text);
     virtual QGraphicsItem *getItem();
     virtual void rescale(double newscale, double oldscale);
     virtual void expand(int maximum);
 
 private:
-    static const QPair<QColor,QColor> colorMap(unsigned int id);
+    static const QPair<QColor,QColor> colorMap(int id);
 
     unsigned int m_baseline;
     unsigned int m_height;

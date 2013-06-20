@@ -51,9 +51,7 @@ void ExecutionChartSectionCreator::addTrace(unsigned int timestamp,
     QChar c;
     switch(id) {
     case 0x1:
-        if (m_inSection) {
-            createSection(m_currentSectionStart,timestamp,m_currentSection,m_sectionNames[m_currentSection]);
-        };
+        expand(timestamp);
     case 0x20:
         m_currentSectionDefinition = value;
         break;
@@ -67,8 +65,11 @@ void ExecutionChartSectionCreator::addTrace(unsigned int timestamp,
         break;
     case 0x22:
         expand(timestamp);
-        createSection(timestamp, timestamp, value, m_sectionNames[value]);
+        createSection(timestamp, timestamp, (int) value, m_sectionNames[value]);
         break;
+    case 0x23:
+        expand(timestamp);
+        createSection(timestamp, timestamp, -1, "Kernel");
     default:
         break;
     }
@@ -76,12 +77,12 @@ void ExecutionChartSectionCreator::addTrace(unsigned int timestamp,
 
 void ExecutionChartSectionCreator::createSection(unsigned int from,
                                                  unsigned int to,
-                                                 unsigned int id,
+                                                 int id,
                                                  QString text)
 {
     ExecutionChartSection *sect;
     sect = new ExecutionChartSection(this, m_scale, m_baseline+2, m_height-4,
-                                     from,to,id,text);
+                                     from, to, id, text);
     m_elements.push_back(sect);
     m_scene->addItem(sect->getItem());
 }

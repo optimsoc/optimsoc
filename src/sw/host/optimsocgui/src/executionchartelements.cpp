@@ -34,7 +34,7 @@
 ExecutionChartSection::ExecutionChartSection(QObject *parent, double scale,
                                              unsigned int baseline, unsigned int height,
                                              unsigned int from, unsigned int to,
-                                             unsigned int id, QString text)
+                                             int id, QString text)
     : ExecutionChartElement(parent, scale), m_baseline(baseline),
       m_height(height), m_from(from), m_to(to), m_id(id), m_text(text)
 {
@@ -58,7 +58,7 @@ QGraphicsItem *ExecutionChartSection::getItem()
     return rect;
 }
 
-const QPair<QColor,QColor> ExecutionChartSection::colorMap(unsigned int id)
+const QPair<QColor,QColor> ExecutionChartSection::colorMap(int id)
 {
     static bool initialized = false;
     static QMap<unsigned int,QPair<QColor,QColor> > map;
@@ -80,7 +80,9 @@ const QPair<QColor,QColor> ExecutionChartSection::colorMap(unsigned int id)
         map[11] = QPair<QColor,QColor>(QColor(0xFFAB988B),Qt::black);
     }
 
-    if (map.find(id)!=map.end()) {
+    if (id == -1) {
+        return QPair<QColor,QColor>(QColor("black"),QColor("black"));
+    } else if (map.find(id)!=map.end()) {
         return map[id];
     } else {
         return QPair<QColor,QColor>(QColor("white"),QColor("black"));
