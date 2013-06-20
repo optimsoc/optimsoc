@@ -117,8 +117,8 @@ const unsigned int NOC_CLASS_DMA = 0x2;
 const unsigned int NOC_CLASS_CONTROLMSG = 0x7;
 
 typedef enum {
-	OPTIMSOC_DBGNOC_USB,
-	OPTIMSOC_DBGNOC_TCP
+    OPTIMSOC_DBGNOC_USB,
+    OPTIMSOC_DBGNOC_TCP
 } ob_dbgnoc_connection_id;
 
 struct ob_dbg_noc_connection_ctx;
@@ -199,7 +199,7 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
     c->log_ctx = log_ctx;
     c->sysinfo = NULL;
 
-	// Set the common calls
+    // Set the common calls
     calls->cpu_stall = &ob_dbgnoc_cpu_stall;
     calls->cpu_reset = &ob_dbgnoc_cpu_reset;
     calls->itm_register_callback = &ob_dbgnoc_itm_register_callback;
@@ -922,7 +922,7 @@ int register_write(struct optimsoc_backend_ctx *ctx, int module_addr,
     packets[0].len = burst_len + 1;
 
     /*
-     * A register write is a single-flit packet:
+     * A register write is a multi-flit packet, starting with this header:
      *
      * -----------------------------------------------------------
      * | DEST[15:11] | CLASS[10:8] | REG_ADDR[7:2] | UNUSED[1:0] |
