@@ -2,18 +2,15 @@
 
 autoreconf --install --symlink
 
-libdir() {
-        echo $(cd $1/$(gcc -print-multi-os-directory); pwd)
-}
-
-args="--prefix=/usr \
---sysconfdir=/etc \
---libdir=$(libdir /usr/lib)"
-
 echo
-echo "----------------------------------------------------------------"
-echo "Initialized build system. For a common configuration please run:"
-echo "----------------------------------------------------------------"
+echo "Configuration done. Before proceeding you need to decide for an installation"
+echo "path. In most cases we recommend to use this folder as installation directory"
+echo "(documentation assumes this). But you can freely choose the prefix."
 echo
-echo "./configure CFLAGS='-g -O0' $args"
+echo "Usual build procedure:"
 echo
+echo "    mkdir build; cd build;"
+echo "    ../configure CFLAGS='-g -O0' --prefix=\`pwd\`/.. --enable-examples"
+echo "    make"
+echo "    make install"
+echo 
