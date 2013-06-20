@@ -62,7 +62,7 @@ public:
                           unsigned int value);
     virtual void expand(int maximum);
 private:
-    void createSection(unsigned int from, unsigned int to, unsigned int id,
+    void createSection(unsigned int from, unsigned int to, int id,
                        QString text);
 
     unsigned int m_currentSectionDefinition;

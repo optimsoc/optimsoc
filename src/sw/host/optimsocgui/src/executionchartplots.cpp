@@ -166,6 +166,7 @@ ExecutionChartPlotCore::ExecutionChartPlotCore(QObject *parent,
     m_traceCreators[0x20].push_back(section);
     m_traceCreators[0x21].push_back(section);
     m_traceCreators[0x22].push_back(section);
+    m_traceCreators[0x23].push_back(section);
     m_creators.append(section);
 
     ExecutionChartEventCreator *decevent =
