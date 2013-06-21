@@ -100,7 +100,7 @@ module itm_trace_collector(
    // read trace information
    always @(posedge clk_sample or posedge rst) begin
       if (rst) begin
-         trace_out_cdc <= {TRACE_WIDTH{1'bx}};
+         trace_out_cdc <= {TRACE_WIDTH{1'b0}};
          trace_out_enable_cdc <= 1'b0;
       end else begin
          if (~cpu_wb_freeze) begin
@@ -108,7 +108,7 @@ module itm_trace_collector(
             trace_out_enable_cdc <= 1'b1;
          end else begin
             // no message for this clock cycle
-            trace_out_cdc <= {TRACE_WIDTH{1'bx}};
+            trace_out_cdc <= {TRACE_WIDTH{1'b0}};
             trace_out_enable_cdc <= 1'b0;
          end
       end
