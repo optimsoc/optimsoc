@@ -476,7 +476,7 @@ wire  [3:0] dcqmem_tag_qmem;
    assign trace_itm = {wb_freeze,wb_pc};
 `endif
 `ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   assign trace_stm = {rf_addrw,rf_dataw,rf_we,wb_freeze,wb_insn};
+   assign trace_stm = {rf_addrw,rf_dataw,rf_we,ex_freeze,ex_insn};
 `endif
    
 //
