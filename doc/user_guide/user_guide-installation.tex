@@ -22,11 +22,10 @@ packages, that will run under Ubuntu 12.04 LTS.
 Independent of the components you plan to use, you will need some
 packages to be installed:
 
-\begin{verbatim}
-$> sudo apt-get -y install git g++ python libtool automake autoconf
-\textbackslash
+\begin{alltt}
+\$> sudo apt-get -y install git g++ python libtool automake autoconf \textbackslash
    libusb-1.0-0-dev libreadline6-dev cmake
-\end{verbatim}
+\end{alltt}
 
 \section{Get OpTiMSoC}
 
@@ -77,12 +76,12 @@ installed and developed in place at the moment. You will therefore
 need to set a few environment variables:
 
 \begin{alltt}
-LISNOC = \emph{/path/to/lisnoc/clone}
-LISNOC_RTL = \$\{LISNOC\}/rtl
+export LISNOC=\emph{/path/to/lisnoc/clone}
+export LISNOC_RTL=\$\{LISNOC\}/rtl
 
-OPTIMSOC = \emph{/path/to/optimsoc/clone}
-OPTIMSOC_RTL = \$\{OPTIMSOC\}/src/rtl
-OPTIMSOC_SYSC = \$\{OPTIMSOC\}/src/sysc
+export OPTIMSOC=\emph{/path/to/optimsoc/clone}
+export OPTIMSOC_RTL=\$\{OPTIMSOC\}/src/rtl
+export OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
 \end{alltt}
 
 It is most convenient to set them in your \verb|.bashrc| (or similar).
@@ -131,11 +130,10 @@ library\footnote{\url{ftp://ocuser:ocuser@openrisc.opencores.org/toolchain/openr
 Mirror: \url{http://lis.ei.tum.de/pub-download/mirror/opencores/openrisc-toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}} and extract it
 to \verb|/opt|.
 
-\begin{verbatim}
-$> cd /opt
-$> sudo -s
-$> tar -xjf openrisc-toolchain-ocsvn-rev789.tar.bz2
-\end{verbatim}
+\begin{alltt}
+\$> cd /opt
+\$> sudo tar -xjf openrisc-toolchain-ocsvn-rev789.tar.bz2
+\end{alltt}
 
 Next you need our prepacked newlib library. Download the current
 version\footnote{\url{http://lis.ei.tum.de/pub-download/optimsoc/toolchain/newlib/optimsoc-newlib-current.tgz}}
@@ -242,9 +240,8 @@ there and extract it:
 
 \begin{alltt}
 \$> sudo cp systemc-2.3.0.tgz /opt/systemc/build
-\$> sudo -s
 \$> cd /opt/systemc/build
-\$> tar -xzf systemc-2.3.0.tgz
+\$> sudo tar -xzf systemc-2.3.0.tgz
 \end{alltt}
 
 Create a build object directory, configure in there, build, install,
@@ -252,11 +249,11 @@ done!
 
 \begin{alltt}
 \$> cd systemc-2.3.0
-\$> mkdir objdir
-\$> cd objdir
-\$> ../configure --prefix=/opt/systemc/2.3.0
-\$> make
-\$> make install
+\$> sudo mkdir objdir
+\$> sudo cd objdir
+\$> sudo ../configure --prefix=/opt/systemc/2.3.0
+\$> sudo make
+\$> sudo make install
 \end{alltt}
 
 You will now find SystemC in \verb|/opt/systemc/2.3.0|.
@@ -266,19 +263,20 @@ You will now find SystemC in \verb|/opt/systemc/2.3.0|.
 First clone the Verilator repository in \verb|/opt|.
 
 \begin{alltt}
-\$> sudo -s
 \$> cd /opt
-\$> git clone http://git.veripool.org/git/verilator
+\$> sudo git clone http://git.veripool.org/git/verilator
 \end{alltt}
 
 Switch to the Verilator directory, prepare the build in place and make:
 
 \begin{alltt}
+\$> sudo -s
 \$> cd verilator
-\$> aclocal
+\$> sudo aclocal
 \$> autoconf
 \$> ./configure
 \$> make
+\$> exit
 \end{alltt}
 
 \subsection{OpTiMSoC SystemC library}
@@ -447,12 +445,12 @@ Check that you have the following environment variables set at this
 point (or a subset depending on your requirements):
 
 \begin{alltt}
-LISNOC=\emph{/path/to/lisnoc/clone}
-LISNOC_RTL=\$\{LISNOC\}/rtl
+export LISNOC=\emph{/path/to/lisnoc/clone}
+export LISNOC_RTL=\$\{LISNOC\}/rtl
 
-OPTIMSOC=\emph{/path/to/optimsoc/clone}
-OPTIMSOC_RTL=\$\{OPTIMSOC\}/src/rtl
-OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
+export OPTIMSOC=\emph{/path/to/optimsoc/clone}
+export OPTIMSOC_RTL=\$\{OPTIMSOC\}/src/rtl
+export OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
 
 # OpTiMSoC toolchain
 export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC\}/tools/utils:\$\{PATH\}
