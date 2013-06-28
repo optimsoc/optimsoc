@@ -23,7 +23,9 @@ Independent of the components you plan to use, you will need some
 packages to be installed:
 
 \begin{verbatim}
-$> sudo apt-get -y install git g++ python
+$> sudo apt-get -y install git g++ python libtool automake autoconf
+\textbackslash
+   libusb-1.0-0-dev libreadline6-dev cmake
 \end{verbatim}
 
 \section{Get OpTiMSoC}
@@ -76,7 +78,7 @@ need to set a few environment variables:
 
 \begin{alltt}
 LISNOC = \emph{/path/to/lisnoc/clone}
-LISNOC_RTL = \$\{OPTIMSOC\}/rtl
+LISNOC_RTL = \$\{LISNOC\}/rtl
 
 OPTIMSOC = \emph{/path/to/optimsoc/clone}
 OPTIMSOC_RTL = \$\{OPTIMSOC\}/src/rtl
@@ -129,7 +131,6 @@ library\footnote{\url{ftp://ocuser:ocuser@openrisc.opencores.org/toolchain/openr
 Mirror: \url{http://lis.ei.tum.de/pub-download/mirror/opencores/openrisc-toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}} and extract it
 to \verb|/opt|.
 
-
 \begin{verbatim}
 $> cd /opt
 $> sudo -s
@@ -137,7 +138,8 @@ $> tar -xjf openrisc-toolchain-ocsvn-rev789.tar.bz2
 \end{verbatim}
 
 Next you need our prepacked newlib library. Download the current
-version\footnote{\url{}} and extract it to \verb|/opt|.
+version\footnote{\url{http://lis.ei.tum.de/pub-download/optimsoc/toolchain/newlib/optimsoc-newlib-current.tgz}}
+and extract it to \verb|/opt|.
 
 Set environment (e.g., in \verb|~/.bashrc|):
 
@@ -186,16 +188,16 @@ In one of the next releases we will have machine support, e.g.,
 \verb|or32-elf-gcc -moptimsoc|.
 
 \subsection{Additional Scripts}
-You will need an additional script \verb|bin2vmem| to initialize the
-memory during simulation. It is distributed with ORPSoC and also
-available in the OpTiMSoC repository under \verb|tools/utils|. Just
-compile it
+You will need some additional scripts, e.g., \verb|bin2vmem| to
+initialize the memory during simulation. It is distributed with ORPSoC
+and also available in the OpTiMSoC repository under
+\verb|tools/utils|. Just compile it
 
 \begin{verbatim}
 $> make
 \end{verbatim}
 
-and install it somewhere in your PATH.
+and add it to your PATH.
 
 \subsection{Configuration}
 
@@ -205,7 +207,7 @@ you will have to add the environment variables as (example for bash):
 
 \begin{alltt}
 # OpTiMSoC toolchain
-export PATH=/opt/openrisc/toolchain/bin:\$\{PATH\}
+export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC\}/tools/utils:\$\{PATH\}
 export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
 \end{alltt}
 
@@ -277,6 +279,22 @@ Switch to the Verilator directory, prepare the build in place and make:
 \$> autoconf
 \$> ./configure
 \$> make
+\end{alltt}
+
+\subsection{OpTiMSoC SystemC library}
+
+The OpTiMSoC SystemC library contains SystemC modules for Debugging of
+Verilated Systems, Simulations and other. It can be found in
+\verb|src/sysc/|. The build is identical to the other libraries
+
+\begin{alltt}
+\$> ./autogen.sh
+\$> mkdir build
+\$> cd build
+\$> ../configure --prefix=`pwd`/.. --with-systemc-inc-dir=\$\{SYSTEMC\}/include \textbackslash
+      --with-systemc-lib-dir=\$\{SYSTEMC\}/lib-linux
+\$> make
+\$> make install
 \end{alltt}
 
 \subsection{Configuration}
@@ -382,6 +400,22 @@ linker to the installation path:
 
 \subsection{Graphical User Interface}
 
+\subsubsection{Prerequisites}
+
+For building you will need Qt:
+
+\begin{alltt}
+\$> sudo apt-get install libqt4-dev
+\end{alltt}
+
+In case you want to develop the GUI, install qtcreator:
+
+\begin{alltt}
+\$> sudo apt-get install qtcreator
+\end{alltt}
+
+\subsubsection{Building}
+
 The graphical user interface resides in
 \verb|src/sw/host/optimsocgui|. Again we recommend installing it in
 place. Instead of autotools we use cmake here as it better integrates
@@ -398,7 +432,10 @@ To build it:
 \end{alltt}
 
 Afterwards you will find \verb|optimsocgui| in
-\verb|src/sw/host/optimsocgui/bin|. You should add this to your PATH:
+\verb|src/sw/host/optimsocgui/bin|.
+
+\subsubsection{Configuration}
+You should add this to your PATH:
 
 \begin{alltt}
 \$> export PATH=\$\{OPTIMSOC\}/src/sw/host/optimsocgui/bin:\$PATH
@@ -411,15 +448,14 @@ point (or a subset depending on your requirements):
 
 \begin{alltt}
 LISNOC=\emph{/path/to/lisnoc/clone}
-LISNOC_RTL=\$\{OPTIMSOC\}/rtl
+LISNOC_RTL=\$\{LISNOC\}/rtl
 
 OPTIMSOC=\emph{/path/to/optimsoc/clone}
 OPTIMSOC_RTL=\$\{OPTIMSOC\}/src/rtl
 OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
 
-
 # OpTiMSoC toolchain
-export PATH=/opt/openrisc/toolchain/bin:\$\{PATH\}
+export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC\}/tools/utils:\$\{PATH\}
 export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
 
 # SystemC environment
