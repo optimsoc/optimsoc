@@ -89,7 +89,7 @@ module system_simpledemo_pgas_ztex(
    output cdc_enable;
 
     // MCB connection
-`ifdef OPTIMSOC_USE_DDR2
+/*`ifdef OPTIMSOC_USE_DDR2
    input [15:0]  mcb3_dram_dq;
    output [12:0] mcb3_dram_a;
    output [2:0]  mcb3_dram_ba;
@@ -107,7 +107,7 @@ module system_simpledemo_pgas_ztex(
    inout         mcb3_dram_dqs_n;
    output        mcb3_dram_ck;
    output        mcb3_dram_ck_n;
-`endif
+`endif*/
 
    // clocks
    wire clk_200;
@@ -119,7 +119,7 @@ module system_simpledemo_pgas_ztex(
    // system control signals
    wire sys_clk_disable;
    wire sys_clk_is_halted;
-   assign sys_clk_is_halted = 0;
+   assign sys_clk_is_halted = sys_clk_disable;
 
    /*
     * Manually insert I/O buffers
@@ -248,8 +248,10 @@ module system_simpledemo_pgas_ztex(
    wire rst_sys;
    wire rst_cpu;
 
+`ifdef OPTIMSOC_CDC_DYNAMIC
    wire [2:0] cdc_conf;
    wire       cdc_enable;
+`endif
 
    clockmanager_ztex115
       u_clockmanager(
@@ -260,10 +262,12 @@ module system_simpledemo_pgas_ztex(
                      .clk     (clk),
                      .rst     (rst_buf),
                      .clk_ct  (clk_ct),
+                     .clk_io  (),
                      .clk_dbg (clk_dbg),
                      .clk_noc (clk_noc),
                      .rst_sys  (rst_sys),
                      .rst_cpu  (rst_cpu),
+                     .sys_halt (sys_clk_disable),
                      .cpu_reset (cpu_reset),
                      .cpu_start (start_cpu));
 
@@ -302,10 +306,12 @@ module system_simpledemo_pgas_ztex(
 `ifdef OPTIMSOC_DEBUG_ENABLE_STM
                .trace_stm                  (trace_stm[`DEBUG_STM_PORTWIDTH-1:0]),
 `endif
-               /*AUTOINST*/
-               // Outputs
+`ifdef OPTIMSOC_CDC_DYNAMIC
                .cdc_conf                (cdc_conf[2:0]),
                .cdc_enable              (cdc_enable),
+`endif
+               /*AUTOINST*/
+               // Outputs
                .ht1_in_ready            (ext_link_in_ready),     // Templated
                .ht1_out_flit            (ext_link_out_flit),     // Templated
                .ht1_out_valid           (ext_link_out_valid),    // Templated
@@ -328,7 +334,7 @@ module system_simpledemo_pgas_ztex(
                .wb_mt2_ack_i            (wb_mt_ack_o),           // Templated
                .wb_mt2_rty_i            (wb_mt_rty_o),           // Templated
                .wb_mt2_err_i            (wb_mt_err_o),           // Templated
-               .wb_mt2_dat_i            (wb_mt_dat_o));           // Templated
+               .wb_mt2_dat_i            (wb_mt_dat_o));          // Templated
 
    // USB interface
    usb_dbg_if
@@ -419,14 +425,14 @@ module system_simpledemo_pgas_ztex(
 
 
 `ifdef OPTIMSOC_MT_PLAIN
-   /* ct_ram AUTO_TEMPLATE(
+   /* wb_sram_sp AUTO_TEMPLATE(
     .wb_clk_i (clk_noc),
     .wb_rst_i (rst_sys),
     .wb_adr_i (wb_mt_adr_i[(32-PGAS_ADDRW)-1:0]),
     .wb_\(.*\) (wb_mt_\1),
     ); */
-   ct_ram
-      #(.mem_size(MEMORY_SIZE))
+   wb_sram_sp
+      #(.MEM_SIZE(MEMORY_SIZE))
    u_gram(/*AUTOINST*/
           // Outputs
           .wb_ack_o                     (wb_mt_ack_o),           // Templated
@@ -443,7 +449,7 @@ module system_simpledemo_pgas_ztex(
           .wb_stb_i                     (wb_mt_stb_i),           // Templated
           .wb_we_i                      (wb_mt_we_i),            // Templated
           .wb_clk_i                     (clk_noc),               // Templated
-          .wb_rst_i                     (rst_sys));               // Templated
+          .wb_rst_i                     (rst_sys));              // Templated
 `endif
 
    `include "optimsoc_functions.vh"
