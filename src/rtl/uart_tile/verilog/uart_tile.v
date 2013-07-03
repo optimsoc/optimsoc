@@ -15,9 +15,9 @@ module uart_tile(
    noc_out_ready
    );
 
-   parameter id = 0;
-   parameter vchannels = 3;
-   parameter use_vchannel = 0;
+   parameter ID = 0;
+   parameter VCHANNELS = 3;
+   parameter USE_VCHANNEL = 0;
   
    parameter ph_dest_width = 5;
    parameter ph_cls_width = 3;
@@ -28,7 +28,7 @@ module uart_tile(
    
    parameter noc_data_width = 32;
    parameter noc_type_width = 2;
-   localparam noc_flit_width = noc_data_width+noc_type_width;
+   localparam NOC_FLIT_WIDTH = noc_data_width+noc_type_width;
 
    parameter UART_BAUD_RATE = 115200;
    
@@ -42,27 +42,27 @@ module uart_tile(
    output stx_pad_o;
    input  srx_pad_i;
    
-   input [noc_flit_width-1:0] noc_in_flit;
-   input [vchannels-1:0]      noc_in_valid;
-   output [vchannels-1:0]     noc_in_ready;
-   output [noc_flit_width-1:0] noc_out_flit;
-   output [vchannels-1:0]      noc_out_valid;
-   input [vchannels-1:0]       noc_out_ready;
+   input [NOC_FLIT_WIDTH-1:0] noc_in_flit;
+   input [VCHANNELS-1:0]      noc_in_valid;
+   output [VCHANNELS-1:0]     noc_in_ready;
+   output [NOC_FLIT_WIDTH-1:0] noc_out_flit;
+   output [VCHANNELS-1:0]      noc_out_valid;
+   input [VCHANNELS-1:0]       noc_out_ready;
 
-   wire [noc_flit_width-1:0] noc_in_flit_cdc;
+   wire [NOC_FLIT_WIDTH-1:0] noc_in_flit_cdc;
    wire                      noc_in_valid_cdc;
    wire                      noc_in_ready_cdc;
-   wire [noc_flit_width-1:0] noc_out_flit_cdc;
+   wire [NOC_FLIT_WIDTH-1:0] noc_out_flit_cdc;
    wire                      noc_out_valid_cdc;
    wire                      noc_out_ready_cdc;
 
    wire                      fifo_in_full;
-   assign noc_in_ready = {vchannels{~fifo_in_full}};
+   assign noc_in_ready = {VCHANNELS{~fifo_in_full}};
    wire                      fifo_in_empty;
    assign noc_in_valid_cdc = ~fifo_in_empty;
 
    cdc_fifo
-    #(.DW(noc_flit_width))
+    #(.DW(NOC_FLIT_WIDTH))
      u_incdc(// Outputs
            .wr_full                     (fifo_in_full),
            .rd_empty                    (fifo_in_empty),
@@ -79,18 +79,18 @@ module uart_tile(
    wire                      fifo_out_full;
    assign noc_out_ready_cdc = ~fifo_out_full;
    wire                      fifo_out_empty;
-   assign noc_out_valid[use_vchannel] = ~fifo_out_empty;
+   assign noc_out_valid[USE_VCHANNEL] = ~fifo_out_empty;
 
    genvar               v;
    generate
-      for (v=0;v<vchannels;v=v+1) begin
-         if (v!=use_vchannel) begin
+      for (v=0;v<VCHANNELS;v=v+1) begin
+         if (v!=USE_VCHANNEL) begin
             assign noc_out_valid[v] = 1'b0;
          end
       end
    endgenerate
 
-   /* fifo AUTO_TEMPLATE(
+   /* cdc_fifo AUTO_TEMPLATE(
     .wr_clk (clk_uart),
     .wr_en  (noc_out_valid_cdc),
     .wr_rst (~rst),
@@ -104,7 +104,7 @@ module uart_tile(
     ) */
    
    cdc_fifo
-    #(.DW(noc_flit_width))
+    #(.DW(NOC_FLIT_WIDTH))
    u_outcdc(/*AUTOINST*/
             // Outputs
             .wr_full                    (fifo_out_full),         // Templated
@@ -224,7 +224,7 @@ module uart_tile(
     ); */
 
    char2noc 
-   #(.ph_dest_width(ph_dest_width),.ph_cls_width(ph_cls_width),.ph_src_width(ph_src_width),.destination(destination),.pkt_class(pkt_class),.id(id))
+   #(.ph_dest_width(ph_dest_width),.ph_cls_width(ph_cls_width),.ph_src_width(ph_src_width),.destination(destination),.pkt_class(pkt_class),.id(ID))
      u_char2noc(/*AUTOINST*/
                 // Outputs
                 .noc_flit               (noc_out_flit_cdc[33:0]), // Templated
