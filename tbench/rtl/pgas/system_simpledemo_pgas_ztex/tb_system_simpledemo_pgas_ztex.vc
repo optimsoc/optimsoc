@@ -9,7 +9,6 @@
 +incdir+${OPTIMSOC_RTL}/noclsu/verilog
 
 +define+OPTIMSOC_MT_PLAIN
-+define+OPTIMSOC_CTRAM_XILINXBRAM_SPARTAN6
 
 +define+OR1200_BOOT_ADR="32'h00000100"
 
@@ -33,8 +32,12 @@ ${OPTIMSOC_RTL}/debug_system/verilog/debug_system.v
 
 ${OPTIMSOC_RTL}/compute_tile_pgas/verilog/compute_tile_pgas.v
 ${OPTIMSOC_RTL}/compute_tile_pgas/verilog/ct_select.v
-${OPTIMSOC_RTL}/ct_ram/verilog/ct_ram.v
-${OPTIMSOC_RTL}/ct_ram/verilog/ct_ram_xilinxbram_spartan6.v
+
+${OPTIMSOC_RTL}/sram/verilog/wb_sram_sp.v
+${OPTIMSOC_RTL}/sram/verilog/wb2sram.v
+${OPTIMSOC_RTL}/sram/verilog/sram_sp.v
+${OPTIMSOC_RTL}/sram/verilog/sram_sp_impl_xilinx_spartan6.v
+
 ${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_unit.v
 ${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_fsm.v
 

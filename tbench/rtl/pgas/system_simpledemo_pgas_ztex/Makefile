@@ -39,7 +39,7 @@ sim:
 		work.tb_system_simpledemo_pgas_ztex work.glbl
 
 sim-noninteractive:
-	vsim -c -voptargs=+acc -L unisims -L xilinxcorelib \
+	vsim -c -voptargs=+acc -L unisims_ver -L xilinxcorelib_ver \
 		work.tb_system_simpledemo_pgas_ztex work.glbl \
 		-do "suppress 8233; run -all"
 
