@@ -43,24 +43,29 @@ module clockmanager_ztex115(
    clk, rst, cpu_reset, cpu_start, sys_halt
    );
 
+   // general parameters
    parameter NUM_CT_CLOCKS = 1;
+   parameter NUM_IO_CLOCKS = 0;
+
+   parameter RST_WIDTH = 128;
+
+   // parameters when using clock domains
    parameter CT_CLOCKS_MUL = 2;
    parameter CT_CLOCKS_DIV = 4;
-
    parameter DBG_CLOCK_MUL = 2;
    parameter DBG_CLOCK_DIV = 2;
-
    parameter NOC_CLOCK_MUL = 3;
    parameter NOC_CLOCK_DIV = 4;
 
-   parameter NUM_IO_CLOCKS = 0;
    parameter IO_CLOCK0_MUL = 2;
    parameter IO_CLOCK0_DIV = 2;
    parameter IO_CLOCK1_MUL = 2;
    parameter IO_CLOCK1_DIV = 2;
    
-   parameter RST_WIDTH = 128;
-
+   // parameters when no clock domains
+   parameter CLOCK_MUL = 2;
+   parameter CLOCK_DIV = 2;
+   
    input clk;
    input rst;
 
@@ -82,7 +87,6 @@ module clockmanager_ztex115(
    input [NUM_CT_CLOCKS-1:0]   cdc_enable;
 `endif
 
-
    wire                       clk_buffered;
 
    wire [NUM_CT_CLOCKS-1:0]   clk_ct_unbuffered;
@@ -94,7 +98,7 @@ module clockmanager_ztex115(
    wire [NUM_IO_CLOCKS-1:0]   clk_io_locked;
    wire                       clk_dbg_locked;
    wire                       clk_noc_locked;
-
+   
    wire [NUM_CT_CLOCKS-1:0]   clk_en_ct;
    wire [NUM_IO_CLOCKS-1:0]   clk_en_io;
    wire                       clk_en_dbg;
@@ -169,6 +173,56 @@ module clockmanager_ztex115(
       u_clk_ibufg(.O(clk_buffered),
                   .I(clk));
 
+`ifndef OPTIMSOC_CLOCKDOMAINS
+   wire clk_common_unbuffered;
+   wire clk_gated_common;
+   wire clk_ungated_common;
+
+   BUFGCE
+     u_clk_bufg_gated(.O(clk_gated_common),
+                      .CE(clk_en_ct[0]),
+                      .I(clk_common_unbuffered));
+
+   BUFG
+     u_clk_bufg_ungated(.O(clk_ungated_common),
+                        .I(clk_common_unbuffered));
+   
+   DCM_CLKGEN
+     #(.CLKFX_MULTIPLY(CLOCK_MUL),
+       .CLKFX_DIVIDE(CLOCK_DIV),
+       .CLKIN_PERIOD(20.83333),
+       .SPREAD_SPECTRUM("NONE"),
+       .STARTUP_WAIT("FALSE"),
+       .CLKFX_MD_MAX(0.000))
+   u_dcm(.CLKIN(clk_buffered),
+         .CLKFX(clk_common_unbuffered),
+         .RST(1'b0),
+         .CLKFXDV (),
+         .CLKFX180 (),
+         .LOCKED(clk_noc_locked),
+         .FREEZEDCM(1'b0),
+         .PROGCLK(1'b0),
+         .PROGDATA(1'b0),
+         .PROGEN(1'b0),
+         .STATUS(),
+         .PROGDONE());       
+
+   generate
+      for (i=0;i<NUM_CT_CLOCKS;i=i+1) begin : genctclocks
+         assign clk_ct_locked[i] = 1'b1;         
+         assign clk_ct[i] = clk_gated_common;
+      end
+      for (i=0;i<NUM_IO_CLOCKS;i=i+1) begin : genioclocks
+         assign clk_io_locked[i] = 1'b1;         
+         assign clk_io[i] = clk_ungated_common;
+      end
+   endgenerate
+
+//   assign clk_noc_locked = 1'b1; // Set by the DCM
+   assign clk_noc = clk_gated_common;
+   assign clk_dbg_locked = 1'b1;
+   assign clk_dbg = clk_ungated_common;
+`else
    generate
       for (i=0;i<NUM_CT_CLOCKS;i=i+1) begin : genctclocks
          wire rst_dcm;
@@ -348,5 +402,5 @@ module clockmanager_ztex115(
                 .PROGCLK(1'b0),
                 .PROGDATA(1'b0),
                 .PROGEN(1'b0));
-
+`endif
 endmodule // clockmanager_ztex115
