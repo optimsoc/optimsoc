@@ -11,7 +11,7 @@ if [ -z "$startstr" ]; then
 fi
 
 # Convert to decimal
-start=`echo "ibase=16;obase=A;$startstr" | bc`
+start=$((0x$startstr))
 
 echo " * Start address of symbol: $start"
 
@@ -24,7 +24,7 @@ echo " * Stop address of symbol: $end"
 memsizestr=`${OR32OBJDUMP} -s -j .rodata --start-address=$start --stop-address=$end optimsoc-sysconfig.o | awk '{ if($0 ~ "^ [0-9a-fA-f]+ [0-9a-fA-f]+") print $2; }'`
 
 # Convert value to decimal
-memsize=`echo "ibase=16;obase=A;$memsizestr" | bc`
+memsize=$((0x$memsizestr))
 
 # Replace ${MEMSIZE} with actual memory size and write linker script
 sed -e "s/\${MEMSIZE}/$memsize/g" < ${BUILDSCRIPTS}/link.ld.in > link.ld
