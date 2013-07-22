@@ -67,6 +67,11 @@ module itm_trace_compression(/*AUTOARG*/
    reg [31:0] prev_wb_pc;
    reg [INSTR_COUNT_WIDTH-1:0] instr_cnt;
 
+   reg [31:0] stream_sa;
+   reg [`DBG_TIMESTAMP_WIDTH-1:0] stream_ts;
+
+   reg bootaddr_found;
+
    wire [31:0] trace_in_wb_pc;
    wire [`DBG_TIMESTAMP_WIDTH-1:0] trace_in_ts;
 
@@ -75,12 +80,17 @@ module itm_trace_compression(/*AUTOARG*/
 
    always @ (posedge clk) begin
       if (rst) begin
-         trace_out_compressed <= 0;
+         trace_out_compressed <= {COMPRESSED_TRACE_WIDTH{1'b0}};
          trace_out_compressed_valid <= 1'b0;
-         instr_cnt <= 0;
-         prev_wb_pc <= 0;
+         instr_cnt <= {INSTR_COUNT_WIDTH{1'b0}};
+         prev_wb_pc <= 32'b0;
+         bootaddr_found <= 0;
+         stream_ts <= {`DBG_TIMESTAMP_WIDTH{1'b0}};
+         stream_sa <= 32'b0;
       end else begin
-         if (trace_in_valid && trace_in != 32'b0) begin
+         if (trace_in_valid && trace_in_wb_pc != {TRACE_IN_WIDTH{1'b0}} &&
+             (bootaddr_found || trace_in_wb_pc == `OR1200_BOOT_ADR)) begin
+
             if ((prev_wb_pc + 4 == trace_in_wb_pc) ||
                 (prev_wb_pc == trace_in_wb_pc)) begin
                // found a sequential instruction (no branch)
@@ -90,13 +100,25 @@ module itm_trace_compression(/*AUTOARG*/
                trace_out_compressed <= 0;
                trace_out_compressed_valid <= 1'b0;
             end else begin
-               // found a branch instruction
-               trace_out_compressed <= {trace_in_ts, trace_in_wb_pc, instr_cnt};
-               trace_out_compressed_valid <= 1'b1;
-               instr_cnt <= 0;
+               // found a nonsequential program flow
+               // this is the first instruction in a new dynamic basic block
+
+               // transmit the previous basic block, we're now at the first
+               // basic block
+               if (bootaddr_found) begin
+                  trace_out_compressed <= {stream_ts, stream_sa, instr_cnt};
+                  trace_out_compressed_valid <= 1'b1;
+               end
+
+               // start new stream
+               stream_sa <= trace_in_wb_pc;
+               stream_ts <= trace_in_ts;
+               instr_cnt <= 1;
             end
 
             prev_wb_pc <= trace_in_wb_pc;
+
+            bootaddr_found <= 1'b1;
          end else begin
             trace_out_compressed <= 0;
             trace_out_compressed_valid <= 1'b0;

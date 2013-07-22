@@ -62,19 +62,19 @@ module itm_trace_collector(
    // to the ring buffer
    output [TRACE_WIDTH-1:0] trace_out;
 
-   wire                                 clk_sample;
+   wire clk_sample;
 `ifdef OPTIMSOC_CLOCKDOMAINS
    assign clk_sample = clk_cdc;
 `else
    assign clk_sample = clk;
 `endif
 
-   reg [TRACE_WIDTH-1:0]    trace_out_cdc;
-   reg                                  trace_out_enable_cdc;
+   reg [TRACE_WIDTH-1:0] trace_out_cdc;
+   reg trace_out_enable_cdc;
 
 `ifdef OPTIMSOC_CLOCKDOMAINS
-   wire                                 cdc_fifo_empty;
-   wire [TRACE_WIDTH-1:0]   cdc_fifo_out;
+   wire cdc_fifo_empty;
+   wire [TRACE_WIDTH-1:0] cdc_fifo_out;
 
    assign trace_out = cdc_fifo_empty ? 'b0 : cdc_fifo_out;
 
