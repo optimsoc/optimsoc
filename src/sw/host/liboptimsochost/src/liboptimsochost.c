@@ -484,15 +484,15 @@ OPTIMSOC_EXPORT
 char* optimsoc_get_module_name(int module_type)
 {
     switch (module_type) {
-    case MODULE_TYPE_CTM:
+    case OPTIMSOC_MODULE_TYPE_CTM:
         return "CTM";
-    case MODULE_TYPE_ITM:
+    case OPTIMSOC_MODULE_TYPE_ITM:
         return "ITM";
-    case MODULE_TYPE_NRM:
+    case OPTIMSOC_MODULE_TYPE_NRM:
         return "NRM";
-    case MODULE_TYPE_NCM:
+    case OPTIMSOC_MODULE_TYPE_NCM:
         return "NCM";
-    case MODULE_TYPE_STM:
+    case OPTIMSOC_MODULE_TYPE_STM:
         return "STM";
     default:
         return "unknown";
@@ -577,4 +577,59 @@ int optimsoc_read_clkstats(struct optimsoc_ctx *ctx, uint32_t *sys_clk,
 {
     return ctx->backend_call.read_clkstats(ctx->backend_ctx, sys_clk,
                                            sys_clk_halted);
+}
+
+OPTIMSOC_EXPORT
+int optimsoc_itm_get_config(struct optimsoc_ctx *ctx,
+                            struct optimsoc_dbg_module *dbg_module,
+                            struct optimsoc_itm_config **itm_config)
+{
+    int rv = ctx->backend_call.itm_refresh_config(ctx->backend_ctx, dbg_module);
+    if (rv < 0) {
+        err(ctx->log_ctx, "Unable to refresh ITM configuration.\n");
+    }
+
+    struct optimsoc_sysinfo *sysinfo = NULL;
+    rv = ctx->backend_call.get_sysinfo(ctx->backend_ctx, &sysinfo);
+    if (rv < 0) {
+        return rv;
+    }
+    if (sysinfo == NULL) {
+        err(ctx->log_ctx, "Run optimsoc_system_discover() first!\n");
+        return -1;
+    }
+
+    *itm_config = sysinfo->itm_config[dbg_module->dbgnoc_addr];
+    return 0;
+}
+
+/**
+ * Free the contents of a optimsoc_sysinfo struct
+ *
+ * The \p sysinfo object is invalid after calling this function and may not be
+ * accessed any more.
+ */
+void optimsoc_sysinfo_free(struct optimsoc_sysinfo* sysinfo)
+{
+    if (sysinfo == NULL) {
+        return;
+    }
+
+    if (sysinfo->dbg_modules != NULL) {
+        free(sysinfo->dbg_modules);
+        sysinfo->dbg_modules = NULL;
+    }
+
+    if (sysinfo->itm_config != NULL) {
+        for (int i = 0;
+             i < DBG_NOC_ADDR_TCM + sysinfo->dbg_module_count; i++) {
+            if (sysinfo->itm_config[i] != NULL) {
+                free(sysinfo->itm_config[i]);
+            }
+        }
+        free(sysinfo->itm_config);
+        sysinfo->itm_config = NULL;
+    }
+
+    free(sysinfo);
 }

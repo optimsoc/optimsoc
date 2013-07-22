@@ -45,6 +45,22 @@ extern "C" {
  */
 struct optimsoc_ctx;
 
+/*
+ * Module types
+ */
+typedef enum {
+    OPTIMSOC_MODULE_TYPE_CTM = 0x01,
+    OPTIMSOC_MODULE_TYPE_ITM = 0x02,
+    OPTIMSOC_MODULE_TYPE_NRM = 0x03,
+    OPTIMSOC_MODULE_TYPE_NCM = 0x04,
+    OPTIMSOC_MODULE_TYPE_STM = 0x05
+} optimsoc_module_type;
+
+typedef enum {
+    OPTIMSOC_BACKEND_DBGNOC,
+    OPTIMSOC_BACKEND_SIMTCP
+} optimsoc_backend_id;
+
 /**
  * A description of a single debug module
  */
@@ -52,15 +68,18 @@ struct optimsoc_dbg_module {
     /** the address in the Debug NoC */
     int dbgnoc_addr;
     /** the module type */
-    int module_type;
+    optimsoc_module_type module_type;
     /** the module version */
     int module_version;
 };
 
-typedef enum {
-    OPTIMSOC_BACKEND_DBGNOC,
-    OPTIMSOC_BACKEND_SIMTCP
-} optimsoc_backend_id;
+/**
+ * Configuration of a single ITM module
+ */
+struct optimsoc_itm_config {
+    /** ID of the associated core */
+    unsigned int core_id;
+};
 
 /**
  * Opaque logging context
@@ -78,7 +97,7 @@ typedef void (*optimsoc_log_fn)(struct optimsoc_log_ctx *ctx,
                                 int line, const char *fn,
                                 const char *format, va_list args);
 
-typedef void (*optimsoc_itm_cb)(int core_id,
+typedef void (*optimsoc_itm_cb)(unsigned int core_id,
                                 uint32_t timestamp,
                                 uint32_t pc,
                                 int count);
@@ -145,6 +164,9 @@ int optimsoc_nrm_set_sample_interval(struct optimsoc_ctx *ctx,
                                      int sample_interval);
 int optimsoc_read_clkstats(struct optimsoc_ctx *ctx, uint32_t *sys_clk,
                            uint32_t *sys_clk_halted);
+int optimsoc_itm_get_config(struct optimsoc_ctx *ctx,
+                            struct optimsoc_dbg_module *dbg_module,
+                            struct optimsoc_itm_config **itm_config);
 
 #ifdef __cplusplus
 } /* extern "C" */

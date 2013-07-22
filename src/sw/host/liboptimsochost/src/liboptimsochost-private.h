@@ -45,17 +45,6 @@
 //#  define DEBUG_DUMP_DATA
 #endif
 
-/*
- * Module types
- */
-enum {
-    MODULE_TYPE_CTM = 0x01,
-    MODULE_TYPE_ITM = 0x02,
-    MODULE_TYPE_NRM = 0x03,
-    MODULE_TYPE_NCM = 0x04,
-    MODULE_TYPE_STM = 0x05
-};
-
 struct optimsoc_sysinfo {
     /** unique system identifier */
     uint16_t sysid;
@@ -63,6 +52,10 @@ struct optimsoc_sysinfo {
     uint16_t dbg_module_count;
     /** debug modules */
     struct optimsoc_dbg_module *dbg_modules;
+    /** configuration of the ITM modules */
+    struct optimsoc_itm_config **itm_config;
 };
+
+void optimsoc_sysinfo_free(struct optimsoc_sysinfo* sysinfo);
 
 #endif /* _LIBOPTIMSOC_PRIVATE_H_ */

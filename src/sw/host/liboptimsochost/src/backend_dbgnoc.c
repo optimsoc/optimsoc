@@ -218,6 +218,7 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
     calls->get_sysinfo = &ob_dbgnoc_get_sysinfo;
     calls->cpu_start = &ob_dbgnoc_cpu_start;
     calls->mem_write = &ob_dbgnoc_mem_write;
+    calls->itm_refresh_config = &ob_dbgnoc_itm_refresh_config;
 
     c->conn_calls = calloc(1, sizeof(struct ob_dbgnoc_connection_interface));
 
@@ -253,14 +254,8 @@ int ob_dbgnoc_free(struct optimsoc_backend_ctx *ctx)
         ctx->rcv_lisnoc32_pkg.flit_data = NULL;
     }
 
-    if (ctx->sysinfo != 0) {
-        if (ctx->sysinfo->dbg_modules != 0) {
-            free(ctx->sysinfo->dbg_modules);
-            ctx->sysinfo->dbg_modules = NULL;
-        }
-        free(ctx->sysinfo);
-        ctx->sysinfo = NULL;
-    }
+    optimsoc_sysinfo_free(ctx->sysinfo);
+    ctx->sysinfo = NULL;
 
     return 0;
 }
@@ -360,9 +355,6 @@ int ob_dbgnoc_discover_system(struct optimsoc_backend_ctx *ctx)
     dbg(ctx->log_ctx, "Discovered a system with ID 0x%04x and %d debug modules\n",
         sysinfo->sysid, sysinfo->dbg_module_count);
 
-    if (sysinfo->dbg_modules != 0) {
-        free(sysinfo->dbg_modules);
-    }
     sysinfo->dbg_modules = calloc(sysinfo->dbg_module_count,
                                   sizeof(struct optimsoc_dbg_module));
 
@@ -387,7 +379,7 @@ int ob_dbgnoc_discover_system(struct optimsoc_backend_ctx *ctx)
                           "address 0x%x\n",
             module_type, module_version, addr);
 
-        if (module_type == MODULE_TYPE_NCM) {
+        if (module_type == OPTIMSOC_MODULE_TYPE_NCM) {
             ctx->ncm_dbgnoc_addr = addr;
 
             res = register_read(ctx, addr, 1, 1, data);
@@ -759,17 +751,6 @@ void* receive_thread(void* ctx_void)
                         uint16_t id = ctx->rcv_lisnoc16_pkg.flit_data[5];
 
                         ctx->stm_cb(core_id, timestamp, id, value);
-                        printf("@%08x Receive report from %d: %d (%08x)\n",
-                               timestamp, core_id, id, value);
-                    } else if (ctx->rcv_lisnoc16_pkg.len == 6 &&
-                        class == DBG_NOC_CLASS_STM) {
-                        uint8_t core_id = ctx->rcv_lisnoc16_pkg.flit_data[0] & 0x00FF;
-                        uint32_t timestamp = ctx->rcv_lisnoc16_pkg.flit_data[1] << 16 | ctx->rcv_lisnoc16_pkg.flit_data[2];
-                        uint32_t value = ctx->rcv_lisnoc16_pkg.flit_data[3] << 16 | ctx->rcv_lisnoc16_pkg.flit_data[4];
-                        uint16_t id = ctx->rcv_lisnoc16_pkg.flit_data[5];
-
-                        printf("@%08x Receive report from %d: %d (%08x)\n",
-                               timestamp, core_id, id, value);
                     }
 
                     pthread_cond_signal(&ctx->rcv_lisnoc16_pkg_condvar);
@@ -1176,7 +1157,7 @@ int ob_dbgnoc_nrm_set_sample_interval(struct optimsoc_backend_ctx *ctx,
     }
 
     for (int i=0; i<ctx->sysinfo->dbg_module_count; i++) {
-        if (ctx->sysinfo->dbg_modules[i].module_type == MODULE_TYPE_NRM) {
+        if (ctx->sysinfo->dbg_modules[i].module_type == OPTIMSOC_MODULE_TYPE_NRM) {
             register_write(ctx, ctx->sysinfo->dbg_modules[i].dbgnoc_addr,
                            2, 1, (uint16_t*)&sample_interval);
         }
@@ -1209,5 +1190,28 @@ int ob_dbgnoc_read_clkstats(struct optimsoc_backend_ctx *ctx, uint32_t *sys_clk,
     *sys_clk_halted = (data[0] << 16) | data[1];
     *sys_clk = (data[2] << 16) | data[3];
 
+    return 0;
+}
+
+/**
+ * Refresh the configuration of a single Instruction Trace Module (ITM)
+ */
+int ob_dbgnoc_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
+                                 struct optimsoc_dbg_module *dbg_module)
+{
+    uint16_t data_out[1];
+    int dbgnoc_addr = dbg_module->dbgnoc_addr;
+    int rv = register_read(ctx, dbgnoc_addr, 0x01, 1, data_out);
+    if (rv < 0) {
+        err(ctx->log_ctx, "Unable to read ITM configuration at Debug NoC "
+            "address %d.\n", dbgnoc_addr);
+        return -1;
+    }
+
+    if (ctx->sysinfo->itm_config[dbgnoc_addr] == NULL) {
+        ctx->sysinfo->itm_config[dbgnoc_addr] = calloc(1, sizeof(struct optimsoc_itm_config));
+    }
+
+    ctx->sysinfo->itm_config[dbgnoc_addr]->core_id = data_out[0];
     return 0;
 }

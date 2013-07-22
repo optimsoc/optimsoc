@@ -40,6 +40,9 @@
 #include <inttypes.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <assert.h>
 
 #include <getopt.h>
 #include <readline/readline.h>
@@ -47,10 +50,138 @@
 
 #include <optimsochost/liboptimsochost.h>
 
+/*
+ * OpenRISC objdump tool to create disassembly
+ */
+#define OR32_OBJDUMP "or32-elf-objdump"
+
 struct optimsoc_ctx *ctx;
-FILE *trace_file;
 FILE *nrm_stat_file;
 FILE *stm_trace_file;
+char **stm_printf_buf;
+unsigned int max_core_id;
+
+int itm_callback_registered;
+
+struct itm_sink {
+    int do_trace;
+    int add_disassembly;
+    FILE *trace_file;
+    unsigned int dis_instr_count;
+    struct disassembled_instruction **dis;
+};
+struct itm_sink** itm_sinks;
+
+struct disassembled_instruction {
+    uint32_t instr;
+    char disassembly[50];
+    char funcname[50];
+};
+
+static int new_disassembly(char* elf_file_path,
+                           struct disassembled_instruction** dis_instr[],
+                           unsigned int* dis_instr_count)
+{
+    int rv;
+    struct disassembled_instruction** instructions = NULL;
+
+    /*
+     * Allocate enough space for the array of disassembled_instruction.
+     * For faster lookups the program counter (PC) represents also the
+     * array index (index = PC >> 2).
+     */
+    struct stat bin_file_stat;
+    rv = stat(elf_file_path, &bin_file_stat);
+    if (rv != 0) {
+        fprintf(stderr, "Unable read file size from file %s\n", elf_file_path);
+        rv = -1;
+        goto error_free_return;
+    }
+    int instr_count = bin_file_stat.st_size/4;
+    instructions = calloc(instr_count,
+                          sizeof(struct disassembled_instruction*));
+    if (!instructions) {
+        fprintf(stderr, "Unable to allocate space for disassembled instructions.");
+        rv = -ENOMEM;
+        goto error_free_return;
+    }
+
+    /*
+     * Create disassembly by calling or32-elf-objdump
+     */
+    char objdump_cmd[255];
+    snprintf(objdump_cmd, 255, "%s -d %s", OR32_OBJDUMP, elf_file_path);
+    FILE* fp_objdump = popen(objdump_cmd, "r");
+    if (fp_objdump == NULL) {
+        fprintf(stderr, "Unable to execute %s.\n", OR32_OBJDUMP);
+        rv = -1;
+        goto error_free_return;
+    }
+
+    /*
+     * read created disassembly into array
+     */
+    char line[255];
+    uint32_t pc;
+    uint8_t instr[4];
+    char funcname[50];
+    char funcname_tmp[50];
+    while (fgets(line, 255, fp_objdump)) {
+        struct disassembled_instruction* instruction = calloc(1, sizeof(struct disassembled_instruction));
+
+        int matches = sscanf(line, "%*8x <%49[^>]>:\n", funcname_tmp);
+        if (matches == 1) {
+            strncpy(funcname, funcname_tmp, 50);
+            funcname[49] = '\n'; /* ensure string termination */
+            continue;
+        }
+
+        matches = sscanf(line, "%8x:\t%"SCNx8" %"SCNx8" %"SCNx8" %"SCNx8"\t%49[^\n]", &pc, &instr[3],
+                         &instr[2], &instr[1], &instr[0], instruction->disassembly);
+        instruction->instr = instr[3] << 24 | instr[2] << 16 | instr[1] << 8 | instr[0];
+        instruction->disassembly[49] = '\0'; /* ensure string termination */
+        strncpy(instruction->funcname, funcname, 50);
+
+        if (matches != 6) {
+            free(instruction);
+            continue;
+        }
+
+        int idx = pc >> 2;
+        assert(idx < instr_count);
+        instructions[idx] = instruction;
+    }
+
+    *dis_instr = instructions;
+    *dis_instr_count = instr_count;
+    rv = 0;
+
+    pclose(fp_objdump);
+    return rv;
+
+error_free_return:
+    if (instructions) {
+        free(instructions);
+    }
+    return rv;
+}
+
+static void free_disassembly(struct disassembled_instruction* dis_instr[],
+                             int instr_count)
+{
+    if (!dis_instr) {
+        return;
+    }
+
+    for (int i=0; i<instr_count; i++) {
+        if (dis_instr[i] == NULL) {
+            continue;
+        }
+        free(dis_instr[i]);
+    }
+
+    dis_instr = NULL;
+}
 
 static void parse_options(char* str, struct optimsoc_backend_option* options[],
                           int *num_options)
@@ -120,7 +251,10 @@ static void connect(optimsoc_backend_id backend,
         exit(EXIT_FAILURE);
     }
 
-    /* show system information */
+    max_core_id = 0;
+    struct optimsoc_itm_config *itm_config;
+
+    /* show system information and determine maximum core ID */
     printf("Connected to system.\n");
     printf("System ID: 0x%08x\n", optimsoc_get_sysid(ctx));
     printf("Module summary:\n");
@@ -132,7 +266,18 @@ static void connect(optimsoc_backend_id backend,
         printf("0x%02x\t0x%02x\t0x%02x\t%s\n", modules[i].dbgnoc_addr,
                modules[i].module_type, modules[i].module_version,
                optimsoc_get_module_name(modules[i].module_type));
+
+
+        if (modules[i].module_type == OPTIMSOC_MODULE_TYPE_ITM) {
+            optimsoc_itm_get_config(ctx, &modules[i], &itm_config);
+            if (itm_config->core_id > max_core_id) {
+                max_core_id = itm_config->core_id;
+            }
+        }
     }
+
+    /* allocate memory for the ITM traces */
+    itm_sinks = calloc(max_core_id + 1, sizeof(struct itm_sink*));
 }
 
 static int disconnect(void)
@@ -152,8 +297,39 @@ static int disconnect(void)
         return err;
     }
 
-    if (trace_file) {
-        fclose(trace_file);
+    if (nrm_stat_file) {
+        fclose(nrm_stat_file);
+        nrm_stat_file = NULL;
+    }
+    if (stm_trace_file) {
+        fclose(stm_trace_file);
+        stm_trace_file = NULL;
+    }
+    if (itm_sinks) {
+        for (unsigned int i = 0; i < max_core_id + 1; i++) {
+            if (itm_sinks[i] != NULL) {
+                if (itm_sinks[i]->trace_file) {
+                    fclose(itm_sinks[i]->trace_file);
+                    itm_sinks[i]->trace_file = NULL;
+                }
+                if (itm_sinks[i]->dis) {
+                    free_disassembly(itm_sinks[i]->dis,
+                                     itm_sinks[i]->dis_instr_count);
+                }
+                free(itm_sinks[i]);
+            }
+        }
+        free(itm_sinks);
+        itm_sinks = NULL;
+    }
+    if (stm_printf_buf) {
+        for (unsigned int i = 0; i < max_core_id + 1; i++) {
+            if (stm_printf_buf[i] != NULL) {
+                free(stm_printf_buf[i]);
+            }
+        }
+        free(stm_printf_buf);
+        stm_printf_buf = NULL;
     }
 
     printf(" done\n");
@@ -239,38 +415,78 @@ static int mem_init(int mem_tile_id, const char* path)
     return 0;
 }
 
-static void write_trace_to_file(int core_id, uint32_t timestamp,
-                                uint32_t pc, int count)
+static void write_itm_trace_to_file(unsigned int core_id, uint32_t timestamp,
+                                    uint32_t pc, int count)
 {
-    fprintf(trace_file, "0x%02x 0x%08x 0x%08x %04d\n",
-            core_id, timestamp, pc, count);
-    fflush(trace_file);
+    if (core_id >= max_core_id || itm_sinks[core_id] == NULL) {
+        return;
+    }
+
+    struct itm_sink *sink = itm_sinks[core_id];
+    if (sink->add_disassembly) {
+        if ((pc >> 2) >= sink->dis_instr_count) {
+            fprintf(stderr, "No disassembly for PC 0x%x available.\n", pc);
+            return;
+        }
+
+        uint32_t pc_word = pc >> 2;
+        for (int i=0; i<count; i++) {
+            pc = pc_word << 2;
+            fprintf(sink->trace_file, "0x%02x 0x%08x 0x%08x %04d %-50s %s\n",
+                    core_id, timestamp, pc, count,
+                    sink->dis[pc_word]->disassembly,
+                    sink->dis[pc_word]->funcname);
+            pc_word++;
+        }
+    } else {
+        fprintf(sink->trace_file, "0x%02x 0x%08x 0x%08x %04d\n",
+                core_id, timestamp, pc, count);
+    }
+
+    fflush(sink->trace_file);
 }
 
 static void write_stm_trace_to_file(uint32_t core_id, uint32_t timestamp,
                                     uint16_t id, uint32_t value)
 {
-    static int nl_printed = 0;
+    int do_print = 0;
+
     switch (id) {
     case 1:
         /* program terminated */
-        fprintf(stm_trace_file, "[%d, %0d] [Program terminated.]",
+        fprintf(stm_trace_file, "[%d, %0d] [Program terminated.]\n",
                 timestamp, core_id);
         break;
     case 4:
         /* simprint */
-        if (!nl_printed) {
-            fprintf(stm_trace_file, "[%d, %0d] ", timestamp, core_id);
-            nl_printed = 1;
-        }
-        fprintf(stm_trace_file, "%c", value);
         if (value == '\n') {
-            nl_printed = 0;
+            do_print = 1;
+        } else {
+            for (int i = 0; i < 49; i++) {
+                if (stm_printf_buf[core_id][i] == '\0') {
+                    if (i == 48) {
+                        stm_printf_buf[core_id][46] = '.';
+                        stm_printf_buf[core_id][47] = '.';
+                        stm_printf_buf[core_id][48] = '.';
+                        stm_printf_buf[core_id][49] = '\0';
+                        do_print = 1;
+                    } else {
+                        stm_printf_buf[core_id][i] = value;
+                        stm_printf_buf[core_id][i+1] = '\0';
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (do_print) {
+            fprintf(stm_trace_file, "[%d, %0d] %s\n", timestamp, core_id, stm_printf_buf[core_id]);
+            stm_printf_buf[core_id][0] = '\0';
         }
         break;
     default:
         /* just a regular message */
-        fprintf(stm_trace_file, "[%d, %0d] Event 0x%x: 0x%x",
+        fprintf(stm_trace_file, "[%d, %0d] Event 0x%x: 0x%x\n",
                 timestamp, core_id, id, value);
     }
     fflush(stm_trace_file);
@@ -288,21 +504,66 @@ static void write_noc_stats_to_file(int router_id, uint32_t timestamp,
     fflush(nrm_stat_file);
 }
 
-static int log_instruction_trace(char* filename)
+static int register_itm_trace(int core_id, char* trace_file_path,
+                              int add_disassembly,
+                              char* elf_file_path)
 {
-    if (trace_file) {
-        fclose(trace_file);
+    int rv;
+
+    struct itm_sink *sink = itm_sinks[core_id];
+    if (!sink) {
+        /* create new itm_sink */
+        sink = calloc(1, sizeof(struct itm_sink));
+        if (!sink) {
+            fprintf(stderr, "Unable to allocate memory for itm_sink.\n");
+            exit(ENOMEM);
+        }
+        itm_sinks[core_id] = sink;
+    } else {
+        /* reuse existing itm_sink; reset all data fields */
+        if (sink->trace_file) {
+            fclose(sink->trace_file);
+            sink->trace_file = NULL;
+        }
+
+        if (sink->dis) {
+            free_disassembly(sink->dis, sink->dis_instr_count);
+        }
+        sink->dis_instr_count = 0;
     }
 
-    trace_file = fopen(filename, "w");
+    /* trace file */
+    FILE *trace_file = fopen(trace_file_path, "w");
     if (!trace_file) {
-        printf("Opening instruction trace file failed: %s (%d)\n",
-               strerror(errno), errno);
+        fprintf(stderr, "Opening instruction trace file for core %d failed: %s (%d)\n",
+                core_id, strerror(errno), errno);
         return -1;
     }
+    sink->trace_file = trace_file;
+    sink->do_trace = 1;
 
-    optimsoc_itm_register_callback(ctx, &write_trace_to_file);
-    printf("Starting to log instruction traces to %s\n", filename);
+    /* disassembly */
+    if (add_disassembly && elf_file_path) {
+        rv = new_disassembly(elf_file_path, &sink->dis, &sink->dis_instr_count);
+        if (rv < 0) {
+            sink->add_disassembly = 0;
+            fprintf(stderr, "Unable to create disassembly. Creating raw "
+                            "instruction trace instead.\n");
+        } else {
+            sink->add_disassembly = 1;
+        }
+    } else {
+        sink->add_disassembly = 0;
+        sink->dis = NULL;
+        sink->dis_instr_count = 0;
+    }
+
+    if (!itm_callback_registered) {
+        optimsoc_itm_register_callback(ctx, &write_itm_trace_to_file);
+        itm_callback_registered = 1;
+    }
+    printf("Starting to log instruction traces for core %d to %s\n", core_id,
+           trace_file_path);
     return 0;
 }
 
@@ -317,6 +578,11 @@ static int log_stm_trace(char* filename)
         printf("Opening STM trace file failed: %s (%d)\n",
                strerror(errno), errno);
         return -1;
+    }
+
+    stm_printf_buf = calloc(max_core_id + 1, sizeof(char*));
+    for (unsigned int i = 0; i < max_core_id + 1; i++) {
+        stm_printf_buf[i] = calloc(50, sizeof(char));
     }
 
     optimsoc_stm_register_callback(ctx, &write_stm_trace_to_file);
@@ -421,8 +687,12 @@ static void display_interactive_help(void)
             "   starting at address 0xBASE_ADDR\n"
             "mem_init FILE MEM_TILE_ID\n"
             "   initialize a memory tile MEM_TILE_ID with FILE\n"
-            "log_instruction_trace FILE\n"
-            "   write an instruction trace for all CPUs to FILE\n"
+            "log_raw_instruction_trace CORE_ID OUT_FILE\n"
+            "   write an instruction trace for CPU CORE_ID to OUT_FILE\n"
+            "log_dis_instruction_trace CORE_ID ELF_FILE OUT_FILE\n"
+            "   write an instruction trace including disassembly for the "
+                "program ELF_FILE \n"
+            "   to OUT_FILE\n"
             "log_stm_trace FILE\n"
             "   write an STM trace for all CPUs to FILE\n"
             "log_noc_stats FILE\n"
@@ -442,7 +712,7 @@ int main(int argc, char *argv[])
     int interactive_mode = 0;
     optimsoc_backend_id backend = OPTIMSOC_BACKEND_DBGNOC;
 
-    trace_file = 0;
+    itm_callback_registered = 0;
 
     /* setup SIGINT (CTRL-C) signal handler */
     struct sigaction act;
@@ -529,16 +799,69 @@ int main(int argc, char *argv[])
                 optimsoc_reset(ctx);
             } else if (!strcmp(cmd, "clkstat")) {
                 display_clkstat();
-            } else if (!strcmp(cmd, "log_instruction_trace")) {
+            } else if (!strcmp(cmd, "log_raw_instruction_trace")) {
                 char* tmp;
+                char* endptr;
 
                 tmp = strtok(NULL, " ");
                 if (!tmp) {
-                    printf("FILE argument missing.\n");
+                    printf("CORE_ID argument missing.\n");
                     display_interactive_help();
                     continue;
                 }
-                log_instruction_trace(tmp);
+                errno = 0;
+                int core_id = strtol(tmp, &endptr, 10);
+                if (endptr == tmp || errno != 0) {
+                    printf("CORE_ID argument invalid.\n");
+                    display_interactive_help();
+                    continue;
+                }
+
+                tmp = strtok(NULL, " ");
+                if (!tmp) {
+                    printf("OUT_FILE argument missing.\n");
+                    display_interactive_help();
+                    continue;
+                }
+                register_itm_trace(core_id, tmp, 0, NULL);
+
+            } else if (!strcmp(cmd, "log_dis_instruction_trace")) {
+                char* tmp;
+                char* endptr;
+
+                tmp = strtok(NULL, " ");
+                if (!tmp) {
+                    printf("CORE_ID argument missing.\n");
+                    display_interactive_help();
+                    continue;
+                }
+                errno = 0;
+                int core_id = strtol(tmp, &endptr, 10);
+                if (endptr == tmp || errno != 0) {
+                    printf("CORE_ID argument invalid.\n");
+                    display_interactive_help();
+                    continue;
+                }
+
+                tmp = strtok(NULL, " ");
+                if (!tmp) {
+                    printf("ELF_FILE argument missing.\n");
+                    display_interactive_help();
+                    continue;
+                }
+                char* elf_file_path = strdup(tmp);
+
+                tmp = strtok(NULL, " ");
+                if (!tmp) {
+                    printf("OUT_FILE argument missing.\n");
+                    display_interactive_help();
+                    continue;
+                }
+                char* trace_file_path = strdup(tmp);
+                register_itm_trace(core_id, trace_file_path, 1, elf_file_path);
+
+                free(trace_file_path);
+                free(elf_file_path);
 
             } else if (!strcmp(cmd, "log_stm_trace")) {
                 char* tmp;

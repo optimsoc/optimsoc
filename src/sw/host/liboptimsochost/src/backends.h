@@ -62,6 +62,8 @@ struct optimsoc_backend_interface {
                                    int /*sample_interval*/);
     int (*read_clkstats)(struct optimsoc_backend_ctx*, uint32_t* /*sys_clk*/,
                          uint32_t* /*sys_clk_halted*/);
+    int (*itm_refresh_config)(struct optimsoc_backend_ctx*,
+                              struct optimsoc_dbg_module* /*dbg_module*/);
 };
 
 #endif /* _BACKENDS_H_ */

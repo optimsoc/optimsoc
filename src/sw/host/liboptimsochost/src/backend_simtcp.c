@@ -175,6 +175,7 @@ int ob_simtcp_new(struct optimsoc_backend_ctx **ctx,
     calls->stm_register_callback = &ob_simtcp_stm_register_callback;
     calls->nrm_set_sample_interval = &ob_simtcp_nrm_set_sample_interval;
     calls->read_clkstats = &ob_simtcp_read_clkstats;
+    calls->itm_refresh_config = &ob_simtcp_itm_refresh_config;
 
     *ctx = c;
 
@@ -426,6 +427,13 @@ int ob_simtcp_nrm_set_sample_interval(struct optimsoc_backend_ctx *ctx,
 
 int ob_simtcp_read_clkstats(struct optimsoc_backend_ctx *ctx, uint32_t *sys_clk,
                             uint32_t *sys_clk_halted)
+{
+    err(ctx->log_ctx, "Not implemented!\n");
+    return -1;
+}
+
+int ob_simtcp_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
+                                 struct optimsoc_dbg_module *dbg_module)
 {
     err(ctx->log_ctx, "Not implemented!\n");
     return -1;

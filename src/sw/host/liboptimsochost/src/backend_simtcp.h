@@ -62,5 +62,7 @@ int ob_simtcp_nrm_set_sample_interval(struct optimsoc_backend_ctx *ctx,
                                       int sample_interval);
 int ob_simtcp_read_clkstats(struct optimsoc_backend_ctx *ctx,
                             uint32_t *sys_clk, uint32_t *sys_clk_halted);
+int ob_simtcp_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
+                                 struct optimsoc_dbg_module *dbg_module);
 
 #endif /* _BACKEND_SIMTCP_H_ */
