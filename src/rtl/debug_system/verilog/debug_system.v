@@ -400,7 +400,7 @@ module debug_system(
    genvar                          i;
 `ifdef OPTIMSOC_DEBUG_ENABLE_ITM
    generate
-      for (i=0;i<DEBUG_ITM_CORE_COUNT;i=i+1) begin
+      for (i=0;i<DEBUG_ITM_CORE_COUNT;i=i+1) begin : gen_itm
          // ITM for CT 0 CPU 0 (ID 0)
          // Debug NoC address: `DBG_NOC_ADDR_DYN_START
          itm
@@ -431,7 +431,7 @@ module debug_system(
 
 `ifdef OPTIMSOC_DEBUG_ENABLE_STM
    generate
-      for (i=0;i<DEBUG_STM_CORE_COUNT;i=i+1) begin
+      for (i=0;i<DEBUG_STM_CORE_COUNT;i=i+1) begin : gen_stm
          stm
            #(.CORE_ID(i))
          u_stm(.clk(clk),
