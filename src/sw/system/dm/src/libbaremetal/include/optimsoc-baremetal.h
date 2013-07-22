@@ -239,6 +239,9 @@ extern void optimsoc_mp_simple_addhandler(unsigned int class,
 extern int lcd_set(unsigned int row,unsigned int col,char c);
 extern void uart_printf(const char *fmt, ...);
 
+extern void optimsoc_timer_init();
+extern void optimsoc_timer_wait(uint32_t microseconds);
+
 /**
  * @}
  */

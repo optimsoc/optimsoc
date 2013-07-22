@@ -6,7 +6,8 @@ libbaremetal_la_SOURCES =\
     dma.c \
     mp_simple.c \
     mutex.c \
-    uart.c 
+    uart.c \
+    timer.c
 
 libbaremetal_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 libbaremetal_la_CPPFLAGS = $(AM_CPPFLAGS) -I $(OPTIMSOC_NEWLIB)/include -Wall
