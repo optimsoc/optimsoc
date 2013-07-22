@@ -94,14 +94,12 @@ typedef void (*optimsoc_stm_cb)(uint32_t core_id,
                                 uint32_t value);
 
 struct optimsoc_backend_option {
-	char* name;
-	char* value;
+    char* name;
+    char* value;
 };
 
-int optimsoc_new(struct optimsoc_ctx **ctx,
-		         optimsoc_backend_id backend,
-		         int num_options,
-		         struct optimsoc_backend_option options[]);
+int optimsoc_new(struct optimsoc_ctx **ctx, optimsoc_backend_id backend,
+                 int num_options, struct optimsoc_backend_option options[]);
 
 int optimsoc_connect(struct optimsoc_ctx *ctx);
 int optimsoc_disconnect(struct optimsoc_ctx *ctx);

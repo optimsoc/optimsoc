@@ -56,7 +56,8 @@ const int DBG_NOC_ADDR_TCM = 0x01;
 /**
  * Opaque object representing the library context.
  */
-struct optimsoc_ctx {
+struct optimsoc_ctx
+{
     /** logging context */
     struct optimsoc_log_ctx *log_ctx;
 
@@ -80,7 +81,6 @@ struct optimsoc_ctx {
  * TBD: description of the logging framework
  */
 
-
 /**
  * \defgroup lib Basic Library Functionality
  *
@@ -103,7 +103,6 @@ struct optimsoc_ctx {
 /**
  * \defgroup lowlevel Low-Level Debug NoC API
  */
-
 
 /**
  * Create a new library context with a given backend.
@@ -132,12 +131,12 @@ int optimsoc_new(struct optimsoc_ctx **ctx, optimsoc_backend_id backend,
 
     switch (backend) {
     case OPTIMSOC_BACKEND_DBGNOC:
-        rv = ob_dbgnoc_new(&(c->backend_ctx), &(c->backend_call),
-                           c->log_ctx, num_options, options);
+        rv = ob_dbgnoc_new(&(c->backend_ctx), &(c->backend_call), c->log_ctx,
+                           num_options, options);
         break;
     case OPTIMSOC_BACKEND_SIMTCP:
-        rv = ob_simtcp_new(&(c->backend_ctx), &(c->backend_call),
-                           c->log_ctx, num_options, options);
+        rv = ob_simtcp_new(&(c->backend_ctx), &(c->backend_call), c->log_ctx,
+                           num_options, options);
         break;
     default:
         err(c->log_ctx, "Unknown backend selected.\n");
@@ -194,7 +193,7 @@ int optimsoc_get_log_priority(struct optimsoc_ctx *ctx)
  * \ingroup log
  */
 OPTIMSOC_EXPORT
-void optimsoc_set_log_priority(struct optimsoc_ctx *ctx,  int priority)
+void optimsoc_set_log_priority(struct optimsoc_ctx *ctx, int priority)
 {
     optimsoc_log_set_priority(ctx->log_ctx, priority);
 }
@@ -307,7 +306,6 @@ int optimsoc_discover_system(struct optimsoc_ctx *ctx)
     return ctx->backend_call.discover_system(ctx->backend_ctx);
 }
 
-
 /**
  * Initialize a memory tile with data
  *
@@ -330,7 +328,8 @@ int optimsoc_mem_init(struct optimsoc_ctx *ctx, int mem_tile_id,
     if (data_len % 4 != 0) {
         /* see the implementation in lisnoc_dma_target.v */
         err(ctx->log_ctx, "DMA writes are only supported in 4-byte blocks, "
-                          "tried to write %d bytes.\n", data_len);
+            "tried to write %d bytes.\n",
+            data_len);
         return -1;
     }
 
@@ -350,9 +349,8 @@ int optimsoc_mem_init(struct optimsoc_ctx *ctx, int mem_tile_id,
         } else {
             len = MEM_INIT_MAX_BYTES;
         }
-        res = optimsoc_mem_write(ctx, mem_tile_id, i*MEM_INIT_MAX_BYTES,
-                                 &data[i*MEM_INIT_MAX_BYTES],
-                                 len);
+        res = optimsoc_mem_write(ctx, mem_tile_id, i * MEM_INIT_MAX_BYTES,
+                                 &data[i * MEM_INIT_MAX_BYTES], len);
         if (res < 0) {
             err(ctx->log_ctx,
                 "Unable to complete DMA write %i. CPUs remain stalled!\n", i);
@@ -360,7 +358,6 @@ int optimsoc_mem_init(struct optimsoc_ctx *ctx, int mem_tile_id,
         }
         remaining_bytes -= len;
     }
-
 
     /* reset and un-stall CPUs */
     res = optimsoc_cpu_reset(ctx);
@@ -533,8 +530,7 @@ int optimsoc_cpu_reset(struct optimsoc_ctx *ctx)
  * \ingroup highlevel
  */
 OPTIMSOC_EXPORT
-int optimsoc_itm_register_callback(struct optimsoc_ctx *ctx,
-                                   optimsoc_itm_cb cb)
+int optimsoc_itm_register_callback(struct optimsoc_ctx *ctx, optimsoc_itm_cb cb)
 {
     return ctx->backend_call.itm_register_callback(ctx->backend_ctx, cb);
 }
@@ -545,8 +541,7 @@ int optimsoc_itm_register_callback(struct optimsoc_ctx *ctx,
  * \ingroup highlevel
  */
 OPTIMSOC_EXPORT
-int optimsoc_nrm_register_callback(struct optimsoc_ctx *ctx,
-                                   optimsoc_nrm_cb cb)
+int optimsoc_nrm_register_callback(struct optimsoc_ctx *ctx, optimsoc_nrm_cb cb)
 {
     return ctx->backend_call.nrm_register_callback(ctx->backend_ctx, cb);
 }
@@ -557,8 +552,7 @@ int optimsoc_nrm_register_callback(struct optimsoc_ctx *ctx,
  * \ingroup highlevel
  */
 OPTIMSOC_EXPORT
-int optimsoc_stm_register_callback(struct optimsoc_ctx *ctx,
-                                   optimsoc_stm_cb cb)
+int optimsoc_stm_register_callback(struct optimsoc_ctx *ctx, optimsoc_stm_cb cb)
 {
     return ctx->backend_call.stm_register_callback(ctx->backend_ctx, cb);
 }

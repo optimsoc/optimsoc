@@ -173,19 +173,21 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
                   int num_options,
                   struct optimsoc_backend_option options[]) {
 
-    int i,rv;
+    int i, rv;
     struct optimsoc_backend_ctx *c;
-    ob_dbgnoc_connection_id connid = OPTIMSOC_DBGNOC_USB; // usb is default
+    ob_dbgnoc_connection_id connid = OPTIMSOC_DBGNOC_USB; /* USB is default */
 
-    // Find connection type in options
-    for (i=0;i<num_options;i++) {
-        if (strcmp(options[i].name,"conn")==0) {
+    /* extract the connection type from the options */
+    for (i = 0; i < num_options; i++) {
+        if (strcmp(options[i].name, "conn") == 0) {
             // Connection type is set in options
-            if (strcmp(options[i].value,"usb")==0) {
-                // usb connection
+            if (strcmp(options[i].value, "usb") == 0) {
                 connid = OPTIMSOC_DBGNOC_USB;
-            } else if (strcmp(options[i].value,"tcp")==0) {
+            } else if (strcmp(options[i].value, "tcp") == 0) {
                 connid = OPTIMSOC_DBGNOC_TCP;
+            } else {
+                info(log_ctx, "Unknown connection option %s, using the "
+                     "USB connection (conn=usb) instead.\n", options[i].value);
             }
         }
     }
@@ -199,7 +201,7 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
     c->log_ctx = log_ctx;
     c->sysinfo = NULL;
 
-    // Set the common calls
+    /* set the common calls */
     calls->cpu_stall = &ob_dbgnoc_cpu_stall;
     calls->cpu_reset = &ob_dbgnoc_cpu_reset;
     calls->itm_register_callback = &ob_dbgnoc_itm_register_callback;
@@ -217,23 +219,21 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
     calls->cpu_start = &ob_dbgnoc_cpu_start;
     calls->mem_write = &ob_dbgnoc_mem_write;
 
-    c->conn_calls = calloc(1,sizeof(struct ob_dbgnoc_connection_interface));
+    c->conn_calls = calloc(1, sizeof(struct ob_dbgnoc_connection_interface));
 
-    // Initialize connection context
+    /* initialize the connection context */
     switch (connid) {
     case OPTIMSOC_DBGNOC_USB:
-        rv = ob_dbgnoc_usb_new(&c->conn_ctx,c->conn_calls,log_ctx,num_options,options);
+        rv = ob_dbgnoc_usb_new(&c->conn_ctx, c->conn_calls, log_ctx,
+                               num_options, options);
         break;
     case OPTIMSOC_DBGNOC_TCP:
-        rv = ob_dbgnoc_tcp_new(&c->conn_ctx,c->conn_calls,log_ctx,num_options,options);
+        rv = ob_dbgnoc_tcp_new(&c->conn_ctx, c->conn_calls, log_ctx,
+                               num_options, options);
         break;
     default:
         rv = -1;
         break;
-    }
-
-    if (rv<0) {
-        return rv;
     }
 
     return rv;
@@ -402,30 +402,31 @@ int ob_dbgnoc_discover_system(struct optimsoc_backend_ctx *ctx)
         }
     }
 
-    if (ctx->sysinfo != NULL) {
-        if (ctx->sysinfo->dbg_modules != 0) {
-            free(ctx->sysinfo->dbg_modules);
-            ctx->sysinfo->dbg_modules = NULL;
-        }
-        free(ctx->sysinfo);
-        ctx->sysinfo = NULL;
-    }
+    /*
+     * Allocate memory for the ITM configurations.
+     *
+     * We use the address in the Debug NoC as index for faster lookups.
+     * dbg_module_count contains the number of debug modules *in addition* to
+     * the TCM, so the highest address in the Debug NoC is
+     * |DBG_NOC_ADDR_TCM + dbg_module_count|.
+     */
+    sysinfo->itm_config = calloc(sysinfo->dbg_module_count + DBG_NOC_ADDR_TCM,
+                                 sizeof(struct optimsoc_itm_config*));
 
+    optimsoc_sysinfo_free(ctx->sysinfo);
     ctx->sysinfo = sysinfo;
     return 0;
 }
 
-
 int ob_dbgnoc_get_sysinfo(struct optimsoc_backend_ctx *ctx,
-                                 struct optimsoc_sysinfo **sysinfo)
+                          struct optimsoc_sysinfo **sysinfo)
 {
     *sysinfo = ctx->sysinfo;
     return 0;
 }
 
-int ob_dbgnoc_mem_write(struct optimsoc_backend_ctx *ctx,
-                               int mem_tile_id, int base_address,
-                               const uint8_t* data, int data_len)
+int ob_dbgnoc_mem_write(struct optimsoc_backend_ctx *ctx, int mem_tile_id,
+                        int base_address, const uint8_t* data, int data_len)
 {
     int rv = 0;
     int dma_address = base_address;
@@ -788,21 +789,21 @@ void* receive_thread(void* ctx_void)
 }
 
 int ob_dbgnoc_itm_register_callback(struct optimsoc_backend_ctx *ctx,
-                                           optimsoc_itm_cb cb)
+                                    optimsoc_itm_cb cb)
 {
     ctx->itm_cb = cb;
     return 0;
 }
 
 int ob_dbgnoc_nrm_register_callback(struct optimsoc_backend_ctx *ctx,
-                                           optimsoc_nrm_cb cb)
+                                    optimsoc_nrm_cb cb)
 {
     ctx->nrm_cb = cb;
     return 0;
 }
 
 int ob_dbgnoc_stm_register_callback(struct optimsoc_backend_ctx *ctx,
-                                           optimsoc_stm_cb cb)
+                                    optimsoc_stm_cb cb)
 {
     ctx->stm_cb = cb;
     return 0;
@@ -818,7 +819,7 @@ int ob_dbgnoc_stm_register_callback(struct optimsoc_backend_ctx *ctx,
  * \param ctx          backend context
  * \param module_addr  module address in the Debug NoC to read from
  * \param reg_addr     register to read
- * \param burst_len    number of 16-bit words to read
+ * \param burst_len    number of 16-bit words to read (4 at most)
  * \param[out] data    read data
  *
  * \return 0 on success, a negative error code otherwise
@@ -1162,7 +1163,7 @@ free_return:
  * \param sample_interval sample interval in clock cycles, set 0 to disable NRMs
  */
 int ob_dbgnoc_nrm_set_sample_interval(struct optimsoc_backend_ctx *ctx,
-                                             int sample_interval)
+                                      int sample_interval)
 {
     assert(ctx->sysinfo);
 
@@ -1186,9 +1187,8 @@ int ob_dbgnoc_nrm_set_sample_interval(struct optimsoc_backend_ctx *ctx,
 /**
  * Read the clock statistics from the system
  */
-int ob_dbgnoc_read_clkstats(struct optimsoc_backend_ctx *ctx,
-                                    uint32_t *sys_clk,
-                                    uint32_t *sys_clk_halted)
+int ob_dbgnoc_read_clkstats(struct optimsoc_backend_ctx *ctx, uint32_t *sys_clk,
+                            uint32_t *sys_clk_halted)
 {
     uint16_t data[4];
     data[0] = 0;
