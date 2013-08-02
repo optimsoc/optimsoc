@@ -20,7 +20,7 @@
  *
  * =================================================================
  *
- * Single-Port RAM with Withbone Interface
+ * Single-Port RAM with Wishbone Interface
  *
  * (c) 2013 by the author(s)
  *
@@ -41,11 +41,14 @@ module wb_sram_sp(/*AUTOARG*/
    );
 
    // Memory size in bytes
-   parameter MEM_SIZE = 'x;
+   parameter MEM_SIZE = 'hx;
+
+   // VMEM file used to initialize the memory in simulation
+   parameter MEM_FILE = "sram.vmem";
 
    // address width
    parameter AW = clog2(MEM_SIZE);
-   
+
    // data width (must be multiple of 8 for byte selects to work)
    // Valid values: 32, 16 and 8
    parameter DW = 32;
@@ -54,11 +57,11 @@ module wb_sram_sp(/*AUTOARG*/
    localparam SW = (DW == 32) ? 4 :
                    (DW == 16) ? 2 :
                    (DW ==  8) ? 1 : 'hx;
-   
-   // Allowed valued:
+
+   // Allowed values:
    //   * PLAIN
    //   * XILINX_SPARTAN6
-   parameter IMPL = `OPTIMSOC_SRAM_IMPLEMENTATION;
+   parameter MEM_IMPL_TYPE = `OPTIMSOC_SRAM_IMPLEMENTATION;
 
    /*
     * +--------------+--------------+
@@ -70,7 +73,7 @@ module wb_sram_sp(/*AUTOARG*/
    localparam BYTE_AW = SW >> 1;
    localparam WORD_AW = AW - BYTE_AW;
 
-   // Wishbone interface
+   // Wishbone SLAVE interface
    input [AW-1:0]  wb_adr_i;
    input [1:0]     wb_bte_i;
    input [2:0]     wb_cti_i;
@@ -140,7 +143,8 @@ module wb_sram_sp(/*AUTOARG*/
       #(.DW       (DW),
         .MEM_SIZE (MEM_SIZE),
         .AW       (WORD_AW),
-        .MEM_IMPL_TYPE (IMPL))
+        .MEM_IMPL_TYPE (MEM_IMPL_TYPE),
+        .MEM_FILE(MEM_FILE))
       sp_ram(/*AUTOINST*/
              // Outputs
              .dout                      (sram_dout[DW-1:0]),     // Templated

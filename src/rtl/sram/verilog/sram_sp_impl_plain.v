@@ -57,7 +57,7 @@ module sram_sp_impl_plain(/*AUTOARG*/
    parameter MEM_SIZE = 'hx;
 
    localparam MEM_SIZE_WORDS = MEM_SIZE / SW;
-   
+
    // VMEM file used to initialize the memory in simulation
    parameter MEM_FILE = "sram.vmem";
 
@@ -78,19 +78,19 @@ module sram_sp_impl_plain(/*AUTOARG*/
    reg [AW-1:0] addr_r;
    always @(posedge clk) begin
       if (rst) begin
-         addr_r <= 'hx;
+         addr_r <= {AW{1'b0}};
       end else begin
          addr_r <= addr;
       end
    end
 
    // Data output drivers
-   assign dout = (oe) ? mem[addr] : {DW{1'b0}};
+   assign dout = (oe) ? mem[addr_r] : {DW{1'b0}};
 
    // memory write
    generate
       genvar i;
-      for (i = 0; i < SW; i = i + 1) begin
+      for (i = 0; i < SW; i = i + 1) begin : gen_sel_writes
          always @ (posedge clk) begin
             if (we) begin
                // The "unusual" array bounds here are Verilog-2001 syntax and

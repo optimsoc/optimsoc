@@ -44,7 +44,7 @@
    );
 
    parameter MEM_SIZE = 'hx;
-   
+
    // address width
    parameter AW = 32;
 
@@ -53,7 +53,7 @@
    parameter DW = 32;
 
    // type of the memory implementation
-   parameter MEM_IMPL_TYPE = "plain";
+   parameter MEM_IMPL_TYPE = "PLAIN";
    // VMEM memory file to load in simulation
    parameter MEM_FILE = "sram.vmem";
 
@@ -68,12 +68,12 @@
    //       it. Otherwise we'll need some defines here.
    initial begin
       if (DW % 8 != 0) begin
-         $display("sp_ram: the data port width (parameter DW) must be a multiple of 8");
+         $display("sram_sp: the data port width (parameter DW) must be a multiple of 8");
          $stop;
       end
 
       if ((1 << clog2(SW)) != SW) begin
-         $display("sp_ram: the byte select width (paramter SW = DW/8) must be a power of two");
+         $display("sram_sp: the byte select width (paramter SW = DW/8) must be a power of two");
          $stop;
       end
    end
@@ -92,14 +92,14 @@
 `ifdef OPTIMSOC_RAM_VALIDATE_ADDRESS
    always @(posedge clk) begin
       if (addr > MEM_SIZE) begin
-         $display("sp_ram: access to out-of-bounds memory address detected!");
+         $display("sram_sp: access to out-of-bounds memory address detected!");
          $stop;
       end
    end
 `endif
 
    generate
-      if (MEM_IMPL_TYPE == "PLAIN") begin
+      if (MEM_IMPL_TYPE == "PLAIN") begin : gen_sram_sp_impl
          sram_sp_impl_plain
             #(/*AUTOINSTPARAM*/
               // Parameters
@@ -119,7 +119,7 @@
                    .addr                (addr[AW-1:0]),
                    .din                 (din[DW-1:0]),
                    .sel                 (sel[SW-1:0]));
-      end else if (MEM_IMPL_TYPE == "XILINX_SPARTAN6") begin // if (MEM_IMPL_TYPE == "PLAIN")
+      end else if (MEM_IMPL_TYPE == "XILINX_SPARTAN6") begin : gen_sram_sp_impl
          sram_sp_impl_xilinx_spartan6
             #(/*AUTOINSTPARAM*/
               // Parameters
@@ -135,12 +135,12 @@
                    .we                  (we),
                    .ce                  (ce),
                    .din                 (din[31:0]));
-      end else begin
+      end else begin : gen_sram_sp_impl
 //         $display("Unsupported memory type: ", MEM_IMPL_TYPE);
 //         $stop;
       end
    endgenerate
 
 `include "optimsoc_functions.vh"
-   
+
  endmodule

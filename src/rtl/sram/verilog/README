@@ -9,14 +9,14 @@ consisting of three parts:
 - Various memory implementations for different target architectures (e.g. BRAM
   for Xilinx Spartan 6 FPGAs)
 
-The external interface complies to the wishbone bus protocol version
+The external interface complies to the Wishbone bus protocol version
 3, especially with respect to memory addressing and burst modes.
 
 All SRAM memory modules use word addressing and offer byte granularity
 through the use of the "byte select" (sel) signal.
 
 SRAM memories for the moment need to comply with the following rules:
-  
+
   * single cycle access, meaning
 
          + cycle 0 + cycle 1 + cycle 2 +

@@ -282,15 +282,16 @@ module compute_tile_dm(
             .s_2_rty_i                  (bussl_rty_o[2]));        // Templated
 
 `ifndef OPTIMSOC_CTRAM_WIRES
-   /* ct_ram AUTO_TEMPLATE(
+   /* wb_sram_sp AUTO_TEMPLATE(
     .wb_clk_i  (clk),
     .wb_rst_i  (rst_sys),
     .wb_\(.*\) (bussl_\1[0]),
     ); */
-   ct_ram
-      #(.aw(32),
-        .mem_size(MEM_SIZE),
-        .memory_file(MEM_FILE))
+   wb_sram_sp
+      #(.DW(32),
+        .AW(32),
+        .MEM_SIZE(MEM_SIZE),
+        .MEM_FILE(MEM_FILE))
       u_ram(/*AUTOINST*/
             // Outputs
             .wb_ack_o                   (bussl_ack_o[0]),        // Templated
