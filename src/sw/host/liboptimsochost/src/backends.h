@@ -52,9 +52,9 @@ struct optimsoc_backend_interface {
     int (*cpu_start)(struct optimsoc_backend_ctx*);
     int (*cpu_stall)(struct optimsoc_backend_ctx*, int /*do_stall*/);
     int (*cpu_reset)(struct optimsoc_backend_ctx*);
-    int (*mem_write)(struct optimsoc_backend_ctx*, int /*mem_tile_id*/,
-                     int /*base_address*/, const uint8_t* /*data*/,
-                     int /*data_len*/);
+    int (*mem_write)(struct optimsoc_backend_ctx*, unsigned int /*memory_id*/,
+                     unsigned int /*base_address*/, const uint8_t* /*data*/,
+                     unsigned int /*data_len*/);
     int (*itm_register_callback)(struct optimsoc_backend_ctx*, optimsoc_itm_cb);
     int (*nrm_register_callback)(struct optimsoc_backend_ctx*, optimsoc_nrm_cb);
     int (*stm_register_callback)(struct optimsoc_backend_ctx*, optimsoc_stm_cb);

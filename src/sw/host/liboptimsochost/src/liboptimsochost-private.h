@@ -54,6 +54,8 @@ struct optimsoc_sysinfo {
     struct optimsoc_dbg_module *dbg_modules;
     /** configuration of the ITM modules */
     struct optimsoc_itm_config **itm_config;
+    /** configuration of the MAM modules */
+    struct optimsoc_mam_config **mam_config;
 };
 
 void optimsoc_sysinfo_free(struct optimsoc_sysinfo* sysinfo);

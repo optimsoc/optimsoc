@@ -53,7 +53,8 @@ typedef enum {
     OPTIMSOC_MODULE_TYPE_ITM = 0x02,
     OPTIMSOC_MODULE_TYPE_NRM = 0x03,
     OPTIMSOC_MODULE_TYPE_NCM = 0x04,
-    OPTIMSOC_MODULE_TYPE_STM = 0x05
+    OPTIMSOC_MODULE_TYPE_STM = 0x05,
+    OPTIMSOC_MODULE_TYPE_MAM = 0x07
 } optimsoc_module_type;
 
 typedef enum {
@@ -79,6 +80,14 @@ struct optimsoc_dbg_module {
 struct optimsoc_itm_config {
     /** ID of the associated core */
     unsigned int core_id;
+};
+
+/**
+ * Configuration of a single MAM module
+ */
+struct optimsoc_mam_config {
+    /** ID of the associated memory */
+    unsigned int memory_id;
 };
 
 /**
@@ -131,10 +140,12 @@ void optimsoc_set_log_priority(struct optimsoc_ctx *ctx, int priority);
 int optimsoc_mem_read(struct optimsoc_ctx *ctx, int tile_id,
                       int base_address, char** data);
 
-int optimsoc_mem_write(struct optimsoc_ctx *ctx, int mem_tile_id,
-                       int base_address, const uint8_t* data, int data_len);
-int optimsoc_mem_init(struct optimsoc_ctx *ctx, int mem_tile_id,
-                      const uint8_t* data, int data_len);
+int optimsoc_mem_write(struct optimsoc_ctx *ctx, unsigned int memory_id,
+                       unsigned int base_address, const uint8_t* data,
+                       unsigned int data_len);
+int optimsoc_mem_init(struct optimsoc_ctx *ctx, unsigned int* memory_ids,
+                      unsigned int memory_count, const uint8_t* data,
+                      int data_len);
 
 char* optimsoc_get_version_string(void);
 

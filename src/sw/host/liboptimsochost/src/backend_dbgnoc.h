@@ -97,10 +97,10 @@ int ob_dbgnoc_reset(struct optimsoc_backend_ctx *ctx);
 int ob_dbgnoc_cpu_start(struct optimsoc_backend_ctx *ctx);
 int ob_dbgnoc_discover_system(struct optimsoc_backend_ctx *ctx);
 int ob_dbgnoc_get_sysinfo(struct optimsoc_backend_ctx *ctx,
-                                 struct optimsoc_sysinfo **sysinfo);
+                          struct optimsoc_sysinfo **sysinfo);
 int ob_dbgnoc_mem_write(struct optimsoc_backend_ctx *ctx,
-                               int mem_tile_id, int base_address,
-                               const uint8_t* data, int data_len);
+                        unsigned int mem_tile_id, unsigned int base_address,
+                        const uint8_t* data, unsigned int data_len);
 int ob_dbgnoc_cpu_stall(struct optimsoc_backend_ctx *ctx, int do_stall);
 int ob_dbgnoc_cpu_reset(struct optimsoc_backend_ctx *ctx);
 
@@ -126,5 +126,6 @@ int ob_dbgnoc_read_clkstats(struct optimsoc_backend_ctx *ctx,
                             uint32_t *sys_clk_halted);
 int ob_dbgnoc_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
                                  struct optimsoc_dbg_module *dbg_module);
+int ob_dbgnoc_mam_get_config(struct optimsoc_backend_ctx *ctx);
 
 #endif /* _BACKEND_DBGNOC_H_ */

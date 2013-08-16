@@ -57,7 +57,8 @@
  */
 #define OR32_OBJDUMP "or32-elf-objdump"
 
-int mem_init(int mem_tile_id, const char* path);
+int mem_init(unsigned int* memory_ids, unsigned int memory_count,
+             const char* path);
 int register_itm_trace(int core_id, char* trace_file_path,
                               int add_disassembly,
                               char* elf_file_path);
@@ -238,7 +239,7 @@ static void parse_options(char* str, struct optimsoc_backend_option* options[],
 
 #ifndef USE_PYTHON
 static void execscript(char *scriptname) {
-	printf("EXEC no python scripting compiled.\n");
+  printf("EXEC no python scripting compiled.\n");
 }
 #else
 extern void execscript(char *scriptname);
@@ -360,10 +361,11 @@ static void sighandler(int sig)
     }
 }
 
-static int mem_write(int mem_tile_id, const char* path, int base_address)
+static int mem_write(unsigned int memory_id, const char* path,
+                     unsigned int base_address)
 {
-    printf("Trying to write %s to memory tile %d starting at 0x%x.\n",
-           path, mem_tile_id, base_address);
+    printf("Trying to write %s to memory %d starting at 0x%x.\n",
+           path, memory_id, base_address);
 
     /* allocate memory for file */
     struct stat stat_buf;
@@ -386,7 +388,7 @@ static int mem_write(int mem_tile_id, const char* path, int base_address)
     }
     fclose(fp);
 
-    int rv = optimsoc_mem_write(ctx, mem_tile_id, base_address, data_buf,
+    int rv = optimsoc_mem_write(ctx, memory_id, base_address, data_buf,
                                 stat_buf.st_size);
     if (rv < 0) {
         printf("optimsoc_mem_write() not successful: %d\n", rv);
@@ -395,10 +397,21 @@ static int mem_write(int mem_tile_id, const char* path, int base_address)
     return 0;
 }
 
-int mem_init(int mem_tile_id, const char* path)
+int mem_init(unsigned int* memory_ids, unsigned int memory_count,
+             const char* path)
 {
-    printf("Trying to initialize memory tile %d with %s\n",
-           mem_tile_id, path);
+    if (memory_count == 1) {
+        printf("Initializing memory %d with %s\n", memory_ids[0], path);
+    } else {
+        printf("Initializing memories ");
+        for (unsigned int i = 0; i < memory_count; i++) {
+            printf("%d", memory_ids[i]);
+            if (i != memory_count - 1) {
+                printf(", ");
+            }
+        }
+        printf(" with %s\n", path);
+    }
 
     /* allocate memory for file */
     struct stat stat_buf;
@@ -421,13 +434,13 @@ int mem_init(int mem_tile_id, const char* path)
     }
     fclose(fp);
 
-    int rv = optimsoc_mem_init(ctx, mem_tile_id, data_buf,
+    int rv = optimsoc_mem_init(ctx, memory_ids, memory_count, data_buf,
                                stat_buf.st_size);
     if (rv < 0) {
         printf("optimsoc_mem_init() not successful: %d\n", rv);
         return -1;
     }
-    printf("Memory tile successfully initialized.\n");
+    printf("Initialization successful!\n");
     return 0;
 }
 
@@ -521,8 +534,8 @@ static void write_noc_stats_to_file(int router_id, uint32_t timestamp,
 }
 
 int register_itm_trace(int core_id, char* trace_file_path,
-                              int add_disassembly,
-                              char* elf_file_path)
+                       int add_disassembly,
+                       char* elf_file_path)
 {
     int rv;
 
@@ -698,11 +711,13 @@ static void display_interactive_help(void)
             "   Reset the whole system, including the debug system\n"
             "clkstat\n"
             "   Read clock statistics\n"
-            "mem_write FILE MEM_TILE_ID [BASE_ADDR]\n"
-            "   write a memory dump from FILE to memory tile MEM_TILE_ID, \n"
+            "mem_write FILE MEMORY_ID [BASE_ADDR]\n"
+            "   write a memory dump from FILE to memory MEMORY_ID, \n"
             "   starting at address 0xBASE_ADDR\n"
-            "mem_init FILE MEM_TILE_ID\n"
-            "   initialize a memory tile MEM_TILE_ID with FILE\n"
+            "mem_init FILE MEMORY_ID\n"
+            "   initialize one or many memories with FILE\n"
+            "   MEMORY_ID can be a single memory, e.g. 0 or a range of \n"
+            "      memories, e.g. 0-3.\n"
             "log_raw_instruction_trace CORE_ID OUT_FILE\n"
             "   write an instruction trace for CPU CORE_ID to OUT_FILE\n"
             "log_dis_instruction_trace CORE_ID ELF_FILE OUT_FILE\n"
@@ -924,15 +939,15 @@ int main(int argc, char *argv[])
 
                 tmp = strtok(NULL, " ");
                 if (!tmp) {
-                    printf("MEM_TILE_ID argument missing.\n");
+                    printf("MEMORY_ID argument missing.\n");
                     display_interactive_help();
                     free(file);
                     continue;
                 }
                 errno = 0;
-                int mem_tile_id = strtol(tmp, &endptr, 10);
+                int memory_id = strtol(tmp, &endptr, 10);
                 if (endptr == tmp || errno != 0) {
-                    printf("MEM_TILE_ID argument invalid.\n");
+                    printf("MEMORY_ID argument invalid.\n");
                     display_interactive_help();
                     free(file);
                     continue;
@@ -951,7 +966,7 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                mem_write(mem_tile_id, file, base_addr);
+                mem_write(memory_id, file, base_addr);
                 free(file);
 
             } else if (!strcmp(cmd, "mem_init")) {
@@ -968,21 +983,66 @@ int main(int argc, char *argv[])
 
                 tmp = strtok(NULL, " ");
                 if (!tmp) {
-                    printf("MEM_TILE_ID argument missing.\n");
+                    printf("MEMORY_ID argument missing.\n");
                     display_interactive_help();
-                    free(file);
-                    continue;
-                }
-                errno = 0;
-                int mem_tile_id = strtol(tmp, &endptr, 10);
-                if (endptr == tmp || errno != 0) {
-                    printf("MEM_TILE_ID argument invalid.\n");
-                    display_interactive_help();
-                    free(file);
-                    continue;
+                    goto mem_init_free;
                 }
 
-                mem_init(mem_tile_id, file);
+                int is_range = 0;
+                int range_delim_pos = 0;
+                for (unsigned int cpos = 0; cpos < strlen(tmp); cpos++) {
+                    if (tmp[cpos] == '-') {
+                        is_range = 1;
+                        range_delim_pos = cpos;
+                        tmp[cpos] = '\0';
+                    }
+
+                    if (!isdigit(tmp[cpos]) && tmp[cpos] != '-' && tmp[cpos] != '\0') {
+                        printf("Unable to parse MEMORY_ID argument. Invalid character '%c' found.", tmp[cpos]);
+                        display_interactive_help();
+                        goto mem_init_free;
+                    }
+                }
+
+                if (!is_range) {
+                    errno = 0;
+                    unsigned int memory_id = strtol(tmp, &endptr, 10);
+                    if (endptr == tmp || errno != 0) {
+                        printf("Unable to parse MEMORY_ID argument. Not a number.\n");
+                        display_interactive_help();
+                        goto mem_init_free;
+                    }
+
+                    mem_init(&memory_id, 1, file);
+                } else {
+                    int range_start = strtol(tmp, &endptr, 10);
+                    if (endptr == tmp || errno != 0) {
+                        printf("Unable to parse MEMORY_ID argument. Start of range is not a number.\n");
+                        display_interactive_help();
+                        goto mem_init_free;
+                    }
+                    int range_end = strtol(&tmp[range_delim_pos+1], &endptr, 10);
+                    if (endptr == tmp || errno != 0) {
+                        printf("Unable to parse MEMORY_ID argument. End of range is not a number.\n");
+                        display_interactive_help();
+                        goto mem_init_free;
+                    }
+
+                    if (range_end < range_start) {
+                        printf("Unable to parse MEMORY_ID argument. Range end smaller than range start!.\n");
+                        display_interactive_help();
+                        goto mem_init_free;
+                    }
+
+                    unsigned int* memory_ids = calloc(range_end - range_start + 1, sizeof(unsigned int));
+                    int i = 0;
+                    for (int memory_id = range_start; memory_id <= range_end; memory_id++) {
+                        memory_ids[i++] = memory_id;
+                    }
+                    mem_init(memory_ids, range_end - range_start + 1, file);
+                }
+
+mem_init_free:
                 free(file);
             } else if (!strcmp(cmd, "nrm_set_sample_interval")) {
                 char* endptr;
@@ -1004,15 +1064,15 @@ int main(int argc, char *argv[])
                 optimsoc_nrm_set_sample_interval(ctx, sample_interval);
 
             } else if (!strcmp(cmd, "exec")) {
-            	char* escript;
-            	escript = strtok(NULL, " ");
-            	if (!script) {
-            		printf("EXEC script missing.\n");
-            		display_interactive_help();
-            		continue;
-            	}
-            	execscript(escript);
-        	} else {
+                char* escript;
+                escript = strtok(NULL, " ");
+                if (!script) {
+                    printf("EXEC script missing.\n");
+                    display_interactive_help();
+                    continue;
+                }
+              execscript(escript);
+          } else {
                 printf("Unknown command \"%s\".\n", cmd);
                 display_interactive_help();
             }

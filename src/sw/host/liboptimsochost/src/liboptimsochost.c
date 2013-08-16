@@ -307,27 +307,28 @@ int optimsoc_discover_system(struct optimsoc_ctx *ctx)
 }
 
 /**
- * Initialize a memory tile with data
+ * Initialize one or many memories with data
  *
  * This function overwrites all existing memory contents with the new data,
  * starting from address 0x00.
  *
- * \param ctx         the library context
- * \param mem_tile_id ID of the memory tile to write the data to
- * \param data        the data to use for initialization
- * \param data_len    length of the data to write
+ * \param ctx          the library context
+ * \param memory_ids   IDs of the memories to write to
+ * \param memory_count Number of the entries in the memory_ids array
+ * \param data         the data to use for initialization
+ * \param data_len     length of the data to write
  *
  * \ingroup highlevel
  */
 OPTIMSOC_EXPORT
-int optimsoc_mem_init(struct optimsoc_ctx *ctx, int mem_tile_id,
-                      const uint8_t* data, int data_len)
+int optimsoc_mem_init(struct optimsoc_ctx *ctx, unsigned int* memory_ids,
+                      unsigned int memory_count, const uint8_t* data,
+                      int data_len)
 {
     int res;
 
     if (data_len % 4 != 0) {
-        /* see the implementation in lisnoc_dma_target.v */
-        err(ctx->log_ctx, "DMA writes are only supported in 4-byte blocks, "
+        err(ctx->log_ctx, "Memory writes are only supported in 4-byte blocks, "
             "tried to write %d bytes.\n",
             data_len);
         return -1;
@@ -340,23 +341,13 @@ int optimsoc_mem_init(struct optimsoc_ctx *ctx, int mem_tile_id,
         return -1;
     }
 
-    int nr_of_writes = 1 + ((data_len - 1) / MEM_INIT_MAX_BYTES);
-    int remaining_bytes = data_len;
-    for (int i = 0; i < nr_of_writes; i++) {
-        int len;
-        if (i == nr_of_writes - 1) {
-            len = remaining_bytes;
-        } else {
-            len = MEM_INIT_MAX_BYTES;
-        }
-        res = optimsoc_mem_write(ctx, mem_tile_id, i * MEM_INIT_MAX_BYTES,
-                                 &data[i * MEM_INIT_MAX_BYTES], len);
+    for (unsigned int i = 0; i < memory_count; i++) {
+        res = optimsoc_mem_write(ctx, memory_ids[i], 0x00000000, data, data_len);
         if (res < 0) {
-            err(ctx->log_ctx,
-                "Unable to complete DMA write %i. CPUs remain stalled!\n", i);
+            err(ctx->log_ctx, "Unable to complete memory write on memory %d. "
+                "CPUs remain stalled!\n", memory_ids[i]);
             return -1;
         }
-        remaining_bytes -= len;
     }
 
     /* reset and un-stall CPUs */
@@ -375,30 +366,36 @@ int optimsoc_mem_init(struct optimsoc_ctx *ctx, int mem_tile_id,
 }
 
 /**
- * Write data into a memory tile
+ * Write data into a memory
  *
- * The DMA interface supports only writes in 4-byte steps.
- *
- * The data is written with DMA requests over the LISNoC, which is accessed
- * through the Debug NoC. This requires the debug system to contain a NCM
- * module.
- *
- * The CPUs are stalled while the memory write is happening, and reset after
- * the memory is successfully written.
+ * Writes are only supported in full words (4 bytes).
  *
  * \param ctx           library context
- * \param mem_tile_id   memory tile id to write the data to
- * \param base_address  base address of the write
+ * \param memory_id     identifier of the memory to write the data to
+ * \param base_address  base (byte) address of the write
  * \param data          data to write
  * \param data_len      number of bytes to write
  *
  * \ingroup highlevel
  */
 OPTIMSOC_EXPORT
-int optimsoc_mem_write(struct optimsoc_ctx *ctx, int mem_tile_id,
-                       int base_address, const uint8_t* data, int data_len)
+int optimsoc_mem_write(struct optimsoc_ctx *ctx, unsigned int memory_id,
+                       unsigned int base_address, const uint8_t* data,
+                       unsigned int data_len)
 {
-    return ctx->backend_call.mem_write(ctx->backend_ctx, mem_tile_id,
+    if ((base_address & 0x3) != 0) {
+       err(ctx->log_ctx, "base_address of optimsoc_mem_write is not a "
+           "word boundary.\n");
+       return -1;
+    }
+    if (data_len % 4 != 0) {
+        err(ctx->log_ctx, "Memory writes are only supported in full words "
+            "(4 bytes), tried to write %d bytes.\n",
+            data_len);
+        return -1;
+    }
+
+    return ctx->backend_call.mem_write(ctx->backend_ctx, memory_id,
                                        base_address, data, data_len);
 }
 
@@ -494,6 +491,8 @@ char* optimsoc_get_module_name(int module_type)
         return "NCM";
     case OPTIMSOC_MODULE_TYPE_STM:
         return "STM";
+    case OPTIMSOC_MODULE_TYPE_MAM:
+        return "MAM";
     default:
         return "unknown";
     }
@@ -629,6 +628,17 @@ void optimsoc_sysinfo_free(struct optimsoc_sysinfo* sysinfo)
         }
         free(sysinfo->itm_config);
         sysinfo->itm_config = NULL;
+    }
+
+    if (sysinfo->mam_config != NULL) {
+        for (int i = 0;
+             i < DBG_NOC_ADDR_TCM + sysinfo->dbg_module_count; i++) {
+            if (sysinfo->mam_config[i] != NULL) {
+                free(sysinfo->mam_config[i]);
+            }
+        }
+        free(sysinfo->mam_config);
+        sysinfo->mam_config = NULL;
     }
 
     free(sysinfo);

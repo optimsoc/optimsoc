@@ -55,16 +55,23 @@ module debug_system(
 `ifdef OPTIMSOC_DEBUG_ENABLE_NRM
                     nrm_ports_flat,
 `endif
+`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
+                    wb_mam_adr_o, wb_mam_cyc_o, wb_mam_dat_o, wb_mam_sel_o,
+                    wb_mam_stb_o, wb_mam_we_o, wb_mam_cab_o, wb_mam_cti_o,
+                    wb_mam_bte_o, wb_mam_ack_i, wb_mam_rty_i, wb_mam_err_i,
+                    wb_mam_dat_i,
+`endif
+
 `ifdef OPTIMSOC_CLOCKDOMAINS
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
+ `ifdef OPTIMSOC_DEBUG_ENABLE_STM
                     clk_itm,
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
+ `endif
+ `ifdef OPTIMSOC_DEBUG_ENABLE_ITM
                     clk_stm,
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_NCM
+ `endif
+ `ifdef OPTIMSOC_DEBUG_ENABLE_NCM
                     clk_ncm,
-`endif
+ `endif
 `endif
    /*AUTOARG*/
    // Outputs
@@ -87,6 +94,13 @@ module debug_system(
    parameter DEBUG_STM_CORE_COUNT = 'bx;
 `else
    parameter DEBUG_STM_CORE_COUNT = 0;
+`endif
+
+   // MAM: number of memories that can be accessed
+`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
+   parameter DEBUG_MAM_MEMORY_COUNT = 'bx;
+`else
+   parameter DEBUG_MAM_MEMORY_COUNT = 0;
 `endif
 
    // NRM: number of monitored LISNoC routers
@@ -150,13 +164,15 @@ module debug_system(
     * - DEBUG_ITM_CORE_COUNT x ITM
     * - DEBUG_STM_CORE_COUNT x STM
     * - DEBUG_NRM_COUNT x NRM
+    * - DEBUG_MAM_MEMORY_COUNT x MAM
     */
    localparam DBG_NOC_ROUTER_COUNT = 2 +
                                      DEBUG_NCM_COUNT +
                                      DEBUG_CTM_COUNT +
                                      DEBUG_ITM_CORE_COUNT +
                                      DEBUG_STM_CORE_COUNT +
-                                     DEBUG_NRM_COUNT;
+                                     DEBUG_NRM_COUNT +
+                                     DEBUG_MAM_MEMORY_COUNT;
 
    input    clk;
    input    rst;
@@ -214,11 +230,28 @@ module debug_system(
    input [DEBUG_NRM_COUNT*DEBUG_NRM_LINKS_PER_ROUTER*DEBUG_NRM_PORTWIDTH-1:0] nrm_ports_flat;
 `endif
 
+   // MAM: Memory Access Module
+`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
+   output [DEBUG_MAM_MEMORY_COUNT*32-1:0] wb_mam_adr_o;
+   output [DEBUG_MAM_MEMORY_COUNT*1-1:0]  wb_mam_cyc_o;
+   output [DEBUG_MAM_MEMORY_COUNT*32-1:0] wb_mam_dat_o;
+   output [DEBUG_MAM_MEMORY_COUNT*4-1:0]  wb_mam_sel_o;
+   output [DEBUG_MAM_MEMORY_COUNT*1-1:0]  wb_mam_stb_o;
+   output [DEBUG_MAM_MEMORY_COUNT*1-1:0]  wb_mam_we_o;
+   output [DEBUG_MAM_MEMORY_COUNT*1-1:0]  wb_mam_cab_o;
+   output [DEBUG_MAM_MEMORY_COUNT*3-1:0]  wb_mam_cti_o;
+   output [DEBUG_MAM_MEMORY_COUNT*2-1:0]  wb_mam_bte_o;
+   input [DEBUG_MAM_MEMORY_COUNT*1-1:0]   wb_mam_ack_i;
+   input [DEBUG_MAM_MEMORY_COUNT*1-1:0]   wb_mam_rty_i;
+   input [DEBUG_MAM_MEMORY_COUNT*1-1:0]   wb_mam_err_i;
+   input [DEBUG_MAM_MEMORY_COUNT*32-1:0]  wb_mam_dat_i;
+`endif
+
    // disable (halt) system clock
    output sys_clk_disable;
    input  sys_clk_is_halted;
    // the individual sys_clk_disable signals for the submodules
-   wire [DEBUG_ITM_CORE_COUNT+DEBUG_STM_CORE_COUNT+DEBUG_NRM_COUNT-1:0] sys_clk_disable_sub;
+   wire [DEBUG_ITM_CORE_COUNT+DEBUG_STM_CORE_COUNT+DEBUG_NRM_COUNT+DEBUG_MAM_MEMORY_COUNT-1:0] sys_clk_disable_sub;
 `ifdef OPTIMSOC_DEBUG_NO_CLOCK_GATING
    assign sys_clk_disable = 0;
 `else
@@ -281,7 +314,7 @@ module debug_system(
    // Debug NoC address: `DBG_NOC_ADDR_TCM
    tcm
       #(.SYSTEM_IDENTIFIER(SYSTEM_IDENTIFIER),
-        .MODULE_COUNT(DEBUG_ITM_CORE_COUNT + DEBUG_STM_CORE_COUNT + DEBUG_NRM_COUNT + DEBUG_CTM_COUNT + DEBUG_NCM_COUNT))
+        .MODULE_COUNT(DEBUG_ITM_CORE_COUNT + DEBUG_STM_CORE_COUNT + DEBUG_NRM_COUNT + DEBUG_CTM_COUNT + DEBUG_NCM_COUNT + DEBUG_MAM_MEMORY_COUNT))
       u_tcm(.clk(clk),
             .rst(rst),
             .sys_clk_is_halted(sys_clk_is_halted),
@@ -298,11 +331,13 @@ module debug_system(
             .cpu_stall(cpu_stall),
             .cpu_reset(cpu_reset));
 
+   // start addresses for the individual debug modules
    localparam DBG_NOC_ADDR_CTM = `DBG_NOC_ADDR_DYN_START;
    localparam DBG_NOC_ADDR_NCM = DBG_NOC_ADDR_CTM + DEBUG_CTM_COUNT;
    localparam DBG_NOC_ADDR_ITM = DBG_NOC_ADDR_NCM + DEBUG_NCM_COUNT;
    localparam DBG_NOC_ADDR_STM = DBG_NOC_ADDR_ITM + DEBUG_ITM_CORE_COUNT;
    localparam DBG_NOC_ADDR_NRM = DBG_NOC_ADDR_STM + DEBUG_STM_CORE_COUNT;
+   localparam DBG_NOC_ADDR_MAM = DBG_NOC_ADDR_NRM + DEBUG_NRM_COUNT;
 
    // CTM
 `ifdef OPTIMSOC_DEBUG_ENABLE_CTM
@@ -491,6 +526,42 @@ module debug_system(
                   .noc32_router_link_in_flit(flit),
                   .noc32_router_link_in_ready(ready),
                   .noc32_router_link_in_valid(valid));
+      end
+   endgenerate
+`endif
+
+`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
+   generate
+      for (i = 0; i < DEBUG_MAM_MEMORY_COUNT; i = i + 1) begin : gen_mam
+         mam
+            #(.MEMORY_ID(i))
+            u_mam(.clk(clk),
+                  .rst(rst),
+
+                  .dbgnoc_out_flit(dbg_link_in_flit[(((DBG_NOC_ADDR_MAM+i)+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_MAM+i)*DBG_NOC_FLIT_WIDTH]),
+                  .dbgnoc_out_valid(dbg_link_in_valid[(((DBG_NOC_ADDR_MAM+i)+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_MAM+i)*DBG_NOC_VCHANNELS]),
+                  .dbgnoc_out_ready(dbg_link_in_ready[(((DBG_NOC_ADDR_MAM+i)+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_MAM+i)*DBG_NOC_VCHANNELS]),
+
+                  .dbgnoc_in_flit(dbg_link_out_flit[(((DBG_NOC_ADDR_MAM+i)+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_MAM+i)*DBG_NOC_FLIT_WIDTH]),
+                  .dbgnoc_in_valid(dbg_link_out_valid[(((DBG_NOC_ADDR_MAM+i)+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_MAM+i)*DBG_NOC_VCHANNELS]),
+                  .dbgnoc_in_ready(dbg_link_out_ready[(((DBG_NOC_ADDR_MAM+i)+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_MAM+i)*DBG_NOC_VCHANNELS]),
+
+                  .sys_clk_is_halted(sys_clk_is_halted),
+                  .sys_clk_disable(sys_clk_disable_sub[DEBUG_ITM_CORE_COUNT+DEBUG_STM_CORE_COUNT+DEBUG_NRM_COUNT+i]),
+
+                  .wb_ack_i        (wb_mam_ack_i[i]),
+                  .wb_rty_i        (wb_mam_rty_i[i]),
+                  .wb_err_i        (wb_mam_err_i[i]),
+                  .wb_dat_i        (wb_mam_dat_i[(i+1)*32-1:i*32]),
+                  .wb_adr_o        (wb_mam_adr_o[(i+1)*32-1:i*32]),
+                  .wb_cyc_o        (wb_mam_cyc_o[i]),
+                  .wb_dat_o        (wb_mam_dat_o[(i+1)*32-1:i*32]),
+                  .wb_sel_o        (wb_mam_sel_o[(i+1)*4-1:i*4]),
+                  .wb_stb_o        (wb_mam_stb_o[i]),
+                  .wb_we_o         (wb_mam_we_o[i]),
+                  .wb_cab_o        (wb_mam_cab_o[i]),
+                  .wb_cti_o        (wb_mam_cti_o[(i+1)*3-1:i*3]),
+                  .wb_bte_o        (wb_mam_bte_o[(i+1)*2-1:i*2]));
       end
    endgenerate
 `endif

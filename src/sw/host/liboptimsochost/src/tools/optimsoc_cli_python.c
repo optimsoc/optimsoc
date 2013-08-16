@@ -6,7 +6,8 @@
 void execscript(char* scriptname);
 
 // Those are the functions as defined in optimsoc_cli.c
-extern int mem_init(int mem_tile_id, const char* path);
+extern int mem_init(unsigned int* memory_ids, unsigned int memory_count,
+                    const char* path);
 extern int register_itm_trace(int core_id, char* trace_file_path,
                               int add_disassembly,
                               char* elf_file_path);
@@ -22,7 +23,7 @@ extern struct optimsoc_ctx *ctx;
 static PyObject *python_version(PyObject *self, PyObject *args);
 
 /**
- * Defines mem_init(tile_id, file)
+ * Defines mem_init(memory_id, file)
  */
 static PyObject *python_mem_init(PyObject *self, PyObject *args);
 
@@ -43,14 +44,14 @@ static PyObject *python_version(PyObject *self, PyObject *args) {
 
 // Implement mem_init(tile_id, file)
 static PyObject *python_mem_init(PyObject *self, PyObject *args) {
-    unsigned int mem_tile;
+    unsigned int memory_id;
     char *path;
-    if (!args || !PyArg_ParseTuple(args, "Is", &mem_tile, &path)) {
+    if (!args || !PyArg_ParseTuple(args, "Is", &memory_id, &path)) {
         printf("Invalid arguments when running mem_init\n");
         return Py_None;
     }
 
-    mem_init(mem_tile, path);
+    mem_init(&memory_id, 1, path);
 
     return Py_None;
 }

@@ -49,6 +49,12 @@ const int NUM_SAMPLES_PER_TRANSFER = 256;
 const int NCM_MAX_LISNOC32_FLITS_PER_PKG = 16;
 
 /**
+ * Maximum number of flits per packet in the Debug NoC
+ * Keep this in sync with MAX_DBGNOC_TO_USB_PACKET_LENGTH in dbg_config.vh!
+ */
+const int LISNOC16_MAX_FLITS_PER_PKG = 32;
+
+/**
  * Timeout in seconds to wait for an acknowledge after DMA writes
  */
 const int MEM_WRITE_ACK_TIMEOUT = 60;
@@ -395,18 +401,27 @@ int ob_dbgnoc_discover_system(struct optimsoc_backend_ctx *ctx)
     }
 
     /*
-     * Allocate memory for the ITM configurations.
+     * Allocate memory for the ITM and MAM configurations.
      *
      * We use the address in the Debug NoC as index for faster lookups.
      * dbg_module_count contains the number of debug modules *in addition* to
      * the TCM, so the highest address in the Debug NoC is
-     * |DBG_NOC_ADDR_TCM + dbg_module_count|.
+     * |DBG_NOC_ADDR_TCM + dbg_module_count|. We also need to allocate space for
+     * address 0 (the external, i.e. USB or TCP, interface), thus the +1 below.
      */
-    sysinfo->itm_config = calloc(sysinfo->dbg_module_count + DBG_NOC_ADDR_TCM,
+    sysinfo->itm_config = calloc(sysinfo->dbg_module_count + DBG_NOC_ADDR_TCM + 1,
                                  sizeof(struct optimsoc_itm_config*));
+    sysinfo->mam_config = calloc(sysinfo->dbg_module_count + DBG_NOC_ADDR_TCM + 1,
+                                 sizeof(struct optimsoc_mam_config*));
 
     optimsoc_sysinfo_free(ctx->sysinfo);
     ctx->sysinfo = sysinfo;
+
+    /* retrieve additional configuration for the individual modules */
+    if (ob_dbgnoc_mam_get_config(ctx) < 0) {
+        info(ctx->log_ctx, "Unable to retrieve MAM configuration.\n");
+    }
+
     return 0;
 }
 
@@ -417,119 +432,112 @@ int ob_dbgnoc_get_sysinfo(struct optimsoc_backend_ctx *ctx,
     return 0;
 }
 
-int ob_dbgnoc_mem_write(struct optimsoc_backend_ctx *ctx, int mem_tile_id,
-                        int base_address, const uint8_t* data, int data_len)
+int ob_dbgnoc_mem_write(struct optimsoc_backend_ctx *ctx,
+                        unsigned int memory_id, unsigned int base_address,
+                        const uint8_t* data, unsigned int data_len)
 {
     int rv = 0;
-    int dma_address = base_address;
-    int data_send_ptr = 0;
+    int data_send_idx = 0;
+    int remaining_bytes = data_len;
 
     dbg(ctx->log_ctx, "Attempting to send %d bytes of data to address 0x%x of "
-                      "memory tile %d.\n", data_len, base_address, mem_tile_id);
+                      "memory %d.\n", data_len, base_address, memory_id);
 
-    if (data_len % 4 != 0) {
-        /* see the implementation in lisnoc_dma_target.v */
-        err(ctx->log_ctx, "DMA writes are only supported in 4-byte blocks, "
-                          "tried to write %d bytes.\n", data_len);
+    /* get Debug NoC address for Memory ID */
+    int module_addr = -1;
+    for (int i = 0; i < ctx->sysinfo->dbg_module_count; i++) {
+        if (ctx->sysinfo->dbg_modules[i].module_type != OPTIMSOC_MODULE_TYPE_MAM) {
+            continue;
+        }
+        if (ctx->sysinfo->mam_config[ctx->sysinfo->dbg_modules[i].dbgnoc_addr]->memory_id == memory_id) {
+            module_addr = ctx->sysinfo->dbg_modules[i].dbgnoc_addr;
+        }
+    }
+    if (module_addr == -1) {
+        err(ctx->log_ctx, "Unable to find a MAM module for the memory with ID %d.\n", memory_id);
         return -1;
     }
 
-    /*
-     * see the comment for the header flit below for an explanation of this
-     * calculation
-     */
-    int bytes_per_packet = 4;
-    /* ceil(data_len/bytes_per_packet) with integers */
-    int number_of_packets = 1 + ((data_len - 1) / bytes_per_packet);
-    dbg(ctx->log_ctx, "Sending data in %d packets with max. %d bytes per packet\n",
-        number_of_packets, bytes_per_packet);
+    dbg(ctx->log_ctx, "Writing memory %d through MAM at Debug NoC address %d", memory_id, module_addr);
 
-    struct lisnoc32_packet* packets32;
-    packets32 = calloc(number_of_packets, sizeof(struct lisnoc32_packet));
-    if (!packets32) {
+    /* calculate the number of required packets and allocate memory for it */
+    int bytes_per_pkg = (LISNOC16_MAX_FLITS_PER_PKG - 3 * 2);
+    bytes_per_pkg -= bytes_per_pkg % 4; /* ceil to full words */
+    dbg(ctx->log_ctx, "Transferring %d bytes per packet\n", bytes_per_pkg);
+
+    /* ceil(data_len/bytes_per_pkg) with integers */
+    int number_of_pkgs = 1 + ((data_len - 1) / bytes_per_pkg);
+    struct lisnoc16_packet* packets;
+    packets = calloc(number_of_pkgs, sizeof(struct lisnoc16_packet));
+    if (!packets) {
         rv = -ENOMEM;
         goto free_return;
     }
 
-    for (int i=0; i<number_of_packets; i++) {
-        int flits_in_this_pkg = 3;
+    for (int i = 0; i < number_of_pkgs; i++) {
+        int flits_in_pkg;
+        if (remaining_bytes < bytes_per_pkg) {
+            /* 3 flits = header, address MSB and LSB */
+            flits_in_pkg = 3 + (remaining_bytes / 2);
+        } else {
+            flits_in_pkg = 3 + (bytes_per_pkg / 2);
+        }
+        packets[i].len = flits_in_pkg;
 
-        packets32[i].len = flits_in_this_pkg;
-
-        packets32[i].flit_data = calloc(flits_in_this_pkg, sizeof(uint32_t));
-        if (!packets32[i].flit_data) {
+        uint16_t* flit_data = calloc(flits_in_pkg, sizeof(uint16_t));
+        if (!flit_data) {
             rv = -ENOMEM;
             goto free_return;
         }
+        packets[i].flit_data = flit_data;
 
         /*
-         * Header flit of a lisnoc32 packet
+         * MAM header flit
          *
-         * ---------------------------------------------------------------/
-         * | DEST[31:27] | CLASS[26:24] | SOURCE[23:19] | PKG_ID[18:15] | /
-         * ---------------------------------------------------------------/
+         * ----------------------------------------
+         * | DEST[15:11] | CLASS[10:8] | TYPE [7:0]
+         * ----------------------------------------
          *
-         * / ---------------------------------------
-         * / | TYPE[14:13] | LAST[12] | SIZE[11:0] |
-         * / ---------------------------------------
-         *
-         * DEST   = mem_tile_id
-         * CLASS  = NOC_CLASS_DMA (DMA transfer)
-         * SOURCE = ctx->ncm_lisnoc_addr
-         * PKG_ID = 0x00 (the PKG_ID is sent back as-is in ACK packets)
-         * TYPE   = 0b00 (local to remote request)
-         * LAST   = mark the last packet in a request; only for the last
-         *          packet a ACK packet is sent by the DMA controller
-         * SIZE   = number of 32 bit words to write in this packet
-         *          Allowed range: [0; NCM_MAX_LISNOC32_FLITS_PER_PKG-2]
-         *          NB: It seems that this field is not used by the DMA
-         *          controller, it writes all data until the last flit.
-         *
-         * Note that the maximum number of flits that can be transferred
-         * through the NCM bridge to the LISNoC is
-         * NCM_MAX_LISNOC32_FLITS_PER_PKG.
-         * The header takes one lisnoc32 flit, the DMA address takes
-         * one lisnoc32 flit as well, leaving NCM_MAX_LISNOC32_FLITS_PER_PKG-2
-         * flits for the payload and each flit can transfer 32 bits of data.
+         * DEST      = module_addr
+         * CLASS     = 0b111 (HACK! we "reuse" this class as it does not matter
+         *             much when sending the data to a specific endpoint, it's
+         *             only important when receiving data from different
+         *             sources)
+         * TYPE      = 0x00: write
          */
-        packets32[i].flit_data[0] = (mem_tile_id & 0x1F) << 27 | // dest
-                                     ctx->ncm_lisnoc_addr << 22 | // src, class is 000
-                                     2 << 18 | // message type
-                                     1 << 17 | // type: data
-                                     0 << 16 | // size: single
-                                     15 << 12; // byte select
+        int next_write_addr = base_address + data_send_idx;
+        flit_data[0] = ((module_addr & 0x1F) << 11) |
+                       (0x7 << 8) |
+                       (0x00 << 0);
 
+        /* address (MSB) */
+        flit_data[1] = next_write_addr >> 16;
+        /* address (LSB) */
+        flit_data[2] = next_write_addr & 0xFFFF;
 
-        /*
-         * the memory address to write the data to (we address bytes)
-         */
-        packets32[i].flit_data[1] = dma_address;
-
-        /*
-         * send data
-         */
-        packets32[i].flit_data[2] = data[data_send_ptr] << 24 |
-                                    data[data_send_ptr+1] << 16 |
-                                    data[data_send_ptr+2] << 8 |
-                                    data[data_send_ptr+3];
-        data_send_ptr += 4;
-        dma_address += 4;
+        /* data flits */
+        for (int j = 0; j < flits_in_pkg - 3; j++) {
+            flit_data[j+3] = data[data_send_idx] << 8 |
+                             data[data_send_idx+1];
+            data_send_idx += 2;
+            remaining_bytes -= 2;
+        }
     }
 
-    if (lisnoc32_send_packets(ctx, packets32, number_of_packets) < 0) {
+    if (lisnoc16_send_packets(ctx, packets, number_of_pkgs) < 0) {
         err(ctx->log_ctx, "Memory write operation failed.\n");
         rv = -1;
         goto free_return;
     }
 
-    free_return:
-    if (packets32) {
-        for (int i=0; i<number_of_packets; i++) {
-            if (packets32[i].flit_data) {
-                free(packets32[i].flit_data);
+free_return:
+    if (packets) {
+        for (int i=0; i<number_of_pkgs; i++) {
+            if (packets[i].flit_data) {
+                free(packets[i].flit_data);
             }
         }
-        free(packets32);
+        free(packets);
     }
     return rv;
 }
@@ -1213,5 +1221,35 @@ int ob_dbgnoc_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
     }
 
     ctx->sysinfo->itm_config[dbgnoc_addr]->core_id = data_out[0];
+    return 0;
+}
+
+
+/**
+ * Retrieve the configuration of all Memory Access Modules (MAM)
+ */
+int ob_dbgnoc_mam_get_config(struct optimsoc_backend_ctx *ctx)
+{
+    for (int i = 0; i < ctx->sysinfo->dbg_module_count; i++) {
+        if (ctx->sysinfo->dbg_modules[i].module_type != OPTIMSOC_MODULE_TYPE_MAM) {
+            continue;
+        }
+
+        uint16_t data_out[1];
+        int dbgnoc_addr = ctx->sysinfo->dbg_modules[i].dbgnoc_addr;
+        int rv = register_read(ctx, dbgnoc_addr, 0x01, 1, data_out);
+        if (rv < 0) {
+            err(ctx->log_ctx, "Unable to read MAM configuration at Debug NoC "
+                "address %d.\n", dbgnoc_addr);
+            return -1;
+        }
+
+        if (ctx->sysinfo->mam_config[dbgnoc_addr] == NULL) {
+            ctx->sysinfo->mam_config[dbgnoc_addr] = calloc(1, sizeof(struct optimsoc_mam_config));
+        }
+
+        ctx->sysinfo->mam_config[dbgnoc_addr]->memory_id = data_out[0];
+    }
+
     return 0;
 }

@@ -370,8 +370,9 @@ int ob_simtcp_get_sysinfo(struct optimsoc_backend_ctx *ctx,
     return 0;
 }
 
-int ob_simtcp_mem_write(struct optimsoc_backend_ctx *ctx, int mem_tile_id,
-                        int base_address, const uint8_t* data, int data_len)
+int ob_simtcp_mem_write(struct optimsoc_backend_ctx *ctx,
+                        unsigned int mem_tile_id, unsigned int base_address,
+                        const uint8_t* data, unsigned int data_len)
 {
     err(ctx->log_ctx, "Not implemented!\n");
     return -1;
