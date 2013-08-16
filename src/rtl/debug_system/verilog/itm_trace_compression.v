@@ -88,7 +88,7 @@ module itm_trace_compression(/*AUTOARG*/
          stream_ts <= {`DBG_TIMESTAMP_WIDTH{1'b0}};
          stream_sa <= 32'b0;
       end else begin
-         if (trace_in_valid && trace_in_wb_pc != {TRACE_IN_WIDTH{1'b0}} &&
+         if (trace_in_valid && trace_in_wb_pc != {32{1'b0}} &&
              (bootaddr_found || trace_in_wb_pc == `OR1200_BOOT_ADR)) begin
 
             if ((prev_wb_pc + 4 == trace_in_wb_pc) ||

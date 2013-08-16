@@ -213,7 +213,6 @@ module dbgnoc_conf_if(/*AUTOARG*/
          end
 
          STATE_READ_REQUEST: begin
-            dbgnoc_in_ready = 1'b0;
             dbgnoc_out_valid = 1'b0;
 
             if (sampled_flit[`FLIT16_TYPE_MSB:`FLIT16_TYPE_LSB] == `FLIT16_TYPE_SINGLE &&
@@ -224,6 +223,7 @@ module dbgnoc_conf_if(/*AUTOARG*/
 
                // send register read header
                dbgnoc_out_rts = 1;
+               dbgnoc_in_ready = 1'b0;
                fsm_state_next = STATE_REPLY_REG_READ_HEADER;
 
             end else if (sampled_flit[`FLIT16_TYPE_MSB:`FLIT16_TYPE_LSB] == `FLIT16_TYPE_HEADER &&
@@ -235,7 +235,9 @@ module dbgnoc_conf_if(/*AUTOARG*/
                // continue to sample following flits (at least one coming up)
                do_sample_flit = 1;
                dbgnoc_in_ready = 1'b1;
+
             end else begin
+               dbgnoc_in_ready = 1'b1;
                fsm_state_next = STATE_WAIT_FOR_REQUEST;
             end
          end

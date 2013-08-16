@@ -152,8 +152,8 @@ module debug_system(
    parameter DBG_NOC_USED_VCHANNEL = 0;
 
    // Debug NoC router FIFO length
-   parameter DBG_NOC_ROUTER_IN_FIFO_LENGTH = 4;
-   parameter DBG_NOC_ROUTER_OUT_FIFO_LENGTH = 4;
+   parameter DBG_NOC_ROUTER_IN_FIFO_LENGTH = 2;
+   parameter DBG_NOC_ROUTER_OUT_FIFO_LENGTH = 2;
 
    /*
     * Number of routers in the Debug NoC

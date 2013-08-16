@@ -121,7 +121,7 @@ module system_2x2_cccc_dm(
     .rst(rst_sys),
     ); */
    lisnoc_mesh2x2
-      #(.vchannels(VCHANNELS))
+      #(.vchannels(VCHANNELS),.in_fifo_length(2),.out_fifo_length(2))
       u_mesh(/*AUTOINST*/
              // Outputs
              .link0_in_ready_o          (link_out_ready[0]),     // Templated
