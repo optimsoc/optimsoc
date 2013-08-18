@@ -75,6 +75,20 @@ AC_CHECK_LIB([readline], [readline], [
 ])
 AC_SUBST(READLINE_LIBS)
 
+AC_ARG_ENABLE([python-interface],
+    AS_HELP_STRING([--enable-python-interface], [enable python interface (default n)]),
+    [use_python=$enableval],
+    [use_python=no])
+
+AS_IF([test "x$use_python" = "xyes"], [
+    AM_PATH_PYTHON()
+    PYTHON_LIBS=`python-config --libs`
+    PYTHON_INCLUDES=`python-config --includes`
+    AC_SUBST(PYTHON_LIBS)
+    AC_SUBST(PYTHON_INCLUDES)
+    AC_DEFINE(USE_PYTHON, [1], [Define to use python interface])
+])
+AM_CONDITIONAL([USE_PYTHON], [test "x$use_python" != "xno"])
 
 AM_CFLAGS="-Wall \
     -Wmissing-declarations -Wmissing-prototypes \
@@ -122,4 +136,5 @@ AC_MSG_RESULT([
         logging:                ${enable_logging}
         debug:                  ${enable_debug}
         build examples:         ${build_examples}
+        python interface:       ${use_python}
 ])

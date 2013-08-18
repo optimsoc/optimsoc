@@ -50,10 +50,18 @@
 
 #include <optimsochost/liboptimsochost.h>
 
+#include <config.h>
+
 /*
  * OpenRISC objdump tool to create disassembly
  */
 #define OR32_OBJDUMP "or32-elf-objdump"
+
+int mem_init(int mem_tile_id, const char* path);
+int register_itm_trace(int core_id, char* trace_file_path,
+                              int add_disassembly,
+                              char* elf_file_path);
+int log_stm_trace(char* filename);
 
 struct optimsoc_ctx *ctx;
 FILE *nrm_stat_file;
@@ -228,6 +236,14 @@ static void parse_options(char* str, struct optimsoc_backend_option* options[],
     *options = optvec;
 }
 
+#ifndef USE_PYTHON
+static void execscript(char *scriptname) {
+	printf("EXEC no python scripting compiled.\n");
+}
+#else
+extern void execscript(char *scriptname);
+#endif
+
 static void connect(optimsoc_backend_id backend,
                     int num_options,
                     struct optimsoc_backend_option options[])
@@ -379,7 +395,7 @@ static int mem_write(int mem_tile_id, const char* path, int base_address)
     return 0;
 }
 
-static int mem_init(int mem_tile_id, const char* path)
+int mem_init(int mem_tile_id, const char* path)
 {
     printf("Trying to initialize memory tile %d with %s\n",
            mem_tile_id, path);
@@ -504,7 +520,7 @@ static void write_noc_stats_to_file(int router_id, uint32_t timestamp,
     fflush(nrm_stat_file);
 }
 
-static int register_itm_trace(int core_id, char* trace_file_path,
+int register_itm_trace(int core_id, char* trace_file_path,
                               int add_disassembly,
                               char* elf_file_path)
 {
@@ -567,7 +583,7 @@ static int register_itm_trace(int core_id, char* trace_file_path,
     return 0;
 }
 
-static int log_stm_trace(char* filename)
+int log_stm_trace(char* filename)
 {
     if (stm_trace_file) {
         fclose(stm_trace_file);
@@ -710,6 +726,7 @@ int main(int argc, char *argv[])
     struct optimsoc_backend_option *options = 0;
     int num_options = 0;
     int interactive_mode = 0;
+    char *script = NULL;
     optimsoc_backend_id backend = OPTIMSOC_BACKEND_DBGNOC;
 
     itm_callback_registered = 0;
@@ -723,6 +740,7 @@ int main(int argc, char *argv[])
     while (1) {
         static struct option long_options[] = {
             {"interactive", no_argument,       0, 'i'},
+            {"script",      required_argument, 0, 's'},
             {"help",        no_argument,       0, 'h'},
             {"version",     no_argument,       0, 'v'},
             {"backend",     required_argument, 0, 'b'},
@@ -731,7 +749,7 @@ int main(int argc, char *argv[])
         };
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "ivhb:o:", long_options, &option_index);
+        c = getopt_long(argc, argv, "is:vhb:o:", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -757,6 +775,9 @@ int main(int argc, char *argv[])
         case 'i':
             interactive_mode = 1;
             break;
+        case 's':
+            script = optarg;
+            break;
         case 'v':
             printf("liboptimsochost version %s\n", optimsoc_get_version_string());
             return EXIT_SUCCESS;
@@ -767,6 +788,10 @@ int main(int argc, char *argv[])
             display_help();
             return EXIT_FAILURE;
         }
+    }
+
+    if (script && (interactive_mode > 0)) {
+        printf("Cannot run interactive and script at same time.\n");
     }
 
     /* connect to target system */
@@ -978,7 +1003,16 @@ int main(int argc, char *argv[])
 
                 optimsoc_nrm_set_sample_interval(ctx, sample_interval);
 
-            } else {
+            } else if (!strcmp(cmd, "exec")) {
+            	char* escript;
+            	escript = strtok(NULL, " ");
+            	if (!script) {
+            		printf("EXEC script missing.\n");
+            		display_interactive_help();
+            		continue;
+            	}
+            	execscript(escript);
+        	} else {
                 printf("Unknown command \"%s\".\n", cmd);
                 display_interactive_help();
             }
@@ -986,7 +1020,11 @@ int main(int argc, char *argv[])
         if (line) {
             free(line);
         }
+    } else if (script) {
+        execscript(script);
     }
+
+
 
     return EXIT_SUCCESS;
 }
