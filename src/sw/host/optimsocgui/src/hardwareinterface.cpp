@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2012-2013 by the author(s)
  *
@@ -50,9 +48,9 @@ void HardwareInterface::softwareTraceCallback(uint32_t core_id,
 }
 
 HardwareInterface::HardwareInterface(QObject *parent)
+    : QObject(parent), m_octx(NULL), m_connectionStatus(Disconnected)
 {
     qRegisterMetaType<ConnectionStatus>("HardwareInterface::ConnectionStatus");
-    m_octx = NULL;
 }
 
 HardwareInterface* HardwareInterface::instance()
@@ -71,7 +69,8 @@ HardwareInterface::~HardwareInterface()
     optimsoc_free(m_octx);
 }
 
-void HardwareInterface::configure(optimsoc_backend_id backend,QMap<QString,QString> options)
+void HardwareInterface::configure(optimsoc_backend_id backend,
+                                  QMap<QString,QString> options)
 {
     if (m_octx) {
         if (m_connectionStatus != Disconnected) {

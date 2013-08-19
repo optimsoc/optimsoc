@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2013 by the author(s)
  *
@@ -77,6 +75,10 @@ ExecutionChart::~ExecutionChart()
 void ExecutionChart::systemDiscovered(int id)
 {
     OptimsocSystem *system = OptimsocSystemFactory::createSystemFromId(id);
+    if (!system) {
+        qWarning("No system description is available; unable to create execution chart.");
+        return;
+    }
 
     m_sceneLabels.clear();
 

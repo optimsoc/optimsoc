@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2013 by the author(s)
  *
@@ -40,13 +38,13 @@ class ConfigureDialog;
 class ConfigureDialog : public QDialog
 {
     Q_OBJECT
-    
+
 public:
     explicit ConfigureDialog(QWidget *parent = 0);
     ~ConfigureDialog();
 
-    optimsoc_backend_id getBackend();
-    QMap<QString,QString> getOptions();
+    optimsoc_backend_id backend();
+    QMap<QString,QString> options();
 
 private:
     Ui::ConfigureDialog *m_ui;

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2013 by the author(s)
  *
@@ -40,13 +38,13 @@ class ExecutionChart;
 class ExecutionChart : public QWidget
 {
     Q_OBJECT
-    
+
 public:
     explicit ExecutionChart(QWidget *parent = 0);
     ~ExecutionChart();
 
     static const QPair<double,QString> mapScaleToString(double x);
-    
+
 public slots:
     void addTraceEvent(unsigned int core_id, unsigned int timestamp,
                        unsigned int id, unsigned int value);

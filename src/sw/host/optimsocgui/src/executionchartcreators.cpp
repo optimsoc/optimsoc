@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2013 by the author(s)
  *
@@ -84,7 +82,7 @@ void ExecutionChartSectionCreator::createSection(unsigned int from,
     sect = new ExecutionChartSection(this, m_scale, m_baseline+2, m_height-4,
                                      from, to, id, text);
     m_elements.push_back(sect);
-    m_scene->addItem(sect->getItem());
+    m_scene->addItem(sect->item());
 }
 
 void ExecutionChartSectionCreator::expand(int maximum)
@@ -169,7 +167,7 @@ void ExecutionChartEventCreator::addTrace(unsigned int timestamp, unsigned int i
         ExecutionChartEvent *event = new ExecutionChartEvent(this, m_scale, m_baseline,
                                                              m_height, m_timestamp, m_width,
                                                              text, m_color);
-        QGraphicsItem *item = event->getItem();
+        QGraphicsItem *item = event->item();
         m_scene->addItem(item);
         m_elements.append(event);
 

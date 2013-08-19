@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2013 by the author(s)
  *
@@ -43,15 +41,20 @@
 #include <QProcessEnvironment>
 
 ExecutionChartPlot::ExecutionChartPlot(QObject *parent, QGraphicsView *gv,
-                                       QGraphicsScene *scene, unsigned int baseline, unsigned int height)
-    : QObject(parent), m_graphicsView(gv), m_scene(scene), m_baseline(baseline), m_height(height)
+                                       QGraphicsScene *scene,
+                                       unsigned int baseline,
+                                       unsigned int height)
+    : QObject(parent), m_graphicsView(gv), m_scene(scene), m_baseline(baseline),
+      m_height(height)
 {
 
 }
 
 ExecutionChartPlotScale::ExecutionChartPlotScale(QObject *parent,
                                                  QGraphicsView *gv,
-                                                 QGraphicsScene *scene, unsigned int baseline, unsigned int height)
+                                                 QGraphicsScene *scene,
+                                                 unsigned int baseline,
+                                                 unsigned int height)
     : ExecutionChartPlot(parent,gv,scene,baseline,height)
 {
     m_currentMaximum = 0;
@@ -61,11 +64,11 @@ ExecutionChartPlotScale::ExecutionChartPlotScale(QObject *parent,
 
 void ExecutionChartPlotScale::rescale(double newscale, double oldscale)
 {
+    Q_UNUSED(oldscale);
+
     m_currentScale = newscale;
     QList<QGraphicsItem*> children = m_line->childItems();
-    for (QList<QGraphicsItem*>::const_iterator it=children.begin();it!=children.end();++it) {
-        delete(*it);
-    }
+    qDeleteAll(children);
 
     int max = m_currentMaximum;
     m_currentMaximum = 0;

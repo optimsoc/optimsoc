@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2012-2013 by the author(s)
  *
@@ -74,6 +72,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ui->actionReset, SIGNAL(triggered()),
             m_hwif, SLOT(reset()));
 
+    // initialize connection status widget
+    showConnectionStatus(HardwareInterface::Disconnected, m_hwif->connectionStatus());
+
     // instruction trace display
     m_traceModel = new QStandardItemModel(0, 4, this);
 
@@ -126,8 +127,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::configure() {
     if (m_hwif->configured()) {
-        QMessageBox ask(QMessageBox::Warning,"Already configured","Already configured. Do you want to reconfigure?",
-                        QMessageBox::Yes|QMessageBox::No,this);
+        QMessageBox ask(QMessageBox::Warning,
+                        "Already configured",
+                        "Already configured. Do you want to reconfigure?",
+                        QMessageBox::Yes|QMessageBox::No, this);
         ask.setModal(true);
         ask.exec();
         if (ask.result() == QMessageBox::No) {
@@ -141,14 +144,14 @@ void MainWindow::configure() {
     dialog.setModal(true);
     dialog.exec();
 
-    if (dialog.result()==ConfigureDialog::Accepted) {
+    if (dialog.result() == ConfigureDialog::Accepted) {
         m_ui->actionConfigure->setEnabled(true);
         m_ui->actionConnect->setEnabled(true);
         m_ui->actionDisconnect->setEnabled(true);
         m_ui->actionReset->setEnabled(true);
         m_ui->actionStartCpus->setEnabled(true);
 
-        m_hwif->configure(dialog.getBackend(),dialog.getOptions());
+        m_hwif->configure(dialog.backend(), dialog.options());
     } else {
         m_ui->actionConfigure->setEnabled(true);
         m_ui->actionConnect->setEnabled(false);

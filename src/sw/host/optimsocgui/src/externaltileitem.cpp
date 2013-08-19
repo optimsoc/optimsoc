@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -16,8 +16,6 @@
  *
  * =================================================================
  *
- * Driver for the simple message passing hardware.
- *
  * (c) 2012-2013 by the author(s)
  *
  * Author(s):
@@ -28,8 +26,9 @@
 
 #include "externaltile.h"
 
-ExternalTileItem::ExternalTileItem(ExternalTile* externalTile, QGraphicsItem *parent) :
-    TileItem(externalTile, parent)
+ExternalTileItem::ExternalTileItem(ExternalTile* externalTile,
+                                   QGraphicsItem *parent)
+    : TileItem(externalTile, parent)
 {
     // memory tiles are dark blue
     setBrush(QBrush(QColor(65, 135, 193)));

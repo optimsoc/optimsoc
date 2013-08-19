@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2013 by the author(s)
  *
@@ -40,7 +38,7 @@ ExecutionChartSection::ExecutionChartSection(QObject *parent, double scale,
 {
 }
 
-QGraphicsItem *ExecutionChartSection::getItem()
+QGraphicsItem *ExecutionChartSection::item()
 {
     unsigned int x = m_from;
     unsigned int y = m_baseline;
@@ -111,7 +109,7 @@ ExecutionChartEvent::ExecutionChartEvent(QObject *parent, double scale,
 {
 }
 
-QGraphicsItem *ExecutionChartEvent::getItem()
+QGraphicsItem *ExecutionChartEvent::item()
 {
     unsigned int x = m_timestamp;
     unsigned int y = m_baseline;

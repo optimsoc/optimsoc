@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
  *
  * =================================================================
- *
- * Driver for the simple message passing hardware.
  *
  * (c) 2013 by the author(s)
  *
@@ -36,7 +34,7 @@ class ExecutionChartElement : public QObject
 public:
     ExecutionChartElement(QObject *parent, double scale)
         : QObject(parent), m_scale(scale) {}
-    virtual QGraphicsItem *getItem() = 0;
+    virtual QGraphicsItem *item() = 0;
     virtual void rescale(double newscale, double oldscale) = 0;
 
 protected:
@@ -51,7 +49,7 @@ public:
                           unsigned int baseline, unsigned int height,
                           unsigned int from, unsigned int to,
                           int id, QString text);
-    virtual QGraphicsItem *getItem();
+    virtual QGraphicsItem *item();
     virtual void rescale(double newscale, double oldscale);
     virtual void expand(int maximum);
 
@@ -78,7 +76,7 @@ public:
                         unsigned int baseline, unsigned int height,
                         unsigned int timestamp, unsigned int width,
                         QString text, QColor color);
-    virtual QGraphicsItem *getItem();
+    virtual QGraphicsItem *item();
     virtual void rescale(double newscale, double oldscale);
 
 private:

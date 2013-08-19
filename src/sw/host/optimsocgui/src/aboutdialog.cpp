@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -16,8 +16,6 @@
  *
  * =================================================================
  *
- * Driver for the simple message passing hardware.
- *
  * (c) 2012-2013 by the author(s)
  *
  * Author(s):
@@ -29,12 +27,12 @@
 
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AboutDialog)
+    m_ui(new Ui::AboutDialog)
 {
-    ui->setupUi(this);
+    m_ui->setupUi(this);
 }
 
 AboutDialog::~AboutDialog()
 {
-    delete ui;
+    delete m_ui;
 }

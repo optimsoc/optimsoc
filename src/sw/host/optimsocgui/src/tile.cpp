@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of OpTiMSoC-GUI.
  *
  * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
@@ -16,8 +16,6 @@
  *
  * =================================================================
  *
- * Driver for the simple message passing hardware.
- *
  * (c) 2012-2013 by the author(s)
  *
  * Author(s):
@@ -25,8 +23,6 @@
  */
 
 #include "tile.h"
-
-#include <QDebug>
 
 #include "tileitem.h"
 
@@ -37,6 +33,5 @@ Tile::Tile(QObject *parent) :
 
 TileItem* Tile::componentItem()
 {
-    qDebug() << "Tile::componentItem()";
     return new TileItem(this);
 }
