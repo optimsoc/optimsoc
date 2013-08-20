@@ -1,30 +1,13 @@
-
-###==== BEGIN Header
-
-# Synopsys, Inc. constraint file
-# /nfs/projects/optimsoc/stefan/optimsoc/syn/pgas/system_ddrtest/system_ddrtest.fdc
-# Written on Fri Apr 12 09:43:24 2013
-# by Synplify Premier, H-2013.03 FDC Constraint Editor
-
-# Custom constraint commands may be added outside of the SCOPE tab sections bounded with BEGIN/END.
-# These sections are generated from SCOPE spreadsheet tabs.
-
-###==== END Header
-
 ###==== BEGIN Collections - (Populated from tab in SCOPE, do not edit)
 ###==== END Collections
 
 ###==== BEGIN Clocks - (Populated from tab in SCOPE, do not edit)
-create_clock  -name {clk} {p:clk} -period {20.8333}
-create_clock  -name {fx2_ifclk} {p:fx2_ifclk} -period {20.8333}
+create_clock {p:fx2_ifclk} -name {fx2_ifclk} -period {33.333}
 
+create_clock {p:clk} -name {clk} -period {20.8333}
 ###==== END Clocks
 
 ###==== BEGIN "Generated Clocks" - (Populated from tab in SCOPE, do not edit)
-create_generated_clock  -name {c:clk_ct} -source {n:u_clockmanager.clk_ct[0]} {n:u_clockmanager.clk_ct[0]} -master_clock {c:clk}
-create_generated_clock  -name {c:clk_noc} -source {n:u_clockmanager.clk_noc} {n:u_clockmanager.clk_noc} -master_clock {c:clk}
-create_generated_clock  -name {c:clk_dbg} -source {n:u_clockmanager.clk_dbg} {n:u_clockmanager.clk_dbg} -master_clock {c:clk}
-create_generated_clock  -disable
 ###==== END "Generated Clocks"
 
 ###==== BEGIN Inputs/Outputs - (Populated from tab in SCOPE, do not edit)
@@ -40,6 +23,9 @@ set_false_path  -from {c:clk} -to {c:clk_ct}
 set_false_path  -from {c:fx2_ifclk} -to {c:clk_dbg}
 set_false_path  -from {c:clk} -to {c:fx2_ifclk}
 set_false_path  -from {c:clk_dbg} -to {c:fx2_ifclk}
+set_false_path  -to {i:u_gram.u_mig_39.memc3_wrapper_inst.memc3_mcb_raw_wrapper_inst.gen_term_calib\.mcb_soft_calibration_top_inst.mcb_soft_calibration_inst.SELFREFRESH_MCB_REQ}
+set_false_path  -from {*/memc?_wrapper_inst/mcb_ui_top_inst/mcb_raw_wrapper_inst/gen_term_calib.mcb_soft_calibration_top_inst/mcb_soft_calibration_inst/CKE_Train}
+set_false_path  -to {*/memc?_wrapper_inst/mcb_ui_top_inst/mcb_raw_wrapper_inst/gen_term_calib.mcb_soft_calibration_top_inst/mcb_soft_calibration_inst/CKE_Train}
 ###==== END "Delay Paths"
 
 ###==== BEGIN Attributes - (Populated from tab in SCOPE, do not edit)
@@ -50,8 +36,6 @@ set_false_path  -from {c:clk_dbg} -to {c:fx2_ifclk}
 
 ###==== BEGIN "Compile Points" - (Populated from tab in SCOPE, do not edit)
 ###==== END "Compile Points"
-
-
 
 
 

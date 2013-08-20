@@ -274,6 +274,7 @@ module system_irobot_pgas_ztex(
                      .clk_io  (clk_io),
                      .clk_dbg (clk_dbg),
                      .clk_noc (clk_noc),
+                     .clk_ddr (),
                      .rst_sys  (rst_sys),
                      .rst_cpu  (rst_cpu),
                      .sys_halt (sys_clk_disable),

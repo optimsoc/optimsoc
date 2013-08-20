@@ -4,11 +4,8 @@
 #
 ######################################################################
 
-NET clk_ct LOC = A11; // Board pin A17
 PIN "u_clockmanager/genctclocks[0].u_clk_ct_bufg_gated/BUFGMUX.O"
    CLOCK_DEDICATED_ROUTE = FALSE;
-
-NET cdc_enable LOC = C14; // Board pin A15
 
 NET clk LOC = L22;
 NET "clk" TNM_NET = "clk";

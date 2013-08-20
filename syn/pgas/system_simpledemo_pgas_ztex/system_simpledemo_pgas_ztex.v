@@ -40,18 +40,29 @@
 `include "dbg_config.vh"
 
 module system_simpledemo_pgas_ztex(
+`ifdef OPTIMSOC_MAINMEM_DDR                        
+   mcb3_dram_a, mcb3_dram_ba, mcb3_dram_ras_n, mcb3_dram_cas_n,
+   mcb3_dram_we_n, mcb3_dram_cke, mcb3_dram_dm, mcb3_dram_udm,
+   mcb3_dram_ck, mcb3_dram_ck_n, mcb3_dram_dq, mcb3_dram_udqs,
+   mcb3_dram_udqs_n, mcb3_rzq, mcb3_zio, mcb3_dram_dqs,
+   mcb3_dram_dqs_n,
+`endif
    /*AUTOARG*/
    // Outputs
-   fx2_sloe, fx2_slrd, fx2_slwr, fx2_pktend, fx2_fifoadr, clk_ct,
-   cdc_enable,
+   fx2_sloe, fx2_slrd, fx2_slwr, fx2_pktend, fx2_fifoadr,
    // Inouts
    fx2_fd,
    // Inputs
    clk, rst, fx2_ifclk, fx2_flaga, fx2_flagb, fx2_flagc, fx2_flagd
    );
 
-   parameter MEMORY_SIZE = 256*1024; // 256 kByte
+`ifdef OPTIMSOC_MAINMEM_DDR
+   parameter MEMORY_SIZE = 128*1024*1024; // 128 MByte
    localparam PGAS_ADDRW = 32 - clog2(MEMORY_SIZE); // This is the part that is overwritten
+`else // BRAM
+   parameter MEMORY_SIZE = 256*1024; // 256 kByte
+   parameter PGAS_ADDRW = 32 - clog2(MEMORY_SIZE); // This is the part that is overwritten
+`endif
 
    // NoC configuration
    parameter NOC_FLIT_DATA_WIDTH = 32;
@@ -85,12 +96,9 @@ module system_simpledemo_pgas_ztex(
    input fx2_flagc;
    input fx2_flagd;
 
-   output clk_ct;
-   output cdc_enable;
-
-    // MCB connection
-/*`ifdef OPTIMSOC_USE_DDR2
-   input [15:0]  mcb3_dram_dq;
+   // MCB connection
+`ifdef OPTIMSOC_MAINMEM_DDR
+   inout [15:0]  mcb3_dram_dq;
    output [12:0] mcb3_dram_a;
    output [2:0]  mcb3_dram_ba;
    output        mcb3_dram_ras_n;
@@ -107,14 +115,11 @@ module system_simpledemo_pgas_ztex(
    inout         mcb3_dram_dqs_n;
    output        mcb3_dram_ck;
    output        mcb3_dram_ck_n;
-`endif*/
+`endif
 
    // clocks
    wire clk_200;
    wire clk_ddr2;
-
-   // resets
-   wire rst_ddr2_sync;
 
    // system control signals
    wire sys_clk_disable;
@@ -140,7 +145,9 @@ module system_simpledemo_pgas_ztex(
    wire [15:0] fx2_fd_out_buf;
    wire fx2_ifclk_buf;
 
-`ifdef OPTIMSOC_MANUAL_IOBUF
+//`ifdef OPTIMSOC_MAINMEM_DDR
+   // When we have DDR memory, we need to manually instantiate buffers
+/* -----\/----- EXCLUDED -----\/-----
    IBUF
       u_ibuf_rst(.O(rst_buf),
                  .I(rst));
@@ -191,7 +198,8 @@ module system_simpledemo_pgas_ztex(
    IBUFG
       u_ibufg_fx2_ifclk(.O(fx2_ifclk_buf),
                         .I(fx2_ifclk));
-`else
+ -----/\----- EXCLUDED -----/\----- */
+//`else
    // clock
    assign fx2_ifclk_buf = fx2_ifclk;
 
@@ -212,7 +220,7 @@ module system_simpledemo_pgas_ztex(
    // inout
    assign fx2_fd_in_buf = fx2_fd;
    assign fx2_fd = (~fx2_slwr ? fx2_fd_out_buf : 16'hz);
-`endif
+//`endif
 
 
    // system control
@@ -238,7 +246,7 @@ module system_simpledemo_pgas_ztex(
 
    // DDR2 memory
    wire ddr2_calib_done;
-`ifndef OPTIMSOC_USE_DDR2
+`ifndef OPTIMSOC_MAINMEM_DDR
    assign ddr2_calib_done = 1'b1;
 `endif
 
@@ -254,15 +262,22 @@ module system_simpledemo_pgas_ztex(
 `endif
 
    clockmanager_ztex115
+`ifdef OPTIMSOC_MAINMEM_DDR
+     #(.ENABLE_DDR_CLOCK(1))
+`endif
       u_clockmanager(
 `ifdef OPTIMSOC_CDC_DYNAMIC
                      .cdc_conf (cdc_conf),
                      .cdc_enable (cdc_enable),
 `endif
+`ifdef OPTIMSOC_MAINMEM_DDR
+                     .clk_ddr (clk_ddr2),
+`else
+                     .clk_ddr (),
+`endif
                      .clk     (clk),
                      .rst     (rst_buf),
                      .clk_ct  (clk_ct),
-                     .clk_io  (),
                      .clk_dbg (clk_dbg),
                      .clk_noc (clk_noc),
                      .rst_sys  (rst_sys),
@@ -424,7 +439,104 @@ module system_simpledemo_pgas_ztex(
                    );
 
 
-`ifdef OPTIMSOC_MT_PLAIN
+`ifdef OPTIMSOC_MAINMEM_DDR
+    /* ztex_ddr2_if AUTO_TEMPLATE(
+    .ddr2_clk(clk_ddr2),
+    .ddr2_rst(rst_sys),
+    .wbm._clk_i (clk_noc),
+    .wbm._rst_i (rst_sys),
+    .wbm0_\(.*\) (wb_mt_\1[]),
+    .wbm1_\(.*\)_i ('b0),
+    .wbm1_\(.*\)_o (),
+    .wbm2_\(.*\)_i ('b0),
+    .wbm2_\(.*\)_o (),
+    .wbm3_\(.*\)_i ('b0),
+    .wbm3_\(.*\)_o (),
+    ); */
+   ztex_ddr2_if
+     u_gram(/*AUTOINST*/
+            // Outputs
+            .ddr2_calib_done            (ddr2_calib_done),
+            .mcb3_dram_a                (mcb3_dram_a[12:0]),
+            .mcb3_dram_ba               (mcb3_dram_ba[2:0]),
+            .mcb3_dram_ras_n            (mcb3_dram_ras_n),
+            .mcb3_dram_cas_n            (mcb3_dram_cas_n),
+            .mcb3_dram_we_n             (mcb3_dram_we_n),
+            .mcb3_dram_cke              (mcb3_dram_cke),
+            .mcb3_dram_dm               (mcb3_dram_dm),
+            .mcb3_dram_udm              (mcb3_dram_udm),
+            .mcb3_dram_ck               (mcb3_dram_ck),
+            .mcb3_dram_ck_n             (mcb3_dram_ck_n),
+            .wbm0_ack_o                 (wb_mt_ack_o),           // Templated
+            .wbm0_err_o                 (wb_mt_err_o),           // Templated
+            .wbm0_rty_o                 (wb_mt_rty_o),           // Templated
+            .wbm0_dat_o                 (wb_mt_dat_o[31:0]),     // Templated
+            .wbm1_ack_o                 (),                      // Templated
+            .wbm1_err_o                 (),                      // Templated
+            .wbm1_rty_o                 (),                      // Templated
+            .wbm1_dat_o                 (),                      // Templated
+            .wbm2_ack_o                 (),                      // Templated
+            .wbm2_err_o                 (),                      // Templated
+            .wbm2_rty_o                 (),                      // Templated
+            .wbm2_dat_o                 (),                      // Templated
+            .wbm3_ack_o                 (),                      // Templated
+            .wbm3_err_o                 (),                      // Templated
+            .wbm3_rty_o                 (),                      // Templated
+            .wbm3_dat_o                 (),                      // Templated
+            // Inouts
+            .mcb3_dram_dq               (mcb3_dram_dq[15:0]),
+            .mcb3_dram_udqs             (mcb3_dram_udqs),
+            .mcb3_dram_udqs_n           (mcb3_dram_udqs_n),
+            .mcb3_rzq                   (mcb3_rzq),
+            .mcb3_zio                   (mcb3_zio),
+            .mcb3_dram_dqs              (mcb3_dram_dqs),
+            .mcb3_dram_dqs_n            (mcb3_dram_dqs_n),
+            // Inputs
+            .ddr2_clk                   (clk_ddr2),              // Templated
+            .ddr2_rst                   (rst_sys),               // Templated
+            .wbm0_clk_i                 (clk_noc),               // Templated
+            .wbm0_rst_i                 (rst_sys),               // Templated
+            .wbm0_dat_i                 (wb_mt_dat_i[31:0]),     // Templated
+            .wbm0_adr_i                 (wb_mt_adr_i[31:0]),     // Templated
+            .wbm0_bte_i                 (wb_mt_bte_i[1:0]),      // Templated
+            .wbm0_cti_i                 (wb_mt_cti_i[2:0]),      // Templated
+            .wbm0_cyc_i                 (wb_mt_cyc_i),           // Templated
+            .wbm0_sel_i                 (wb_mt_sel_i[3:0]),      // Templated
+            .wbm0_stb_i                 (wb_mt_stb_i),           // Templated
+            .wbm0_we_i                  (wb_mt_we_i),            // Templated
+            .wbm1_clk_i                 (clk_noc),               // Templated
+            .wbm1_rst_i                 (rst_sys),               // Templated
+            .wbm1_dat_i                 ('b0),                   // Templated
+            .wbm1_adr_i                 ('b0),                   // Templated
+            .wbm1_bte_i                 ('b0),                   // Templated
+            .wbm1_cti_i                 ('b0),                   // Templated
+            .wbm1_cyc_i                 ('b0),                   // Templated
+            .wbm1_sel_i                 ('b0),                   // Templated
+            .wbm1_stb_i                 ('b0),                   // Templated
+            .wbm1_we_i                  ('b0),                   // Templated
+            .wbm2_clk_i                 (clk_noc),               // Templated
+            .wbm2_rst_i                 (rst_sys),               // Templated
+            .wbm2_dat_i                 ('b0),                   // Templated
+            .wbm2_adr_i                 ('b0),                   // Templated
+            .wbm2_bte_i                 ('b0),                   // Templated
+            .wbm2_cti_i                 ('b0),                   // Templated
+            .wbm2_cyc_i                 ('b0),                   // Templated
+            .wbm2_sel_i                 ('b0),                   // Templated
+            .wbm2_stb_i                 ('b0),                   // Templated
+            .wbm2_we_i                  ('b0),                   // Templated
+            .wbm3_dat_i                 ('b0),                   // Templated
+            .wbm3_adr_i                 ('b0),                   // Templated
+            .wbm3_bte_i                 ('b0),                   // Templated
+            .wbm3_cti_i                 ('b0),                   // Templated
+            .wbm3_cyc_i                 ('b0),                   // Templated
+            .wbm3_sel_i                 ('b0),                   // Templated
+            .wbm3_stb_i                 ('b0),                   // Templated
+            .wbm3_we_i                  ('b0),                   // Templated
+            .wbm3_clk_i                 (clk_noc),               // Templated
+            .wbm3_rst_i                 (rst_sys));              // Templated
+   
+`else
+`ifdef OPTIMSOC_MAINMEM_BRAM
    /* wb_sram_sp AUTO_TEMPLATE(
     .wb_clk_i (clk_noc),
     .wb_rst_i (rst_sys),
@@ -450,9 +562,13 @@ module system_simpledemo_pgas_ztex(
           .wb_we_i                      (wb_mt_we_i),            // Templated
           .wb_clk_i                     (clk_noc),               // Templated
           .wb_rst_i                     (rst_sys));              // Templated
+`else // !`ifdef OPTIMSOC_MAINMEN_BRAM
+   $fatal("You need to select the main memory implementation technology");
+`endif
 `endif
 
    `include "optimsoc_functions.vh"
+
 endmodule
 
 // Local Variables:
