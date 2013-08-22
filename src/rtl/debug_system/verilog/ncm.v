@@ -34,6 +34,7 @@
  */
 
 `include "dbg_config.vh"
+`include "lisnoc16_def.vh"
 
 module ncm(/*AUTOARG*/
    // Outputs

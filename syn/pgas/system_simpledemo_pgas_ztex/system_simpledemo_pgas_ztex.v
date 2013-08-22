@@ -118,7 +118,6 @@ module system_simpledemo_pgas_ztex(
 `endif
 
    // clocks
-   wire clk_200;
    wire clk_ddr2;
 
    // system control signals

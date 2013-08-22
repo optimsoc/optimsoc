@@ -26,7 +26,7 @@
  * these wishbone bus connection to the outside world.
  * Therewith, this module may be attached to up to 4 different wishbone
  * buses as a slave device.
- *
+ * 
  * (c) 2012-2013 by the author(s)
  *
  * Author(s):
@@ -66,7 +66,7 @@ module ztex_ddr2_if(/*AUTOARG*/
    parameter USE_WBPORT1 = 0;
    parameter USE_WBPORT2 = 0;
    parameter USE_WBPORT3 = 0;
-
+   
    // MCB connection
    inout [15:0] mcb3_dram_dq;
    output [12:0] mcb3_dram_a;
@@ -164,8 +164,6 @@ module ztex_ddr2_if(/*AUTOARG*/
    wire          mcb3_rzq;
    wire          mcb3_zio;
    wire          mcb3_dram_udm;
-   wire          c3_sys_clk;
-   wire          c3_sys_rst_i;
    wire          c3_calib_done;
    wire          c3_clk0;
    wire          c3_rst0;
@@ -353,8 +351,14 @@ module ztex_ddr2_if(/*AUTOARG*/
                                  .rd_count_i            (c3_p0_rd_count), // Templated
                                  .rd_overflow_i         (c3_p0_rd_overflow), // Templated
                                  .rd_error_i            (c3_p0_rd_error)); // Templated
-      end // block: genwbport0
-
+      end else begin // block: genwbport0
+         assign wbm1_dat_o = 32'hx;
+         assign {wbm1_ack_o, wbm1_rty_o, wbm1_err_o} = 3'b000;
+         assign c3_p1_cmd_clk = 0;
+         assign c3_p1_rd_clk = 0;
+         assign c3_p1_wr_clk = 0;
+      end
+      
       if (USE_WBPORT1) begin : genwbport1
          wb_mig_if u_wb_mig_if1 (/*AUTOINST*/
                                  // Outputs
@@ -397,51 +401,63 @@ module ztex_ddr2_if(/*AUTOARG*/
                                  .rd_count_i            (c3_p1_rd_count), // Templated
                                  .rd_overflow_i         (c3_p1_rd_overflow), // Templated
                                  .rd_error_i            (c3_p1_rd_error)); // Templated
-      end // block: genwbport1
+      end else begin // block: genwbport1
+         assign wbm1_dat_o = 32'hx;
+         assign {wbm1_ack_o, wbm1_rty_o, wbm1_err_o} = 3'b000;
+         assign c3_p1_cmd_clk = 0;
+         assign c3_p1_rd_clk = 0;
+         assign c3_p1_wr_clk = 0;
+      end
 
       if (USE_WBPORT2) begin : genwbport2
-   wb_mig_if u_wb_mig_if2 (/*AUTOINST*/
-                           // Outputs
-                           .wb_dat_o            (wbm2_dat_o),    // Templated
-                           .wb_ack_o            (wbm2_ack_o),    // Templated
-                           .wb_err_o            (wbm2_err_o),    // Templated
-                           .wb_rty_o            (wbm2_rty_o),    // Templated
-                           .cmd_clk_o           (c3_p2_cmd_clk), // Templated
-                           .cmd_en_o            (c3_p2_cmd_en),  // Templated
-                           .cmd_instr_o         (c3_p2_cmd_instr), // Templated
-                           .cmd_bl_o            (c3_p2_cmd_bl),  // Templated
-                           .cmd_byte_addr_o     (c3_p2_cmd_byte_addr), // Templated
-                           .wr_clk_o            (c3_p2_wr_clk),  // Templated
-                           .wr_en_o             (c3_p2_wr_en),   // Templated
-                           .wr_mask_o           (c3_p2_wr_mask), // Templated
-                           .wr_data_o           (c3_p2_wr_data), // Templated
-                           .rd_clk_o            (c3_p2_rd_clk),  // Templated
-                           .rd_en_o             (c3_p2_rd_en),   // Templated
-                           // Inputs
-                           .wb_adr_i            (wbm2_adr_i),    // Templated
-                           .wb_bte_i            (wbm2_bte_i),    // Templated
-                           .wb_cti_i            (wbm2_cti_i),    // Templated
-                           .wb_cyc_i            (wbm2_cyc_i),    // Templated
-                           .wb_dat_i            (wbm2_dat_i),    // Templated
-                           .wb_sel_i            (wbm2_sel_i),    // Templated
-                           .wb_stb_i            (wbm2_stb_i),    // Templated
-                           .wb_we_i             (wbm2_we_i),     // Templated
-                           .wb_clk_i            (wbm2_clk_i),    // Templated
-                           .wb_rst_i            (wbm2_rst_i),    // Templated
-                           .cmd_empty_i         (c3_p2_cmd_empty), // Templated
-                           .cmd_full_i          (c3_p2_cmd_full), // Templated
-                           .wr_full_i           (c3_p2_wr_full), // Templated
-                           .wr_empty_i          (c3_p2_wr_empty), // Templated
-                           .wr_count_i          (c3_p2_wr_count), // Templated
-                           .wr_underrun_i       (c3_p2_wr_underrun), // Templated
-                           .wr_error_i          (c3_p2_wr_error), // Templated
-                           .rd_data_i           (c3_p2_rd_data), // Templated
-                           .rd_full_i           (c3_p2_rd_full), // Templated
-                           .rd_empty_i          (c3_p2_rd_empty), // Templated
-                           .rd_count_i          (c3_p2_rd_count), // Templated
-                           .rd_overflow_i       (c3_p2_rd_overflow), // Templated
-                           .rd_error_i          (c3_p2_rd_error)); // Templated
-      end // block: genwbport2
+         wb_mig_if u_wb_mig_if2 (/*AUTOINST*/
+                                 // Outputs
+                                 .wb_dat_o              (wbm2_dat_o),    // Templated
+                                 .wb_ack_o              (wbm2_ack_o),    // Templated
+                                 .wb_err_o              (wbm2_err_o),    // Templated
+                                 .wb_rty_o              (wbm2_rty_o),    // Templated
+                                 .cmd_clk_o             (c3_p2_cmd_clk), // Templated
+                                 .cmd_en_o              (c3_p2_cmd_en),  // Templated
+                                 .cmd_instr_o           (c3_p2_cmd_instr), // Templated
+                                 .cmd_bl_o              (c3_p2_cmd_bl),  // Templated
+                                 .cmd_byte_addr_o       (c3_p2_cmd_byte_addr), // Templated
+                                 .wr_clk_o              (c3_p2_wr_clk),  // Templated
+                                 .wr_en_o               (c3_p2_wr_en),   // Templated
+                                 .wr_mask_o             (c3_p2_wr_mask), // Templated
+                                 .wr_data_o             (c3_p2_wr_data), // Templated
+                                 .rd_clk_o              (c3_p2_rd_clk),  // Templated
+                                 .rd_en_o               (c3_p2_rd_en),   // Templated
+                                 // Inputs
+                                 .wb_adr_i              (wbm2_adr_i),    // Templated
+                                 .wb_bte_i              (wbm2_bte_i),    // Templated
+                                 .wb_cti_i              (wbm2_cti_i),    // Templated
+                                 .wb_cyc_i              (wbm2_cyc_i),    // Templated
+                                 .wb_dat_i              (wbm2_dat_i),    // Templated
+                                 .wb_sel_i              (wbm2_sel_i),    // Templated
+                                 .wb_stb_i              (wbm2_stb_i),    // Templated
+                                 .wb_we_i               (wbm2_we_i),     // Templated
+                                 .wb_clk_i              (wbm2_clk_i),    // Templated
+                                 .wb_rst_i              (wbm2_rst_i),    // Templated
+                                 .cmd_empty_i           (c3_p2_cmd_empty), // Templated
+                                 .cmd_full_i            (c3_p2_cmd_full), // Templated
+                                 .wr_full_i             (c3_p2_wr_full), // Templated
+                                 .wr_empty_i            (c3_p2_wr_empty), // Templated
+                                 .wr_count_i            (c3_p2_wr_count), // Templated
+                                 .wr_underrun_i         (c3_p2_wr_underrun), // Templated
+                                 .wr_error_i            (c3_p2_wr_error), // Templated
+                                 .rd_data_i             (c3_p2_rd_data), // Templated
+                                 .rd_full_i             (c3_p2_rd_full), // Templated
+                                 .rd_empty_i            (c3_p2_rd_empty), // Templated
+                                 .rd_count_i            (c3_p2_rd_count), // Templated
+                                 .rd_overflow_i         (c3_p2_rd_overflow), // Templated
+                                 .rd_error_i            (c3_p2_rd_error)); // Templated
+      end else begin // block: genwbport2
+         assign wbm2_dat_o = 32'hx;
+         assign {wbm2_ack_o, wbm2_rty_o, wbm2_err_o} = 3'b000;
+         assign c3_p2_cmd_clk = 0;
+         assign c3_p2_rd_clk = 0;
+         assign c3_p2_wr_clk = 0;
+      end
 
       if (USE_WBPORT3) begin : genwbport3
          wb_mig_if u_wb_mig_if3(/*AUTOINST*/
@@ -485,9 +501,15 @@ module ztex_ddr2_if(/*AUTOARG*/
                                 .rd_count_i     (c3_p3_rd_count), // Templated
                                 .rd_overflow_i  (c3_p3_rd_overflow), // Templated
                                 .rd_error_i     (c3_p3_rd_error)); // Templated
-      end // block: genwbport3
+      end else begin // block: genwbport3
+         assign wbm3_dat_o = 32'hx;
+         assign {wbm3_ack_o, wbm3_rty_o, wbm3_err_o} = 3'b000;
+         assign c3_p3_cmd_clk = 0;
+         assign c3_p3_rd_clk = 0;
+         assign c3_p3_wr_clk = 0;
+      end
    endgenerate
-
+   
    //-------------------------------------------------------------------------------------
    // DDR2 Memory Interface Generator Module Instatiation
    //-------------------------------------------------------------------------------------   

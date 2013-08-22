@@ -48,7 +48,7 @@ module usb_dbg_if(/*AUTOARG*/
    parameter DBG_NOC_VCHANNELS = `DBG_NOC_VCHANNELS;
 
    parameter MAX_DBGNOC_TO_USB_PACKET_LENGTH = `MAX_DBGNOC_TO_USB_PACKET_LENGTH;
-   localparam MAX_DBGNOC_TO_USB_PACKET_LENGTH_WIDTH = $clog2(MAX_DBGNOC_TO_USB_PACKET_LENGTH);
+   localparam MAX_DBGNOC_TO_USB_PACKET_LENGTH_WIDTH = clog2(MAX_DBGNOC_TO_USB_PACKET_LENGTH);
 
 
    input clk_sys;
@@ -139,6 +139,9 @@ module usb_dbg_if(/*AUTOARG*/
                      .in_noc_data(dbgnoc_in_flit),
                      .in_noc_valid(dbgnoc_in_valid),
                      .in_noc_ready(dbgnoc_in_ready));
+
+	`include "optimsoc_functions.vh"
+
 endmodule
 
 

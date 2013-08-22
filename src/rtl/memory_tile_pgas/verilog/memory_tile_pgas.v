@@ -90,25 +90,6 @@ module memory_tile_pgas(/*AUTOARG*/
    // and it will therefore not receive a response
    assign noc_in_ready[VC_LSU_RESP] = 1'b0;
 
-   wire [VCHANNELS-1:0] mod_out_ready;
-   wire [VCHANNELS-1:0] mod_out_valid;
-   wire [NOC_FLIT_WIDTH-1:0] mod_out_flit[0:VCHANNELS-1];
-   wire [VCHANNELS-1:0] mod_in_ready;
-   wire [VCHANNELS-1:0] mod_in_valid;
-   wire [NOC_FLIT_WIDTH-1:0] mod_in_flit[0:VCHANNELS-1];
-
-   wire [NOC_FLIT_WIDTH*VCHANNELS-1:0] mod_out_flit_flat;
-
-   assign mod_in_valid = noc_in_valid;
-   assign noc_in_ready = mod_in_ready;
-   generate
-      genvar v;
-      for (v=0;v<VCHANNELS;v=v+1) begin
-         assign mod_in_flit[v] = noc_in_flit;
-         assign mod_out_flit_flat[(v+1)*NOC_FLIT_WIDTH-1:v*NOC_FLIT_WIDTH] = mod_out_flit[v];
-      end
-   endgenerate
-
    /* noclsu_memory AUTO_TEMPLATE(
     .noc_out_valid (noc_out_valid[VC_LSU_RESP]),
     .noc_out_ready (noc_out_ready[VC_LSU_RESP]),
