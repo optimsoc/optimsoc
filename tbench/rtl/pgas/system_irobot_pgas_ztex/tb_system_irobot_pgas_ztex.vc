@@ -9,7 +9,7 @@
 +incdir+${OPTIMSOC_RTL}/noclsu/verilog
 
 +define+OPTIMSOC_MT_PLAIN
-
++define+OPTIMSOC_IO_CLOCKS
 +define+OR1200_BOOT_ADR="32'h00000100"
 
 +initmem+0

@@ -36,16 +36,22 @@ module clockmanager_ztex115(
 `ifdef OPTIMSOC_CDC_DYNAMIC
    cdc_conf, cdc_enable,
 `endif
+`ifdef OPTIMSOC_IO_CLOCKS
+   clk_io,
+`endif
    /*AUTOARG*/
    // Outputs
-   clk_ct, clk_io, clk_dbg, clk_noc, clk_ddr, rst_sys, rst_cpu,
+   clk_ct, clk_dbg, clk_noc, clk_ddr, rst_sys, rst_cpu,
    // Inputs
    clk, rst, cpu_reset, cpu_start, sys_halt
    );
 
    // general parameters
    parameter NUM_CT_CLOCKS = 1;
-   parameter NUM_IO_CLOCKS = 0;
+`ifdef OPTIMSOC_IO_CLOCKS
+   parameter NUM_IO_CLOCKS = 1;
+`endif
+
    parameter ENABLE_DDR_CLOCK = 0;
 
    parameter RST_WIDTH = 128;
@@ -58,10 +64,12 @@ module clockmanager_ztex115(
    parameter NOC_CLOCK_MUL = 3;
    parameter NOC_CLOCK_DIV = 4;
 
+`ifdef OPTIMSOC_IO_CLOCKS
    parameter IO_CLOCK0_MUL = 2;
    parameter IO_CLOCK0_DIV = 2;
    parameter IO_CLOCK1_MUL = 2;
    parameter IO_CLOCK1_DIV = 2;
+`endif
    
    // parameters when no clock domains
    parameter CLOCK_MUL = 2;
@@ -71,7 +79,9 @@ module clockmanager_ztex115(
    input rst;
 
    output [NUM_CT_CLOCKS-1:0] clk_ct;
+`ifdef OPTIMSOC_IO_CLOCKS
    output [NUM_IO_CLOCKS-1:0] clk_io;
+`endif
    output                     clk_dbg;
    output                     clk_noc;
    output                     clk_ddr;
@@ -92,33 +102,38 @@ module clockmanager_ztex115(
    wire                       clk_buffered;
 
    wire [NUM_CT_CLOCKS-1:0]   clk_ct_unbuffered;
-   wire [NUM_IO_CLOCKS-1:0]   clk_io_unbuffered;
    wire                       clk_dbg_unbuffered;
    wire                       clk_noc_unbuffered;
    wire                       clk_ddr_unbuffered;
 
    wire [NUM_CT_CLOCKS-1:0]   clk_ct_locked;
-   wire [NUM_IO_CLOCKS-1:0]   clk_io_locked;
    wire                       clk_dbg_locked;
    wire                       clk_noc_locked;
    wire                       clk_ddr_locked;
    
    wire [NUM_CT_CLOCKS-1:0]   clk_en_ct;
-   wire [NUM_IO_CLOCKS-1:0]   clk_en_io;
    wire                       clk_en_dbg;
    wire                       clk_en_noc;
    wire                       clk_en_ddr;
+
+`ifdef OPTIMSOC_IO_CLOCKS
+   wire [NUM_IO_CLOCKS-1:0]   clk_io_unbuffered;
+   wire [NUM_IO_CLOCKS-1:0]   clk_io_locked;
+   wire [NUM_IO_CLOCKS-1:0]   clk_en_io;
+`endif
 
    reg                        hold_cpu;
 
    genvar i;
    generate
-      for (i=0;i<NUM_CT_CLOCKS;i=i+1) begin
+      for (i=0;i<NUM_CT_CLOCKS;i=i+1) begin : gen_en_ct
          assign clk_en_ct[i] = clk_ct_locked[i] & ~sys_halt;
       end
-      for (i=0;i<NUM_IO_CLOCKS;i=i+1) begin
+`ifdef OPTIMSOC_IO_CLOCKS
+      for (i=0;i<NUM_IO_CLOCKS;i=i+1) begin : gen_en_io
          assign clk_en_io[i] = clk_io_locked[i];
       end
+`endif
    endgenerate
 
    assign clk_en_noc = clk_noc_locked & ~sys_halt;
@@ -316,7 +331,8 @@ module clockmanager_ztex115(
 `endif // `ifdef OPTIMSOC_CDC_DYNAMIC
       end // for (i=0;i<NUM_CT_CLOCKS;i=i+1)
 
-      if (NUM_IO_CLOCKS > 0) begin
+`ifdef OPTIMSOC_IO_CLOCKS
+      if (NUM_IO_CLOCKS > 0) begin : gen_ioclk0
          BUFGCE
             u_clk_ct_bufg_gated(.O(clk_io[0]),
                                 .CE(clk_en_io[0]),
@@ -340,7 +356,7 @@ module clockmanager_ztex115(
                       .STATUS(),
                       .PROGDONE());       
       end
-      if (NUM_IO_CLOCKS > 1) begin
+      if (NUM_IO_CLOCKS > 1) begin : gen_ioclk1
          BUFGCE
             u_clk_ct_bufg_gated(.O(clk_io[1]),
                                 .CE(clk_en_io[1]),
@@ -364,6 +380,7 @@ module clockmanager_ztex115(
                       .STATUS(),
                       .PROGDONE());       
       end
+`endif
 
       if (ENABLE_DDR_CLOCK) begin : gen_ddrclk
          BUFGCE

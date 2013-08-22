@@ -206,7 +206,7 @@ set_option -project_relative_includes 1
 set_option -include_path "$OPTIMSOC_RTL/;$OPTIMSOC_RTL/uart_tile/verilog/;$OPTIMSOC_RTL/or1200mp/verilog/;$OPTIMSOC_RTL/debug_system/verilog/;$LISNOC_RTL/;$LISNOC_RTL/dma/;$LISNOC_RTL/lisnoc16/;$LISNOC_RTL/lisnoc16/usb/;$LISNOC_RTL/lisnoc16/converter/;$SYNDIR;$OPTIMSOC_RTL/uart_tile/verilog;"
 
 # if you set OPTIMSOC_USE_DDR2 use the corresponding UCF file above
-set_option -hdl_define -set "OPTIMSOC_MT_PLAIN OPTIMSOC_CTRAM_PLAINBETTER OR1200_BOOT_ADR=32'h00000100"
+set_option -hdl_define -set "OPTIMSOC_MT_PLAIN OPTIMSOC_CTRAM_PLAINBETTER OR1200_BOOT_ADR=32'h00000100 OPTIMSOC_IO_CLOCKS"
 
 # pr_1 attributes
 set_option -job pr_1 -add par
@@ -287,7 +287,7 @@ set_option -vlog_std sysv
 set_option -project_relative_includes 1
 set_option -include_path "$OPTIMSOC_RTL/;$OPTIMSOC_RTL/uart_tile/verilog/;$OPTIMSOC_RTL/or1200mp/verilog/;$OPTIMSOC_RTL/debug_system/verilog/;$LISNOC_RTL/;$LISNOC_RTL/dma/;$LISNOC_RTL/lisnoc16/;$LISNOC_RTL/lisnoc16/usb/;$LISNOC_RTL/lisnoc16/converter/;$SYNDIR;$OPTIMSOC_RTL/uart_tile/verilog"
 
-set_option -hdl_define -set "OPTIMSOC_MT_PLAIN OPTIMSOC_CTRAM_PLAINBETTER OR1200_BOOT_ADR=32'h00000100"
+set_option -hdl_define -set "OPTIMSOC_MT_PLAIN OPTIMSOC_CTRAM_PLAINBETTER OR1200_BOOT_ADR=32'h00000100 OPTIMSOC_IO_CLOCKS"
 
 # pr_1 attributes
 set_option -job pr_1 -add par
