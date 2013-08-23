@@ -1,0 +1,8 @@
+optimsoc_inc_dir $OPTIMSOC_RTL
+optimsoc_inc_dir $LISNOC_RTL
+
+optimsoc_add_file system_simpledemo_pgas.v
+
+optimsoc_add_module compute_tile_pgas
+optimsoc_add_module memory_tile_pgas
+optimsoc_add_module lisnoc.router

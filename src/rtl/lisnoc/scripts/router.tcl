@@ -1,0 +1,10 @@
+lisnoc_add_file router/lisnoc_router.v
+lisnoc_add_file router/lisnoc_router.v
+lisnoc_add_file router/lisnoc_fifo.v
+lisnoc_add_file router/lisnoc_router_arbiter.v
+lisnoc_add_file router/lisnoc_router_input.v
+lisnoc_add_file router/lisnoc_router_input_route.v
+lisnoc_add_file router/lisnoc_router_output.v
+lisnoc_add_file router/lisnoc_router_output_arbiter.v
+lisnoc_add_file router/lisnoc_router_arbiter_prio.v
+lisnoc_add_file lisnoc_arb_rr.v

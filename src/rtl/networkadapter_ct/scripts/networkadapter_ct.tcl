@@ -1,0 +1,9 @@
+
+optimsoc_add_file networkadapter_ct.v
+optimsoc_add_file networkadapter_conf.v
+
+lisnoc_add_file router/lisnoc_router_output_arbiter.v
+
+optimsoc_add_module lisnoc.dma
+optimsoc_add_module lisnoc.mp_simple
+

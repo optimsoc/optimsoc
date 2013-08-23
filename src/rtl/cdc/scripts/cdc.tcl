@@ -1,0 +1,9 @@
+
+optimsoc_add_file cdc_fifo.v
+optimsoc_add_file cdc_sync_rd2wr.v
+optimsoc_add_file cdc_sync_wr2rd.v
+optimsoc_add_file cdc_fifo_mem.v
+optimsoc_add_file cdc_rdptr_empty.v
+optimsoc_add_file cdc_wrptr_full.v
+optimsoc_add_file cdc_rqacksync.v
+optimsoc_add_file cdc_sync_2ff.v

@@ -1,10 +1,7 @@
 all: build
 
-work:
-	if [ ! -d work ]; then vlib work; fi
-
-build: work
-	vlog -f tb_system_2x2_cccc.vc
+build:
+	vsim -c -do modelsim_compile.tcl
 
 sim:
 	vsim -voptargs=+acc -c work.tb_system_2x2_cccc -do "run -all"

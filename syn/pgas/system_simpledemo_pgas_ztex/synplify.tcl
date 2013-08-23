@@ -1,9 +1,12 @@
-set OPTIMSOC_RTL [get_env OPTIMSOC_RTL]
-set OPTIMSOC [get_env OPTIMSOC]
-set LISNOC_RTL [get_env LISNOC_RTL]
+set OPTIMSOC_TCL $env(OPTIMSOC_TCL)
 set SYNDIR [file dirname [info script]]
 
-# Base OpTiMSoC system
+source $OPTIMSOC_TCL/optimsoc_synplify.tcl
+
+optimsoc_add_file "$SYNDIR/system_simpledemo_pgas_ztex.v"
+
+
+return
 add_file -verilog "$OPTIMSOC_RTL/compute_tile_pgas/verilog/compute_tile_pgas.v"
 add_file -verilog "$OPTIMSOC_RTL/compute_tile_pgas/verilog/ct_select.v"
 add_file -verilog "$OPTIMSOC_RTL/noclsu/verilog/noclsu_tile.v"

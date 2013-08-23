@@ -1,0 +1,4 @@
+
+optimsoc_add_file clockmanager_ztex115.v
+optimsoc_add_file dcm_clkgen_ctrl.v
+optimsoc_add_file clk_opt_ctrl.v
