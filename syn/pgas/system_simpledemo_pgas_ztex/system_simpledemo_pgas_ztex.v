@@ -144,61 +144,6 @@ module system_simpledemo_pgas_ztex(
    wire [15:0] fx2_fd_out_buf;
    wire fx2_ifclk_buf;
 
-//`ifdef OPTIMSOC_MAINMEM_DDR
-   // When we have DDR memory, we need to manually instantiate buffers
-/* -----\/----- EXCLUDED -----\/-----
-   IBUF
-      u_ibuf_rst(.O(rst_buf),
-                 .I(rst));
-   IBUF
-      u_ibuf_fx2_flaga(.O(fx2_flaga_buf),
-                       .I(fx2_flaga));
-   IBUF
-      u_ibuf_fx2_flagb(.O(fx2_flagb_buf),
-                       .I(fx2_flagb));
-   IBUF
-      u_ibuf_fx2_flagc(.O(fx2_flagc_buf),
-                       .I(fx2_flagc));
-   IBUF
-      u_ibuf_fx2_flagd(.O(fx2_flagd_buf),
-                       .I(fx2_flagd));
-
-   OBUF
-      u_obuf_fx2_sloe(.O(fx2_sloe),
-                      .I(fx2_sloe_buf));
-   OBUF
-      u_obuf_fx2_slrd(.O(fx2_slrd),
-                      .I(fx2_slrd_buf));
-   OBUF
-      u_obuf_fx2_slwr(.O(fx2_slwr),
-                      .I(fx2_slwr_buf));
-   OBUF
-      u_obuf_fx2_pktend(.O(fx2_pktend),
-                        .I(fx2_pktend_buf));
-   OBUF
-      u_obuf_fx2_fifoadr0(.O(fx2_fifoadr[0]),
-                          .I(fx2_fifoadr_buf[0]));
-   OBUF
-      u_obuf_fx2_fifoadr1(.O(fx2_fifoadr[1]),
-                          .I(fx2_fifoadr_buf[1]));
-
-   generate
-      genvar i;
-
-      for (i = 0; i<16; i = i + 1) begin
-         IOBUF
-            u_iobuf_fx2_fd(.O(fx2_fd_in_buf[i]),
-                           .IO(fx2_fd[i]),
-                           .I(fx2_fd_out_buf[i]),
-                           .T(fx2_slwr_buf)); // LOW = output; fx2_slwr is active low!
-      end
-   endgenerate
-
-   IBUFG
-      u_ibufg_fx2_ifclk(.O(fx2_ifclk_buf),
-                        .I(fx2_ifclk));
- -----/\----- EXCLUDED -----/\----- */
-//`else
    // clock
    assign fx2_ifclk_buf = fx2_ifclk;
 
@@ -219,7 +164,6 @@ module system_simpledemo_pgas_ztex(
    // inout
    assign fx2_fd_in_buf = fx2_fd;
    assign fx2_fd = (~fx2_slwr ? fx2_fd_out_buf : 16'hz);
-//`endif
 
 
    // system control

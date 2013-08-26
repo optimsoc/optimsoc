@@ -154,7 +154,7 @@ module compute_tile_pgas(
    wire [19:0]   pic_ints_i;
    assign pic_ints_i[19:4] = 16'h0;
    assign pic_ints_i[1:0] = 2'b00;
-
+   
    /* or1200_module AUTO_TEMPLATE(
     .clk_i          (clk),
     .rst_i          (rst_cpu),
@@ -222,7 +222,7 @@ module compute_tile_pgas(
             .dwb_ack_i                  (dc_ack_i),              // Templated
             .dwb_err_i                  (dc_err_i),              // Templated
             .dwb_rty_i                  (dc_rty_i),              // Templated
-            .dwb_dat_i                  (dc_dat_i[31:0]));        // Templated
+            .dwb_dat_i                  (dc_dat_i[31:0]));       // Templated
 
    /* ct_select AUTO_TEMPLATE(
     .m_\(.*\)_o (dc_\1_i[]),
@@ -269,7 +269,7 @@ module compute_tile_pgas(
                .s_1_ack_i               (dc_na_ack_i),           // Templated
                .s_1_err_i               (dc_na_err_i),           // Templated
                .s_1_rty_i               (dc_na_rty_i),           // Templated
-               .s_1_dat_i               (dc_na_dat_i[31:0]));     // Templated
+               .s_1_dat_i               (dc_na_dat_i[31:0]));    // Templated
 
    genvar i;
    generate
@@ -567,7 +567,7 @@ module compute_tile_pgas(
            .wbs_we_i                    (dc_na_we_o),            // Templated
            .wbs_cab_i                   (1'bx),                  // Templated
            .wbs_cti_i                   (dc_na_cti_o),           // Templated
-           .wbs_bte_i                   (dc_na_bte_o));           // Templated
+           .wbs_bte_i                   (dc_na_bte_o));          // Templated
 
 
 endmodule

@@ -44,6 +44,12 @@ module compute_tile_dm(
    wb_mam_we_o, wb_mam_cab_o, wb_mam_cti_o, wb_mam_bte_o, wb_mam_ack_i,
    wb_mam_rty_i, wb_mam_err_i, wb_mam_dat_i,
 `endif
+`ifdef OPTIMSOC_CTRAM_WIRES
+   wb_mem_adr_i, wb_mem_cyc_i, wb_mem_dat_i, wb_mem_sel_i,
+   wb_mem_stb_i, wb_mem_we_i, wb_mem_cab_i, wb_mem_cti_i,
+   wb_mem_bte_i, wb_mem_ack_o, wb_mem_rty_o, wb_mem_err_o,
+   wb_mem_dat_o,
+`endif
    /*AUTOARG*/
    // Outputs
    noc_in_ready, noc_out_flit, noc_out_valid,
@@ -98,6 +104,39 @@ module compute_tile_dm(
    output        wb_mam_rty_i;
    output        wb_mam_err_i;
    output [31:0] wb_mam_dat_i;
+`endif
+
+`ifdef OPTIMSOC_CTRAM_WIRES
+   output [31:0] wb_mem_adr_i;
+   output        wb_mem_cyc_i;
+   output [31:0] wb_mem_dat_i;
+   output [3:0]  wb_mem_sel_i;
+   output        wb_mem_stb_i;
+   output        wb_mem_we_i;
+   output        wb_mem_cab_i;
+   output [2:0]  wb_mem_cti_i;
+   output [1:0]  wb_mem_bte_i;
+   input         wb_mem_ack_o;
+   input         wb_mem_rty_o;
+   input         wb_mem_err_o;
+   input [31:0]  wb_mem_dat_o;
+`else // !`ifdef OPTIMSOC_CTRAM_WIRES
+   wire [32-1:0] wb_mem_adr_i;
+   wire [1:0]    wb_mem_bte_i;
+   wire [2:0]    wb_mem_cti_i;
+   wire          wb_mem_cyc_i;
+   wire [32-1:0] wb_mem_dat_i;
+   wire [4-1:0]  wb_mem_sel_i;
+   wire          wb_mem_stb_i;
+   wire          wb_mem_we_i;
+
+   wire          wb_mem_ack_o;
+   wire          wb_mem_err_o;
+   wire          wb_mem_rty_o;
+   wire [32-1:0] wb_mem_dat_o;
+
+   wire          wb_mem_clk_i;
+   wire          wb_mem_rst_i;
 `endif
 
    wire [31:0]   busms_adr_o[0:2];
@@ -199,7 +238,7 @@ module compute_tile_dm(
                .dwb_ack_i               (busms_ack_i[1]),        // Templated
                .dwb_err_i               (busms_err_i[1]),        // Templated
                .dwb_rty_i               (busms_rty_i[1]),        // Templated
-               .dwb_dat_i               (busms_dat_i[1][31:0]));  // Templated
+               .dwb_dat_i               (busms_dat_i[1][31:0]));         // Templated
 
 
    assign busms_cab_o[0] = 1'b0;
@@ -299,25 +338,8 @@ module compute_tile_dm(
             .s_2_dat_i                  (bussl_dat_o[2][31:0]),  // Templated
             .s_2_ack_i                  (bussl_ack_o[2]),        // Templated
             .s_2_err_i                  (bussl_err_o[2]),        // Templated
-            .s_2_rty_i                  (bussl_rty_o[2]));        // Templated
+            .s_2_rty_i                  (bussl_rty_o[2]));       // Templated
 
-
-   wire [32-1:0] wb_mem_adr_i;
-   wire [1:0]    wb_mem_bte_i;
-   wire [2:0]    wb_mem_cti_i;
-   wire          wb_mem_cyc_i;
-   wire [32-1:0] wb_mem_dat_i;
-   wire [4-1:0]  wb_mem_sel_i;
-   wire          wb_mem_stb_i;
-   wire          wb_mem_we_i;
-
-   wire          wb_mem_ack_o;
-   wire          wb_mem_err_o;
-   wire          wb_mem_rty_o;
-   wire [32-1:0] wb_mem_dat_o;
-
-   wire          wb_mem_clk_i;
-   wire          wb_mem_rst_i;
 
    /* mam_wb_adapter AUTO_TEMPLATE(
     .wb_in_clk_i  (clk),
@@ -375,7 +397,7 @@ module compute_tile_dm(
                        .wb_out_ack_o    (wb_mem_ack_o),          // Templated
                        .wb_out_err_o    (wb_mem_err_o),          // Templated
                        .wb_out_rty_o    (wb_mem_rty_o),          // Templated
-                       .wb_out_dat_o    (wb_mem_dat_o));          // Templated
+                       .wb_out_dat_o    (wb_mem_dat_o));                 // Templated
 
 `ifndef OPTIMSOC_CTRAM_WIRES
    /* wb_sram_sp AUTO_TEMPLATE(
@@ -402,7 +424,7 @@ module compute_tile_dm(
             .wb_stb_i                   (wb_mem_stb_i),          // Templated
             .wb_we_i                    (wb_mem_we_i),           // Templated
             .wb_clk_i                   (wb_mem_clk_i),          // Templated
-            .wb_rst_i                   (wb_mem_rst_i));          // Templated
+            .wb_rst_i                   (wb_mem_rst_i));                 // Templated
 `endif
 
    wire [DMA_ENTRIES:0] na_irq;
@@ -478,7 +500,7 @@ module compute_tile_dm(
            .wbs_we_i                    (bussl_we_i[1]),         // Templated
            .wbs_cab_i                   (bussl_cab_i[1]),        // Templated
            .wbs_cti_i                   (bussl_cti_i[1]),        // Templated
-           .wbs_bte_i                   (bussl_bte_i[1]));        // Templated
+           .wbs_bte_i                   (bussl_bte_i[1]));       // Templated
 
    /* bootrom AUTO_TEMPLATE(
     .clk(clk),
@@ -507,7 +529,7 @@ module compute_tile_dm(
                 .wb_dat_i               (bussl_dat_i[2][31:0]),  // Templated
                 .wb_cyc_i               (bussl_cyc_i[2]),        // Templated
                 .wb_stb_i               (bussl_stb_i[2]),        // Templated
-                .wb_sel_i               (bussl_sel_i[2][3:0]));   // Templated
+                .wb_sel_i               (bussl_sel_i[2][3:0]));  // Templated
 
 endmodule
 

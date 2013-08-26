@@ -1,4 +1,5 @@
 set OPTIMSOC_RTL [get_env OPTIMSOC_RTL]
+set OPTIMSOC [get_env OPTIMSOC]
 set LISNOC_RTL [get_env LISNOC_RTL]
 set SYNDIR [file dirname [info script]]
 
@@ -181,6 +182,12 @@ add_file -verilog "$SYNDIR/fifo_usb_to_noc.v"
 add_file -verilog "$LISNOC_RTL/lisnoc16/usb/lisnoc16_usb_to_noc.v"
 add_file -verilog "$LISNOC_RTL/lisnoc16/usb/lisnoc16_usb_from_noc.v"
 
+# DDR
+add_file -verilog "$OPTIMSOC_RTL/xilinx_ddr/verilog/wb_mig_if.v"
+add_file -verilog "$OPTIMSOC_RTL/xilinx_ddr/verilog/ztex_1_15_mig_39.v"
+add_file -verilog "$OPTIMSOC_RTL/xilinx_ddr/verilog/ztex_ddr2_if.v"
+add_file -edif "$OPTIMSOC/syn/ipcores/xilinx/ztex_ddr/ztex_1_15_mig_39.edf"
+add_file -ucf "$SYNDIR/system_2x2_cccc_ztex_ddr.ucf"
 
 ################################################################################
 # implementation: "rev_1_15d_bram"
@@ -258,3 +265,150 @@ set_option -write_apr_constraint 1
 project -result_file "./rev_1_15d_bram/system_2x2_cccc_ztex115d_bram.edf"
 
 #design plan options
+
+#implementation: "rev_1_15d_ddr"
+impl -add rev_1_15d_ddr -type fpga
+
+#
+#implementation attributes
+
+set_option -vlog_std sysv
+set_option -project_relative_includes 1
+set_option -hdl_define -set OPTIMSOC_CTRAM_WIRES
+set_option -include_path "$OPTIMSOC_RTL/;$OPTIMSOC_RTL/or1200mp/verilog/;$OPTIMSOC_RTL/debug_system/verilog/;$LISNOC_RTL/;$LISNOC_RTL/dma/;$LISNOC_RTL/lisnoc16/;$LISNOC_RTL/lisnoc16/usb/;$LISNOC_RTL/lisnoc16/converter/;$SYNDIR;$OPTIMSOC_RTL/uart_tile/verilog"
+
+#pr_1 attributes
+set_option -job pr_1 -add par
+set_option -job pr_1 -option enable_run 1
+set_option -job pr_1 -option run_backannotation 0
+
+#device options
+set_option -technology Spartan6
+set_option -part XC6SLX150
+set_option -package CSG484
+set_option -speed_grade -3
+set_option -part_companion ""
+
+#compilation/mapping options
+set_option -use_fsm_explorer 0
+set_option -top_module "system_2x2_cccc_ztex"
+
+# mapper_options
+set_option -frequency auto
+set_option -write_verilog 0
+set_option -write_vhdl 0
+set_option -resolve_multiple_driver 1
+set_option -srs_instrumentation 1
+
+# xilinx_options
+set_option -RWCheckOnRam 1
+set_option -enhanced_optimization 0
+set_option -automatic_compile_point 1
+
+# Xilinx Spartan3
+set_option -run_prop_extract 1
+set_option -maxfan 10000
+set_option -disable_io_insertion 0
+set_option -pipe 1
+set_option -retiming 0
+set_option -update_models_cp 0
+set_option -fix_gated_and_generated_clocks 1
+set_option -no_sequential_opt 1
+
+# Xilinx Spartan6
+set_option -enable_prepacking 1
+
+# Xilinx
+set_option -fc_phys_opt 0
+
+# sequential_optimization_options
+set_option -symbolic_fsm_compiler 1
+
+# Compiler Options
+set_option -compiler_compatible 0
+set_option -resource_sharing 1
+set_option -multi_file_compilation_unit 1
+set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_ddr.ucf"
+
+#automatic place and route (vendor) options
+set_option -write_apr_constraint 1
+
+#set result format/file last
+project -result_file "./rev_1_15d_ddr/system_2x2_cccc_ztex.edf"
+
+#design plan options
+impl -active "rev_1_15d_ddr"
+
+
+#implementation: "rev_1_15b_ddr"
+impl -add rev_1_15b_ddr -type fpga
+
+#
+#implementation attributes
+
+set_option -vlog_std sysv
+set_option -project_relative_includes 1
+set_option -hdl_define -set OPTIMSOC_CTRAM_WIRES
+set_option -include_path "$OPTIMSOC_RTL/;$OPTIMSOC_RTL/or1200mp/verilog/;$OPTIMSOC_RTL/debug_system/verilog/;$LISNOC_RTL/;$LISNOC_RTL/dma/;$LISNOC_RTL/lisnoc16/;$LISNOC_RTL/lisnoc16/usb/;$LISNOC_RTL/lisnoc16/converter/;$SYNDIR;$OPTIMSOC_RTL/uart_tile/verilog"
+
+#pr_1 attributes
+set_option -job pr_1 -add par
+set_option -job pr_1 -option enable_run 1
+set_option -job pr_1 -option run_backannotation 0
+
+#device options
+set_option -technology Spartan6
+set_option -part XC6SLX75
+set_option -package CSG484
+set_option -speed_grade -3
+set_option -part_companion ""
+
+#compilation/mapping options
+set_option -use_fsm_explorer 0
+set_option -top_module "system_2x2_cccc_ztex"
+
+# mapper_options
+set_option -frequency auto
+set_option -write_verilog 0
+set_option -write_vhdl 0
+set_option -resolve_multiple_driver 1
+set_option -srs_instrumentation 1
+
+# xilinx_options
+set_option -RWCheckOnRam 1
+set_option -enhanced_optimization 0
+set_option -automatic_compile_point 1
+
+# Xilinx Spartan3
+set_option -run_prop_extract 1
+set_option -maxfan 10000
+set_option -disable_io_insertion 0
+set_option -pipe 1
+set_option -retiming 0
+set_option -update_models_cp 0
+set_option -fix_gated_and_generated_clocks 1
+set_option -no_sequential_opt 1
+
+# Xilinx Spartan6
+set_option -enable_prepacking 1
+
+# Xilinx
+set_option -fc_phys_opt 0
+
+# sequential_optimization_options
+set_option -symbolic_fsm_compiler 1
+
+# Compiler Options
+set_option -compiler_compatible 0
+set_option -resource_sharing 1
+set_option -multi_file_compilation_unit 1
+set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_ddr.ucf"
+
+#automatic place and route (vendor) options
+set_option -write_apr_constraint 1
+
+#set result format/file last
+project -result_file "./rev_1_15b_ddr/system_2x2_cccc_ztex.edf"
+
+#design plan options
+impl -active "rev_1_15b_ddr"

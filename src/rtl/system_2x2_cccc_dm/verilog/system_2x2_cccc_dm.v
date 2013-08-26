@@ -43,6 +43,12 @@ module system_2x2_cccc_dm(
    wb_mam_we_o, wb_mam_cab_o, wb_mam_cti_o, wb_mam_bte_o, wb_mam_ack_i,
    wb_mam_rty_i, wb_mam_err_i, wb_mam_dat_i,
 `endif
+`ifdef OPTIMSOC_CTRAM_WIRES
+   wb_mem_adr_i, wb_mem_cyc_i, wb_mem_dat_i, wb_mem_sel_i,
+   wb_mem_stb_i, wb_mem_we_i, wb_mem_cab_i, wb_mem_cti_i,
+   wb_mem_bte_i, wb_mem_ack_o, wb_mem_rty_o, wb_mem_err_o,
+   wb_mem_dat_o,
+`endif
    /*AUTOARG*/
    // Inputs
    clk, rst_sys, rst_cpu
@@ -81,6 +87,21 @@ module system_2x2_cccc_dm(
    output [4*1-1:0]   wb_mam_rty_i;
    output [4*1-1:0]   wb_mam_err_i;
    output [4*32-1:0]  wb_mam_dat_i;
+`endif
+`ifdef OPTIMSOC_CTRAM_WIRES
+   output [4*32-1:0] wb_mem_adr_i;
+   output [4*1-1:0]  wb_mem_cyc_i;
+   output [4*32-1:0] wb_mem_dat_i;
+   output [4*4-1:0]  wb_mem_sel_i;
+   output [4*1-1:0]  wb_mem_stb_i;
+   output [4*1-1:0]  wb_mem_we_i;
+   output [4*1-1:0]  wb_mem_cab_i;
+   output [4*3-1:0]  wb_mem_cti_i;
+   output [4*2-1:0]  wb_mem_bte_i;
+   input [4*1-1:0]   wb_mem_ack_o;
+   input [4*1-1:0]   wb_mem_rty_o;
+   input [4*1-1:0]   wb_mem_err_o;
+   input [4*32-1:0]  wb_mem_dat_o;
 `endif
 
    // Flits from NoC->tiles
@@ -159,6 +180,21 @@ module system_2x2_cccc_dm(
                  .wb_mam_cab_o               (wb_mam_cab_o[i]),
                  .wb_mam_cti_o               (wb_mam_cti_o[(i+1)*3-1:i*3]),
                  .wb_mam_bte_o               (wb_mam_bte_o[(i+1)*2-1:i*2]),
+`endif
+`ifdef OPTIMSOC_CTRAM_WIRES
+                 .wb_mem_ack_o               (wb_mem_ack_o[i]),
+                 .wb_mem_rty_o               (wb_mem_rty_o[i]),
+                 .wb_mem_err_o               (wb_mem_err_o[i]),
+                 .wb_mem_dat_o               (wb_mem_dat_o[(i+1)*32-1:i*32]),
+                 .wb_mem_adr_i               (wb_mem_adr_i[(i+1)*32-1:i*32]),
+                 .wb_mem_cyc_i               (wb_mem_cyc_i[i]),
+                 .wb_mem_dat_i               (wb_mem_dat_i[(i+1)*32-1:i*32]),
+                 .wb_mem_sel_i               (wb_mem_sel_i[(i+1)*4-1:i*4]),
+                 .wb_mem_stb_i               (wb_mem_stb_i[i]),
+                 .wb_mem_we_i                (wb_mem_we_i[i]),
+                 .wb_mem_cab_i               (wb_mem_cab_i[i]),
+                 .wb_mem_cti_i               (wb_mem_cti_i[(i+1)*3-1:i*3]),
+                 .wb_mem_bte_i               (wb_mem_bte_i[(i+1)*2-1:i*2]),
 `endif
                  .noc_in_ready               (link_in_ready[i][VCHANNELS-1:0]),
                  .noc_out_flit               (link_out_flit[i][NOC_FLIT_WIDTH-1:0]),
