@@ -1,2 +1,5 @@
 /CMakeLists.txt.user
+
+# Folders for the current build and installation structure
 /build
+/bin

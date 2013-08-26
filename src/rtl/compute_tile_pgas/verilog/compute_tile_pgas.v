@@ -75,6 +75,8 @@ module compute_tile_pgas(
    parameter PGAS_ADDRW = 15;
    parameter PGAS_BASE = 0;
 
+   parameter DMA_ENTRIES = 4;
+
    input [NOC_FLIT_WIDTH-1:0]      noc_in_flit;
    input [VCHANNELS-1:0]           noc_in_valid;
    output [VCHANNELS-1:0]          noc_in_ready;
@@ -496,7 +498,24 @@ module compute_tile_pgas(
             .ic_we_i                    (ic_we_o),               // Templated
             .ic_sel_i                   (ic_sel_o),              // Templated
             .ic_bte_i                   (ic_bte_o),              // Templated
-            .ic_cti_i                   (ic_cti_o));              // Templated
+            .ic_cti_i                   (ic_cti_o));             // Templated
+
+   wire [DMA_ENTRIES:0] na_irq;
+
+   /*
+    *  +---+-..-+----+
+    *  |   dma  | mp |
+    *  +---+-..-+----+
+    * dma_entries 1  (0)
+    *
+    * map to irq lines of cpu
+    *
+    *  +----+-----+
+    *  | mp | dma |
+    *  +----+-----+
+    *    3     2
+    */
+   assign pic_ints_i[3:2] = {na_irq[0],|na_irq[DMA_ENTRIES:1]};
 
    /* networkadapter_ct AUTO_TEMPLATE(
     .noc_in_ready (noc_in_na_ready_cdc),
@@ -512,7 +531,7 @@ module compute_tile_pgas(
     .wbs_\(.*\)_o (dc_na_\1_i),
     .wbs_\(.*\)_i (dc_na_\1_o),
     .wbs_cab_i (1'bx),
-    .irq (pic_ints_i[3:2]),
+    .irq (na_irq),
     .rst (rst_sys),
     ); */
    networkadapter_ct
@@ -548,7 +567,7 @@ module compute_tile_pgas(
            .wbs_rty_o                   (dc_na_rty_i),           // Templated
            .wbs_err_o                   (dc_na_err_i),           // Templated
            .wbs_dat_o                   (dc_na_dat_i),           // Templated
-           .irq                         (pic_ints_i[3:2]),       // Templated
+           .irq                         (na_irq),                // Templated
            // Inputs
            .clk                         (clk),
            .rst                         (rst_sys),               // Templated

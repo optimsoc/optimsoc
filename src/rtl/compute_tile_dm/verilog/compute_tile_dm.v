@@ -69,6 +69,7 @@ module compute_tile_dm(
    parameter MEM_SIZE = 30*1024; // 30 kByte
    parameter MEM_FILE = "ct.vmem";
 
+   parameter NA_ENABLE_DMA = 1;
    parameter DMA_ENTRIES = 4;
    // TODO: make define out of it
 
@@ -453,6 +454,7 @@ module compute_tile_dm(
     );*/
    networkadapter_ct
       #(.tileid(ID),
+        .conf_dma(NA_ENABLE_DMA),
         .dma_entries(DMA_ENTRIES),
         .vchannels(VCHANNELS),
         .noc_flit_width(NOC_FLIT_WIDTH))

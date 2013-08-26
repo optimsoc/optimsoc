@@ -3,3 +3,4 @@ trace.*
 transcript
 *.wlf
 work
+ct.vmem

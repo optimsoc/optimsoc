@@ -58,9 +58,9 @@ module system_2x2_cccc_ztex(
    );
 
    // 128 kByte for each of the four compute tiles (4*128 kByte total)
-   localparam MEM_SIZE = 96*1024;
+   parameter MEM_SIZE = 96*1024;
    // Memory file, used only in simulation
-   localparam MEM_FILE = "ct.vmem";
+   parameter MEM_FILE = "ct.vmem";
 
    // NoC configuration
    localparam NOC_FLIT_DATA_WIDTH = 32;
