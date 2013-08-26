@@ -303,7 +303,7 @@ set_option -srs_instrumentation 1
 # xilinx_options
 set_option -RWCheckOnRam 1
 set_option -enhanced_optimization 0
-set_option -automatic_compile_point 1
+set_option -automatic_compile_point 0
 
 # Xilinx Spartan3
 set_option -run_prop_extract 1
@@ -377,7 +377,7 @@ set_option -srs_instrumentation 1
 # xilinx_options
 set_option -RWCheckOnRam 1
 set_option -enhanced_optimization 0
-set_option -automatic_compile_point 1
+set_option -automatic_compile_point 0
 
 # Xilinx Spartan3
 set_option -run_prop_extract 1
