@@ -110,7 +110,6 @@ void *ob_simtcp_receive_thread(void* ctx_void)
         assert(rv == msg->len - 2);
 
         uint8_t trtype;
-        uint16_t traddr;
 
         switch (msg->type) {
         case MSGTYPE_SYSDISCOVER:
@@ -124,7 +123,6 @@ void *ob_simtcp_receive_thread(void* ctx_void)
             break;
         case MSGTYPE_TRACE:
             trtype = (uint8_t) msg->payload[0];
-            traddr = *((uint16_t*) &msg->payload[2]);
             if (trtype == DBGTYPE_STM && ctx->stm_cb) {
                 uint32_t coreid, timestamp, value;
                 uint16_t id;

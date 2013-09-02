@@ -1,3 +1,5 @@
+SUBDIRS = . tools
+
 pkginclude_HEADERS = optimsochost/liboptimsochost.h
 lib_LTLIBRARIES = liboptimsochost.la
 

@@ -94,8 +94,6 @@ static int disconnect(void)
 
 int main(int argc, char *argv[])
 {
-    int c;
-    int interactive_mode = 0;
     optimsoc_backend_id backend = OPTIMSOC_BACKEND_DBGNOC;
 
     trace_file = 0;

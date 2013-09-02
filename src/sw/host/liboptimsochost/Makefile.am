@@ -3,12 +3,7 @@ CLEANFILES =
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
-
 SUBDIRS = src doc
-
-if BUILD_EXAMPLES
-SUBDIRS += examples
-endif
 
 # prepare pkg-config file
 SED_PROCESS = \

@@ -10,7 +10,7 @@ echo
 echo "Usual build procedure:"
 echo
 echo "    mkdir build; cd build;"
-echo "    ../configure CFLAGS='-g -O0' --prefix=\`pwd\`/.. --enable-examples"
+echo "    ../configure CFLAGS='-g -O0' --prefix=\`pwd\`/.. --enable-python-interface"
 echo "    make"
 echo "    make install"
 echo 

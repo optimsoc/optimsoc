@@ -44,12 +44,6 @@ AS_IF([test "x$enable_debug" = "xyes"], [
     AC_DEFINE(DEBUG, [1], [Debug messages.])
 ])
 
-AC_ARG_ENABLE([examples],
-    AS_HELP_STRING([--enable-examples], [build example applications (default n)])],
-    [build_examples=$enableval],
-    [build_examples=no])
-AM_CONDITIONAL([BUILD_EXAMPLES], [test "x$build_examples" != "xno"])
-
 # check for libusb 1.0
 #
 # The libusb function libusb_error_string() was introduced with libusb 1.0.9.
@@ -114,7 +108,7 @@ AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
         Makefile
         src/Makefile
-        examples/Makefile
+        src/tools/Makefile
         doc/Makefile
         doc/doxygen.cfg
 ])
@@ -135,6 +129,5 @@ AC_MSG_RESULT([
 
         logging:                ${enable_logging}
         debug:                  ${enable_debug}
-        build examples:         ${build_examples}
         python interface:       ${use_python}
 ])

@@ -683,8 +683,8 @@ static void display_help(void)
            "Example:\n"
            "Connect over USB to a FPGA-board running OpTiMSoC:\n"
            "  optimsoc_cli -i -bdbgnoc -oconn=usb\n"
-           "Connect over USB to a FPGA-board running OpTiMSoC:\n"
-           "  optimsoc_cli -i -bdbgnoc -oconn=tcp,host=localhost,port=22000\n");
+           "Connect over TCP to a system simulation with debug emulator:\n"
+           "  optimsoc_cli -i -bdbgnoc -oconn=tcp,host=localhost,port=23000\n");
 }
 
 static void display_interactive_help(void)
