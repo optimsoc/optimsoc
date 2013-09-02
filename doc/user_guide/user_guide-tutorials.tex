@@ -348,26 +348,126 @@ By moving the mouse over the section you will find the description of
 the section. Similarly for the events you find a short description of
 the event.
 
-% \section{PGAS System}
+\section{Going to the FPGA: ZTEX Boards}
 
-% problem: memory größe
+The recommended platform for software development or any other system
+which needs no I/O is the ZTEX boards\footnote{See
+  http://www.ztex.de}. Various variants exist, the supported boards
+are the 1.15 series version b and d, where the latter is twice as
+large as the former and can therefore contain more processor cores.
+The 2x2 example works with both boards.
 
-% pgas system bauen und simulieren
+\subsection{Prepare: Simulate the Complete System}
 
-% \section{UART I/O}
+Before we go to the actual board we want to simulate the entire system
+on the FPGA to see if the debug system works correctly and the
+clocks works correct.
 
-% problem: auf dem FPGA kein report-printf
+The distribution therefore contains a SystemC module that functionally
+behaves like the USB chip on the ZTEX boards. The host tools can
+connect to the debug system via this module using a TCP socket.
 
-% andere sysconfig
+The system can be found at \verb|tbench/rtl/dm/system_2x2_cccc_ztex|.
+Build the system running \verb|make|. Before you simulate the system
+you will now need to provide a \verb|modelsim.ini| either globally or
+in the system's folder that contains the Xilinx libraries. Once you
+have it, you can start the system using \verb|make
+sim-noninteractive|. The simulation will start and you can now connect
+to the system in a different shell by using the command line
+interface:
 
-% UART tile
+\begin{alltt}
+\$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
+\end{alltt}
 
-% \section{XUPV5 Simulation}
+The command line interface will connect to the system and enumerate
+all debug modules:
 
-% Funktionale simulation
+\begin{alltt}
+Connected to system.
+System ID: 0x0000ce75
+Module summary:
+addr.	type	version	name
+0x02	0x02	0x00	ITM
+0x03	0x02	0x00	ITM
+0x04	0x02	0x00	ITM
+0x05	0x02	0x00	ITM
+0x06	0x05	0x00	STM
+0x07	0x05	0x00	STM
+0x08	0x05	0x00	STM
+0x09	0x05	0x00	STM
+0x0a	0x07	0x00	MAM
+0x0b	0x07	0x00	MAM
+0x0c	0x07	0x00	MAM
+0x0d	0x07	0x00	MAM
+\end{alltt}
 
-% \section{XUPV5 Synthesis}
+The modules are the \emph{Instruction Trace Module (ITM)},
+\emph{Software Trace Module (STM)} and \emph{Memory Access Module
+  (MAM)} for each of the four cores.
 
-% Synthese auf XUPV5, 2x2\_cmuc
+Before debugging now, you will need to build the software as described
+before in the \verb|sw| subfolder. Once you have build
+\verb|hello_simplemp| you can execute it in the simulation.
 
-% Erklären wie Speicher initialisieren und bauen
+First you enter interactive mode:
+
+\begin{alltt}
+\$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
+\end{alltt}
+
+After enumeration you will get an \verb|OpTiMSoC>| shell. First you
+can initialize the memories:
+
+\begin{alltt}
+OpTiMSoC> mem_init hello_simplemp.bin 0-3
+\end{alltt}
+
+Next you need to enable logging of the software trace events to a
+file:
+
+\begin{alltt}
+OpTiMSoC> log_stm_trace strace
+\end{alltt}
+
+Then start the system:
+\begin{alltt}
+OpTiMSoC> start
+\end{alltt}
+
+Let it run for a while (1 minute) and then leave the command line
+interface:
+\begin{alltt}
+OpTiMSoC> quit
+\end{alltt}
+
+After that you will find the expected output of the trace events in
+\verb|strace|.
+
+\subsection{Synthesis}
+
+Once you have checked the correct functionality of the system (or
+alter your extensions) you can go over to system synthesis for the
+FPGA. At the moment we support the Synopsys FPGA flow (Synplify).
+
+You can find the system synthesis in the folder
+\verb|syn/dm/system_2x2_cccc_ztex/|. A Makefile is used to build the
+systems.
+
+To generate the system first create the project file:
+
+\begin{alltt}
+\$> make synplify.prj
+\end{alltt}
+
+Run the synthesis afterwards (b or d board):
+
+\begin{alltt}
+\$> make synplify_115b_ddr
+\end{alltt}
+
+Once the synthesis is finished you can generate the bitstream:
+
+\begin{alltt}
+\$> bitgen -w rev_1_15b_ddr/pr_1/system_2x2_cccc_ztex.ncd
+\end{alltt}

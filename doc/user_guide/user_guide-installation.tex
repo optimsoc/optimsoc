@@ -185,7 +185,15 @@ export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
 In one of the next releases we will have machine support, e.g.,
 \verb|or32-elf-gcc -moptimsoc|.
 
-\subsection{Additional Scripts}
+\subsection{TCL Environment \& Additional Scripts}
+
+In the EDA field TCL is still the scripting language of choice.
+Fortunately, all of the EDA tools have a TCL scripting interface. To
+allow for easier creation of projects and compile RTL sources we added
+some TCL scripts for all modules and targets. The scripts can be found
+in \verb|tools/tcl|. You need the environment variable
+\verb|OPTIMSOC_TCL| to point there.
+
 You will need some additional scripts, e.g., \verb|bin2vmem| to
 initialize the memory during simulation. It is distributed with ORPSoC
 and also available in the OpTiMSoC repository under
@@ -207,6 +215,7 @@ you will have to add the environment variables as (example for bash):
 # OpTiMSoC toolchain
 export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC\}/tools/utils:\$\{PATH\}
 export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+export OPTIMSOC_TCL=\$\{OPTIMSOC\}/tools/tcl
 \end{alltt}
 
 \section{SystemC, Verilator and SystemC Libraries}
@@ -379,22 +388,32 @@ generate configure and Makefiles:
 \$> ./autogen.sh
 \end{alltt}
 
-Then build, make and install:
+The library comes with tools, the most important is the command
+line interface \verb|optimsoc_cli|. It can be used to communicate with
+the OpTiMSoC debug system on the command line. Recently, a Python
+scripting interface has been added. You will need the python
+development libraries for this to work when enabled via
+\verb|--enable-python-interface|.
 
-\begin{alltt}
-\$> mkdir build
-\$> cd build
-\$> ../configure --prefix=`pwd`/../ --enable-examples
-\$> make
-\$> make install
-\end{alltt}
+Build, make and install:
 
-To make it available to the debug software you need to point the
-linker to the installation path:
+\begin{verbatim}
+$> mkdir build
+$> cd build
+$> ../configure --prefix=`pwd`/../ --enable-python-interface
+$> make
+$> make install
+\end{verbatim}
 
-\begin{alltt}
-\$> export LD_LIBRARY_PATH=\$\{OPTIMSOC\}/src/sw/host/liboptimsochost/lib:\$\{LD_LIBRARY_PATH\}
-\end{alltt}
+You need to add the library to the library path to be available to the
+debug software and add the tools to the \verb|PATH| (if installed).
+
+
+\begin{verbatim}
+$> export LD_LIBRARY_PATH=${OPTIMSOC}/src/sw/host/liboptimsochost/lib:\
+     ${LD_LIBRARY_PATH}
+$> export PATH=${OPTIMSOC}/src/sw/host/liboptimsochost/bin:${PATH}
+\end{verbatim}
 
 \subsection{Graphical User Interface}
 
@@ -456,6 +475,9 @@ export OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
 export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC\}/tools/utils:\$\{PATH\}
 export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
 
+# TCL scripting
+export OPTIMSOC_TCL=\$\{OPTIMSOC\}/tools/tcl
+
 # SystemC environment
 export SYSTEMC=/opt/systemc/2.3.0
 export SYSTEMC_INCLUDE=\$\{SYSTEMC\}/include
@@ -467,11 +489,20 @@ export PATH=\$\{VERILATOR_ROOT\}/bin:\$\{PATH\}
 # System software
 export PKG_CONFIG_PATH=\$\{OPTIMSOC\}/src/sw/system/dm/share/pkgconfig
 
-# Host library
+# Host library and tools
 export LD_LIBRARY_PATH=\$\{OPTIMSOC\}/src/sw/host/liboptimsochost/lib:\$\{LD_LIBRARY_PATH\}
+export PATH=\$\{OPTIMSOC\}/src/sw/host/liboptimsochost/bin:\$\{PATH\}
 
 # GUI
 export PATH=\$\{OPTIMSOC\}/src/sw/host/optimsocgui/bin:\$\{PATH\}
 
-
 \end{alltt}
+
+\section{Upgrade from rel-20130620}
+
+\begin{itemize}
+  \item The TCL interface has been added. Set \verb|OPTIMSOC_TCL| as
+    described above.
+  \item The previous liboptimsochost examples are now part of the
+    distribution as ``tools''. Please rebuilt the library.
+\end{itemize}
