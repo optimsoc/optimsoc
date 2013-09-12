@@ -89,10 +89,11 @@
    output [DW-1:0] dout; // output data bus
 
    // validate the memory address (check if it's inside the memory size bounds)
-`ifdef OPTIMSOC_RAM_VALIDATE_ADDRESS
+`ifdef OPTIMSOC_SRAM_VALIDATE_ADDRESS
    always @(posedge clk) begin
       if (addr > MEM_SIZE) begin
-         $display("sram_sp: access to out-of-bounds memory address detected!");
+         $display("sram_sp: access to out-of-bounds memory address detected! Trying to access byte address 0x%x, MEM_SIZE is %d bytes.",
+                  addr, MEM_SIZE);
          $stop;
       end
    end
