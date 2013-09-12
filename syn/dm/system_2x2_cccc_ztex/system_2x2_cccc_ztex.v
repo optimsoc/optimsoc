@@ -57,8 +57,10 @@ module system_2x2_cccc_ztex(
    clk, rst, fx2_ifclk, fx2_flaga, fx2_flagb, fx2_flagc, fx2_flagd
    );
 
-   // 128 kByte for each of the four compute tiles (4*128 kByte total)
-   parameter MEM_SIZE = 96*1024;
+   // 32 MByte for each of the four compute tiles (128 MByte total)
+   // The ZTEX 1.15 boards provide 128 MByte DDR2 memory, which is
+   // used by the compute tile memories.
+   localparam MEM_SIZE = 32*1024*1024;
    // Memory file, used only in simulation
    parameter MEM_FILE = "ct.vmem";
 

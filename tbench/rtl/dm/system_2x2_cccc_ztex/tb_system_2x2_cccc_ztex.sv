@@ -65,7 +65,6 @@ module tb_system_2x2_cccc_ztex;
    always fx2_ifclk = #16.66ns ~fx2_ifclk; // 30 MHz
 
    system_2x2_cccc_ztex
-     #(.MEM_SIZE(128*1024))
       u_system(.clk(clk),
                .rst(reset),
                .fx2_ifclk(fx2_ifclk),
