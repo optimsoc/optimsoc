@@ -41,7 +41,7 @@ module clockmanager_ztex115(
 `endif
    /*AUTOARG*/
    // Outputs
-   clk_ct, clk_dbg, clk_noc, clk_ddr, rst_sys, rst_cpu,
+   clk_ct, clk_dbg, clk_noc, clk_ddr, rst_sys, rst_cpu, sys_is_halted,
    // Inputs
    clk, rst, cpu_reset, cpu_start, sys_halt
    );
@@ -70,11 +70,11 @@ module clockmanager_ztex115(
    parameter IO_CLOCK1_MUL = 2;
    parameter IO_CLOCK1_DIV = 2;
 `endif
-   
+
    // parameters when no clock domains
    parameter CLOCK_MUL = 2;
    parameter CLOCK_DIV = 2;
-   
+
    input clk;
    input rst;
 
@@ -93,7 +93,9 @@ module clockmanager_ztex115(
    input                      cpu_start;
 
    input                      sys_halt;
-   
+
+   output                     sys_is_halted;
+
 `ifdef OPTIMSOC_CDC_DYNAMIC
    input [NUM_CT_CLOCKS*3-1:0] cdc_conf;
    input [NUM_CT_CLOCKS-1:0]   cdc_enable;
@@ -101,9 +103,12 @@ module clockmanager_ztex115(
 
    wire                       clk_buffered;
 
+`ifdef OPTIMSOC_CLOCKDOMAINS
    wire [NUM_CT_CLOCKS-1:0]   clk_ct_unbuffered;
    wire                       clk_dbg_unbuffered;
    wire                       clk_noc_unbuffered;
+`endif
+
    wire                       clk_ddr_unbuffered;
 
    wire [NUM_CT_CLOCKS-1:0]   clk_ct_locked;
@@ -135,6 +140,8 @@ module clockmanager_ztex115(
       end
 `endif
    endgenerate
+
+   assign sys_is_halted = ~(&clk_en_ct);
 
    assign clk_en_noc = clk_noc_locked & ~sys_halt;
    assign clk_en_dbg = clk_dbg_locked;
@@ -207,7 +214,7 @@ module clockmanager_ztex115(
    BUFG
      u_clk_bufg_ungated(.O(clk_ungated_common),
                         .I(clk_common_unbuffered));
-   
+
    DCM_CLKGEN
      #(.CLKFX_MULTIPLY(CLOCK_MUL),
        .CLKFX_DIVIDE(CLOCK_DIV),
@@ -226,16 +233,12 @@ module clockmanager_ztex115(
          .PROGDATA(1'b0),
          .PROGEN(1'b0),
          .STATUS(),
-         .PROGDONE());       
+         .PROGDONE());
 
    generate
       for (i=0;i<NUM_CT_CLOCKS;i=i+1) begin : genctclocks
-         assign clk_ct_locked[i] = 1'b1;         
+         assign clk_ct_locked[i] = 1'b1;
          assign clk_ct[i] = clk_gated_common;
-      end
-      for (i=0;i<NUM_IO_CLOCKS;i=i+1) begin : genioclocks
-         assign clk_io_locked[i] = 1'b1;         
-         assign clk_io[i] = clk_ungated_common;
       end
    endgenerate
 
@@ -331,87 +334,7 @@ module clockmanager_ztex115(
 `endif // `ifdef OPTIMSOC_CDC_DYNAMIC
       end // for (i=0;i<NUM_CT_CLOCKS;i=i+1)
 
-`ifdef OPTIMSOC_IO_CLOCKS
-      if (NUM_IO_CLOCKS > 0) begin : gen_ioclk0
-         BUFGCE
-            u_clk_ct_bufg_gated(.O(clk_io[0]),
-                                .CE(clk_en_io[0]),
-                                .I(clk_io_unbuffered[0]));
-
-         DCM_CLKGEN
-            #(.CLKFX_MULTIPLY(IO_CLOCK0_MUL),
-              .CLKFX_DIVIDE(IO_CLOCK0_DIV),
-              .CLKIN_PERIOD(20.83333),
-              .SPREAD_SPECTRUM("NONE"),
-              .STARTUP_WAIT("FALSE"),
-              .CLKFX_MD_MAX(0.000))
-            u_dcm_io0(.CLKIN(clk_buffered),
-                      .CLKFX(clk_io_unbuffered[0]),
-                      .RST(1'b0),
-                      .LOCKED(clk_io_locked[0]),
-                      .FREEZEDCM(1'b0),
-                      .PROGCLK(1'b0),
-                      .PROGDATA(1'b0),
-                      .PROGEN(1'b0),
-                      .STATUS(),
-                      .PROGDONE());       
-      end
-      if (NUM_IO_CLOCKS > 1) begin : gen_ioclk1
-         BUFGCE
-            u_clk_ct_bufg_gated(.O(clk_io[1]),
-                                .CE(clk_en_io[1]),
-                                .I(clk_io_unbuffered[1]));
-
-         DCM_CLKGEN
-            #(.CLKFX_MULTIPLY(IO_CLOCK1_MUL),
-              .CLKFX_DIVIDE(IO_CLOCK1_DIV),
-              .CLKIN_PERIOD(20.83333),
-              .SPREAD_SPECTRUM("NONE"),
-              .STARTUP_WAIT("FALSE"),
-              .CLKFX_MD_MAX(0.000))
-            u_dcm_io0(.CLKIN(clk_buffered),
-                      .CLKFX(clk_io_unbuffered[1]),
-                      .RST(1'b0),
-                      .LOCKED(clk_io_locked[1]),
-                      .FREEZEDCM(1'b0),
-                      .PROGCLK(1'b0),
-                      .PROGDATA(1'b0),
-                      .PROGEN(1'b0),
-                      .STATUS(),
-                      .PROGDONE());       
-      end
-`endif
-
-      if (ENABLE_DDR_CLOCK) begin : gen_ddrclk
-         BUFGCE
-            u_clk_ddr_bufg_gated(.O(clk_ddr),
-                                .CE(1'b1),
-                                .I(clk_ddr_unbuffered));
-
-         DCM_CLKGEN
-            #(.CLKFX_MULTIPLY(25),
-              .CLKFX_DIVIDE(6),
-              .CLKIN_PERIOD(20.83333),
-              .SPREAD_SPECTRUM("NONE"),
-              .STARTUP_WAIT("FALSE"),
-              .CLKFX_MD_MAX(0.000))
-            u_dcm_ddr(.CLKIN(clk_buffered),
-                      .CLKFX(clk_ddr_unbuffered),
-                      .RST(1'b0),
-                      .LOCKED(clk_ddr_locked),
-                      .FREEZEDCM(1'b0),
-                      .PROGCLK(1'b0),
-                      .PROGDATA(1'b0),
-                      .PROGEN(1'b0),
-                      .STATUS(),
-                      .PROGDONE());
-      end else begin // if (ENABLE_DDR_CLOCK)
-         assign clk_ddr = 1'b0;
-         assign clk_ddr_unbuffered = 1'b0;
-         assign clk_ddr_locked = 1'b1;
-      end
    endgenerate
-
    BUFGCE
       u_clk_noc_bufg_gated(.O(clk_noc),
                            .CE(clk_en_noc),
@@ -453,5 +376,89 @@ module clockmanager_ztex115(
                 .PROGCLK(1'b0),
                 .PROGDATA(1'b0),
                 .PROGEN(1'b0));
+`endif // !`ifndef OPTIMSOC_CLOCKDOMAINS
+
+   // Those are always separate clock domains
+   `ifdef OPTIMSOC_IO_CLOCKS
+      if (NUM_IO_CLOCKS > 0) begin : gen_ioclk0
+         BUFGCE
+            u_clk_ct_bufg_gated(.O(clk_io[0]),
+                                .CE(clk_en_io[0]),
+                                .I(clk_io_unbuffered[0]));
+
+         DCM_CLKGEN
+            #(.CLKFX_MULTIPLY(IO_CLOCK0_MUL),
+              .CLKFX_DIVIDE(IO_CLOCK0_DIV),
+              .CLKIN_PERIOD(20.83333),
+              .SPREAD_SPECTRUM("NONE"),
+              .STARTUP_WAIT("FALSE"),
+              .CLKFX_MD_MAX(0.000))
+            u_dcm_io0(.CLKIN(clk_buffered),
+                      .CLKFX(clk_io_unbuffered[0]),
+                      .RST(1'b0),
+                      .LOCKED(clk_io_locked[0]),
+                      .FREEZEDCM(1'b0),
+                      .PROGCLK(1'b0),
+                      .PROGDATA(1'b0),
+                      .PROGEN(1'b0),
+                      .STATUS(),
+                      .PROGDONE());
+      end
+      if (NUM_IO_CLOCKS > 1) begin : gen_ioclk1
+         BUFGCE
+            u_clk_ct_bufg_gated(.O(clk_io[1]),
+                                .CE(clk_en_io[1]),
+                                .I(clk_io_unbuffered[1]));
+
+         DCM_CLKGEN
+            #(.CLKFX_MULTIPLY(IO_CLOCK1_MUL),
+              .CLKFX_DIVIDE(IO_CLOCK1_DIV),
+              .CLKIN_PERIOD(20.83333),
+              .SPREAD_SPECTRUM("NONE"),
+              .STARTUP_WAIT("FALSE"),
+              .CLKFX_MD_MAX(0.000))
+            u_dcm_io0(.CLKIN(clk_buffered),
+                      .CLKFX(clk_io_unbuffered[1]),
+                      .RST(1'b0),
+                      .LOCKED(clk_io_locked[1]),
+                      .FREEZEDCM(1'b0),
+                      .PROGCLK(1'b0),
+                      .PROGDATA(1'b0),
+                      .PROGEN(1'b0),
+                      .STATUS(),
+                      .PROGDONE());
+      end
 `endif
+
+   generate
+      if (ENABLE_DDR_CLOCK) begin : gen_ddrclk
+         BUFGCE
+            u_clk_ddr_bufg_gated(.O(clk_ddr),
+                                .CE(1'b1),
+                                .I(clk_ddr_unbuffered));
+
+         DCM_CLKGEN
+            #(.CLKFX_MULTIPLY(25),
+              .CLKFX_DIVIDE(6),
+              .CLKIN_PERIOD(20.83333),
+              .SPREAD_SPECTRUM("NONE"),
+              .STARTUP_WAIT("FALSE"),
+              .CLKFX_MD_MAX(0.000))
+            u_dcm_ddr(.CLKIN(clk_buffered),
+                      .CLKFX(clk_ddr_unbuffered),
+                      .RST(1'b0),
+                      .LOCKED(clk_ddr_locked),
+                      .FREEZEDCM(1'b0),
+                      .PROGCLK(1'b0),
+                      .PROGDATA(1'b0),
+                      .PROGEN(1'b0),
+                      .STATUS(),
+                      .PROGDONE());
+      end else begin // if (ENABLE_DDR_CLOCK)
+         assign clk_ddr = 1'b0;
+         assign clk_ddr_unbuffered = 1'b0;
+         assign clk_ddr_locked = 1'b1;
+      end
+   endgenerate
+
 endmodule // clockmanager_ztex115
