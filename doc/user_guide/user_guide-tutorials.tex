@@ -95,7 +95,7 @@ copy the whole path
 $> optimsoc-app-link dm baremetal/hello_simple
 \end{verbatim}
 
-Inside the \verb|hello_simple| folder you can find the
+Inside the \verb|hello_simple.lnk| folder you can find the
 \verb|hello_simple.c| and the \verb|Makefile|. Now \verb|make| the
 example. This will automatically also build the sysconfig.o and link
 all together to the elf file. Furthermore some other files are build:
@@ -116,7 +116,7 @@ testbench main folder. Before the simulation warned that
 to this filename
 
 \begin{verbatim}
-> ln -s sw/hello_simple/hello_simple.vmem ct.vmem
+> ln -s sw/hello_simple.lnk/hello_simple.vmem ct.vmem
 \end{verbatim}
 
 If you now run the software (\verb|make sim|), the simulation should
@@ -371,10 +371,10 @@ The system can be found at \verb|tbench/rtl/dm/system_2x2_cccc_ztex|.
 Build the system running \verb|make|. Before you simulate the system
 you will now need to provide a \verb|modelsim.ini| either globally or
 in the system's folder that contains the Xilinx libraries. Once you
-have it, you can start the system using \verb|make
-sim-noninteractive|. The simulation will start and you can now connect
-to the system in a different shell by using the command line
-interface:
+have it, you can start the system using
+\verb|make sim-noninteractive|. The simulation will start and you
+can now connect to the system in a different shell by using the
+command line interface:
 
 \begin{alltt}
 \$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
