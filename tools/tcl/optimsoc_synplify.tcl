@@ -12,6 +12,17 @@ set OPTIMSOC_RTL $env(OPTIMSOC_RTL)
 set OPTIMSOC $env(OPTIMSOC)
 set LISNOC_RTL $env(LISNOC_RTL)
 
+# The environment variable OPTIMSOC_SYN_OUTDIR lets a user specify
+# the working/output directory of a synthesis. This allows for the
+# synthesis results to be outside the source tree.
+# If this environment variable is not set, the synthesis is done
+# in the directory where it was started.
+if { [info exists env(OPTIMSOC_SYN_OUTDIR)] } {
+    set OPTIMSOC_SYN_OUTDIR $env(OPTIMSOC_SYN_OUTDIR)
+} else {
+    set OPTIMSOC_SYN_OUTDIR "."
+}
+
 set optimsoc_current_module ""
 set optimsoc_current_submodule ""
 
@@ -97,3 +108,4 @@ proc optimsoc_get_incdirs {} {
     puts [join $inc_dirs ";"]
     return [join $inc_dirs ";"]
 }
+

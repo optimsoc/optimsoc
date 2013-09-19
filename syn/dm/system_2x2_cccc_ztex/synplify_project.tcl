@@ -97,7 +97,7 @@ set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf"
 set_option -write_apr_constraint 1
 
 #set result format/file last
-project -result_file "./rev_1_15d_bram/system_2x2_cccc_ztex115d_bram.edf"
+project -result_file "$OPTIMSOC_SYN_OUTDIR/rev_1_15d_bram/system_2x2_cccc_ztex115d_bram.edf"
 
 ################################################################################
 # implementation: "rev_1_15b_ddr"
@@ -177,7 +177,7 @@ set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_d
 set_option -write_apr_constraint 1
 
 #set result format/file last
-project -result_file "./rev_1_15b_ddr/system_2x2_cccc_ztex115b_ddr.edf"
+project -result_file "$OPTIMSOC_SYN_OUTDIR/rev_1_15b_ddr/system_2x2_cccc_ztex115b_ddr.edf"
 
 
 ################################################################################
@@ -255,6 +255,7 @@ set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_d
 set_option -write_apr_constraint 1
 
 #set result format/file last
-project -result_file "./rev_1_15d_ddr/system_2x2_cccc_ztex115d_ddr.edf"
+project -result_file "$OPTIMSOC_SYN_OUTDIR/rev_1_15d_ddr/system_2x2_cccc_ztex115d_ddr.edf"
 
 project -save synplify.prj
+
