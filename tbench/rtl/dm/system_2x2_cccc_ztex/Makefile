@@ -36,7 +36,8 @@ build: work
 
 sim:
 	vsim -voptargs=+acc -L unisims_ver -L xilinxcorelib_ver -L unimacro_ver \
-		work.tb_system_2x2_cccc_ztex work.glbl
+		work.tb_system_2x2_cccc_ztex work.glbl \
+		-do "suppress 8233; do wave.do"
 
 sim-noninteractive:
 	vsim -c -voptargs=+acc -L unisims_ver -L xilinxcorelib_ver \
