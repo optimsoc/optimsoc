@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <assert.h>
@@ -63,6 +64,11 @@ const int MEM_WRITE_ACK_TIMEOUT = 60;
  * Timeout in seconds for register reads
  */
 const int REGISTER_READ_TIMEOUT = 60;
+/**
+ * Expect the answer for a register read request with in this number of
+ * packets, otherwise the read is considered to have failed.
+ */
+const int REGISTER_READ_MAXPKGS = 100000;
 
 /**
  * Mask to filter out the CLASS part of a lisnoc16 header flit
@@ -150,17 +156,15 @@ struct optimsoc_backend_ctx {
 
     /** received lisnoc16 packet */
     struct lisnoc16_packet rcv_lisnoc16_pkg;
-    /** rcv_lisnoc16_pkg mutex */
-    pthread_mutex_t rcv_lisnoc16_pkg_mutex;
-    /** rcv_lisnoc16_pkg has changed */
-    pthread_cond_t rcv_lisnoc16_pkg_condvar;
+    /** should a consumer be informed about new rcv_lisnoc16_pkg? */
+    int signal_rcv_lisnoc16_pkg;
+    /** semaphore: a new rcv_lisnoc16_pkg is available */
+    sem_t sem_rcv_lisnoc16_pkg_available;
+    /** semaphore: the processing of the rcv_lisnoc16_pkg is done */
+    sem_t sem_rcv_lisnoc16_pkg_processed;
 
     /** received lisnoc32 packet */
     struct lisnoc32_packet rcv_lisnoc32_pkg;
-    /** rcv_lisnoc32_pkg mutex */
-    pthread_mutex_t rcv_lisnoc32_pkg_mutex;
-    /** rcv_lisnoc32_pkg has changed */
-    pthread_cond_t rcv_lisnoc32_pkg_condvar;
 
     /** optimsoc_discover_system() has been run */
     int system_discovery_done;
@@ -275,10 +279,21 @@ int ob_dbgnoc_connect(struct optimsoc_backend_ctx *ctx)
         return rv;
     }
 
-    /* start receiving thread */
-    pthread_mutex_init(&ctx->rcv_lisnoc16_pkg_mutex, NULL);
-    pthread_cond_init(&ctx->rcv_lisnoc16_pkg_condvar, NULL);
+    /* Initialize semaphores used to communicate between the receiving thread
+     * and the processing functions when receiving a Debug NoC packet. */
+    ctx->signal_rcv_lisnoc16_pkg = 0;
+    rv = sem_init(&ctx->sem_rcv_lisnoc16_pkg_available, 0, 0);
+    if (rv < 0) {
+        err(ctx->log_ctx, "Unable to create sem_rcv_lisnoc16_pkg_available");
+        return -1;
+    }
+    rv = sem_init(&ctx->sem_rcv_lisnoc16_pkg_processed, 0, 0);
+    if (rv < 0) {
+        err(ctx->log_ctx, "Unable to create sem_rcv_lisnoc16_pkg_available");
+        return -1;
+    }
 
+    /* start receiving thread */
     pthread_attr_init(&ctx->receive_thread_attr);
     pthread_attr_setdetachstate(&ctx->receive_thread_attr,
                                 PTHREAD_CREATE_DETACHED);
@@ -301,6 +316,11 @@ int ob_dbgnoc_disconnect(struct optimsoc_backend_ctx *ctx)
     pthread_cancel(ctx->receive_thread);
     pthread_join(ctx->receive_thread, &status);
     pthread_attr_destroy(&ctx->receive_thread_attr);
+
+    sem_destroy(&ctx->sem_rcv_lisnoc16_pkg_available);
+    sem_destroy(&ctx->sem_rcv_lisnoc16_pkg_processed);
+    /* XXX: This cannot be non-zero at this point, but better safe than sorry! */
+    ctx->signal_rcv_lisnoc16_pkg = 0;
 
     int rv = ctx->conn_calls->disconnect(ctx->conn_ctx);
     if (rv < 0) {
@@ -667,8 +687,6 @@ void* receive_thread(void* ctx_void)
                             packet_len);
                     } else {
                         int packet32_len = (packet_len - 1) / 2;
-                        pthread_mutex_lock(&ctx->rcv_lisnoc32_pkg_mutex);
-
                         if (packet32_len > NCM_MAX_LISNOC32_FLITS_PER_PKG) {
                             err(ctx->log_ctx, "lisnoc32 packet with %d more "
                                               "than %d flits received. This is "
@@ -695,18 +713,13 @@ void* receive_thread(void* ctx_void)
                         printf("Received control message from %d: 0x%02x\n",
                                source, message);
                     }
-
-
-                    pthread_cond_signal(&ctx->rcv_lisnoc32_pkg_condvar);
-                    pthread_mutex_unlock(&ctx->rcv_lisnoc32_pkg_mutex);
                 } else {
                     /* regular lisnoc16 packet */
                     dbg(ctx->log_ctx, "Processing lisnoc16 packet.\n");
-                    pthread_mutex_lock(&ctx->rcv_lisnoc16_pkg_mutex);
 
                     if (packet_len > NUM_SAMPLES_PER_TRANSFER) {
-                        err(ctx->log_ctx, "lisnoc32 packet with %d more than %d "
-                            "flits received. This is not supported.\n",
+                        err(ctx->log_ctx, "Debug NoC packet with %d more than "
+                            "%d flits received. This is not supported.\n",
                             packet_len,
                             NUM_SAMPLES_PER_TRANSFER);
                         return 0;
@@ -761,8 +774,11 @@ void* receive_thread(void* ctx_void)
                         ctx->stm_cb(core_id, timestamp, id, value);
                     }
 
-                    pthread_cond_signal(&ctx->rcv_lisnoc16_pkg_condvar);
-                    pthread_mutex_unlock(&ctx->rcv_lisnoc16_pkg_mutex);
+                    /* allow the consumer thread to process the packet as well */
+                    if (ctx->signal_rcv_lisnoc16_pkg) {
+                        sem_post(&ctx->sem_rcv_lisnoc16_pkg_available);
+                        sem_wait(&ctx->sem_rcv_lisnoc16_pkg_processed);
+                    }
                 }
             }
 
@@ -824,10 +840,10 @@ int register_read(struct optimsoc_backend_ctx *ctx, int module_addr,
     }
 
     /*
-     * Lock the mutex before sending the request to make sure we get the
-     * response!
+     * Notify the receiving thread that we want to be informed if a new packet
+     * arrives.
      */
-    pthread_mutex_lock(&ctx->rcv_lisnoc16_pkg_mutex);
+    ctx->signal_rcv_lisnoc16_pkg = 1;
 
     struct lisnoc16_packet packets[1];
     packets[0].flit_data = &flit_data;
@@ -855,24 +871,24 @@ int register_read(struct optimsoc_backend_ctx *ctx, int module_addr,
     }
 
     /* process response */
-    for (int i=0; i<1000; i++) {
+    for (int i = 0; i < REGISTER_READ_MAXPKGS; i++) {
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
         ts.tv_sec += REGISTER_READ_TIMEOUT;
-        int ret;
-        ret = pthread_cond_timedwait(&ctx->rcv_lisnoc16_pkg_condvar,
-                                     &ctx->rcv_lisnoc16_pkg_mutex,
-                                     &ts);
-        if (ret == ETIMEDOUT) {
+
+        int rv = sem_timedwait(&ctx->sem_rcv_lisnoc16_pkg_available, &ts);
+        if (rv < 0 && errno == ETIMEDOUT) {
             err(ctx->log_ctx, "Response for register read not received within "
                 "%d seconds. Timing out.\n", REGISTER_READ_TIMEOUT);
 
-            pthread_mutex_unlock(&ctx->rcv_lisnoc16_pkg_mutex);
+            ctx->signal_rcv_lisnoc16_pkg = 0;
             return -ETIMEDOUT;
         }
 
+        uint8_t class = (ctx->rcv_lisnoc16_pkg.flit_data[0] &
+                         FLIT16_HEADER_CLASS_MASK) >> 8;
         if (ctx->rcv_lisnoc16_pkg.len == burst_len + 1 &&
-            (ctx->rcv_lisnoc16_pkg.flit_data[0] & FLIT16_HEADER_CLASS_MASK) >> FLIT16_HEADER_CLASS_POS == DBG_NOC_CLASS_REG_READ_RESP) {
+            class == DBG_NOC_CLASS_REG_READ_RESP) {
 
             info(ctx->log_ctx, "Received register read response.\n");
             for (int flit=1; flit<=burst_len; flit++) {
@@ -886,14 +902,25 @@ int register_read(struct optimsoc_backend_ctx *ctx, int module_addr,
             fprintf(stderr, "\n");
 #endif
 
-            pthread_mutex_unlock(&ctx->rcv_lisnoc16_pkg_mutex);
+            /* received read response, it's all good */
+            ctx->signal_rcv_lisnoc16_pkg = 0;
+            sem_post(&ctx->sem_rcv_lisnoc16_pkg_processed);
             return 0;
         }
+
+        if (i == REGISTER_READ_MAXPKGS - 1) {
+            /*
+             * This is the last try, don't get informed for new packets.
+             * This needs happen while the thread is waiting for the semaphore
+             * to be posted!
+             */
+            ctx->signal_rcv_lisnoc16_pkg = 0;
+        }
+        sem_post(&ctx->sem_rcv_lisnoc16_pkg_processed);
     }
-    pthread_mutex_unlock(&ctx->rcv_lisnoc16_pkg_mutex);
 
     err(ctx->log_ctx, "Did not receive the register read response within "
-        "1000 packets. Giving up.");
+        "%d packets. Giving up.\n", REGISTER_READ_MAXPKGS);
     return -1;
 }
 
@@ -1012,8 +1039,9 @@ int lisnoc16_send_packets(struct optimsoc_backend_ctx *ctx,
 #endif
 
     for (int i = 0; i < length_transfer_rounded / NUM_SAMPLES_PER_TRANSFER; i++) {
-        int ret = ctx->conn_calls->write_fn(ctx->conn_ctx, &data_transfer[i*NUM_SAMPLES_PER_TRANSFER],
-                                NUM_SAMPLES_PER_TRANSFER);
+        int ret = ctx->conn_calls->write_fn(ctx->conn_ctx,
+                                            &data_transfer[i*NUM_SAMPLES_PER_TRANSFER],
+                                            NUM_SAMPLES_PER_TRANSFER);
 
         if (ret < 0) {
             err(ctx->log_ctx, "Transfer failed.\n");

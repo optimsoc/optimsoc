@@ -176,7 +176,7 @@ int ob_dbgnoc_tcp_reset(struct ob_dbgnoc_connection_ctx *ctx)
 }
 
 int ob_dbgnoc_tcp_write(struct ob_dbgnoc_connection_ctx *ctx, uint16_t *buffer,
-                           int len)
+                        int len)
 {
     assert(ctx->socketfd >= 0);
 
@@ -184,7 +184,7 @@ int ob_dbgnoc_tcp_write(struct ob_dbgnoc_connection_ctx *ctx, uint16_t *buffer,
 }
 
 int ob_dbgnoc_tcp_read(struct ob_dbgnoc_connection_ctx *ctx, uint16_t *buffer,
-                          int len)
+                       int len)
 {
     assert(ctx->socketfd >= 0);
 
