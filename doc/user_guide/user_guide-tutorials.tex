@@ -358,6 +358,7 @@ large as the former and can therefore contain more processor cores.
 The 2x2 example works with both boards.
 
 \subsection{Prepare: Simulate the Complete System}
+\label{subsection:2x2_ztex_simulate_complete_system}
 
 Before we go to the actual board we want to simulate the entire system
 on the FPGA to see if the debug system works correctly and the
@@ -460,7 +461,18 @@ To generate the system first create the project file:
 \$> make synplify.prj
 \end{alltt}
 
-Run the synthesis afterwards (b or d board):
+Now the Synplify project file has been generated and you're ready to start the
+synthesis.
+
+If you want to have the output of the synthesis in a folder different from your
+source folder (the one where you just ran \verb|make| in), you can set the
+environment variable \verb|OPTIMSOC_SYN_OUTDIR| to any path you like, e.g. put
+\begin{alltt}
+export OPTIMSOC_SYN_OUTDIR=\$HOME/syn
+\end{alltt}
+in your profile script (e.g. your \verb|.bashrc| file) and reload it.
+
+Run the synthesis afterwards (for the ZTEX 1.15b or d board):
 
 \begin{alltt}
 \$> make synplify_115b_ddr
@@ -469,5 +481,49 @@ Run the synthesis afterwards (b or d board):
 Once the synthesis is finished you can generate the bitstream:
 
 \begin{alltt}
-\$> bitgen -w rev_1_15b_ddr/pr_1/system_2x2_cccc_ztex.ncd
+\$> make bitgen_115d_ddr
 \end{alltt}
+
+\subsection{Testing on the FPGA}
+Now that you have generated a bitstream we're ready to upload it to the FPGA.
+Connect the ZTEX 1.15 board to your PC via USB.
+
+% XXX: Add information about udev rules required for device permissions
+
+If you are running OpTiMSoC on the board for the first time you need to update
+the firmware on the board. To do that, switch to the folder
+\verb|src/sw/firmware/ztex_usbfpga_1_15_fx2_fw| in your OpTiMSoC source tree.
+Follow the instructions inside the provided \verb|README| file to build and
+flash the board with the required firmware. All of this only needs to be done
+once for each board (until the firmware changes).
+
+Everything ready to go? Then upload the bitstream to the FPGA by running
+
+\begin{alltt}
+\$> make flash_115d_ddr
+\end{alltt}
+
+in the same folder where you have been running \verb|make bitstream_...| etc.
+in the previous section. The output should be something like
+
+\begin{alltt}
+FWLoader -v 0x221a 0x100 -f -uf /[somepath]/system_2x2_cccc_ztex.bit
+FPGA configuration time: 194 ms
+\end{alltt}
+
+As the FPGA is now ready you can use the same method to connect to the
+FPGA and load software on it as you've done in the Section
+\ref{subsection:2x2_ztex_simulate_complete_system}, just this time the
+connection paramters used in \verb|optimsoc_cli| are a bit different.
+
+Run
+\begin{alltt}
+\$> optimsoc_cli -i -bdbgnoc -oconn=usb
+\end{alltt}
+
+to connect to the FPGA board over USB. You should again be presented with a
+listing of all available debug modules. Now you can continue just as you did
+before by calling \verb|mem_init| to load some software onto the FPGA, etc.
+
+Congratulations, you've run OpTiMSoC on real hardware for the first time! Now
+you're ready to explore and customize OpTiMSoC for yourself. Have fun!
