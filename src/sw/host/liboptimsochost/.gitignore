@@ -16,6 +16,7 @@ Makefile.in
 # Eclipse project files
 /.project
 /.cproject
+/.settings
 
 # Folders for the current build and installation structure
 /build/

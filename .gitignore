@@ -4,3 +4,8 @@
 *.orig
 *.bak
 \#*\#
+
+# eclipse project files
+/.externalToolBuilders
+/.project
+/.settings
