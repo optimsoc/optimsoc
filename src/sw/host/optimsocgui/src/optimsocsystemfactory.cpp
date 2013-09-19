@@ -48,6 +48,9 @@ OptimsocSystem* OptimsocSystemFactory::createSystemFromId(int systemId)
     case 57005:
         system = createSystem57005();
         break;
+    case 0xce75:
+        system = createSystem2x2CcccZtex();
+        break;
     default:
         qWarning("No system description available for ID %d!", systemId);
         system = NULL;
@@ -79,6 +82,39 @@ OptimsocSystem *OptimsocSystemFactory::createSystem1()
     r10->setTile(mt1);
     NocRouter* r01 = new NocRouter(2);
     r01->setTile(et2);
+    NocRouter* r11 = new NocRouter(3);
+    r11->setTile(ct3);
+    noc->setRouter(0, 0, r00);
+    noc->setRouter(1, 0, r10);
+    noc->setRouter(0, 1, r01);
+    noc->setRouter(1, 1, r11);
+    system->setNoc(noc);
+
+    return system;
+}
+
+OptimsocSystem *OptimsocSystemFactory::createSystem2x2CcccZtex()
+{
+    OptimsocSystem *system = new OptimsocSystem();
+
+    // Tiles: CCCC
+    ComputeTile* ct0 = new ComputeTile(0);
+    system->addTile(ct0);
+    ComputeTile* ct1 = new ComputeTile(1);
+    system->addTile(ct1);
+    ComputeTile* ct2 = new ComputeTile(2);
+    system->addTile(ct2);
+    ComputeTile* ct3 = new ComputeTile(3);
+    system->addTile(ct3);
+
+    // NoC: 2x2 mesh
+    MeshNoc* noc = new MeshNoc(2, 2);
+    NocRouter* r00 = new NocRouter(0);
+    r00->setTile(ct0);
+    NocRouter* r10 = new NocRouter(1);
+    r10->setTile(ct1);
+    NocRouter* r01 = new NocRouter(2);
+    r01->setTile(ct2);
     NocRouter* r11 = new NocRouter(3);
     r11->setTile(ct3);
     noc->setRouter(0, 0, r00);

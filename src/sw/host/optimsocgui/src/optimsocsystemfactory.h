@@ -42,6 +42,7 @@ private:
     static OptimsocSystem* createSystem1();
     static OptimsocSystem* createSystem2();
     static OptimsocSystem* createSystem57005();
+    static OptimsocSystem* createSystem2x2CcccZtex();
 
 };
 
