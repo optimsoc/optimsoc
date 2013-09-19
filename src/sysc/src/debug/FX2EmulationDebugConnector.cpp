@@ -24,6 +24,7 @@
  */
 
 #include "FX2EmulationDebugConnector.h"
+#include <errno.h>
 
 SC_MODULE_EXPORT(FX2EmulationDebugConnector);
 
@@ -78,7 +79,7 @@ void FX2EmulationDebugConnector::handler()
     servaddr.sin_port = htons(port);
 
     if (bind(listenfd, (sockaddr *) &servaddr, sizeof(servaddr)) == -1) {
-        printf("Cannot bind\n");
+        printf("Cannot bind, errno == %d\n", errno);
         fflush(stdout);
         return;
     }
