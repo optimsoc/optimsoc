@@ -235,7 +235,11 @@ module wb2sram(/*AUTOARG*/
          end else if (wb_cti_i == 3'b111) begin
             // End of cycle
             if (wb_stb_i) begin
-               nxt_wb_ack = 1;
+               if (!wb_ack) begin
+                  nxt_wb_ack = 1;
+               end else begin
+                  nxt_wb_ack = 0;
+               end                
             end else begin
                nxt_wb_ack = 0;
             end
