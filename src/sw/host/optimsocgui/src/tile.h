@@ -33,16 +33,27 @@ class Tile : public QObject
 {
 Q_OBJECT
 public:
-    explicit Tile(QObject *parent = 0);
+    explicit Tile(int tileId, QObject *parent = 0);
 
     virtual QString tileTypeName() const = 0;
 
     virtual TileItem* componentItem();
 
+    bool initMemory(QByteArray data);
+
+    int tileId();
+
+    bool hasMemory();
+    void setMemory(bool memory);
+
+private:
+    int m_hasmemory;
+
 signals:
+    void memoryWriteFinished(bool success);
 
-public slots:
-
+protected:
+    int m_tileId;
 };
 
 #endif // TILE_H

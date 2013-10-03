@@ -42,9 +42,6 @@ signals:
 
 public slots:
 
-private:
-    int m_computeTileId;
-
 };
 
 #endif // COMPUTETILE_H

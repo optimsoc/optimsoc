@@ -40,16 +40,6 @@ public:
 
     TileItem* componentItem();
 
-    bool initMemory(QByteArray data);
-
-signals:
-    void memoryWriteFinished(bool success);
-
-public slots:
-
-protected:
-    int m_memoryTileId;
-
 };
 
 #endif // MEMORYTILE_H

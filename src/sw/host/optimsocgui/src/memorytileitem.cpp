@@ -48,8 +48,8 @@ MemoryTileItem::~MemoryTileItem()
 
 void MemoryTileItem::writeMemory()
 {
-    WriteMemoryDialog* diag = new WriteMemoryDialog(dynamic_cast<MemoryTile*>(m_tile));
+    /*WriteMemoryDialog* diag = new WriteMemoryDialog(dynamic_cast<MemoryTile*>(m_tile));
     diag->setModal(true);
     diag->exec();
-    delete diag;
+    delete diag;*/
 }

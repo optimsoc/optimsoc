@@ -36,9 +36,18 @@
     </layout>
    </item>
    <item>
+    <widget class="QListWidget" name="listWidget">
+     <item>
+      <property name="text">
+       <string>No memories detected</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="initMemoryButton">
      <property name="text">
-      <string>Initialize memory tile with file</string>
+      <string>Initialize memories with file</string>
      </property>
     </widget>
    </item>

@@ -27,8 +27,7 @@
 #include "computetileitem.h"
 
 ComputeTile::ComputeTile(int computeTileId, QObject *parent) :
-    Tile(parent),
-    m_computeTileId(computeTileId)
+    Tile(computeTileId, parent)
 {
 }
 
@@ -39,5 +38,5 @@ TileItem* ComputeTile::componentItem()
 
 int ComputeTile::tileId()
 {
-    return m_computeTileId;
+    return m_tileId;
 }

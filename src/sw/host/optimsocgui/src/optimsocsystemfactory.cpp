@@ -99,12 +99,16 @@ OptimsocSystem *OptimsocSystemFactory::createSystem2x2CcccZtex()
 
     // Tiles: CCCC
     ComputeTile* ct0 = new ComputeTile(0);
+    ct0->setMemory(true);
     system->addTile(ct0);
     ComputeTile* ct1 = new ComputeTile(1);
+    ct1->setMemory(true);
     system->addTile(ct1);
     ComputeTile* ct2 = new ComputeTile(2);
+    ct2->setMemory(true);
     system->addTile(ct2);
     ComputeTile* ct3 = new ComputeTile(3);
+    ct3->setMemory(true);
     system->addTile(ct3);
 
     // NoC: 2x2 mesh

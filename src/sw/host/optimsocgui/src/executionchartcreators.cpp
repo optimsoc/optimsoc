@@ -50,6 +50,7 @@ void ExecutionChartSectionCreator::addTrace(unsigned int timestamp,
     switch(id) {
     case 0x1:
         expand(timestamp);
+        createSection(timestamp, timestamp, -1, "Exited");
     case 0x20:
         m_currentSectionDefinition = value;
         break;
@@ -65,9 +66,9 @@ void ExecutionChartSectionCreator::addTrace(unsigned int timestamp,
         expand(timestamp);
         createSection(timestamp, timestamp, (int) value, m_sectionNames[value]);
         break;
-    case 0x23:
+    case 0x31:
         expand(timestamp);
-        createSection(timestamp, timestamp, -1, "Kernel");
+        createSection(timestamp, timestamp, -1, "System start");
     default:
         break;
     }

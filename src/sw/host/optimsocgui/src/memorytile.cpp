@@ -28,27 +28,11 @@
 #include "hardwareinterface.h"
 
 MemoryTile::MemoryTile(int memoryTileId, QObject *parent) :
-    Tile(parent),
-    m_memoryTileId(memoryTileId)
+    Tile(memoryTileId,parent)
 {
 }
 
 TileItem* MemoryTile::componentItem()
 {
     return new MemoryTileItem(this);
-}
-
-/**
- * Initialize the memory of this tile.
- *
- * This method is asynchronous. The return code is delivered through the
- * memoryWriteFinished() signal.
- */
-bool MemoryTile::initMemory(QByteArray data)
-{
-    HardwareInterface* hwif = HardwareInterface::instance();
-    connect(hwif, SIGNAL(memoryWriteFinished(bool)),
-            this, SIGNAL(memoryWriteFinished(bool)));
-    QMetaObject::invokeMethod(hwif, "initMemory", Q_ARG(int, m_memoryTileId),
-                              Q_ARG(QByteArray, data));
 }

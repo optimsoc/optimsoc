@@ -169,56 +169,8 @@ ExecutionChartPlotCore::ExecutionChartPlotCore(QObject *parent,
     m_traceCreators[0x20].push_back(section);
     m_traceCreators[0x21].push_back(section);
     m_traceCreators[0x22].push_back(section);
-    m_traceCreators[0x23].push_back(section);
+    m_traceCreators[0x31].push_back(section);
     m_creators.append(section);
-
-    ExecutionChartEventCreator *decevent =
-            new ExecutionChartEventCreator(this, scene, m_baseline, m_height, 3, "dec: %1");
-    decevent->appendDec(true);
-    m_traceCreators[0x30].push_back(decevent);
-    m_creators.append(decevent);
-
-    ExecutionChartEventCreator *decsignedevent =
-            new ExecutionChartEventCreator(this, scene, m_baseline, m_height, 3, "signed: %1");
-    decsignedevent->appendDecSigned(true);
-    m_traceCreators[0x31].push_back(decsignedevent);
-    m_creators.append(decsignedevent);
-
-    ExecutionChartEventCreator *hexevent =
-            new ExecutionChartEventCreator(this, scene, m_baseline, m_height, 3, "hex: %1");
-    hexevent->appendHex(true);
-    m_traceCreators[0x32].push_back(hexevent);
-    m_creators.append(hexevent);
-
-    ExecutionChartEventCreator *floatevent =
-            new ExecutionChartEventCreator(this, scene, m_baseline, m_height, 3, "float: %1");
-    floatevent->appendFloat(true);
-    m_traceCreators[0x33].push_back(floatevent);
-    m_creators.append(floatevent);
-
-    ExecutionChartEventCreator *charevent =
-            new ExecutionChartEventCreator(this, scene, m_baseline, m_height, 3, "char: %1");
-    charevent->appendChar(true);
-    m_traceCreators[0x34].push_back(charevent);
-    m_creators.append(charevent);
-
-    ExecutionChartEventCreator *stringevent =
-            new ExecutionChartEventCreator(this, scene, m_baseline, m_height, 3, "string: %1");
-    stringevent->appendString(true);
-    m_traceCreators[0x35].push_back(stringevent);
-    m_creators.append(stringevent);
-
-    QString combined = "dec: %1\nsigned: %2\nhex: %3\nfloat: %4\nchar: %5\nstring: %6";
-    ExecutionChartEventCreator *combinedevent =
-            new ExecutionChartEventCreator(this, scene, m_baseline, m_height, 3, combined);
-    combinedevent->appendDec(true);
-    combinedevent->appendDecSigned(false);
-    combinedevent->appendHex(false);
-    combinedevent->appendFloat(false);
-    combinedevent->appendChar(false);
-    combinedevent->appendString(false);
-    m_traceCreators[0x36].push_back(combinedevent);
-    m_creators.append(combinedevent);
 
     QString path = QProcessEnvironment::systemEnvironment().value("OPTIMSOC");
     path = path + "/src/sw/host/optimsocgui/events.d";

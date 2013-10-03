@@ -70,6 +70,8 @@ public slots:
     void addSoftwareTraceToStdout(unsigned int core_id, unsigned int timestamp,
                                   unsigned int id, unsigned int value);
     void configure();
+
+    void initMemories();
 };
 
 #endif // MAINWINDOW_H

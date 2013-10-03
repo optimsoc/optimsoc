@@ -175,7 +175,7 @@ void HardwareInterface::initMemory(int memoryTileId, QByteArray data)
         return;
     }
 
-    int rv = optimsoc_mem_write(m_octx, 3, 0x00,
+    int rv = optimsoc_mem_write(m_octx, memoryTileId, 0x00,
                                 (const uint8_t*)(data.constData()),
                                 data.length());
     emit memoryWriteFinished(rv == 0);

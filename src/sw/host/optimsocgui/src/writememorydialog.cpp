@@ -28,12 +28,12 @@
 #include <QFileDialog>
 
 #include "hardwareinterface.h"
-#include "memorytile.h"
+#include "tile.h"
 
-WriteMemoryDialog::WriteMemoryDialog(MemoryTile* memoryTile, QWidget *parent) :
+WriteMemoryDialog::WriteMemoryDialog(OptimsocSystem* system, QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::WriteMemoryDialog),
-    m_memoryTile(memoryTile)
+    m_system(system)
 {
     m_ui->setupUi(this);
     disableUiForUpload(false);
@@ -42,6 +42,26 @@ WriteMemoryDialog::WriteMemoryDialog(MemoryTile* memoryTile, QWidget *parent) :
             this, SLOT(showFilePicker()));
     connect(m_ui->initMemoryButton, SIGNAL(clicked()),
             this, SLOT(initMemory()));
+
+    m_ui->listWidget->clear();
+
+    if (!system) {
+        QListWidgetItem *item = new QListWidgetItem(QString("No system connected"));
+        m_ui->listWidget->addItem(item);
+        m_ui->initMemoryButton->setEnabled(false);
+    } else {
+        QList<Tile*> tiles = system->tiles();
+        for (QList<Tile*>::iterator it = tiles.begin(); it != tiles.end(); ++it) {
+            Tile *tile = (*it);
+            if (tile->hasMemory()) {
+                QListWidgetItem *listitem = new QListWidgetItem(QString("Tile %1").arg(tile->tileId()));
+                m_ui->listWidget->addItem(listitem);
+                m_listitems[tile] = listitem;
+               listitem->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+               listitem->setCheckState(Qt::Checked);
+            }
+        }
+    }
 }
 
 WriteMemoryDialog::~WriteMemoryDialog()
@@ -67,7 +87,7 @@ void WriteMemoryDialog::showFilePicker()
 
 void WriteMemoryDialog::initMemory()
 {
-    disableUiForUpload(true);
+    //disableUiForUpload(true);
 
     QFile file(m_ui->fileNameEdit->text());
     if (!file.open(QIODevice::ReadOnly)) {
@@ -85,9 +105,17 @@ void WriteMemoryDialog::initMemory()
         return;
     }
 
-    connect(m_memoryTile, SIGNAL(memoryWriteFinished(bool)),
-            this, SLOT(memoryWriteFinished(bool)));
-    m_memoryTile->initMemory(data);
+    /*    connect(m_memoryTile, SIGNAL(memoryWriteFinished(bool)),
+                this, SLOT(memoryWriteFinished(bool)));
+          m_memoryTile->initMemory(data);*/
+    for (QMap<Tile*, QListWidgetItem*>::iterator it = m_listitems.begin();
+         it != m_listitems.end(); ++it) {
+        Tile *tile = it.key();
+        QListWidgetItem *item = it.value();
+        if (item->checkState() == Qt::Checked) {
+            tile->initMemory(data);
+        }
+    }
 }
 
 void WriteMemoryDialog::disableUiForUpload(bool disable)

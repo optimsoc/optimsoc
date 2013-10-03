@@ -26,6 +26,9 @@
 #define WRITEMEMORYDIALOG_H
 
 #include <QDialog>
+#include <QListWidgetItem>
+
+#include "optimsocsystem.h"
 
 namespace Ui {
 class WriteMemoryDialog;
@@ -38,7 +41,7 @@ class WriteMemoryDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit WriteMemoryDialog(MemoryTile* memoryTile, QWidget *parent = 0);
+    explicit WriteMemoryDialog(OptimsocSystem *system, QWidget *parent = 0);
     ~WriteMemoryDialog();
 
 public slots:
@@ -48,9 +51,12 @@ public slots:
 
 private:
     Ui::WriteMemoryDialog *m_ui;
-    MemoryTile* m_memoryTile;
 
     void disableUiForUpload(bool disable);
+
+    OptimsocSystem *m_system;
+
+    QMap<Tile*, QListWidgetItem*> m_listitems;
 };
 
 #endif // WRITEMEMORYDIALOG_H

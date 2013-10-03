@@ -132,7 +132,8 @@ void ExecutionChart::addTraceEvent(unsigned int core_id, unsigned int timestamp,
         m_plotCores[core_id]->addSoftwareTrace(timestamp,id,value);
     }
 
-    m_currentMaximum = m_scene.width();
+//    m_currentMaximum = m_scene.width(); That hangs, no idea why
+    m_currentMaximum = timestamp;
     expand(m_currentMaximum);
 }
 

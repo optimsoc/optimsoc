@@ -27,8 +27,7 @@
 #include "externaltileitem.h"
 
 ExternalTile::ExternalTile(int externalId, QObject *parent) :
-    Tile(parent),
-    m_externalId(externalId)
+    Tile(externalId, parent)
 {
 }
 

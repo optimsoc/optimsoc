@@ -25,13 +25,45 @@
 #include "tile.h"
 
 #include "tileitem.h"
+#include "hardwareinterface.h"
 
-Tile::Tile(QObject *parent) :
-    QObject(parent)
+Tile::Tile(int tileId, QObject *parent) :
+    QObject(parent),
+    m_tileId(tileId)
 {
 }
 
 TileItem* Tile::componentItem()
 {
     return new TileItem(this);
+}
+
+/**
+ * Initialize the memory of this tile.
+ *
+ * This method is asynchronous. The return code is delivered through the
+ * memoryWriteFinished() signal.
+ */
+bool Tile::initMemory(QByteArray data)
+{
+    HardwareInterface* hwif = HardwareInterface::instance();
+    connect(hwif, SIGNAL(memoryWriteFinished(bool)),
+            this, SIGNAL(memoryWriteFinished(bool)));
+    QMetaObject::invokeMethod(hwif, "initMemory", Q_ARG(int, m_tileId),
+                              Q_ARG(QByteArray, data));
+}
+
+int Tile::tileId()
+{
+    return m_tileId;
+}
+
+bool Tile::hasMemory()
+{
+    return m_hasmemory;
+}
+
+void Tile::setMemory(bool memory)
+{
+    m_hasmemory = memory;
 }

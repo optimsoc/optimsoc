@@ -33,6 +33,7 @@
 #include "optimsocsystem.h"
 #include "optimsocsystemfactory.h"
 #include "executionchart.h"
+#include "writememorydialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -42,6 +43,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     // init UI
     m_ui->setupUi(this);
+
+    m_system = NULL;
 
     statusBar()->addPermanentWidget(m_statusBarConnectionStat);
 
@@ -57,6 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
             this, SLOT(showAboutDialog()));
+
+    connect(m_ui->actionInitialize, SIGNAL(triggered()), this, SLOT(initMemories()));
 
     connect(m_ui->actionConfigure, SIGNAL(triggered()), this, SLOT(configure()));
     connect(m_ui->actionConnect, SIGNAL(triggered()),
@@ -150,6 +155,7 @@ void MainWindow::configure() {
         m_ui->actionDisconnect->setEnabled(true);
         m_ui->actionReset->setEnabled(true);
         m_ui->actionStartCpus->setEnabled(true);
+        m_ui->menuMemories->setEnabled(true);
 
         m_hwif->configure(dialog.backend(), dialog.options());
     } else {
@@ -158,6 +164,7 @@ void MainWindow::configure() {
         m_ui->actionDisconnect->setEnabled(false);
         m_ui->actionReset->setEnabled(false);
         m_ui->actionStartCpus->setEnabled(false);
+        m_ui->menuMemories->setEnabled(false);
     }
 }
 
@@ -274,4 +281,12 @@ void MainWindow::addSoftwareTraceToStdout(unsigned int core_id,
             m_stdoutcollector[core_id] = "";
         }
     }
+}
+
+void MainWindow::initMemories()
+{
+    WriteMemoryDialog* diag = new WriteMemoryDialog(m_system, this);
+    diag->setModal(true);
+    diag->exec();
+    delete diag;
 }
