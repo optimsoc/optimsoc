@@ -276,10 +276,12 @@ module debug_system(
    // global timestamp
    wire [`DBG_TIMESTAMP_WIDTH-1:0] timestamp;
 
+   wire                            start_cpu_edge;
+
    // Global Timestamp Provider (GTS)
    global_timestamp_provider
       u_gts(.clk(clk),
-            .rst(rst),
+            .rst(start_cpu_edge),
             .timestamp(timestamp));
 
    // Debug NoC: a uni-directional ring with DBG_NOC_ROUTER_COUNT routers
@@ -334,6 +336,7 @@ module debug_system(
             .dbgnoc_in_ready(dbg_link_out_ready[((`DBG_NOC_ADDR_TCM+1)*DBG_NOC_VCHANNELS)-1:`DBG_NOC_ADDR_TCM*DBG_NOC_VCHANNELS]),
 
             .start_cpu(start_cpu),
+            .start_cpu_edge (start_cpu_edge),
             .cpu_stall(cpu_stall),
             .cpu_reset(cpu_reset));
 

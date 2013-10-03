@@ -37,7 +37,7 @@
 module tcm(/*AUTOARG*/
    // Outputs
    dbgnoc_out_flit, dbgnoc_out_valid, dbgnoc_in_ready, cpu_stall,
-   cpu_reset, start_cpu,
+   cpu_reset, start_cpu, start_cpu_edge,
    // Inputs
    clk, rst, sys_clk_is_halted, dbgnoc_out_ready, dbgnoc_in_flit,
    dbgnoc_in_valid
@@ -76,6 +76,7 @@ module tcm(/*AUTOARG*/
    output cpu_stall;
    output cpu_reset;
    output start_cpu;
+   output start_cpu_edge;
 
    // configuration memory
    wire [CONF_MEM_SIZE*16-1:0] conf_mem_flat_out;
@@ -162,6 +163,23 @@ module tcm(/*AUTOARG*/
    assign cpu_stall = conf_mem_out[3][0];
    assign cpu_reset = conf_mem_out[3][2];
    assign start_cpu = conf_mem_out[3][4];
+
+   // To generate the rising edge of the start cpu signal, we need to
+   // register the start cpu signal.
+   reg                          start_cpu_r;
+
+   always @(posedge clk) begin
+      if (rst) begin
+         start_cpu_r <= 1'b0;
+      end else begin
+         start_cpu_r <= start_cpu;
+      end
+   end
+
+   // If the start cpu signal is high this cycle and not the previous,
+   // this is the edge
+   assign start_cpu_edge = start_cpu & ~start_cpu_r;
+
 
    always @ (posedge clk) begin
       if (rst) begin
