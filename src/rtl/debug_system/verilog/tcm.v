@@ -73,9 +73,9 @@ module tcm(/*AUTOARG*/
    output [DBG_NOC_VCHANNELS-1:0] dbgnoc_in_ready;
 
    // CPU control
-   output reg cpu_stall;
-   output reg cpu_reset;
-   output reg start_cpu;
+   output cpu_stall;
+   output cpu_reset;
+   output start_cpu;
 
    // configuration memory
    wire [CONF_MEM_SIZE*16-1:0] conf_mem_flat_out;
@@ -153,6 +153,16 @@ module tcm(/*AUTOARG*/
                        .conf_mem_flat_in_valid(conf_mem_flat_in_valid)); // Templated
 
 
+   // TODO:
+   //  * unstall removed, necessary?
+   //  * isn't start_cpu = !cpu_reset?
+   //  * Review signals, I think the clockmanager assumes the single
+   //    cycle signals instead of constant high, nevertheless it is
+   //    not important.
+   assign cpu_stall = conf_mem_out[3][0];
+   assign cpu_reset = conf_mem_out[3][2];
+   assign start_cpu = conf_mem_out[3][4];
+
    always @ (posedge clk) begin
       if (rst) begin
          conf_mem_in[0] <= 16'd0; // version
@@ -165,31 +175,10 @@ module tcm(/*AUTOARG*/
          conf_mem_in[7] <= 16'h0; // dbg performance: sys_clk-counter LSB
          conf_mem_flat_in_valid <= {CONF_MEM_SIZE{1'b1}};
 
-         cpu_stall <= 0;
-         cpu_reset <= 0;
-         start_cpu <= 0;
-
          halted_sys_clk_counter <= 32'h0;
          sys_clk_counter <= 32'h0;
 
       end else begin
-         // bit 0: stall all CPUs
-         if ((conf_mem_out[3] >> 0) & 16'h1) begin
-            cpu_stall <= 1;
-         end
-
-         // bit 1: un-stall all CPUs
-         if ((conf_mem_out[3] >> 1) & 16'h1) begin
-            cpu_stall <= 0;
-         end
-
-         // bit 2: reset all CPUs
-         if ((conf_mem_out[3] >> 2) & 16'h1) begin
-            cpu_reset <= 1;
-         end else begin
-            cpu_reset <= 0;
-         end
-
          // bit 3: request current values of dbg performance counters
          if ((conf_mem_out[3] >> 3) & 16'h1) begin
             // write current values to the configuration register...
@@ -220,13 +209,6 @@ module tcm(/*AUTOARG*/
                halted_sys_clk_counter <= halted_sys_clk_counter;
             end
 
-         end
-
-         // bit 4: starts cpu
-         if ((conf_mem_out[3] >> 4) & 16'h1) begin
-            start_cpu <= 1;
-         end else begin
-            start_cpu <= 0;
          end
 
          // reset config register (only writes to this register are possible)
