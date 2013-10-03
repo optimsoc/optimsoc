@@ -373,9 +373,14 @@ Build the system running \verb|make|. Before you simulate the system
 you will now need to provide a \verb|modelsim.ini| either globally or
 in the system's folder that contains the Xilinx libraries. Once you
 have it, you can start the system using
-\verb|make sim-noninteractive|. The simulation will start and you
-can now connect to the system in a different shell by using the
-command line interface:
+
+\begin{alltt}
+\$> make sim-noninteractive
+\end{alltt}
+
+The simulation will start and you can now connect
+to the system in a different shell by using the command line
+interface:
 
 \begin{alltt}
 \$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
@@ -488,7 +493,30 @@ Once the synthesis is finished you can generate the bitstream:
 Now that you have generated a bitstream we're ready to upload it to the FPGA.
 Connect the ZTEX 1.15 board to your PC via USB.
 
-% XXX: Add information about udev rules required for device permissions
+If you run \verb|lsusb| the board identifies itself as:
+
+\begin{alltt}
+Bus 001 Device 004: ID 221a:0100  
+\end{alltt}
+
+There is no manufacturer or further information displayed. The reason
+is, that OpTiMSoC otherwise may require to buy a set of USB
+identifiers. Instead, all ZTEX boards share the same identifier and
+the following command is used to find out details on the Firmware,
+Board and Capabilities:
+
+\begin{alltt}
+\$> FWLoader -c -ii
+\end{alltt}
+
+To use the ZTEX boards as a user, it is recommended to add the following
+udev rule
+
+\begin{alltt}
+SUBSYSTEM=="usb", ATTR{idVendor}=="221a", ATTR{idProduct}=="0100", MODE="0666"
+\end{alltt}
+
+for example in \verb|/etc/udev/rules.d/60-usb.rules|.
 
 If you are running OpTiMSoC on the board for the first time you need to update
 the firmware on the board. To do that, switch to the folder
@@ -496,6 +524,21 @@ the firmware on the board. To do that, switch to the folder
 Follow the instructions inside the provided \verb|README| file to build and
 flash the board with the required firmware. All of this only needs to be done
 once for each board (until the firmware changes).
+
+Now the board will identify itself using \verb|FWLoader -c -ii|:
+
+\begin{alltt}
+bus=001  device=4 (`004')  ID=221a:100
+   Manufacturer="TUM LIS"  Product="OpTiMSoC - ZTEX USB 1.15"    SerialNumber="04A32DBCFA"
+   productID=10.13.0.0  fwVer=0  ifVer=1
+   FPGA configured
+   Capabilities:
+      EEPROM read/write
+      FPGA configuration
+      Flash memory support
+      High speed FPGA configuration
+      MAC EEPROM read/write
+\end{alltt}
 
 Everything ready to go? Then upload the bitstream to the FPGA by running
 
@@ -525,5 +568,22 @@ to connect to the FPGA board over USB. You should again be presented with a
 listing of all available debug modules. Now you can continue just as you did
 before by calling \verb|mem_init| to load some software onto the FPGA, etc.
 
-Congratulations, you've run OpTiMSoC on real hardware for the first time! Now
-you're ready to explore and customize OpTiMSoC for yourself. Have fun!
+Congratulations, you've run OpTiMSoC on real hardware for the first
+time! You can now develop software and explore OpTiMSoC. A handy
+utility is the python interface to the command line interface. Instead
+of running the interactive mode you can run the script interface like:
+
+\begin{alltt}
+\$> optimsoc_cli -s <script.py> -bdbgnoc -oconn=usb
+\end{alltt}
+
+An example python script:
+
+\begin{alltt}
+mem_init(2,"hello_simple.bin")
+log_stm_trace("strace")
+start()
+\end{alltt}
+
+You can also connect to the USB now using the GUI. Now you're ready to
+explore and customize OpTiMSoC for yourself. Have fun!

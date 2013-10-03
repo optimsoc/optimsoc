@@ -24,7 +24,7 @@ packages to be installed:
 
 \begin{alltt}
 \$> sudo apt-get -y install git g++ python libtool automake autoconf \textbackslash
-   libusb-1.0-0-dev libreadline6-dev cmake
+   libusb-1.0-0-dev libreadline6-dev cmake sdcc
 \end{alltt}
 
 \section{Get OpTiMSoC}
@@ -457,6 +457,20 @@ You should add this to your PATH:
 \begin{alltt}
 \$> export PATH=\$\{OPTIMSOC\}/src/sw/host/optimsocgui/bin:\$PATH
 \end{alltt}
+
+\section{ZTEX Tools}
+
+In case you are running the bitstreams on the FPGA you will need the
+ZTEX toolchain as it can be downloaded at \url{http://www.ztex.de}. We
+will in the following assume you downloaded it and unpacked it to
+\verb|/opt/ztex/| so that the folder \verb|/opt/ztex/java| exists. You
+will need to set the path accordingly:
+
+\begin{alltt}
+export PATH=/opt/ztex/bin:/opt/ztex/java/FWLoader:\$\{PATH\}
+\end{alltt}
+
+Furthermore you will need the small device compiler \verb|sdcc|.
 
 \section{Configuration Summary}
 
