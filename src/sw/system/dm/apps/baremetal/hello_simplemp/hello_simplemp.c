@@ -37,10 +37,12 @@
 
 // In this example every rank except 0 sends a simple message to rank 0.
 // Rank 0 will output a hello world for each sender and wait until all
-// of them arrived.
+// of them arrived. Then it replies to all of them to terminate.
 
 // Used by rank 0 to count all received hello messages
 unsigned int volatile hello_received = 0;
+
+int rank = 0;
 
 // This function is called by the driver on receival of a message
 void recv(unsigned int *buffer,int len) {
@@ -63,6 +65,15 @@ void recv(unsigned int *buffer,int len) {
 
 // The main function
 void main() {
+    // Trace to the debug system
+    optimsoc_trace_definesection(0, "Init");
+    optimsoc_trace_definesection(1, "Print & Send");
+    optimsoc_trace_definesection(2, "Wait for all");
+    optimsoc_trace_definesection(3, "Wait for reply");
+    optimsoc_trace_definesection(4, "Send replies");
+    optimsoc_trace_definesection(5, "Done");
+    optimsoc_trace_section(0);
+
     // Initialize optimsoc library
     optimsoc_init(0);
     optimsoc_mp_simple_init();
@@ -72,15 +83,43 @@ void main() {
     optimsoc_mp_simple_addhandler(0,&recv);
 
     // Determine tiles rank
-    int rank = optimsoc_ctrank();
+    //    int rank = optimsoc_ctrank();
+    int rank = optimsoc_get_tileid();
 
     if (rank==0) {
+        // Trace
+        optimsoc_trace_section(2);
+  
         // Rank 0 simply waits for all tiles to send their message
         while (hello_received < (optimsoc_ctnum()-1) ) {}
 
         // Conclude and print hello
         printf("Received all messages. Hello World!\n",rank,optimsoc_ctnum());
+	
+        optimsoc_trace_section(4);
+        
+	for (int d=1; d <= hello_received; d++) {
+	    // The message is a one flit packet
+	    uint32_t buffer[1] = { 0 };
+
+	    // Set destination (tile 0)
+	    set_bits(&buffer[0],d,OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
+
+	    // Set class (0)
+	    set_bits(&buffer[0],0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
+	    
+	    // Set sender as my rank
+	    set_bits(&buffer[0],optimsoc_ranktile(rank),OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
+	    
+	    // Send the message
+	    optimsoc_mp_simple_send(1,(uint32_t*) buffer);
+	}
+
+	optimsoc_trace_section(5);
     } else {
+        // Trace
+        optimsoc_trace_section(1);
+
         // The message is a one flit packet
         uint32_t buffer[1] = { 0 };
 
@@ -95,6 +134,12 @@ void main() {
 
         // Send the message
         optimsoc_mp_simple_send(1,(uint32_t*) buffer);
+
+	optimsoc_trace_section(3);
+
+        while(hello_received == 0) {}
+	
+	optimsoc_trace_section(5);	
     }
 }
 
