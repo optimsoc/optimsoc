@@ -35,6 +35,8 @@
 #include "executionchart.h"
 #include "writememorydialog.h"
 
+#include "plotspectrogram.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_ui(new Ui::MainWindow),
@@ -69,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ui->actionDisconnect, SIGNAL(triggered()),
             m_hwif, SLOT(disconnect()));
     connect(m_hwif, SIGNAL(connectionStatusChanged(HardwareInterface::ConnectionStatus, HardwareInterface::ConnectionStatus)),
-            this, SLOT(showConnectionStatus(HardwareInterface::ConnectionStatus, HardwareInterface::ConnectionStatus)));
+            this, SLOT(updateConnectionStatus(HardwareInterface::ConnectionStatus, HardwareInterface::ConnectionStatus)));
     connect(m_hwif, SIGNAL(systemDiscovered(int)),
             this, SLOT(systemDiscovered(int)));
     connect(m_ui->actionStartCpus, SIGNAL(triggered()),
@@ -78,7 +80,7 @@ MainWindow::MainWindow(QWidget *parent) :
             m_hwif, SLOT(reset()));
 
     // initialize connection status widget
-    showConnectionStatus(HardwareInterface::Disconnected, m_hwif->connectionStatus());
+    updateConnectionStatus(HardwareInterface::Disconnected, m_hwif->connectionStatus());
 
     // instruction trace display
     m_traceModel = new QStandardItemModel(0, 4, this);
@@ -95,8 +97,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // XXX: Disable instruction trace dock until it contains data
     m_ui->instructionTraceDockWidget->hide();
 
-    connect(m_hwif, SIGNAL(softwareTraceReceived(uint,uint,uint,uint)),
-            this, SLOT(addSoftwareTraceToStdout(uint,uint,uint,uint)));
+    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(struct SoftwareTraceEvent)),
+            this, SLOT(addSoftwareTraceToStdout(struct SoftwareTraceEvent)));
 
     // software trace display
     m_swTraceModel = new QStandardItemModel(0, 4, this);
@@ -107,15 +109,20 @@ MainWindow::MainWindow(QWidget *parent) :
     m_swTraceModel->setHeaderData(3, Qt::Horizontal, QObject::tr("Value"));
 
     m_ui->softwareTraceTableView->setModel(m_swTraceModel);
-    connect(m_hwif, SIGNAL(softwareTraceReceived(unsigned int, unsigned int, unsigned int, unsigned int)),
-            this, SLOT(addSoftwareTraceToModel(unsigned int, unsigned int, unsigned int, unsigned int)));
+    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(SoftwareTraceEvent)),
+            this, SLOT(addSoftwareTraceToModel(SoftwareTraceEvent)));
 
     // Connect to Execution Trace
-    connect(m_hwif, SIGNAL(softwareTraceReceived(uint,uint,uint,uint)),
-            m_ui->widgetExecutionTrace, SLOT(addTraceEvent(uint,uint,uint,uint)));
+    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(SoftwareTraceEvent)),
+            m_ui->widgetExecutionTrace, SLOT(addTraceEvent(SoftwareTraceEvent)));
 
     connect(m_hwif, SIGNAL(systemDiscovered(int)),
             m_ui->widgetExecutionTrace, SLOT(systemDiscovered(int)));
+
+    PlotSpectrogram *heatmap = new PlotSpectrogram(this);
+    heatmap->hide();
+    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(SoftwareTraceEvent)),
+            heatmap, SLOT(softwareTraceEvent(SoftwareTraceEvent)));
 
     configure();
 }
@@ -152,10 +159,10 @@ void MainWindow::configure() {
     if (dialog.result() == ConfigureDialog::Accepted) {
         m_ui->actionConfigure->setEnabled(true);
         m_ui->actionConnect->setEnabled(true);
-        m_ui->actionDisconnect->setEnabled(true);
-        m_ui->actionReset->setEnabled(true);
-        m_ui->actionStartCpus->setEnabled(true);
-        m_ui->menuMemories->setEnabled(true);
+        m_ui->actionDisconnect->setEnabled(false);
+        m_ui->actionReset->setEnabled(false);
+        m_ui->actionStartCpus->setEnabled(false);
+        m_ui->menuMemories->setEnabled(false);
 
         m_hwif->configure(dialog.backend(), dialog.options());
     } else {
@@ -175,18 +182,30 @@ void MainWindow::showAboutDialog()
     aboutDialog->exec();
 }
 
-void MainWindow::showConnectionStatus(HardwareInterface::ConnectionStatus oldStatus,
-                                      HardwareInterface::ConnectionStatus newStatus)
+void MainWindow::updateConnectionStatus(HardwareInterface::ConnectionStatus oldStatus,
+                                        HardwareInterface::ConnectionStatus newStatus)
 {
     switch (newStatus) {
     case HardwareInterface::Connected:
         m_statusBarConnectionStat->setText(tr("Connected"));
+        m_ui->actionConfigure->setEnabled(true);
+        m_ui->actionConnect->setEnabled(false);
+        m_ui->actionDisconnect->setEnabled(true);
+        m_ui->actionReset->setEnabled(true);
+        m_ui->actionStartCpus->setEnabled(true);
+        m_ui->menuMemories->setEnabled(true);
         break;
     case HardwareInterface::Connecting:
         m_statusBarConnectionStat->setText(tr("Connecting ..."));
         break;
     case HardwareInterface::Disconnected:
         m_statusBarConnectionStat->setText(tr("Disconnected"));
+        m_ui->actionConfigure->setEnabled(true);
+        m_ui->actionConnect->setEnabled(true);
+        m_ui->actionDisconnect->setEnabled(false);
+        m_ui->actionReset->setEnabled(false);
+        m_ui->actionStartCpus->setEnabled(false);
+        m_ui->menuMemories->setEnabled(false);
         break;
     case HardwareInterface::Disconnecting:
         m_statusBarConnectionStat->setText(tr("Disconnecting ..."));
@@ -213,6 +232,7 @@ void MainWindow::systemDiscovered(int systemId)
 
     m_ui->systemOverviewWidget->setSystem(m_system);
     m_ui->disconnectedUiStack->setCurrentIndex(0);
+
 }
 
 void MainWindow::addTraceToModel(int core_id, unsigned int timestamp,
@@ -236,49 +256,45 @@ void MainWindow::addTraceToModel(int core_id, unsigned int timestamp,
     m_traceModel->appendRow(items);
 }
 
-void MainWindow::addSoftwareTraceToModel(unsigned int core_id,
-                                         unsigned int timestamp,
-                                         unsigned int id, unsigned int value)
+void MainWindow::addSoftwareTraceToModel(struct SoftwareTraceEvent event)
 {
+    return;
     QList<QStandardItem*> items;
 
-    QStandardItem* coreIdItem = new QStandardItem(QString("%1").arg(core_id));
+    QStandardItem* coreIdItem = new QStandardItem(QString("%1").arg(event.core_id));
     items.append(coreIdItem);
 
-    QStandardItem* timestampItem = new QStandardItem(QString("%1").arg(timestamp));
+    QStandardItem* timestampItem = new QStandardItem(QString("%1").arg(event.timestamp));
     items.append(timestampItem);
 
-    QStandardItem* idItem = new QStandardItem(QString("0x%1").arg(id, 0, 16));
+    QStandardItem* idItem = new QStandardItem(QString("0x%1").arg(event.id, 0, 16));
     items.append(idItem);
 
-    QStandardItem* valueItem = new QStandardItem(QString("0x%1").arg(value, 0, 16));
+    QStandardItem* valueItem = new QStandardItem(QString("0x%1").arg(event.value, 0, 16));
     items.append(valueItem);
 
 
     m_swTraceModel->appendRow(items);
 }
 
-void MainWindow::addSoftwareTraceToStdout(unsigned int core_id,
-                                          unsigned int timestamp,
-                                          unsigned int id,
-                                          unsigned int value)
+void MainWindow::addSoftwareTraceToStdout(SoftwareTraceEvent event)
 {
-    if (id==0x4) {
-        QChar character(value);
+    if (event.id == 0x4) {
+        QChar character(event.value);
 
-        if (m_stdoutcollector.size() <= core_id) {
-            m_stdoutcollector.resize(core_id+1);
+        if (m_stdoutcollector.size() <= event.core_id) {
+            m_stdoutcollector.resize(event.core_id+1);
         }
 
-        if (m_stdoutcollector[core_id].length() == 0) {
-            m_stdoutcollector[core_id] = QString("[%1, %2 ns] %3").arg(core_id).arg(timestamp).arg(character);
+        if (m_stdoutcollector[event.core_id].length() == 0) {
+            m_stdoutcollector[event.core_id] = QString("[%1, %2 ns] %3").arg(event.core_id).arg(event.timestamp).arg(character);
         } else if (character != '\n') {
-            m_stdoutcollector[core_id] += character;
+            m_stdoutcollector[event.core_id] += character;
         }
 
         if (character == '\n') {
-            m_ui->stdoutTextEdit->appendPlainText(m_stdoutcollector[core_id]);
-            m_stdoutcollector[core_id] = "";
+            m_ui->stdoutTextEdit->appendPlainText(m_stdoutcollector[event.core_id]);
+            m_stdoutcollector[event.core_id] = "";
         }
     }
 }

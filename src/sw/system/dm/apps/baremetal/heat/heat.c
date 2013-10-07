@@ -38,11 +38,11 @@
 #include <string.h> // For memcpy
 
 // The dimensions of the heat area
-#define XSIZE 20
-#define YSIZE 20
+#define XSIZE 10
+#define YSIZE 10
 
 // The number of iterations
-#define ITERATIONS 50
+#define ITERATIONS 5000
 
 // As this problem is embarrasingly parallel, it is quite easy to just split the
 // area as a matrix. As the direct neighbor elements are required in the

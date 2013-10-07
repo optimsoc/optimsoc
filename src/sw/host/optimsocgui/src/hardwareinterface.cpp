@@ -44,13 +44,22 @@ void HardwareInterface::softwareTraceCallback(uint32_t core_id,
                                               uint16_t id,
                                               uint32_t value)
 {
-    instance()->emitSoftwareTraceReceived(core_id, timestamp, id, value);
+    SoftwareTraceEvent *event = new SoftwareTraceEvent;
+    event->core_id   = core_id;
+    event->timestamp = timestamp;
+    event->id        = id;
+    event->value     = value;
+
+    instance()->m_softwareTraceMutex.lock();
+    instance()->m_softwareTraceQueue.push_back(event);
+    instance()->m_softwareTraceMutex.unlock();
 }
 
 HardwareInterface::HardwareInterface(QObject *parent)
     : QObject(parent), m_octx(NULL), m_connectionStatus(Disconnected)
 {
     qRegisterMetaType<ConnectionStatus>("HardwareInterface::ConnectionStatus");
+    qRegisterMetaType<SoftwareTraceEvent>("SoftwareTraceEvent");
 }
 
 HardwareInterface* HardwareInterface::instance()
@@ -143,6 +152,10 @@ void HardwareInterface::connect()
     // register callback function for software traces
     optimsoc_stm_register_callback(m_octx,
                                    &HardwareInterface::softwareTraceCallback);
+
+    QObject::connect(&m_softwareTraceTimer, SIGNAL(timeout()), this, SLOT(softwareTraceTimer()));
+    m_softwareTraceTimer.start(20);
+
     return;
 }
 
@@ -217,12 +230,12 @@ void HardwareInterface::emitInstructionTraceReceived(int core_id,
     emit instructionTraceReceived(core_id, timestamp, pc, count);
 }
 
-
-void HardwareInterface::emitSoftwareTraceReceived(uint32_t core_id,
-                                                  uint32_t timestamp,
-                                                  uint16_t id,
-                                                  uint32_t value)
-
+void HardwareInterface::softwareTraceTimer()
 {
-    emit softwareTraceReceived(core_id, timestamp, id, value);
+    m_softwareTraceMutex.lock();
+
+    m_softwareTraceDistributor.emitEvents(m_softwareTraceQueue);
+
+    m_softwareTraceQueue.clear();
+    m_softwareTraceMutex.unlock();
 }

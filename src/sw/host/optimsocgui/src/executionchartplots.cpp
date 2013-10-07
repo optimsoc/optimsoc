@@ -40,142 +40,52 @@
 #include <QTextStream>
 #include <QProcessEnvironment>
 
-ExecutionChartPlot::ExecutionChartPlot(QObject *parent, QGraphicsView *gv,
-                                       QGraphicsScene *scene,
-                                       unsigned int baseline,
-                                       unsigned int height)
-    : QObject(parent), m_graphicsView(gv), m_scene(scene), m_baseline(baseline),
-      m_height(height)
+#include <QSettings>
+
+ExecutionChartPlot::ExecutionChartPlot(QCPAxis *keyaxis, QCPAxis *valueaxis)
+    : QCPAbstractPlottable(keyaxis, valueaxis)
 {
 
 }
 
-ExecutionChartPlotScale::ExecutionChartPlotScale(QObject *parent,
-                                                 QGraphicsView *gv,
-                                                 QGraphicsScene *scene,
-                                                 unsigned int baseline,
-                                                 unsigned int height)
-    : ExecutionChartPlot(parent,gv,scene,baseline,height)
-{
-    m_currentMaximum = 0;
-    m_line = new QGraphicsLineItem();
-    m_scene->addItem(m_line);
-}
-
-void ExecutionChartPlotScale::rescale(double newscale, double oldscale)
-{
-    Q_UNUSED(oldscale);
-
-    m_currentScale = newscale;
-    QList<QGraphicsItem*> children = m_line->childItems();
-    qDeleteAll(children);
-
-    int max = m_currentMaximum;
-    m_currentMaximum = 0;
-    expand(max);
-}
-
-void ExecutionChartPlotScale::expand(int maximum)
-{
-    // The basic line is just modified to match the maximum size
-    m_line->setLine(0,m_baseline+2,maximum,m_baseline+2);
-
-    // Get the 10s logarithm of this scale
-    double scalelog10 = log10(m_currentScale);
-
-    int lowerscalelog10 = floor(scalelog10);
-    int upperscalelog10 = ceil(scalelog10);
-
-    double stepsminor, stepsmajor;
-
-    // Zoom level is a power of ten
-    if (fabs(scalelog10-lowerscalelog10)<0.01) {
-        stepsminor = 25*m_currentScale;
-        stepsmajor = 100*m_currentScale;
-    } else {
-        double difftolog10 = upperscalelog10-scalelog10;
-        if (difftolog10>0.8) {
-            stepsminor = 2.5*exp10(upperscalelog10);
-            stepsmajor = stepsminor*4;
-        } else if (difftolog10>0.6) {
-            stepsminor = 5*exp10(upperscalelog10);
-            stepsmajor = stepsminor*4;
-        } else if (difftolog10>0.2) {
-            stepsminor = 12.5*exp10(upperscalelog10);
-            stepsmajor = stepsminor*4;
-        } else if (difftolog10>0.04) {
-            stepsminor = 25*exp10(upperscalelog10);
-            stepsmajor = stepsminor*4;
-        } else {
-            stepsminor = 50*exp10(upperscalelog10);
-            stepsmajor = stepsminor*4;
-        }
-    }
-
-    double i;
-
-    // Generate ticks
-    i = ceil(m_currentMaximum/stepsminor)*stepsminor;
-    while (i <= maximum) {
-        qreal x0, x1, y0, y1;
-        double mod = fmod(i,stepsmajor);
-        bool modnearzero = (mod<0.01);
-        bool modnearstep = ((stepsmajor-mod)<0.01);
-        bool ismajor = (modnearzero || modnearstep);
-        x0 = x1 = i;
-        y0 = 2;
-        if (ismajor) {
-            y1 = 12;
-        } else {
-            y1 = 6;
-        }
-        new QGraphicsLineItem(x0,y0,x1,y1,m_line);
-
-        if (ismajor) {
-            QPair<double,QString> scaled = ExecutionChart::mapScaleToString(i);
-            QString scaledString = QString("%1 %2").arg(scaled.first).arg(scaled.second);
-            QGraphicsSimpleTextItem *text = new QGraphicsSimpleTextItem(scaledString,m_line);
-            QFont font = text->font();
-            font.setPixelSize(10);
-            text->setFont(font);
-
-            QTransform textTransform;
-            text->setPos(i+2*m_currentScale,9);
-            textTransform.scale(m_currentScale,1);
-            text->setTransformOriginPoint(i,10);
-            text->setTransform(textTransform);
-        }
-
-        i=i+stepsminor;
-    }
-    m_currentMaximum = maximum;
-}
-
-void ExecutionChartPlotScale::addSoftwareTrace(unsigned int timestamp,
-                                               unsigned int id,
-                                               unsigned int value)
-{
-
-}
-
-ExecutionChartPlotCore::ExecutionChartPlotCore(QObject *parent,
-                                               QGraphicsView *gv,
-                                               QGraphicsScene *scene, unsigned int baseline, unsigned int height)
-    : ExecutionChartPlot(parent,gv,scene,baseline,height)
+ExecutionChartPlotCore::ExecutionChartPlotCore(QCPAxis *keyaxis, QCPAxis *valueaxis, QString corename)
+    : ExecutionChartPlot(keyaxis, valueaxis), m_currentExtend(0)
 {
     ExecutionChartSectionCreator *section =
-            new ExecutionChartSectionCreator(this, scene, m_baseline+2, m_height-4);
+            new ExecutionChartSectionCreator(this);
     m_traceCreators[0x1].push_back(section);
     m_traceCreators[0x20].push_back(section);
     m_traceCreators[0x21].push_back(section);
     m_traceCreators[0x22].push_back(section);
     m_traceCreators[0x31].push_back(section);
     m_creators.append(section);
+    m_creatorLayers.insert(LayerSections, section);
 
     QString path = QProcessEnvironment::systemEnvironment().value("OPTIMSOC");
     path = path + "/src/sw/host/optimsocgui/events.d";
 
     readEventsFromPath(path);
+
+    QVector<double> ticks; QVector<QString> ticklabels;
+    ticks.append(0.5); ticklabels.append("Exec");
+    valueaxis->setAutoTicks(false);
+    valueaxis->setAutoTickLabels(false);
+    valueaxis->setTickVector(ticks);
+    valueaxis->setRange(0.0,1.0);
+    valueaxis->setTickVectorLabels(ticklabels);
+
+    keyaxis->setVisible(false);
+
+}
+
+void ExecutionChartPlotCore::coordsToPixels(double key, double value, double &x, double &y) const
+{
+    QCPAbstractPlottable::coordsToPixels(key, value, x, y);
+}
+
+void ExecutionChartPlotCore::pixelsToCoords(const QPointF &pixelPos, double &key, double &value) const
+{
+    QCPAbstractPlottable::pixelsToCoords(pixelPos, key, value);
 }
 
 void ExecutionChartPlotCore::readEventsFromPath(QString path)
@@ -184,130 +94,173 @@ void ExecutionChartPlotCore::readEventsFromPath(QString path)
     QStringList flist = dir.entryList();
 
     for (QStringList::iterator it = flist.begin(); it != flist.end(); ++it ) {
-        if ((*it != ".") && (*it != "..") && (it->right(1) != "~" ))
+        if ((*it != ".") && (*it != "..") && (it->right(4) == ".ini" ))
             readEventsFromFile(path+"/"+*it);
     }
 }
 
 void ExecutionChartPlotCore::readEventsFromFile(QString filename)
 {
-    QFile file(filename);
+    QSettings settings(filename, QSettings::IniFormat);
 
-    if (!file.open(QIODevice::ReadOnly)) {
-        return;
-    }
+    QStringList ids = settings.childGroups();
+    QString id;
 
-    QTextStream stream(&file);
-    while (!stream.atEnd()) {
-        QString line = stream.readLine();
-
-        if (line[0] == '#')
-            continue;
-
-        int i = line.indexOf(":");
-        if (i<0)
-            continue;
-
-        QString id = line.left(i);
-        line = line.mid(i+1);
-
-        i = line.indexOf(":");
-        if (i<0)
-            continue;
-
-        QString format = line.left(i);
-        line = line.mid(i+1);
-
-        i = line.indexOf(":");
-        if (i<0)
-            continue;
-
-        QString swidth = line.left(i);
-        line = line.mid(i+1);
-
-        i = line.indexOf(":");
-        if (i<0)
-            continue;
-
-        QString scolor = line.left(i);
-        QString text = line.mid(i+1);
-
-        // Convert index to uint
-        unsigned int index;
-        i = id.indexOf("x");
+    foreach (id, ids) {
+        settings.beginGroup(id);
         bool ok;
-        if (i>=0) {
-            index = id.mid(i+1).toUInt(&ok,16);
-        } else {
-            index = id.toUInt(&ok);
-        }
-        if (!ok)
+
+        unsigned int event_id = id.toUInt(&ok, 0); // C convention
+        if (!ok) {
+            settings.endGroup();
             continue;
+        }
 
-        // Convert width to uint
-        unsigned int width = swidth.toUInt(&ok);
-        if (!ok)
-            width = 3;
+        QVariant width = settings.value("width", 3);
+        unsigned int event_width = width.toString().toUInt(&ok, 0);
+        if (!ok) {
+            event_width = 3;
+        }
 
-        // Convert color
-        unsigned int color = 0xff000000 | scolor.toUInt(&ok);
-        if (!ok)
-            color = 0xff000000;
+        QVariant color = settings.value("color", 0);
+        unsigned int event_color = color.toString().toUInt(&ok, 0);
+        if (!ok) {
+            event_color = 0;
+        }
+
+        QVariant text = settings.value("text", "");
+        QString event_text = text.toString();
+
+        QString format = settings.value("format", "").toString();
 
         ExecutionChartEventCreator *event =
-                new ExecutionChartEventCreator(this, m_scene, m_baseline, m_height, width, text, color);
+                new ExecutionChartEventCreator(this, event_width, event_text, event_color);
 
         if (format.length() == 0) {
             event->appendEmpty();
         }
 
-        for (i = 0; i < format.length(); ++i) {
+        for (int i = 0; i < format.length(); ++i) {
             if (format[i] == 'u') {
-                event->appendDec(i==0);
+                event->appendDec(i == 0);
             } else if (format[i] == 'd') {
-                event->appendDecSigned(i==0);
+                event->appendDecSigned(i == 0);
             } else if (format[i] == 'x') {
-                event->appendHex(i==0);
+                event->appendHex(i == 0);
             } else if (format[i] == 'f') {
-                event->appendFloat(i==0);
+                event->appendFloat(i == 0);
             } else if (format[i] == 'c') {
-                event->appendChar(i==0);
+                event->appendChar(i == 0);
             } else if (format[i] == 's') {
-                event->appendString(i==0);
+                event->appendString(i == 0);
             }
         }
 
-        m_traceCreators[index].push_back(event);
+        m_traceCreators[event_id].push_back(event);
         m_creators.append(event);
+        m_creatorLayers.insert(LayerEvents, event);
 
+        settings.endGroup();
     }
 
 }
 
-void ExecutionChartPlotCore::addSoftwareTrace(unsigned int timestamp,
-                                              unsigned int id,
-                                              unsigned int value)
+unsigned int ExecutionChartPlotCore::addSoftwareTrace(SoftwareTraceEvent *event)
 {
+    unsigned int update_extend = 0;
+    unsigned int tmp_extend;
+    uint16_t id = event->id;
     if (m_traceCreators.find(id) != m_traceCreators.end()) {
         QVector<ExecutionChartElementCreator*>::const_iterator it;
-        for (it=m_traceCreators[id].begin();it!=m_traceCreators[id].end();++it) {
-            (*it)->addTrace(timestamp, id, value);
+        for (it = m_traceCreators[id].begin(); it != m_traceCreators[id].end(); ++it) {
+            tmp_extend = (*it)->addTrace(event);
+            if (tmp_extend > update_extend) {
+                update_extend = tmp_extend;
+            }
+        }
+    }
+    return update_extend;
+}
+
+double ExecutionChartPlotCore::selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const
+{
+    double select = -1.0;
+    double tmp;
+    QMap<QString, QVariant> map;
+    details->setValue(map);
+    enum LayerPosition position;
+    ExecutionChartElementCreator *creator;
+
+    QList<enum LayerPosition> layers = m_creatorLayers.keys();
+
+    foreach(position, layers) {
+        QList<ExecutionChartElementCreator*> creators = m_creatorLayers.values(position);
+        foreach(creator, creators) {
+            QVariant subdetails;
+            tmp = creator->selectTest(pos, onlySelectable, &subdetails);
+            if (tmp >= select) {
+                map["subdetails"] = subdetails;
+                map["creator"] = QVariant::fromValue<ExecutionChartElementCreator*>(creator);
+                select = tmp;
+            }
+        }
+    }
+
+    if (select > -1.0) {
+        details->setValue(map);
+    }
+
+    return select;
+}
+
+void ExecutionChartPlotCore::draw(QCPPainter *painter)
+{
+    enum LayerPosition position;
+    ExecutionChartElementCreator *creator;
+
+    QList<enum LayerPosition> layers = m_creatorLayers.keys();
+
+    foreach(position, layers) {
+        QList<ExecutionChartElementCreator*> creators = m_creatorLayers.values(position);
+        foreach(creator, creators) {
+            creator->draw(painter);
         }
     }
 }
 
-void ExecutionChartPlotCore::rescale(double newscale, double oldscale)
+void ExecutionChartPlotCore::clearData()
 {
-    ExecutionChartElementCreator *e;
-    foreach(e,m_creators) {
-        e->rescale(newscale,oldscale);
+
+}
+
+void ExecutionChartPlotCore::drawLegendIcon(QCPPainter *painter, const QRectF &rect) const
+{
+
+}
+
+QCPRange ExecutionChartPlotCore::getKeyRange(bool &validRange, SignDomain inSignDomain) const
+{
+    return QCPRange(0, m_currentExtend);
+}
+
+QCPRange ExecutionChartPlotCore::getValueRange(bool &validRange, SignDomain inSignDomain) const
+{
+    return QCPRange(0, 1);
+}
+
+void ExecutionChartPlotCore::updateExtend(unsigned int extend)
+{
+    ExecutionChartElementCreator *creator;
+    foreach(creator, m_creators) {
+        creator->updateExtend(extend);
     }
 }
 
-void ExecutionChartPlotCore::expand(int maximum)
+void ExecutionChartPlotCore::selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged)
 {
-    ExecutionChartElementCreator *e;
-    foreach(e,m_creators) {
-        e->expand(maximum);
-    }
+    QMap<QString, QVariant> map = details.toMap();
+
+    ExecutionChartElementCreator *creator = map["creator"].value<ExecutionChartElementCreator*>();
+
+    creator->selectEvent(event, additive, map["subdetails"], selectionStateChanged);
 }

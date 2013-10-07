@@ -60,18 +60,17 @@ private:
 
 public slots:
     void showAboutDialog();
-    void showConnectionStatus(HardwareInterface::ConnectionStatus oldStatus,
-                              HardwareInterface::ConnectionStatus newStatus);
+    void updateConnectionStatus(HardwareInterface::ConnectionStatus oldStatus,
+                                HardwareInterface::ConnectionStatus newStatus);
     void systemDiscovered(int systemId);
     void addTraceToModel(int core_id, unsigned int timestamp,
                          unsigned int pc, int count);
-    void addSoftwareTraceToModel(unsigned int core_id, unsigned int timestamp,
-                                 unsigned int id, unsigned int value);
-    void addSoftwareTraceToStdout(unsigned int core_id, unsigned int timestamp,
-                                  unsigned int id, unsigned int value);
+    void addSoftwareTraceToModel(struct SoftwareTraceEvent);
+    void addSoftwareTraceToStdout(struct SoftwareTraceEvent event);
     void configure();
 
     void initMemories();
+
 };
 
 #endif // MAINWINDOW_H

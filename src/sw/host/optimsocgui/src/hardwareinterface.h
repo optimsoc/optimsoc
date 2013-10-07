@@ -28,6 +28,11 @@
 
 #include <QThread>
 #include <QMap>
+#include <QQueue>
+#include <QTimer>
+#include <QMutex>
+
+#include "traceevents.h"
 
 #include "liboptimsochost.h"
 
@@ -60,12 +65,12 @@ public:
 
     void emitInstructionTraceReceived(int core_id, uint32_t timestamp,
                                       uint32_t pc, int count);
-    void emitSoftwareTraceReceived(uint32_t core_id, uint32_t timestamp,
-                                   uint16_t id, uint32_t value);
 
     void configure(optimsoc_backend_id type, QMap<QString,QString> options);
     bool configured();
     HardwareInterface::ConnectionStatus connectionStatus() { return m_connectionStatus; }
+
+    SoftwareTraceEventDistributor *softwareTraceEventDistributor() { return &m_softwareTraceDistributor; }
 
 public slots:
     void threadStarted() {}
@@ -77,10 +82,16 @@ public slots:
     void startCpus();
     void reset();
 
+    void softwareTraceTimer();
 private:
     static HardwareInterface *s_instance;
     struct optimsoc_ctx *m_octx;
     ConnectionStatus m_connectionStatus;
+
+    QQueue<SoftwareTraceEvent*> m_softwareTraceQueue;
+    QTimer m_softwareTraceTimer;
+    QMutex m_softwareTraceMutex;
+    SoftwareTraceEventDistributor m_softwareTraceDistributor;
 
     HardwareInterface(QObject *parent = 0);
 
@@ -91,9 +102,6 @@ signals:
     void memoryWriteFinished(bool success);
     void instructionTraceReceived(int core_id, unsigned int timestamp,
                                   unsigned int pc, int count);
-    void softwareTraceReceived(unsigned int core_id, unsigned int timestamp,
-                               unsigned int id, unsigned int value);
-
 };
 
 #endif // HARDWAREINTERFACE_H

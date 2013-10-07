@@ -29,31 +29,28 @@
 #include <QBrush>
 #include <QPen>
 
-ExecutionChartSection::ExecutionChartSection(QObject *parent, double scale,
-                                             unsigned int baseline, unsigned int height,
-                                             unsigned int from, unsigned int to,
+ExecutionChartSection::ExecutionChartSection(unsigned int from, unsigned int to,
                                              int id, QString text)
-    : ExecutionChartElement(parent, scale), m_baseline(baseline),
-      m_height(height), m_from(from), m_to(to), m_id(id), m_text(text)
+    : ExecutionChartElement(), m_from(from), m_to(to), m_id(id), m_text(text)
 {
+    m_colors = colorMap(m_id);
 }
 
-QGraphicsItem *ExecutionChartSection::item()
+void ExecutionChartSection::getRange(unsigned int &from, unsigned int &to)
 {
-    unsigned int x = m_from;
-    unsigned int y = m_baseline;
-    unsigned int width = m_to-m_from;
-    unsigned int height = m_height;
-    QGraphicsRectItem *rect = new QGraphicsRectItem(x,y,width,height);
-    QPair<QColor,QColor> colors = colorMap(m_id);
-    rect->setBrush(colors.first);
-    rect->setPen(colors.second);
-    rect->setToolTip(m_text);
-    rect->setZValue(-1);
+    from = m_from;
+    to = m_to;
+}
 
-    m_item = rect;
+void ExecutionChartSection::getColors(QColor &pen, QColor &brush)
+{
+    brush = m_colors.first;
+    pen = m_colors.second;
+}
 
-    return rect;
+void ExecutionChartSection::updateExtend(unsigned int to)
+{
+    m_to = to;
 }
 
 const QPair<QColor,QColor> ExecutionChartSection::colorMap(int id)
@@ -87,52 +84,10 @@ const QPair<QColor,QColor> ExecutionChartSection::colorMap(int id)
     }
 }
 
-void ExecutionChartSection::rescale(double newscale, double oldscale)
-{
-    m_scale = newscale;
-}
-
-void ExecutionChartSection::expand(int maximum)
-{
-    m_to = maximum;
-    QRectF rect = m_item->rect();
-    rect.setWidth(m_to-m_from);
-    m_item->setRect(rect);
-}
-
-ExecutionChartEvent::ExecutionChartEvent(QObject *parent, double scale,
-                                         unsigned int baseline, unsigned int height,
-                                         unsigned int timestamp, unsigned int width,
+ExecutionChartEvent::ExecutionChartEvent(unsigned int timestamp, unsigned int width,
                                          QString text, QColor color)
-    : ExecutionChartElement(parent, scale), m_baseline(baseline), m_height(height),
-      m_timestamp(timestamp), m_width(width), m_text(text), m_color(color)
+    : ExecutionChartElement(), m_timestamp(timestamp), m_width(width), m_color(color)
 {
-}
-
-QGraphicsItem *ExecutionChartEvent::item()
-{
-    unsigned int x = m_timestamp;
-    unsigned int y = m_baseline;
-    unsigned int width = m_width*m_scale;
-    unsigned int height = m_height;
-
-    QGraphicsRectItem *rect = new QGraphicsRectItem(x,y,width,height);
-    rect->setBrush(m_color);
-    rect->setPen(Qt::NoPen);
-    QString tooltip = m_text+QString("\ntimestamp: %1 ns").arg(m_timestamp);
-    tooltip = tooltip.replace("\\n","\n");
-    rect->setToolTip(tooltip);
-
-    m_item = rect;
-
-    return rect;
-}
-
-void ExecutionChartEvent::rescale(double newscale, double oldscale)
-{
-    m_scale = newscale;
-
-    QRectF r = m_item->rect();
-    r.setWidth(m_width*newscale);
-    m_item->setRect(r);
+    m_text = text+QString("\ntimestamp: %1 ns").arg(m_timestamp);
+    m_text = m_text.replace("\\n","\n");
 }

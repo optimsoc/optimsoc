@@ -22,6 +22,8 @@ include(${QT_USE_FILE})
 # Check for liboptimsoc
 FIND_PACKAGE(Liboptimsochost REQUIRED)
 
+FIND_PACKAGE(Libqwt REQUIRED)
+
 add_subdirectory(src)
 #add_subdirectory(doc)
 

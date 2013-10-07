@@ -24,54 +24,51 @@
 
 #include "executionchartcreators.h"
 
+#include <QToolTip>
+
 #include "executionchartelements.h"
 
-ExecutionChartElementCreator::ExecutionChartElementCreator(QObject *parent,
-                                                           QGraphicsScene *scene)
-    : QObject(parent), m_scene(scene), m_scale(0)
+#include "assert.h"
+
+ExecutionChartElementCreator::ExecutionChartElementCreator(ExecutionChartPlotCore *plot)
+    : m_plot(plot)
 {
 
 }
 
-ExecutionChartSectionCreator::ExecutionChartSectionCreator(QObject *parent,
-                                                           QGraphicsScene *scene,
-                                                           unsigned int baseline,
-                                                           unsigned int height)
-    : ExecutionChartElementCreator(parent,scene), m_baseline(baseline), m_height(height),
-      m_inSection(false)
+ExecutionChartSectionCreator::ExecutionChartSectionCreator(ExecutionChartPlotCore *plot)
+    : ExecutionChartElementCreator(plot), m_inSection(false), m_currentSection(0)
 {
 
 }
 
-void ExecutionChartSectionCreator::addTrace(unsigned int timestamp,
-                                            unsigned int id, unsigned int value)
+unsigned int ExecutionChartSectionCreator::addTrace(SoftwareTraceEvent *event)
 {
     QChar c;
-    switch(id) {
+    switch(event->id) {
     case 0x1:
-        expand(timestamp);
-        createSection(timestamp, timestamp, -1, "Exited");
+        createSection(event->timestamp, event->timestamp, -1, "Exited");
     case 0x20:
-        m_currentSectionDefinition = value;
+        m_currentSectionDefinition = event->value;
         break;
     case 0x21:
-        c = value&0xff;
-        if (m_sectionNames.find(m_currentSectionDefinition)==m_sectionNames.end()) {
+        c = event->value & 0xff;
+        if (m_sectionNames.find(m_currentSectionDefinition) == m_sectionNames.end()) {
             m_sectionNames[m_currentSectionDefinition] = c;
         } else {
             m_sectionNames[m_currentSectionDefinition] += c;
         }
         break;
     case 0x22:
-        expand(timestamp);
-        createSection(timestamp, timestamp, (int) value, m_sectionNames[value]);
+        createSection(event->timestamp, event->timestamp, (int) event->value, m_sectionNames[event->value]);
         break;
     case 0x31:
-        expand(timestamp);
-        createSection(timestamp, timestamp, -1, "System start");
+        createSection(event->timestamp, event->timestamp, -1, "System start");
     default:
         break;
     }
+
+    return event->timestamp;
 }
 
 void ExecutionChartSectionCreator::createSection(unsigned int from,
@@ -79,52 +76,85 @@ void ExecutionChartSectionCreator::createSection(unsigned int from,
                                                  int id,
                                                  QString text)
 {
+    updateExtend(from);
     ExecutionChartSection *sect;
-    sect = new ExecutionChartSection(this, m_scale, m_baseline+2, m_height-4,
-                                     from, to, id, text);
+    sect = new ExecutionChartSection(from, to, id, text);
     m_elements.push_back(sect);
-    m_scene->addItem(sect->item());
+    m_currentSection = sect;
 }
 
-void ExecutionChartSectionCreator::expand(int maximum)
+void ExecutionChartSectionCreator::updateExtend(unsigned int extend)
 {
-    // If no elements exists
-    if (m_elements.length()==0) return;
-
-    // Get last section
-    ExecutionChartSection *section;
-    section = reinterpret_cast<ExecutionChartSection*>(m_elements.last());
-
-    // Resize section
-    section->expand(maximum);
-}
-
-void ExecutionChartElementCreator::rescale(double newscale, double oldscale)
-{
-    ExecutionChartElement *e;
-    foreach(e,m_elements) {
-        e->rescale(newscale,oldscale);
+    if (m_currentSection) {
+        m_currentSection->updateExtend(extend);
     }
-    m_scale = newscale;
 }
 
-ExecutionChartEventCreator::ExecutionChartEventCreator(QObject *parent,
-                                                       QGraphicsScene *scene,
-                                                       unsigned int baseline,
-                                                       unsigned int height,
-                                                       unsigned int width,
-                                                       QString textFormat,
-                                                       unsigned int color)
-    : ExecutionChartElementCreator(parent,scene), m_baseline(baseline),
-      m_height(height), m_width(width), m_acceptAppends(true),
+double ExecutionChartSectionCreator::selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const
+{
+    double x, y;
+    m_plot->pixelsToCoords(pos, x, y);
+
+    if ((y < 0.25) || (y > 0.75)) {
+        return -1.0;
+    }
+
+    ExecutionChartElement *elem;
+    ExecutionChartSection *section;
+    foreach (elem, m_elements) {
+        section = dynamic_cast<ExecutionChartSection*>(elem);
+        unsigned int from, to;
+        section->getRange(from, to);
+        if ((x > from) && (x < to)) {
+            *details = QVariant::fromValue<ExecutionChartSection*>(section);
+            return 0.0;
+        }
+    }
+
+    return -1.0;
+}
+
+void ExecutionChartSectionCreator::selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged)
+{
+    ExecutionChartSection* section = details.value<ExecutionChartSection*>();
+    QToolTip::showText(event->globalPos(), section->text(), 0);
+}
+
+void ExecutionChartSectionCreator::draw(QCPPainter *painter)
+{
+    ExecutionChartElement *elem;
+    ExecutionChartSection *section;
+    foreach (elem, m_elements) {
+        section = dynamic_cast<ExecutionChartSection*>(elem);
+        double x1, x2, y1, y2;
+
+        unsigned int from, to;
+        QColor brush, pen;
+
+        section->getRange(from, to);
+        section->getColors(pen, brush);
+
+        m_plot->coordsToPixels(from, 0.25, x1, y1);
+        m_plot->coordsToPixels(to, 0.75, x2, y2);
+
+        painter->setBrush(QBrush(brush));
+        painter->setPen(QPen(pen));
+
+        painter->drawRect(x1, y1, x2-x1, y2-y1);
+    }
+}
+
+
+ExecutionChartEventCreator::ExecutionChartEventCreator(ExecutionChartPlotCore *plot, unsigned int width, QString textFormat, QColor color)
+    : ExecutionChartElementCreator(plot), m_width(width), m_acceptAppends(true),
       m_eventActualTime(NULL), m_textFormat(textFormat), m_color(color)
 {
 }
 
-void ExecutionChartEventCreator::addTrace(unsigned int timestamp, unsigned int id, unsigned int value)
+unsigned int ExecutionChartEventCreator::addTrace(SoftwareTraceEvent *event)
 {
     if (m_eventSequence.size()==0) {
-        return;
+        return 0;
     }
 
     if (m_acceptAppends) {
@@ -145,7 +175,7 @@ void ExecutionChartEventCreator::addTrace(unsigned int timestamp, unsigned int i
     // Get current event we are waiting for from iterator
     Event* e = *m_eventSequenceIterator;
 
-    bool rv = e->occur(value);
+    bool rv = e->occur(event->value);
     if (rv) {
         // If the event is complete: advance
         m_eventSequenceIterator++;
@@ -153,27 +183,83 @@ void ExecutionChartEventCreator::addTrace(unsigned int timestamp, unsigned int i
 
     // Assign timestamp if matches
     if (e == m_eventActualTime) {
-        m_timestamp = timestamp;
+        m_timestamp = event->timestamp;
     }
 
     if (m_eventSequenceIterator == m_eventSequence.end()) {
         // This was the last in the sequence
         // Generate string to display
         QString text = m_textFormat;
-        foreach(e,m_eventSequence) {
+        foreach(e, m_eventSequence) {
             text = e->format(text);
         }
 
         // Draw actual event
-        ExecutionChartEvent *event = new ExecutionChartEvent(this, m_scale, m_baseline,
-                                                             m_height, m_timestamp, m_width,
+        ExecutionChartEvent *event = new ExecutionChartEvent(m_timestamp, m_width,
                                                              text, m_color);
-        QGraphicsItem *item = event->item();
-        m_scene->addItem(item);
+
         m_elements.append(event);
 
         // Reset to the begin of the sequence
         m_eventSequenceIterator = m_eventSequence.begin();
+    }
+
+    return event->timestamp;
+}
+
+double ExecutionChartEventCreator::selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const
+{
+    double x, y;
+    m_plot->pixelsToCoords(pos, x, y);
+
+    if ((y < 0.1) || (y > 0.9)) {
+        return -1.0;
+    }
+
+    ExecutionChartElement *elem;
+    ExecutionChartEvent *event;
+    foreach (elem, m_elements) {
+        event = dynamic_cast<ExecutionChartEvent*>(elem);
+
+        double ex, ey;
+        m_plot->coordsToPixels(event->timestamp(), 0, ex, ey);
+        if ((pos.x() >= ex - 2) && (pos.x() <= ex + event->width() + 2)) {
+            *details = QVariant::fromValue<ExecutionChartEvent*>(event);
+            return 0.0;
+        }
+    }
+
+    return -1.0;
+}
+
+void ExecutionChartEventCreator::selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged)
+{
+    ExecutionChartEvent* ev = details.value<ExecutionChartEvent*>();
+    QToolTip::showText(event->globalPos(), ev->text(), 0);
+}
+
+void ExecutionChartEventCreator::draw(QCPPainter *painter)
+{
+    ExecutionChartElement *elem;
+    ExecutionChartEvent *event;
+    foreach (elem, m_elements) {
+        event = dynamic_cast<ExecutionChartEvent*>(elem);
+
+        unsigned int time = event->timestamp();
+        QColor brush = event->color();
+        unsigned int width = event->width();
+
+        double x1, x2, y1, y2;
+
+        m_plot->coordsToPixels(time, 0.1, x1, y1);
+        m_plot->coordsToPixels(time, 0.9, x2, y2);
+
+        x2 = x1 + width;
+
+        painter->setBrush(brush);
+        painter->setPen(Qt::NoPen);
+
+        painter->drawRect(x1, y1, x2-x1, y2-y1);
     }
 }
 

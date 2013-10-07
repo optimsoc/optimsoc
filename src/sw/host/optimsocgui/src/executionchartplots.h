@@ -31,46 +31,25 @@
 #include <QGraphicsLineItem>
 #include <QList>
 
+#include "qcustomplot.h"
+
+#include "traceevents.h"
+
 // Forward declaration
 class ExecutionChartElementCreator;
 
 /**
   * Abstract prototype for plotting classes
   */
-class ExecutionChartPlot : public QObject
+class ExecutionChartPlot : public QCPAbstractPlottable
 {
     Q_OBJECT
 
 public:
-    ExecutionChartPlot(QObject *parent, QGraphicsView *gv,QGraphicsScene *scene,
-                       unsigned int baseline,unsigned int height);
-    virtual void addSoftwareTrace(unsigned int timestamp, unsigned int id,
-                                  unsigned int value) = 0;
+    ExecutionChartPlot(QCPAxis *keyaxis, QCPAxis *valueaxis);
+    virtual unsigned int addSoftwareTrace(SoftwareTraceEvent *event) = 0;
+    virtual void updateExtend(unsigned int) = 0;
 protected:
-    int m_baseline;
-    int m_height;
-    QGraphicsView *m_graphicsView;
-    QGraphicsScene *m_scene;
-};
-
-class ExecutionChartPlotScale : public ExecutionChartPlot
-{
-    Q_OBJECT
-
-public:
-    ExecutionChartPlotScale(QObject *parent, QGraphicsView *gv,
-                            QGraphicsScene *scene, unsigned int baseline,
-                            unsigned int height);
-    void addSoftwareTrace(unsigned int timestamp, unsigned int id,
-                          unsigned int value);
-
-public slots:
-    void rescale(double newscale,double oldscale);
-    void expand(int maximum);
-private:
-    QGraphicsLineItem *m_line;
-    int m_currentMaximum;
-    double m_currentScale;
 };
 
 class ExecutionChartPlotCore : public ExecutionChartPlot
@@ -78,19 +57,38 @@ class ExecutionChartPlotCore : public ExecutionChartPlot
     Q_OBJECT
 
 public:
-    ExecutionChartPlotCore(QObject *parent, QGraphicsView *gv,
-                           QGraphicsScene *scene, unsigned int baseline,
-                           unsigned int height);
-    void addSoftwareTrace(unsigned int timestamp, unsigned int id,
-                          unsigned int value);
+    ExecutionChartPlotCore(QCPAxis *keyaxis, QCPAxis *valueaxis, QString corename);
     void readEventsFromFile(QString filename);
     void readEventsFromPath(QString path);
-public slots:
-    void rescale(double newscale,double oldscale);
-    void expand(int maximum);
+
+    virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const;
+    virtual void draw(QCPPainter *painter);
+    virtual void clearData();
+    virtual void drawLegendIcon(QCPPainter *painter, const QRectF &rect) const;
+    virtual QCPRange getKeyRange(bool &validRange, SignDomain inSignDomain) const;
+    virtual QCPRange getValueRange(bool &validRange, SignDomain inSignDomain) const;
+
+    virtual unsigned int addSoftwareTrace(SoftwareTraceEvent *event);
+
+    virtual void updateExtend(unsigned int extend);
+
+    void coordsToPixels(double key, double value, double &x, double &y) const;
+    void pixelsToCoords(const QPointF &pixelPos, double &key, double &value) const;
+
+    void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
 private:
+    enum LayerPosition {
+        LayerSections = 0,
+        LayerEvents = 1
+    };
+
+    QString m_corename;
     QList<ExecutionChartElementCreator*> m_creators;
+    QMultiMap<enum LayerPosition, ExecutionChartElementCreator*> m_creatorLayers;
     QMap<unsigned int,QVector<ExecutionChartElementCreator*> > m_traceCreators;
+
+    unsigned int m_currentExtend;
+    ExecutionChartElementCreator *m_currentSelection;
 };
 
 #endif // EXECUTIONCHARTPLOTS_H

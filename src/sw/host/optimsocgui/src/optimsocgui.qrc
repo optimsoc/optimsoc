@@ -6,5 +6,12 @@
         <file>resources/zoom-original.png</file>
         <file>resources/configure.png</file>
         <file>resources/document-save.png</file>
+        <file>resources/download.png</file>
+        <file>resources/media-playback-pause.png</file>
+        <file>resources/media-playback-start.png</file>
+        <file>resources/network-connect.png</file>
+        <file>resources/network-disconnect.png</file>
+        <file>resources/arrow-left.png</file>
+        <file>resources/arrow-right.png</file>
     </qresource>
 </RCC>

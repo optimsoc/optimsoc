@@ -26,10 +26,12 @@
 #define EXECUTIONCHART_H
 
 #include <QWidget>
-#include <QGraphicsScene>
+#include <QTimer>
 #include <QMap>
 
 #include "executionchartplots.h"
+
+#include "traceevents.h"
 
 namespace Ui {
 class ExecutionChart;
@@ -43,38 +45,36 @@ public:
     explicit ExecutionChart(QWidget *parent = 0);
     ~ExecutionChart();
 
-    static const QPair<double,QString> mapScaleToString(double x);
-
 public slots:
-    void addTraceEvent(unsigned int core_id, unsigned int timestamp,
-                       unsigned int id, unsigned int value);
+    void addTraceEvent(struct SoftwareTraceEvent);
     void systemDiscovered(int id);
+    void rangeChanged(QCPRange oldrange, QCPRange newrange);
+    void replot();
 
 private slots:
     void on_zoomInButton_clicked();
     void on_zoomOutButton_clicked();
-    void updateZoomLabel(double newscale,double oldscale);
-    void onRescale(double newscale,double oldscale);
-    void onExpand(int maximum);
-
     void on_zoomOriginalButton_clicked();
 
+    void on_leftButton_clicked();
+
+    void on_rightButton_clicked();
+
 private:
-    void resizeEvent(QResizeEvent *event);
-
     Ui::ExecutionChart *m_ui;
-    QGraphicsScene m_scene;
-    QGraphicsScene m_sceneLabels;
 
-    ExecutionChartPlotScale *m_plotScale;
     QVector<ExecutionChartPlotCore*> m_plotCores;
+    unsigned int m_currentMaximum;
+    bool m_autoscroll;
 
-    double m_currentScale;
-    int m_currentMaximum;
+    double m_zoomFactor;
+    double m_slideFactor;
+
+    QTimer m_plotTimer;
 
 signals:
-    void rescale(double newscale,double oldscale);
-    void expand(int maximum);
+    void rangeChange(QCPRange newrange);
+
 };
 
 #endif // EXECUTIONCHART_H

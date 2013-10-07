@@ -32,33 +32,47 @@ class ExecutionChartSection;
 #include <QGraphicsScene>
 #include <QMap>
 
+#include "qcustomplot.h"
+
+#include "traceevents.h"
+#include "executionchartplots.h"
+#include "executionchartelements.h"
+
 class ExecutionChartElementCreator : public QObject
 {
     Q_OBJECT
 
 public:
-    ExecutionChartElementCreator(QObject *parent, QGraphicsScene *scene);
-    virtual void addTrace(unsigned int timestamp,
-                          unsigned int id,
-                          unsigned int value) = 0;
-    void rescale(double newscale, double oldscale);
-    virtual void expand(int maximum) {}
+    ExecutionChartElementCreator(ExecutionChartPlotCore *plot);
+    /**
+      * Add trace event
+      *
+      * @return Updated maximum extend
+      */
+    virtual unsigned int addTrace(SoftwareTraceEvent *event) = 0;
+    virtual void updateExtend(unsigned int extend) {}
+    virtual void draw(QCPPainter *painter) = 0;
+    virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const = 0;
+    virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged) = 0;
 protected:
     QList<ExecutionChartElement*> m_elements;
-    QGraphicsScene *m_scene;
-    double m_scale;
+    ExecutionChartPlotCore *m_plot;
 };
+
+Q_DECLARE_METATYPE(ExecutionChartElementCreator*)
 
 class ExecutionChartSectionCreator : public ExecutionChartElementCreator
 {
     Q_OBJECT
 
 public:
-    ExecutionChartSectionCreator(QObject *parent, QGraphicsScene *scene,
-                                 unsigned int baseline, unsigned int height);
-    virtual void addTrace(unsigned int timestamp, unsigned int id,
-                          unsigned int value);
-    virtual void expand(int maximum);
+    ExecutionChartSectionCreator(ExecutionChartPlotCore *plot);
+    virtual unsigned int addTrace(SoftwareTraceEvent *event);
+    virtual void updateExtend(unsigned int extend);
+    virtual void draw(QCPPainter *painter);
+    virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const;
+    virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
+
 private:
     void createSection(unsigned int from, unsigned int to, int id,
                        QString text);
@@ -66,11 +80,10 @@ private:
     unsigned int m_currentSectionDefinition;
     QMap<unsigned int,QString> m_sectionNames;
     bool m_inSection;
-    unsigned int m_currentSection;
-    unsigned int m_currentSectionStart;
 
-    unsigned int m_baseline;
-    unsigned int m_height;
+    ExecutionChartSection* m_currentSection;
+    ExecutionChartSection* m_currentSelection;
+
 };
 
 class ExecutionChartEventCreator : public ExecutionChartElementCreator
@@ -182,10 +195,10 @@ class ExecutionChartEventCreator : public ExecutionChartElementCreator
     };
 
 public:
-    ExecutionChartEventCreator(QObject *parent, QGraphicsScene *scene,
-                               unsigned int baseline, unsigned int height,
-                               unsigned int width, QString textFormat,
-                               unsigned int color = 0xff000000);
+    ExecutionChartEventCreator(ExecutionChartPlotCore *plot, unsigned int width, QString textFormat, QColor color);
+    virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const;
+    virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
+    virtual void draw(QCPPainter *painter);
     bool appendEmpty();
     bool appendDec(bool actualTime);
     bool appendDecSigned(bool actualTime);
@@ -194,11 +207,8 @@ public:
     bool appendChar(bool actualTime);
     bool appendString(bool actualTime);
 
-    virtual void addTrace(unsigned int timestamp, unsigned int id,
-                          unsigned int value);
+    virtual unsigned int addTrace(SoftwareTraceEvent *event);
 private:
-    unsigned int m_baseline;
-    unsigned int m_height;
     unsigned int m_width;
     QString m_textFormat;
 
@@ -208,6 +218,8 @@ private:
     Event* m_eventActualTime;
     unsigned int m_timestamp;
     QColor m_color;
+
+    ExecutionChartEvent *m_currentSelection;
 };
 
 #endif // EXECUTIONCHARTCREATORS_H

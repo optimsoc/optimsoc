@@ -30,6 +30,9 @@ SET(optimsocgui_SRCS
     meshnoclayout.cpp
     noclayout.cpp
     optimsocsystemscene.cpp
+    traceevents.cpp
+    plotspectrogram.cpp
+    qcustomplot.cpp
 )
 
 # add all *.ui files here
@@ -39,6 +42,7 @@ SET(optimsocgui_UIS
     configuredialog.ui
     executionchart.ui
     writememorydialog.ui
+    plotspectrogram.ui
 )
 
 # add all files which contain classes using the QT_OBJECT macro here
@@ -70,6 +74,9 @@ SET(optimsocgui_MOC_HEADERS
     meshnoclayout.h
     noclayout.h
     optimsocsystemscene.h
+    traceevents.h
+    plotspectrogram.h
+    qcustomplot.h
 )
 
 SET(optimsocgui_QRCS
@@ -108,6 +115,6 @@ add_executable(optimsocgui
   ${optimsocgui_QRCS_SRCS}
 )
 
-target_link_libraries(optimsocgui ${QT_LIBRARIES} ${LIBOPTIMSOCHOST_LIBRARIES})
+target_link_libraries(optimsocgui ${QT_LIBRARIES} ${LIBOPTIMSOCHOST_LIBRARIES} ${QWT_LIBRARIES})
 
 install(TARGETS optimsocgui DESTINATION bin)

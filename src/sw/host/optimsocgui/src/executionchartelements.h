@@ -32,11 +32,7 @@ class ExecutionChartElement : public QObject
     Q_OBJECT
 
 public:
-    ExecutionChartElement(QObject *parent, double scale)
-        : QObject(parent), m_scale(scale) {}
-    virtual QGraphicsItem *item() = 0;
-    virtual void rescale(double newscale, double oldscale) = 0;
-
+    ExecutionChartElement() {}
 protected:
     double m_scale;
 };
@@ -45,50 +41,47 @@ class ExecutionChartSection : public ExecutionChartElement
 {
     Q_OBJECT
 public:
-    ExecutionChartSection(QObject *parent, double scale,
-                          unsigned int baseline, unsigned int height,
-                          unsigned int from, unsigned int to,
+    ExecutionChartSection(unsigned int from, unsigned int to,
                           int id, QString text);
-    virtual QGraphicsItem *item();
-    virtual void rescale(double newscale, double oldscale);
-    virtual void expand(int maximum);
-
+    void getRange(unsigned int &from, unsigned int &to);
+    void getColors(QColor &pen, QColor &brush);
+    QString text() { return m_text; }
+    void updateExtend(unsigned int to);
 private:
     static const QPair<QColor,QColor> colorMap(int id);
-
-    unsigned int m_baseline;
-    unsigned int m_height;
 
     unsigned int m_from;
     unsigned int m_to;
     unsigned int m_id;
     QString m_text;
 
-    QGraphicsRectItem *m_item;
+    QPair<QColor,QColor> m_colors;
 };
+
+Q_DECLARE_METATYPE(ExecutionChartSection*)
 
 class ExecutionChartEvent : public ExecutionChartElement
 {
     Q_OBJECT
 
 public:
-    ExecutionChartEvent(QObject *parent, double scale,
-                        unsigned int baseline, unsigned int height,
-                        unsigned int timestamp, unsigned int width,
+    ExecutionChartEvent(unsigned int timestamp, unsigned int width,
                         QString text, QColor color);
-    virtual QGraphicsItem *item();
-    virtual void rescale(double newscale, double oldscale);
+    unsigned int timestamp() { return m_timestamp; }
+    unsigned int width() { return m_width; }
+    QString text() { return m_text; }
+    QColor color() { return m_color; }
 
 private:
     QGraphicsRectItem *m_item;
 
-    unsigned int m_baseline;
-    unsigned int m_height;
     unsigned int m_timestamp;
     unsigned int m_width;
 
     QString m_text;
     QColor m_color;
 };
+
+Q_DECLARE_METATYPE(ExecutionChartEvent*)
 
 #endif // EXECUTIONCHARTELEMENTS_H
