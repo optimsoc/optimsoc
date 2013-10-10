@@ -244,6 +244,10 @@ int optimsoc_free(struct optimsoc_ctx *ctx)
 {
     int rv;
 
+    if (!ctx) {
+        return 0;
+    }
+
     if (ctx->backend_call.connected(ctx->backend_ctx)) {
         err(ctx->log_ctx, "Call optimsoc_disconnect() first!\n");
         return -1;
