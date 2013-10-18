@@ -18,8 +18,10 @@ ${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm.v
 ${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm_bus.v
 ${OPTIMSOC_RTL}/compute_tile_dm/verilog/compute_tile_dm_bus_arbiter.v
 ${OPTIMSOC_RTL}/bootrom/verilog/bootrom.v
-${OPTIMSOC_RTL}/ct_ram/verilog/ct_ram.v
-${OPTIMSOC_RTL}/ct_ram/verilog/ct_ram_plain.v
+${OPTIMSOC_RTL}/sram/verilog/wb_sram_sp.v
+${OPTIMSOC_RTL}/sram/verilog/wb2sram.v
+${OPTIMSOC_RTL}/sram/verilog/sram_sp.v
+${OPTIMSOC_RTL}/sram/verilog/sram_sp_impl_plain.v
 ${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_unit.v
 ${OPTIMSOC_RTL}/wb_cas_unit/verilog/wb_cas_fsm.v
 
