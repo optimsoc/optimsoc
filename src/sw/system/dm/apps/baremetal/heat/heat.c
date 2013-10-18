@@ -38,11 +38,11 @@
 #include <string.h> // For memcpy
 
 // The dimensions of the heat area
-#define XSIZE 10
-#define YSIZE 10
+#define XSIZE 20
+#define YSIZE 20
 
 // The number of iterations
-#define ITERATIONS 10
+#define ITERATIONS 50
 
 // As this problem is embarrasingly parallel, it is quite easy to just split the
 // area as a matrix. As the direct neighbor elements are required in the
@@ -170,6 +170,12 @@ int main() {
     optimsoc_trace_definesection(2,"update");
     optimsoc_trace_definesection(3,"barrier");
 
+    if (rank == 0) {
+      OPTIMSOC_TRACE(0x1000, 0);
+      OPTIMSOC_TRACE(0x1100, XSIZE);
+      OPTIMSOC_TRACE(0x1101, YSIZE);
+    }
+
     optimsoc_trace_section(0);
 
     // If this rank is not part of the grid, just quit..
@@ -218,15 +224,16 @@ int main() {
     // To see any heat distribution we need a hot spot, that
     // is here on the upper left corner.
     if (rank==0) {
-        matrix[0][POS(0,0)] = 9.99;
-        matrix[0][POS(1,0)] = 9.99;
-        matrix[0][POS(0,1)] = 9.99;
-        matrix[0][POS(0,2)] = 9.99;
-
-        matrix[1][POS(0,0)] = 9.99;
-        matrix[1][POS(1,0)] = 9.99;
-        matrix[1][POS(0,1)] = 9.99;
-        matrix[1][POS(0,2)] = 9.99;
+      matrix[0][POS(0,0)] = 19.99;
+      matrix[1][POS(0,0)] = 19.99;
+      for (int x=0;x<xdim;x++) {
+        matrix[0][POS(x,0)] = 19.99;
+        matrix[1][POS(x,0)] = 19.99;
+      }
+      for (int y=0;y<ydim;y++) {
+        matrix[0][POS(0,y)] = 19.99;
+        matrix[1][POS(0,y)] = 19.99;
+      }
     }
 
     // Allocate memory for the result matrix
@@ -414,6 +421,17 @@ void heat() {
 
         barrier();
 
+	// Trace to host
+        for (int x=1;x<xdim+1;x++) {
+            for (int y=1;y<ydim+1;y++) {
+	      // 0x1102: x position
+	      // 0x1103: y position
+	      // 0x1104: value
+	      OPTIMSOC_TRACE(0x1102, xbase+x-1);
+	      OPTIMSOC_TRACE(0x1103, ybase+y-1);
+	      OPTIMSOC_TRACE(0x1104, matrix[curmatrix][POS(x,y)]);
+            }
+        }
 
         // Change matrices
         // (1-0=1, 1-1=0)
@@ -461,6 +479,8 @@ void heat() {
 
     // Final barrier to ensure the result is complete
     barrier();
+
+    
 }
 
 // Above we registered a function that is called for each incoming packet
