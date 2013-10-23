@@ -19,16 +19,14 @@
  *
  * liboptimsochost is a host-side library for talking with the OpTiMSoC system.
  *
- * For connecting with the system, the USB interface of the Debug NoC is used.
- *
- * (c) 2012 by the author(s)
+ * (c) 2012-2013 by the author(s)
  *
  * Author(s):
  *    Philipp Wagner, mail@philipp-wagner.com
  */
 
-#ifndef _LIBOPTIMSOC_H_
-#define _LIBOPTIMSOC_H_
+#ifndef _LIBOPTIMSOCHOST_H_
+#define _LIBOPTIMSOCHOST_H_
 
 #include <stdarg.h>
 #include <inttypes.h>

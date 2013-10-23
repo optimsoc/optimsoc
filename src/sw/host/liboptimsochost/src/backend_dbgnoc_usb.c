@@ -328,20 +328,19 @@ int ob_dbgnoc_usb_read(struct ob_dbgnoc_connection_ctx *ctx, uint16_t *buffer,
 #endif
 
     int bytes_transferred;
-    int cancel_oldstate;
 
     /*
      * We cannot cancel the thread while libusb is waiting for a transfer, as
      * it will leave locks inside libusb in an undefined state and may cause
      * hangs when calling libusb_close().
      */
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_oldstate);
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     rv = libusb_bulk_transfer(ctx->usb_dev_handle, OPTIMSOC_USB_RD_EP,
                               (unsigned char*)buffer,
                               sizeof(uint16_t) * len,
                               &bytes_transferred,
                               OPTIMSOC_USB_RX_TIMEOUT_MS);
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &cancel_oldstate);
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_testcancel(); // explicit cancellation point
 
     if (rv < 0) {

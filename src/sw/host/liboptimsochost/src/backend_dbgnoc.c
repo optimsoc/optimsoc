@@ -610,8 +610,9 @@ void* receive_thread(void* ctx_void)
             buffer_rx[i] = 0;
         }
 
-        rv = ctx->conn_calls->read_fn(ctx->conn_ctx, buffer_rx + NUM_SAMPLES_PER_TRANSFER,
-                          NUM_SAMPLES_PER_TRANSFER);
+        rv = ctx->conn_calls->read_fn(ctx->conn_ctx,
+                                      buffer_rx + NUM_SAMPLES_PER_TRANSFER,
+                                      NUM_SAMPLES_PER_TRANSFER);
 
         if (rv < 0) {
             /* probably a timeout, i.e. no data to read. try again. */
