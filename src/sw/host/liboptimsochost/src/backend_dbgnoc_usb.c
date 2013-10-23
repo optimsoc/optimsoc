@@ -342,6 +342,7 @@ int ob_dbgnoc_usb_read(struct ob_dbgnoc_connection_ctx *ctx, uint16_t *buffer,
                               &bytes_transferred,
                               OPTIMSOC_USB_RX_TIMEOUT_MS);
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &cancel_oldstate);
+    pthread_testcancel(); // explicit cancellation point
 
     if (rv < 0) {
         return -1;
