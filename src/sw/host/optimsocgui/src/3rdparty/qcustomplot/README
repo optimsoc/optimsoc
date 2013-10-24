@@ -1,0 +1,8 @@
+This folder contains QCustomPlot, a Qt plotting library.
+
+Author:  Emanuel Eichhammer
+Website: http://www.qcustomplot.com/
+License: GPLv3+
+Version: 1.0.1 + patches (see below)
+Patches:
+  https://gitorious.org/qcustomplot/wallentos-qcustomplot/commit/370bad52b66149e5169c87cf738e589b0caae881

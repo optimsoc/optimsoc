@@ -1,178 +1,156 @@
-/*
- * This file is part of OpTiMSoC-GUI.
+/* Copyright (c) 2012-2013 by the author(s)
  *
- * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * OpTiMSoC-GUI is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
- *
- * =================================================================
- *
- * (c) 2012-2013 by the author(s)
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *
  * Author(s):
- *    Philipp Wagner, philipp.wagner@tum.de
+ *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QMessageBox>
 #include <QDebug>
+#include <QLabel>
+#include <QSettings>
+#include <QStandardItemModel>
 
 #include "aboutdialog.h"
-#include "configuredialog.h"
-#include "optimsocsystem.h"
 #include "optimsocsystemfactory.h"
-#include "executionchart.h"
-#include "writememorydialog.h"
 
 #include "plotspectrogram.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_ui(new Ui::MainWindow),
-    m_hardwareInterfaceThread(new QThread),
-    m_statusBarConnectionStat(new QLabel)
+    m_statusBarConnectionStat(new QLabel),
+    m_statusBarSystemStat(new QLabel),
+    m_sysif(SystemInterface::instance())
 {
     // init UI
     m_ui->setupUi(this);
 
-    m_system = NULL;
-
     statusBar()->addPermanentWidget(m_statusBarConnectionStat);
-
-    // create hardware interface thread
-    m_hwif = HardwareInterface::instance();
-    connect(m_hardwareInterfaceThread, SIGNAL(started()),
-            m_hwif, SLOT(threadStarted()));
-    connect(m_hardwareInterfaceThread, SIGNAL(finished()),
-            m_hwif, SLOT(threadFinished()));
-    m_hwif->moveToThread(m_hardwareInterfaceThread);
-    m_hardwareInterfaceThread->start();
+    statusBar()->addPermanentWidget(m_statusBarSystemStat);
 
     connect(m_ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(m_ui->actionAbout, SIGNAL(triggered()),
             this, SLOT(showAboutDialog()));
 
-    connect(m_ui->actionInitialize, SIGNAL(triggered()), this, SLOT(initMemories()));
+    connect(m_sysif,
+            SIGNAL(connectionStatusChanged(SystemInterface::ConnectionStatus, SystemInterface::ConnectionStatus)),
+            this,
+            SLOT(showConnectionStatus(SystemInterface::ConnectionStatus, SystemInterface::ConnectionStatus)));
 
-    connect(m_ui->actionConfigure, SIGNAL(triggered()), this, SLOT(configure()));
-    connect(m_ui->actionConnect, SIGNAL(triggered()),
-            m_hwif, SLOT(connect()));
-    connect(m_ui->actionDisconnect, SIGNAL(triggered()),
-            m_hwif, SLOT(disconnect()));
-    connect(m_hwif, SIGNAL(connectionStatusChanged(HardwareInterface::ConnectionStatus, HardwareInterface::ConnectionStatus)),
-            this, SLOT(updateConnectionStatus(HardwareInterface::ConnectionStatus, HardwareInterface::ConnectionStatus)));
-    connect(m_hwif, SIGNAL(systemDiscovered(int)),
-            this, SLOT(systemDiscovered(int)));
+    connect(m_sysif,
+            SIGNAL(systemStatusChanged(SystemInterface::SystemStatus, SystemInterface::SystemStatus)),
+            this,
+            SLOT(showSystemStatus(SystemInterface::SystemStatus, SystemInterface::SystemStatus)));
+
     connect(m_ui->actionStartCpus, SIGNAL(triggered()),
-            m_hwif, SLOT(startCpus()));
-    connect(m_ui->actionReset, SIGNAL(triggered()),
-            m_hwif, SLOT(reset()));
+            m_sysif, SLOT(startCpus()));
+    connect(m_ui->actionStallCpus, SIGNAL(triggered()),
+            m_sysif, SLOT(stallCpus()));
+    connect(m_ui->actionResetSystem, SIGNAL(triggered()),
+            m_sysif, SLOT(resetSystem()));
+
+    connect(m_ui->btnToggleLogViewer, SIGNAL(toggled(bool)),
+            this, SLOT(toggleLogViewer(bool)));
+    connect(m_ui->logViewer, SIGNAL(unseenLogMsgs(uint,uint)),
+            this, SLOT(updateUnseenLogMsgsInButton(uint,uint)));
 
     // initialize connection status widget
-    updateConnectionStatus(HardwareInterface::Disconnected, m_hwif->connectionStatus());
+    showConnectionStatus(SystemInterface::Disconnected,
+                         m_sysif->connectionStatus());
 
-    // instruction trace display
-    m_traceModel = new QStandardItemModel(0, 4, this);
+    readSettings();
 
-    m_traceModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Core ID"));
-    m_traceModel->setHeaderData(1, Qt::Horizontal, QObject::tr("Timestamp"));
-    m_traceModel->setHeaderData(2, Qt::Horizontal, QObject::tr("$PC"));
-    m_traceModel->setHeaderData(3, Qt::Horizontal, QObject::tr("#"));
-
-    m_ui->instructionTraceTableView->setModel(m_traceModel);
-    connect(m_hwif, SIGNAL(instructionTraceReceived(int, unsigned int, unsigned int, int)),
-            this, SLOT(addTraceToModel(int, unsigned int, unsigned int, int)));
-
-    // XXX: Disable instruction trace dock until it contains data
-    m_ui->instructionTraceDockWidget->hide();
-
-    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(struct SoftwareTraceEvent)),
-            this, SLOT(addSoftwareTraceToStdout(struct SoftwareTraceEvent)));
-
-    // software trace display
-    m_swTraceModel = new QStandardItemModel(0, 4, this);
-
-    m_swTraceModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Core ID"));
-    m_swTraceModel->setHeaderData(1, Qt::Horizontal, QObject::tr("Timestamp"));
-    m_swTraceModel->setHeaderData(2, Qt::Horizontal, QObject::tr("Message"));
-    m_swTraceModel->setHeaderData(3, Qt::Horizontal, QObject::tr("Value"));
-
-    m_ui->softwareTraceTableView->setModel(m_swTraceModel);
-    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(SoftwareTraceEvent)),
-            this, SLOT(addSoftwareTraceToModel(SoftwareTraceEvent)));
-
-    // Connect to Execution Trace
-    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(SoftwareTraceEvent)),
-            m_ui->widgetExecutionTrace, SLOT(addTraceEvent(SoftwareTraceEvent)));
-
-    connect(m_hwif, SIGNAL(systemDiscovered(int)),
-            m_ui->widgetExecutionTrace, SLOT(systemDiscovered(int)));
-
-    PlotSpectrogram *heatmap = new PlotSpectrogram(this);
-    heatmap->hide();
-    connect(m_hwif->softwareTraceEventDistributor(), SIGNAL(softwareTraceEvent(SoftwareTraceEvent)),
-            heatmap, SLOT(softwareTraceEvent(SoftwareTraceEvent)));
-
-    configure();
+    // ensure initial state
+    updateUnseenLogMsgsInButton(0, 0);
 }
 
 MainWindow::~MainWindow()
 {
-    m_hardwareInterfaceThread->quit();
-    m_hardwareInterfaceThread->wait();
+    delete m_sysif;
 
-    delete m_hardwareInterfaceThread;
-    delete m_hwif;
+    delete m_statusBarConnectionStat;
+    delete m_statusBarSystemStat;
     delete m_ui;
+
+    // The system is allocated in SystemView. We delete it here to ensure it is
+    // deleted when closing the application.
+    OptimsocSystem *sys = OptimsocSystemFactory::currentSystem();
+    if (sys) {
+        delete sys;
+    }
 }
 
-void MainWindow::configure() {
-    if (m_hwif->configured()) {
-        QMessageBox ask(QMessageBox::Warning,
-                        "Already configured",
-                        "Already configured. Do you want to reconfigure?",
-                        QMessageBox::Yes|QMessageBox::No, this);
-        ask.setModal(true);
-        ask.exec();
-        if (ask.result() == QMessageBox::No) {
-            return;
-        }
+/**
+ * The window received a close event
+ *
+ * This implementation writes all settings otherwise does not change the event
+ * handling.
+ *
+ * @see QMainWindow::closeEvent()
+ *
+ * @param event
+ */
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    writeSettings();
+    QMainWindow::closeEvent(event);
+}
 
-        m_hwif->disconnect();
-    }
+/**
+ * Restore the UI state based on the settings
+ */
+void MainWindow::readSettings()
+{
+    QSettings settings;
+    settings.beginGroup("MainWindow");
 
-    ConfigureDialog dialog(this);
-    dialog.setModal(true);
-    dialog.exec();
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("windowState").toByteArray());
 
-    if (dialog.result() == ConfigureDialog::Accepted) {
-        m_ui->actionConfigure->setEnabled(true);
-        m_ui->actionConnect->setEnabled(true);
-        m_ui->actionDisconnect->setEnabled(false);
-        m_ui->actionReset->setEnabled(false);
-        m_ui->actionStartCpus->setEnabled(false);
-        m_ui->menuMemories->setEnabled(false);
+    m_ui->splitterBottomSection->restoreState(settings.value("splitterBottomSectionState").toByteArray());
+    m_ui->logViewer->setVisible(settings.value("logViewerVisible").toBool());
+    m_ui->btnToggleLogViewer->setChecked(settings.value("logViewerVisible").toBool());
 
-        m_hwif->configure(dialog.backend(), dialog.options());
-    } else {
-        m_ui->actionConfigure->setEnabled(true);
-        m_ui->actionConnect->setEnabled(false);
-        m_ui->actionDisconnect->setEnabled(false);
-        m_ui->actionReset->setEnabled(false);
-        m_ui->actionStartCpus->setEnabled(false);
-        m_ui->menuMemories->setEnabled(false);
-    }
+    settings.endGroup();
+}
+
+/**
+ * Write the UI state to the settings to restore it on the next program run
+ */
+void MainWindow::writeSettings()
+{
+    QSettings settings;
+    settings.beginGroup("MainWindow");
+
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("windowState", saveState());
+
+    settings.setValue("splitterBottomSectionState",
+                      m_ui->splitterBottomSection->saveState());
+    settings.setValue("logViewerVisible", m_ui->logViewer->isVisible());
+
+    settings.endGroup();
 }
 
 void MainWindow::showAboutDialog()
@@ -182,127 +160,146 @@ void MainWindow::showAboutDialog()
     aboutDialog->exec();
 }
 
-void MainWindow::updateConnectionStatus(HardwareInterface::ConnectionStatus oldStatus,
-                                        HardwareInterface::ConnectionStatus newStatus)
+/**
+ * Update the UI after the connection status changed
+ *
+ * @param oldStatus
+ * @param newStatus
+ */
+void MainWindow::showConnectionStatus(SystemInterface::ConnectionStatus oldStatus,
+                                      SystemInterface::ConnectionStatus newStatus)
 {
+    Q_UNUSED(oldStatus);
+
     switch (newStatus) {
-    case HardwareInterface::Connected:
+    case SystemInterface::Connected:
         m_statusBarConnectionStat->setText(tr("Connected"));
+
         m_ui->actionConfigure->setEnabled(true);
         m_ui->actionConnect->setEnabled(false);
         m_ui->actionDisconnect->setEnabled(true);
-        m_ui->actionReset->setEnabled(true);
-        m_ui->actionStartCpus->setEnabled(true);
-        m_ui->menuMemories->setEnabled(true);
+
+        m_ui->actionResetSystem->setEnabled(true);
         break;
-    case HardwareInterface::Connecting:
+    case SystemInterface::Connecting:
         m_statusBarConnectionStat->setText(tr("Connecting ..."));
+
+        m_ui->actionConfigure->setEnabled(false);
+        m_ui->actionConnect->setEnabled(false);
+        m_ui->actionDisconnect->setEnabled(false);
+
+        m_ui->actionResetSystem->setEnabled(false);
         break;
-    case HardwareInterface::Disconnected:
+    case SystemInterface::Disconnected:
         m_statusBarConnectionStat->setText(tr("Disconnected"));
+
         m_ui->actionConfigure->setEnabled(true);
         m_ui->actionConnect->setEnabled(true);
         m_ui->actionDisconnect->setEnabled(false);
-        m_ui->actionReset->setEnabled(false);
+
+        m_ui->actionResetSystem->setEnabled(false);
+
         m_ui->actionStartCpus->setEnabled(false);
-        m_ui->menuMemories->setEnabled(false);
+        m_ui->actionStallCpus->setEnabled(false);
         break;
-    case HardwareInterface::Disconnecting:
+    case SystemInterface::Disconnecting:
         m_statusBarConnectionStat->setText(tr("Disconnecting ..."));
+
+        m_ui->actionConfigure->setEnabled(false);
+        m_ui->actionConnect->setEnabled(false);
+        m_ui->actionDisconnect->setEnabled(false);
+
+        m_ui->actionResetSystem->setEnabled(false);
+
+        m_ui->actionStartCpus->setEnabled(false);
+        m_ui->actionStallCpus->setEnabled(false);
         break;
     default:
         m_statusBarConnectionStat->setText(tr("Unknown"));
     }
 
-    if (newStatus != HardwareInterface::Connected) {
-        m_ui->disconnectedUiStack->setCurrentIndex(1);
+    // always show connection tab, but the others only if the we're connected
+    if (newStatus != SystemInterface::Connected) {
+        m_ui->taskTabWidget->setTabEnabled(1, false);
+        m_ui->taskTabWidget->setTabEnabled(2, false);
+    } else {
+        m_ui->taskTabWidget->setTabEnabled(1, true);
+        m_ui->taskTabWidget->setTabEnabled(2, true);
     }
 }
 
-void MainWindow::systemDiscovered(int systemId)
+/**
+ * Update the UI after the system status changed
+ *
+ * @param oldStatus
+ * @param newStatus
+ */
+void MainWindow::showSystemStatus(SystemInterface::SystemStatus oldStatus,
+                                  SystemInterface::SystemStatus newStatus)
 {
-    m_system = OptimsocSystemFactory::createSystemFromId(systemId);
-    if (!m_system) {
-        QMetaObject::invokeMethod(m_hwif, "disconnect");
-        QMessageBox::warning(this, "System not in database",
-                             QString("The discovered system with ID %1 is not "
-                                     "in the device database.").arg(systemId));
-        return;
-    }
+    Q_UNUSED(oldStatus);
 
-    m_ui->systemOverviewWidget->setSystem(m_system);
-    m_ui->disconnectedUiStack->setCurrentIndex(0);
+    switch (newStatus) {
+    case SystemInterface::Ready:
+        m_statusBarSystemStat->setText("Ready");
 
-}
+        m_ui->actionStartCpus->setEnabled(true);
+        m_ui->actionStallCpus->setEnabled(false);
+        break;
+    case SystemInterface::Running:
+        m_statusBarSystemStat->setText("Running");
 
-void MainWindow::addTraceToModel(int core_id, unsigned int timestamp,
-                                 unsigned int pc, int count)
-{
-    QList<QStandardItem*> items;
+        m_ui->actionStartCpus->setEnabled(false);
+        m_ui->actionStallCpus->setEnabled(true);
+        break;
+    case SystemInterface::Stalled:
+        m_statusBarSystemStat->setText("Stalled");
 
-    QStandardItem* coreIdItem = new QStandardItem(QString("%1").arg(core_id));
-    items.append(coreIdItem);
+        m_ui->actionStartCpus->setEnabled(true);
+        m_ui->actionStallCpus->setEnabled(false);
+        break;
+    case SystemInterface::Unknown:
+    default:
+        m_statusBarSystemStat->setText("Unknown");
 
-    QStandardItem* timestampItem = new QStandardItem(QString("%1").arg(timestamp));
-    items.append(timestampItem);
-
-    QStandardItem* pcItem = new QStandardItem(QString("0x%1").arg(pc, 0, 16));
-    items.append(pcItem);
-
-    QStandardItem* countItem = new QStandardItem(QString("%1").arg(count));
-    items.append(countItem);
-
-
-    m_traceModel->appendRow(items);
-}
-
-void MainWindow::addSoftwareTraceToModel(struct SoftwareTraceEvent event)
-{
-    return;
-    QList<QStandardItem*> items;
-
-    QStandardItem* coreIdItem = new QStandardItem(QString("%1").arg(event.core_id));
-    items.append(coreIdItem);
-
-    QStandardItem* timestampItem = new QStandardItem(QString("%1").arg(event.timestamp));
-    items.append(timestampItem);
-
-    QStandardItem* idItem = new QStandardItem(QString("0x%1").arg(event.id, 0, 16));
-    items.append(idItem);
-
-    QStandardItem* valueItem = new QStandardItem(QString("0x%1").arg(event.value, 0, 16));
-    items.append(valueItem);
-
-
-    m_swTraceModel->appendRow(items);
-}
-
-void MainWindow::addSoftwareTraceToStdout(SoftwareTraceEvent event)
-{
-    if (event.id == 0x4) {
-        QChar character(event.value);
-
-        if (m_stdoutcollector.size() <= event.core_id) {
-            m_stdoutcollector.resize(event.core_id+1);
-        }
-
-        if (m_stdoutcollector[event.core_id].length() == 0) {
-            m_stdoutcollector[event.core_id] = QString("[%1, %2 ns] %3").arg(event.core_id).arg(event.timestamp).arg(character);
-        } else if (character != '\n') {
-            m_stdoutcollector[event.core_id] += character;
-        }
-
-        if (character == '\n') {
-            m_ui->stdoutTextEdit->appendPlainText(m_stdoutcollector[event.core_id]);
-            m_stdoutcollector[event.core_id] = "";
-        }
+        m_ui->actionStartCpus->setEnabled(true);
+        m_ui->actionStallCpus->setEnabled(false);
+        break;
     }
 }
 
-void MainWindow::initMemories()
+/**
+ * Show/hide the log viewer at the bottom
+ *
+ * @param showLogViewer should the log viewer be visible?
+ */
+void MainWindow::toggleLogViewer(bool showLogViewer)
 {
-    WriteMemoryDialog* diag = new WriteMemoryDialog(m_system, this);
-    diag->setModal(true);
-    diag->exec();
-    delete diag;
+    m_ui->logViewer->setVisible(showLogViewer);
+}
+
+/**
+ * Update the label of the "toggle log viewer" button to display new messages
+ *
+ * @param m_unseenInfo
+ * @param m_unseenImportant
+ */
+void MainWindow::updateUnseenLogMsgsInButton(unsigned int m_unseenInfo,
+                                             unsigned int m_unseenImportant)
+{
+    if (m_unseenImportant > 0) {
+        // XXX: Use system color definitions to work with different themes
+        m_ui->btnToggleLogViewer->setStyleSheet("color: red");
+    } else {
+        m_ui->btnToggleLogViewer->setStyleSheet("");
+    }
+
+    unsigned int cnt = m_unseenImportant + m_unseenInfo;
+    QString label;
+    if (cnt == 0) {
+        label = QString("Log Messages");
+    } else {
+        label = QString("Log Messages (%1 unseen)").arg(cnt);
+    }
+    m_ui->btnToggleLogViewer->setText(label);
 }

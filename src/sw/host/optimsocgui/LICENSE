@@ -1,0 +1,17 @@
+The OpTiMSoC Host GUI contains code of two licenses:
+
+- All our own code is licensed under the MIT aka X11 license.
+  The full license text can be found in the file LICENSE.MIT
+
+- The QCustomPlot library in the folder 3rdparty/qcustomplot
+  is licensed GPLv3 or later. The full license text can be
+  found in the LICENSE.GPLv3 file.
+
+Since GPL-code is included, the whole application is licensed
+under GPLv3+. This means if you have to follow all requirements
+of the GPL license if you redistribute this application.
+
+If you plan to contribute code to this application, please do
+so under the MIT license. This gives us and you more choice
+what else to do with your and our code.
+

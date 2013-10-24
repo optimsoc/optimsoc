@@ -1,32 +1,34 @@
-/*
- * This file is part of OpTiMSoC-GUI.
+/* Copyright (c) 2013 by the author(s)
  *
- * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * OpTiMSoC-GUI is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
- *
- * =================================================================
- *
- * (c) 2013 by the author(s)
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *
  * Author(s):
- *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
+ *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
 #include "executionchart.h"
 #include "ui_executionchart.h"
 
 #include "optimsocsystem.h"
+#include "optimsocsystemelement.h"
 #include "optimsocsystemfactory.h"
+#include "systeminterface.h"
 
 #include <QGraphicsTextItem>
 #include <QGraphicsRectItem>
@@ -38,7 +40,8 @@
 
 ExecutionChart::ExecutionChart(QWidget *parent) :
     QWidget(parent),
-    m_ui(new Ui::ExecutionChart), m_currentMaximum(0), m_autoscroll(true), m_zoomFactor(10.0), m_slideFactor(0.5)
+    m_ui(new Ui::ExecutionChart), m_currentMaximum(0), m_autoscroll(true),
+    m_zoomFactor(10.0), m_slideFactor(0.5), m_sysif(SystemInterface::instance())
 {
     // Set up user interface
     m_ui->setupUi(this);
@@ -78,6 +81,15 @@ ExecutionChart::ExecutionChart(QWidget *parent) :
 
     connect(&m_plotTimer, SIGNAL(timeout()), this, SLOT(replot()));
     m_plotTimer.start(20);
+
+    connect(OptimsocSystemFactory::instance(),
+            SIGNAL(currentSystemChanged(OptimsocSystem*, OptimsocSystem*)),
+            this,
+            SLOT(systemChanged(OptimsocSystem*, OptimsocSystem*)));
+    connect(m_sysif->softwareTraceEventDistributor(),
+            SIGNAL(softwareTraceEvent(struct SoftwareTraceEvent)),
+            this,
+            SLOT(addTraceEvent(struct SoftwareTraceEvent)));
 }
 
 ExecutionChart::~ExecutionChart()
@@ -85,16 +97,12 @@ ExecutionChart::~ExecutionChart()
     delete m_ui;
 }
 
-void ExecutionChart::systemDiscovered(int id)
+void ExecutionChart::systemChanged(OptimsocSystem* oldSystem,
+                                   OptimsocSystem* newSystem)
 {
-    OptimsocSystem *system = OptimsocSystemFactory::createSystemFromId(id);
-    if (!system) {
-        qWarning("No system description is available; unable to create execution chart.");
-        return;
-    }
+    Q_UNUSED(oldSystem);
 
-
-    QList<Tile*> tiles = system->tiles();
+    QList<OptimsocSystemElement*> tiles = newSystem->tiles();
     unsigned int row = 0;
     for (int i=0; i<tiles.size(); ++i) {
         QCPAxisRect *coreaxis = new QCPAxisRect(m_ui->widget_plot);

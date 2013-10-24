@@ -1,36 +1,39 @@
-/*
- * This file is part of OpTiMSoC-GUI.
+/* Copyright (c) 2012-2013 by the author(s)
  *
- * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * OpTiMSoC-GUI is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
- *
- * =================================================================
- *
- * (c) 2012-2013 by the author(s)
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *
  * Author(s):
- *    Philipp Wagner, philipp.wagner@tum.de
+ *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
 #ifndef SYSTEMOVERVIEWWIDGET_H
 #define SYSTEMOVERVIEWWIDGET_H
 
 #include <QWidget>
-#include <QGraphicsView>
+#include <QtWebKit/QWebView>
 
 #include "optimsocsystem.h"
 
-class SystemOverviewWidget : public QGraphicsView
+class QDomElement;
+class SystemOverviewJsApi;
+
+class SystemOverviewWidget : public QWidget
 {
     Q_OBJECT
 public:
@@ -39,12 +42,35 @@ public:
     void setSystem(OptimsocSystem *system);
 
 signals:
+    void elementClicked(QString id);
 
 public slots:
+    void handleItemClicked(QString idref);
 
 private:
-    QGraphicsScene *m_scene;
     OptimsocSystem *m_optimsocSystem;
+    QWebView* m_webView;
+    SystemOverviewJsApi *m_jsapi;
+
+    void setupUi();
+
+    /**
+     * Modify all DOMElements with @idref to contain an onclick handler
+     *
+     * This recursive method goes through all DOMElements and inserts an
+     * onclick handler if the element contains an @optimsoc:idref attribute.
+     *
+     * @param el
+     */
+    void modifyDomElementForOnclick(QDomElement el);
+
+    /**
+     * Load the SVG depicting the system into the QWebView used for display
+     *
+     * The image is also modified to allow the interaction with the system to
+     * happen.
+     */
+    void loadSvgIntoWebView();
 
 };
 

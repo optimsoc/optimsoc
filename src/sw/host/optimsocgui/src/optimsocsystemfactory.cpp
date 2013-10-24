@@ -1,29 +1,32 @@
-/*
- * This file is part of OpTiMSoC-GUI.
+/* Copyright (c) 2012-2013 by the author(s)
  *
- * OpTiMSoC-GUI is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * OpTiMSoC-GUI is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with OpTiMSoC. If not, see <http://www.gnu.org/licenses/>.
- *
- * =================================================================
- *
- * (c) 2012-2013 by the author(s)
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *
  * Author(s):
- *    Philipp Wagner, philipp.wagner@tum.de
- *    Stefan Wallentowitz, stefan.wallentowitz@tum.de
+ *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
 #include "optimsocsystemfactory.h"
+
+#include <QFileInfo>
+#include <QProcessEnvironment>
+#include <QtDebug>
 
 #include "computetile.h"
 #include "memorytile.h"
@@ -31,152 +34,111 @@
 #include "meshnoc.h"
 
 /**
- * Create a OptimsocSystem object for a system with the given \p systemId
+ * Current default system
+ * @see setCurrentSystem()
+ * @see currentSystem()
+ */
+OptimsocSystem* OptimsocSystemFactory::s_currentSystem = NULL;
+OptimsocSystemFactory* OptimsocSystemFactory::s_instance = NULL;
+
+OptimsocSystemFactory::OptimsocSystemFactory(QObject *parent) : QObject(parent)
+{
+}
+
+/**
+ * Get the only instance of this class
  *
- * @todo read the system information from a database instead of hardcoding it
+ * All methods of this class are static. You only need to get an instance
+ * of this class if you want to connect to one of the signals, e.g.
+ * currentSystemChanged().
+ *
+ * @return
+ */
+OptimsocSystemFactory* OptimsocSystemFactory::instance()
+{
+    if (!OptimsocSystemFactory::s_instance) {
+        OptimsocSystemFactory::s_instance = new OptimsocSystemFactory();
+    }
+    return OptimsocSystemFactory::s_instance;
+}
+
+/**
+ * Create a OptimsocSystem object for a system with the given @p systemId
  */
 OptimsocSystem* OptimsocSystemFactory::createSystemFromId(int systemId)
 {
-    OptimsocSystem *system;
-    switch(systemId) {
-    case 1:
-        system = createSystem1();
-        break;
-    case 2:
-        system = createSystem2();
-        break;
-    case 57005:
-        system = createSystem57005();
-        break;
-    case 0xce75:
-        system = createSystem2x2CcccZtex();
-        break;
-    default:
-        qWarning("No system description available for ID %d!", systemId);
-        system = NULL;
-        break;
+    // find the system descriptions directory
+    QString systemDescriptionsDir;
+    QProcessEnvironment sysenv = QProcessEnvironment::systemEnvironment();
+    if (sysenv.contains("OPTIMSOC_SYSTEM_DESCRIPTIONS")) {
+        systemDescriptionsDir = sysenv.value("OPTIMSOC_SYSTEM_DESCRIPTIONS");
+    } else if (sysenv.contains("OPTIMSOC")) {
+        systemDescriptionsDir = QString("%1/src/sw/host/system-descriptions")
+                                    .arg(sysenv.value("OPTIMSOC"));
+    } else {
+        qWarning("No system description path is set. Set the environment "
+                 "variable OPTIMSOC_SYSTEM_DESCRIPTIONS to a directory with "
+                 "the system description XML files.");
+        return NULL;
     }
 
-    return system;
+    // see if we have a suitable system description available
+    QString sysDescFile = QString("%1/%2.xml")
+                              .arg(systemDescriptionsDir)
+                              .arg(systemId, 4, 16, QLatin1Char('0'));
+    if (!QFileInfo(sysDescFile).exists()) {
+        qWarning("No system description available for ID 0x%04x. The XML "
+                 "description file %s could not be read.", systemId,
+                 sysDescFile.toLatin1().data());
+        return NULL;
+    }
+
+    return new OptimsocSystem(sysDescFile);
 }
 
-OptimsocSystem *OptimsocSystemFactory::createSystem1()
+/**
+ * Set the current default system.
+ *
+ * Note that the ownership of the @p system pointer is <b>not</b> transferred
+ * to this class. If you want to replace a system you have set before use
+ * the following code:
+ * <code>
+ * OptimsocSystem* newSys = ...; // initialize the new system as usual
+ *
+ * OptimsocSystem* sys = OptimsocSystemFactory::currentSystem();
+ * delete sys;
+ * OptimsocSystemFactory::setCurrentSystem(newSys);
+ * </code>
+ *
+ * If the current system changes the signal currentSystemChanged() is emitted.
+ * To connecto to this class you need to get the singleton instance of this
+ * class.
+ * <code>
+ * connect(OptimsocSystemFactory::instance(), SIGNAL(currentSystemChanged(OptimsocSystem*, OptimsocSystem*)),
+ *         this, SLOT(someSlot()));
+ * </code>
+ *
+ * @see instance()
+ *
+ * @param system The new default system.
+ */
+void OptimsocSystemFactory::setCurrentSystem(OptimsocSystem *system)
 {
-    OptimsocSystem *system = new OptimsocSystem();
+    if (s_currentSystem == system) {
+        return;
+    }
 
-    // Tiles: CMEC
-    ComputeTile* ct0 = new ComputeTile(0);
-    system->addTile(ct0);
-    MemoryTile* mt1 = new MemoryTile(1);
-    system->addTile(mt1);
-    ExternalTile* et2 = new ExternalTile(2);
-    system->addTile(et2);
-    ComputeTile* ct3 = new ComputeTile(3);
-    system->addTile(ct3);
-
-    // NoC: 2x2 mesh
-    MeshNoc* noc = new MeshNoc(2, 2);
-    NocRouter* r00 = new NocRouter(0);
-    r00->setTile(ct0);
-    NocRouter* r10 = new NocRouter(1);
-    r10->setTile(mt1);
-    NocRouter* r01 = new NocRouter(2);
-    r01->setTile(et2);
-    NocRouter* r11 = new NocRouter(3);
-    r11->setTile(ct3);
-    noc->setRouter(0, 0, r00);
-    noc->setRouter(1, 0, r10);
-    noc->setRouter(0, 1, r01);
-    noc->setRouter(1, 1, r11);
-    system->setNoc(noc);
-
-    return system;
+    OptimsocSystem* oldSystem = s_currentSystem;
+    s_currentSystem = system;
+    emit instance()->currentSystemChanged(oldSystem, s_currentSystem);
 }
 
-OptimsocSystem *OptimsocSystemFactory::createSystem2x2CcccZtex()
+/**
+ * Get the current default system
+ *
+ * @return
+ */
+OptimsocSystem* OptimsocSystemFactory::currentSystem()
 {
-    OptimsocSystem *system = new OptimsocSystem();
-
-    // Tiles: CCCC
-    ComputeTile* ct0 = new ComputeTile(0);
-    ct0->setMemory(true);
-    system->addTile(ct0);
-    ComputeTile* ct1 = new ComputeTile(1);
-    ct1->setMemory(true);
-    system->addTile(ct1);
-    ComputeTile* ct2 = new ComputeTile(2);
-    ct2->setMemory(true);
-    system->addTile(ct2);
-    ComputeTile* ct3 = new ComputeTile(3);
-    ct3->setMemory(true);
-    system->addTile(ct3);
-
-    // NoC: 2x2 mesh
-    MeshNoc* noc = new MeshNoc(2, 2);
-    NocRouter* r00 = new NocRouter(0);
-    r00->setTile(ct0);
-    NocRouter* r10 = new NocRouter(1);
-    r10->setTile(ct1);
-    NocRouter* r01 = new NocRouter(2);
-    r01->setTile(ct2);
-    NocRouter* r11 = new NocRouter(3);
-    r11->setTile(ct3);
-    noc->setRouter(0, 0, r00);
-    noc->setRouter(1, 0, r10);
-    noc->setRouter(0, 1, r01);
-    noc->setRouter(1, 1, r11);
-    system->setNoc(noc);
-
-    return system;
-}
-
-OptimsocSystem *OptimsocSystemFactory::createSystem57005()
-{
-    OptimsocSystem *system = new OptimsocSystem();
-
-    ComputeTile* ct0 = new ComputeTile(0);
-    system->addTile(ct0);
-
-    MeshNoc* noc = new MeshNoc(1, 1);
-    NocRouter* r00 = new NocRouter(0);
-    r00->setTile(ct0);
-    noc->setRouter(0, 0, r00);
-    system->setNoc(noc);
-
-    return system;
-}
-
-OptimsocSystem *OptimsocSystemFactory::createSystem2()
-{
-    OptimsocSystem *system = new OptimsocSystem();
-
-    ComputeTile* ct0 = new ComputeTile(0);
-    system->addTile(ct0);
-
-    ComputeTile* ct1 = new ComputeTile(1);
-    system->addTile(ct1);
-
-    ComputeTile* ct2 = new ComputeTile(2);
-    system->addTile(ct2);
-
-    ComputeTile* ct3 = new ComputeTile(3);
-    system->addTile(ct3);
-
-    // NoC: 2x2 mesh
-    MeshNoc* noc = new MeshNoc(2, 2);
-    NocRouter* r00 = new NocRouter(0);
-    r00->setTile(ct0);
-    NocRouter* r10 = new NocRouter(1);
-    r10->setTile(ct1);
-    NocRouter* r01 = new NocRouter(2);
-    r01->setTile(ct2);
-    NocRouter* r11 = new NocRouter(3);
-    r11->setTile(ct3);
-    noc->setRouter(0, 0, r00);
-    noc->setRouter(1, 0, r10);
-    noc->setRouter(0, 1, r01);
-    noc->setRouter(1, 1, r11);
-    system->setNoc(noc);
-
-    return system;
+    return s_currentSystem;
 }

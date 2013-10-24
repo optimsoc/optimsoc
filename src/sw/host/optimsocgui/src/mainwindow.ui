@@ -7,8 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>1000</height>
+    <height>1040</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>OpTiMSoC Host GUI</string>
@@ -16,60 +22,68 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QStackedWidget" name="disconnectedUiStack">
-      <property name="autoFillBackground">
-       <bool>true</bool>
+     <widget class="QSplitter" name="splitterBottomSection">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
       </property>
-      <property name="currentIndex">
-       <number>1</number>
-      </property>
-      <widget class="QWidget" name="page">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="SystemOverviewWidget" name="systemOverviewWidget" native="true"/>
-        </item>
-       </layout>
+      <widget class="QTabWidget" name="taskTabWidget">
+       <property name="tabShape">
+        <enum>QTabWidget::Rounded</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="ConnectionView" name="tabConnection">
+        <attribute name="title">
+         <string>Connection</string>
+        </attribute>
+       </widget>
+       <widget class="SystemView" name="tabSystem">
+        <attribute name="title">
+         <string>System Overview</string>
+        </attribute>
+       </widget>
+       <widget class="SoftwareExecutionView" name="tabSoftwareExecution">
+        <attribute name="title">
+         <string>Software Execution</string>
+        </attribute>
+       </widget>
       </widget>
-      <widget class="QWidget" name="page_2">
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="QTextBrowser" name="textBrowser">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
-          <property name="html">
-           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;img src=&quot;:/resources/optimsoc_logo.png&quot; /&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Sans'; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Sans'; font-size:12pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans'; font-size:12pt; font-weight:600;&quot;&gt;Welcome to OpTiMSoC GUI!&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Sans'; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans'; font-size:10pt;&quot;&gt;This application gives you an easy interface to your OpTiMSoC system for debugging and other common tasks. &lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Sans'; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans'; font-size:10pt;&quot;&gt;To get started, connect the OpTiMSoC device to your PC and click in the menu above on Target System -&amp;gt; Connect.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Sans'; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans'; font-size:10pt;&quot;&gt;For more information visit &lt;/span&gt;&lt;a href=&quot;http://www.optimsoc.org&quot;&gt;&lt;span style=&quot; font-family:'Sans'; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;www.optimsoc.org&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Sans'; font-size:10pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="textInteractionFlags">
-           <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
-          </property>
-          <property name="openExternalLinks">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+      <widget class="LogWidget" name="logViewer" native="true"/>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="btnToggleLogViewer">
+        <property name="text">
+         <string>Logs</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -98,93 +112,17 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>&amp;Target System</string>
     </property>
-    <widget class="QMenu" name="menuMemories">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="title">
-      <string>Memories</string>
-     </property>
-     <addaction name="actionInitialize"/>
-    </widget>
-    <addaction name="actionConfigure"/>
     <addaction name="separator"/>
-    <addaction name="actionConnect"/>
-    <addaction name="actionDisconnect"/>
     <addaction name="actionStartCpus"/>
-    <addaction name="actionHaltCpus"/>
-    <addaction name="actionReset"/>
+    <addaction name="actionStallCpus"/>
+    <addaction name="actionResetSystem"/>
     <addaction name="separator"/>
-    <addaction name="menuMemories"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuTarget_System"/>
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QDockWidget" name="instructionTraceDockWidget">
-   <property name="floating">
-    <bool>false</bool>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
-    <layout class="QVBoxLayout" name="verticalLayout_3">
-     <item>
-      <widget class="QTableView" name="instructionTraceTableView"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="softwareTraceDockWidget">
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QVBoxLayout" name="verticalLayout_4">
-     <item>
-      <widget class="QTableView" name="softwareTraceTableView"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWidgetStdout">
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetStdoutContents">
-    <layout class="QVBoxLayout" name="verticalLayout_5">
-     <item>
-      <widget class="QPlainTextEdit" name="stdoutTextEdit"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWidgetExecutionTrace">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>79</width>
-     <height>300</height>
-    </size>
-   </property>
-   <property name="baseSize">
-    <size>
-     <width>240</width>
-     <height>150</height>
-    </size>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>8</number>
-   </attribute>
-   <widget class="ExecutionChart" name="widgetExecutionTrace"/>
-  </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="minimumSize">
     <size>
@@ -201,12 +139,9 @@ p, li { white-space: pre-wrap; }
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionConfigure"/>
-   <addaction name="actionConnect"/>
-   <addaction name="actionDisconnect"/>
-   <addaction name="separator"/>
    <addaction name="actionStartCpus"/>
-   <addaction name="actionHaltCpus"/>
+   <addaction name="actionStallCpus"/>
+   <addaction name="actionResetSystem"/>
   </widget>
   <action name="actionAbout">
    <property name="text">
@@ -259,16 +194,19 @@ p, li { white-space: pre-wrap; }
    <property name="text">
     <string>&amp;Start CPUs</string>
    </property>
+   <property name="toolTip">
+    <string>(Re-)Start CPUs</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
    </property>
   </action>
-  <action name="actionReset">
+  <action name="actionResetSystem">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Reset</string>
+    <string>Reset System</string>
    </property>
   </action>
   <action name="actionConfigure">
@@ -293,7 +231,7 @@ p, li { white-space: pre-wrap; }
     <string>Initialize</string>
    </property>
   </action>
-  <action name="actionHaltCpus">
+  <action name="actionStallCpus">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -302,24 +240,36 @@ p, li { white-space: pre-wrap; }
      <normaloff>:/resources/media-playback-pause.png</normaloff>:/resources/media-playback-pause.png</iconset>
    </property>
    <property name="text">
-    <string>&amp;Halt CPUs</string>
+    <string>&amp;Stall CPUs</string>
    </property>
    <property name="toolTip">
-    <string>Halt CPUs</string>
+    <string>Stall CPUs</string>
    </property>
   </action>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>SystemOverviewWidget</class>
+   <class>ConnectionView</class>
    <extends>QWidget</extends>
-   <header>systemoverviewwidget.h</header>
+   <header>connectionview.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ExecutionChart</class>
+   <class>LogWidget</class>
    <extends>QWidget</extends>
-   <header>executionchart.h</header>
+   <header>logwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SystemView</class>
+   <extends>QWidget</extends>
+   <header>systemview.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SoftwareExecutionView</class>
+   <extends>QWidget</extends>
+   <header>softwareexecutionview.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
