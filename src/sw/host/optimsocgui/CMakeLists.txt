@@ -22,38 +22,49 @@
 #   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
 #   Philipp Wagner <philipp.wagner@tum.de>
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
+cmake_minimum_required(VERSION 2.8.0)
 
 project(optimsocgui)
-SET (VERSION_MAJOR "0")
-SET (VERSION_MINOR "2")
-SET (VERSION_PATCH "0")
-SET (VERSION_SUFFIX "pre")
-SET (PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_SUFFIX})
+set(VERSION_MAJOR "0")
+set(VERSION_MINOR "2")
+set(VERSION_PATCH "0")
+set(VERSION_SUFFIX "pre")
+set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_SUFFIX})
 
-SET(CMAKE_VERBOSE_MAKEFILE OFF)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # include our own cmake module files
-SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 
 # check for Qt
-SET (QT_MT_REQUIRED TRUE)
-SET (QT_MIN_VERSION "4.8.0")
-FIND_PACKAGE(Qt4 REQUIRED QtCore QtGui QtXml QtWebkit)
+set(QT_MT_REQUIRED TRUE)
+set(QT_MIN_VERSION "4.8.0")
+find_package(Qt4 REQUIRED QtCore QtGui QtXml QtWebkit)
 
 include(${QT_USE_FILE})
 
-# Check for liboptimsoc
-FIND_PACKAGE(Liboptimsochost REQUIRED)
+# check for liboptimsochost
+find_package(Liboptimsochost REQUIRED)
 
-FIND_PACKAGE(Libqwt REQUIRED)
+# check for libqwt
+find_package(Libqwt REQUIRED)
 
-add_subdirectory(src)
+# Debug mode
+option(DEFINE_DEBUG
+  "Build the project using debugging code"
+  ON)
+if(DEFINE_DEBUG)
+  add_definitions(-DDEBUG)
+  set(CMAKE_BUILD_TYPE Debug)
+else(DEFINE_DEBUG)
+  set(CMAKE_BUILD_TYPE Release)
+endif(DEFINE_DEBUG)
+message(STATUS "Build type is " ${CMAKE_BUILD_TYPE})
 
 # Doxygen API documentation
 option(BUILD_APIDOCS "Use Doxygen to create the HTML based API documentation" ON)
 if(BUILD_APIDOCS)
-  FIND_PACKAGE(Doxygen)
+  find_package(Doxygen)
   if (NOT DOXYGEN_FOUND)
     message(FATAL_ERROR
       "Doxygen is needed to build the API documentation. Please install it.")
@@ -67,4 +78,7 @@ if(BUILD_APIDOCS)
                     SOURCES ${PROJECT_BINARY_DIR}/doxygen.cfg)
 endif()
 
-MESSAGE(STATUS "OpTiMSoC GUI ${PROJECT_VERSION} will be built to install into ${CMAKE_INSTALL_PREFIX}")
+# include our main sources here
+add_subdirectory(src)
+
+message(STATUS "OpTiMSoC GUI ${PROJECT_VERSION} will be built to install into ${CMAKE_INSTALL_PREFIX}")

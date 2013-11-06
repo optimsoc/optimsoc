@@ -23,111 +23,100 @@
 #   Philipp Wagner <philipp.wagner@tum.de>
 
 # add all *.cpp files here
-SET(optimsocgui_SRCS
-    aboutdialog.cpp
-    connectionview.cpp
-    executionchart.cpp
-    executionchartcreators.cpp
-    executionchartelements.cpp
-    executionchartplots.cpp
-    hexspinbox.cpp
-    logwidget.cpp
-    main.cpp
-    mainwindow.cpp
-    memory.cpp
-    memoryinteractionwidget.cpp
-    memorytablemodel.cpp
-    optimsocsystem.cpp
-    optimsocsystemelement.cpp
-    optimsocsystemelementtreeitem.cpp
-    optimsocsystemfactory.cpp
-    optimsocsystemmodel.cpp
-    plotspectrogram.cpp
-    softwareexecutionview.cpp
-    systeminterface.cpp
-    systeminterfaceworker.cpp
-    systemoverviewjsapi.cpp
-    systemoverviewwidget.cpp
-    systemview.cpp
-    traceevents.cpp
-    util.cpp
+set(optimsocgui_SRCS
+  aboutdialog.cpp
+  connectionview.cpp
+  executionchart.cpp
+  executionchartcreators.cpp
+  executionchartelements.cpp
+  executionchartplots.cpp
+  hexspinbox.cpp
+  logwidget.cpp
+  main.cpp
+  mainwindow.cpp
+  memory.cpp
+  memoryinteractionwidget.cpp
+  memorytablemodel.cpp
+  optimsocsystem.cpp
+  optimsocsystemelement.cpp
+  optimsocsystemelementtreeitem.cpp
+  optimsocsystemfactory.cpp
+  optimsocsystemmodel.cpp
+  plotspectrogram.cpp
+  softwareexecutionview.cpp
+  systeminterface.cpp
+  systeminterfaceworker.cpp
+  systemoverviewjsapi.cpp
+  systemoverviewwidget.cpp
+  systemview.cpp
+  traceevents.cpp
+  util.cpp
 
-    tile/tile.cpp
-    tile/computetile/computetile.cpp
-    tile/externaltile/externaltile.cpp
-    tile/memorytile/memorytile.cpp
+  tile/tile.cpp
+  tile/computetile/computetile.cpp
+  tile/externaltile/externaltile.cpp
+  tile/memorytile/memorytile.cpp
 
-    3rdparty/qcustomplot/qcustomplot.cpp
+  3rdparty/qcustomplot/qcustomplot.cpp
 )
 
 # add all *.ui files here
-SET(optimsocgui_UIS
-    aboutdialog.ui
-    connectionview.ui
-    executionchart.ui
-    logwidget.ui
-    mainwindow.ui
-    memoryinteractionwidget.ui
-    plotspectrogram.ui
-    softwareexecutionview.ui
-    systemview.ui
+set(optimsocgui_UIS
+  aboutdialog.ui
+  connectionview.ui
+  executionchart.ui
+  logwidget.ui
+  mainwindow.ui
+  memoryinteractionwidget.ui
+  plotspectrogram.ui
+  softwareexecutionview.ui
+  systemview.ui
 )
 
 # add all files which contain classes using the QT_OBJECT macro here
-SET(optimsocgui_MOC_HEADERS
-    aboutdialog.h
-    connectionview.h
-    executionchartcreators.h
-    executionchartelements.h
-    executionchart.h
-    executionchartplots.h
-    hexspinbox.h
-    logwidget.h
-    mainwindow.h
-    memory.h
-    memoryinteractionwidget.h
-    memorytablemodel.h
-    optimsocsystemelement.h
-    optimsocsystemelementtreeitem.h
-    optimsocsystemfactory.h
-    optimsocsystem.h
-    optimsocsystemmodel.h
-    plotspectrogram.h
-    softwareexecutionview.h
-    systeminterface.h
-    systeminterfaceworker.h
-    systemoverviewjsapi.h
-    systemoverviewwidget.h
-    systemview.h
-    traceevents.h
+set(optimsocgui_MOC_HEADERS
+  aboutdialog.h
+  connectionview.h
+  executionchartcreators.h
+  executionchartelements.h
+  executionchart.h
+  executionchartplots.h
+  hexspinbox.h
+  logwidget.h
+  mainwindow.h
+  memory.h
+  memoryinteractionwidget.h
+  memorytablemodel.h
+  optimsocsystemelement.h
+  optimsocsystemelementtreeitem.h
+  optimsocsystemfactory.h
+  optimsocsystem.h
+  optimsocsystemmodel.h
+  plotspectrogram.h
+  softwareexecutionview.h
+  systeminterface.h
+  systeminterfaceworker.h
+  systemoverviewjsapi.h
+  systemoverviewwidget.h
+  systemview.h
+  traceevents.h
 
-    tile/tile.h
-    tile/computetile/computetile.h
-    tile/externaltile/externaltile.h
-    tile/memorytile/memorytile.h
+  tile/tile.h
+  tile/computetile/computetile.h
+  tile/externaltile/externaltile.h
+  tile/memorytile/memorytile.h
 
-    3rdparty/qcustomplot/qcustomplot.h
+  3rdparty/qcustomplot/qcustomplot.h
 )
 
-SET(optimsocgui_QRCS
-    optimsocgui.qrc
+set(optimsocgui_QRCS
+  optimsocgui.qrc
 )
 
-# Debug mode
-OPTION(DEFINE_DEBUG
-  "Build the project using debugging code"
-  ON)
-IF(DEFINE_DEBUG)
-  ADD_DEFINITIONS(-DDEBUG)
-  SET(CMAKE_BUILD_TYPE Debug)
-  MESSAGE("Build type is " ${CMAKE_BUILD_TYPE})
-ENDIF(DEFINE_DEBUG)
-
-
-QT4_ADD_RESOURCES(optimsocgui_QRCS_SRCS ${optimsocgui_QRCS})
+qt4_add_resources(optimsocgui_QRCS_SRCS ${optimsocgui_QRCS})
 
 # generate ui_*.h files (inside CMAKE_CURRENT_BINARY_DIR)
-QT4_WRAP_UI(optimsocgui_UIS_H ${optimsocgui_UIS})
+qt4_wrap_ui(optimsocgui_UIS_H ${optimsocgui_UIS})
 
 include_directories(
   ${LIBOPTIMSOCHOST_INCLUDE_DIR}
@@ -143,7 +132,7 @@ include_directories(
 )
 
 # generate moc_*.cpp files
-QT4_WRAP_CPP(optimsocgui_MOC_SRCS ${optimsocgui_MOC_HEADERS})
+qt4_wrap_cpp(optimsocgui_MOC_SRCS ${optimsocgui_MOC_HEADERS})
 
 # generate executable
 add_executable(optimsocgui
@@ -153,6 +142,10 @@ add_executable(optimsocgui
   ${optimsocgui_QRCS_SRCS}
 )
 
-target_link_libraries(optimsocgui ${QT_LIBRARIES} ${LIBOPTIMSOCHOST_LIBRARIES} ${QWT_LIBRARIES})
+target_link_libraries(optimsocgui
+  ${QT_LIBRARIES}
+  ${LIBOPTIMSOCHOST_LIBRARIES}
+  ${QWT_LIBRARIES}
+)
 
 install(TARGETS optimsocgui DESTINATION bin)
