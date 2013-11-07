@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2013 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,43 +22,36 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-#ifndef OPTIMSOCSYSTEMFACTORY_H
-#define OPTIMSOCSYSTEMFACTORY_H
+#ifndef XSLTPROC_H
+#define XSLTPROC_H
 
-#include <QObject>
+#include <QString>
+#include <QByteArray>
 
-#include "optimsocsystem.h"
-
-class OptimsocSystemFactory : public QObject
+/**
+ * XSLT Processor
+ *
+ * This class encapsulates the libxslt XSLT processor for use inside a Qt
+ * application. It tries to be as simple as possible, just doing
+ * transformations, not much else.
+ */
+class XsltProc
 {
-Q_OBJECT
 public:
-    static OptimsocSystemFactory* instance();
+    XsltProc();
+    XsltProc(const QString xmlFile, const QString xslFile);
+    virtual ~XsltProc();
 
-    static OptimsocSystem* createSystemFromId(int systemId);
-    static void setCurrentSystem(OptimsocSystem *system);
-    static OptimsocSystem* currentSystem();
-    static QString getSysdescDir();
-
-signals:
-    /**
-     * The current system has changed
-     *
-     * @see currentSystem()
-     * @see setCurrentSystem()
-     *
-     * @param oldSystem the old system which is being replaced
-     * @param newSystem the new "default" (current) system
-     */
-    void currentSystemChanged(OptimsocSystem* oldSystem, OptimsocSystem *newSystem);
-
-public slots:
+    void setXmlFile(const QString fileName);
+    void setXslFile(const QString fileName);
+    bool transform();
+    QByteArray outputDocument();
 
 private:
-    OptimsocSystemFactory(QObject *parent = 0);
-    static OptimsocSystem* s_currentSystem;
-    static OptimsocSystemFactory* s_instance;
-
+    QString m_xmlFileName;
+    QString m_xslFileName;
+    QByteArray m_outputDocument;
+    char* m_outputDocumentChar;
 };
 
-#endif // OPTIMSOCSYSTEMFACTORY_H
+#endif // XSLTPROC_H

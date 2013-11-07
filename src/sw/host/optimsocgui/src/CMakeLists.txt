@@ -51,6 +51,7 @@ set(optimsocgui_SRCS
   systemview.cpp
   traceevents.cpp
   util.cpp
+  xsltproc.cpp
 
   tile/tile.cpp
   tile/computetile/computetile.cpp
@@ -119,7 +120,6 @@ qt4_add_resources(optimsocgui_QRCS_SRCS ${optimsocgui_QRCS})
 qt4_wrap_ui(optimsocgui_UIS_H ${optimsocgui_UIS})
 
 include_directories(
-  ${LIBOPTIMSOCHOST_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
 
@@ -129,6 +129,10 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/tile/memorytile
 
   ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/qcustomplot
+
+  ${LIBOPTIMSOCHOST_INCLUDE_DIR}
+  ${LIBXSLT_INCLUDE_DIR}
+  ${LIBXML2_INCLUDE_DIR}
 )
 
 # generate moc_*.cpp files
@@ -145,6 +149,8 @@ add_executable(optimsocgui
 target_link_libraries(optimsocgui
   ${QT_LIBRARIES}
   ${LIBOPTIMSOCHOST_LIBRARIES}
+  ${LIBXML2_LIBRARIES}
+  ${LIBXSLT_LIBRARIES}
   ${QWT_LIBRARIES}
 )
 

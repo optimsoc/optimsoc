@@ -51,5 +51,6 @@ void SystemOverviewJsApi::attachObject()
 
 void SystemOverviewJsApi::handleIdClick(const QString &idref)
 {
+    qDebug() << "idref clicked: " << idref;
     emit itemClicked(idref);
 }

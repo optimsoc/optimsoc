@@ -53,23 +53,7 @@ private:
     SystemOverviewJsApi *m_jsapi;
 
     void setupUi();
-
-    /**
-     * Modify all DOMElements with @idref to contain an onclick handler
-     *
-     * This recursive method goes through all DOMElements and inserts an
-     * onclick handler if the element contains an @optimsoc:idref attribute.
-     *
-     * @param el
-     */
     void modifyDomElementForOnclick(QDomElement el);
-
-    /**
-     * Load the SVG depicting the system into the QWebView used for display
-     *
-     * The image is also modified to allow the interaction with the system to
-     * happen.
-     */
     void loadSvgIntoWebView();
 
 };

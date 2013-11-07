@@ -49,6 +49,12 @@ find_package(Liboptimsochost REQUIRED)
 # check for libqwt
 find_package(Libqwt REQUIRED)
 
+# check for libxml2
+find_package(LibXml2 REQUIRED)
+
+# check for libxslt
+find_package(LibXslt REQUIRED)
+
 # Debug mode
 option(DEFINE_DEBUG
   "Build the project using debugging code"

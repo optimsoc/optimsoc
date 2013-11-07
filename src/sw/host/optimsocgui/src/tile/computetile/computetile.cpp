@@ -37,7 +37,9 @@
  * Create a new ComputeTile based on its XML description
  *
  * @param tileNode the XML description of the tile
- * @param parent
+ * @param system   the system this tile belongs to
+ * @param parent   the parent element of this tile. Use NULL for top-level
+ *                 elements.
  */
 ComputeTile::ComputeTile(const QDomNode &tileNode, OptimsocSystem *system,
                          OptimsocSystemElement *parent) :

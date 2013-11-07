@@ -25,14 +25,19 @@
 #include "optimsocsystem.h"
 
 #include "computetile.h"
-#include "memorytile.h"
 #include "externaltile.h"
 #include "memory.h"
+#include "memorytile.h"
+#include "optimsocsystemfactory.h"
+#include "xsltproc.h"
 
 #include <QDomDocument>
 #include <QFile>
+#include <QFileInfo>
 #include <QUrl>
-#include <QDebug>
+#include <QtXmlPatterns/QXmlSchema>
+#include <QtXmlPatterns/QXmlSchemaValidator>
+#include <QtDebug>
 
 /**
  * Namespace of the OpTiMSoC system description XML
@@ -63,30 +68,84 @@ OptimsocSystem::~OptimsocSystem()
 /**
  * Parse the XML system description file and initialize this object with it
  *
- * @param xmlDescFile
- * @return
+ * A couple things are done in order to extract the correct system description
+ * out of the XML file:
+ *
+ * -# The input XML file @p xmlDescFile is validated against the XML Schema
+ *    for the OpTiMSoC System Description XML, optimsoc-sysdesc.xsd
+ * -# The XML file is converted into the generic system description form,
+ *    replacing short forms like the meshnoc elements with the generic form,
+ *    e.g. genericnoc.
+ *    At the same time the graphic showing the system is auto-generated if
+ *    requested by the author (layout/\@autogen = 'true').
+ * -# The SVG system overview graphic is extracted and the SystemOverviewWidget
+ *    is initialized with it.
+ * -# Information about the system, e.g. the tile configuration, etc. is
+ *    extracted.
+ *
+ * @param xmlDescFile the file name of the input XML file
+ * @return parsing successful?
  */
 bool OptimsocSystem::parseXmlDescription(QString xmlDescFile)
 {
     QDomDocument doc;
 
-    QFile file(xmlDescFile);
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning("Unable to read XML system description file.");
+    // get the system description directory (it contains the XSLT and
+    // XML Schema files)
+    QString systemDescriptionsDir = OptimsocSystemFactory::getSysdescDir();
+    if (systemDescriptionsDir.isNull()) {
+        qWarning("No system description directory found. Unable to create system.");
         return false;
     }
+
+    // check if the XML file exists
+    if (!QFile::exists(xmlDescFile)) {
+        qWarning() << "The XML system description file '" << xmlDescFile << "' does not exist.";
+        return false;
+    }
+
+    // validate the system description XML against the XML Schema
+    // We do this at every loading since all following operations require a
+    // XML document following the specifications layed out in the schema. They
+    // might fail in obscure ways if the XML file is wrong in some way.
+    QString schemaFile = QString("%1/util/optimsoc-system.xsd").arg(systemDescriptionsDir);
+    QXmlSchema schema;
+    schema.load(QUrl::fromLocalFile(schemaFile));
+    if (!schema.isValid()) {
+        qWarning() << "The XML Schema " << schemaFile << "is not valid";
+        return false;
+    }
+    QXmlSchemaValidator schemaValidator(schema);
+    if (!schemaValidator.validate(QUrl::fromLocalFile(xmlDescFile))) {
+        qWarning() << "The instance " << xmlDescFile << " does not validate "
+                   << "against the schema " << schemaFile;
+        return false;
+    }
+
+    // convert the input XML file to a generic system description
+    // We don't use the XSLT engine from Qt's XmlPatterns module since it does
+    // support only a very limited subset of XSLT (2.0) and does not allow
+    // writing reliable stylesheets which work across different XSLT processors.
+    // Instead we use libxslt, which is encapsulated inside the XsltProc class.
+    QString genericXslt = QString("%1/util/convert-to-generic.xsl").arg(systemDescriptionsDir);
+    XsltProc xsltproc(xmlDescFile, genericXslt);
+    if (!xsltproc.transform()) {
+        qWarning("Unable to convert input XML to generic description");
+        return false;
+    }
+
+    // read generic description into DOM
     QString errorMsg;
     int errorLine, errorColumn;
-    if (!doc.setContent(&file, true, &errorMsg, &errorLine, &errorColumn)) {
-        file.close();
+    if (!doc.setContent(xsltproc.outputDocument(), true, &errorMsg, &errorLine,
+                        &errorColumn)) {
         qWarning("Unable to put XML system description into DOM: "
                  "%s in line %d, column %d.", errorMsg.toLatin1().data(),
                  errorLine, errorColumn);
         return false;
     }
-    file.close();
 
-    // layout SVG
+    // extract the layout SVG
     QDomNode layout = doc.elementsByTagNameNS(SYSDESC_NS, "layout").item(0);
     if (layout.attributes().contains("src")) {
         // possibly resolve a relative @src
@@ -104,6 +163,13 @@ bool OptimsocSystem::parseXmlDescription(QString xmlDescFile)
                 m_layoutSvg = svgFile.readAll();
             }
         }
+    } else {
+        // the SVG is inline in the system description XML
+        QByteArray svgData("<?xml version='1.0' encoding='UTF-8'?>\n");
+        QTextStream svgDataStream(&svgData, QIODevice::Append);
+        svgDataStream.setCodec("UTF-8");
+        layout.firstChild().save(svgDataStream, 2, QDomNode::EncodingFromTextStream);
+        m_layoutSvg = svgData;
     }
 
     // read all tiles
@@ -200,11 +266,23 @@ OptimsocSystemElement* OptimsocSystem::elementById(const QString id)
     return m_elementIdLookup.value(id);
 }
 
+/**
+ * Get the SVG graphic showing the system layout
+ *
+ * @return the complete (and valid) XML document describing the SVG
+ */
 QByteArray OptimsocSystem::layoutSvg()
 {
     return m_layoutSvg;
 }
 
+/**
+ * Register an ID for a system element in the element registry
+ *
+ * @param id      the ID to register
+ * @param element the element with the ID
+ * @return
+ */
 bool OptimsocSystem::registerId(QString id, OptimsocSystemElement *element)
 {
     // XXX: Check if the element is already registered and un-register it first!

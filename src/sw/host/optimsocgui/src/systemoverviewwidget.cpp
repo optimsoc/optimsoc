@@ -66,6 +66,12 @@ void SystemOverviewWidget::setupUi()
     setLayout(layout);
 }
 
+/**
+ * Load the SVG depicting the system into the QWebView used for display
+ *
+ * The image is also modified to allow the interaction with the system to
+ * happen.
+ */
 void SystemOverviewWidget::loadSvgIntoWebView()
 {
     // parse SVG into DOM
@@ -86,10 +92,18 @@ void SystemOverviewWidget::loadSvgIntoWebView()
     m_webView->setContent(doc.toByteArray(), "image/svg+xml");
 }
 
+/**
+ * Modify all DOMElements with \@optimsoc-idref to contain an onclick handler
+ *
+ * This recursive method goes through all DOMElements and inserts an
+ * onclick handler if the element contains an \@optimsoc-idref attribute.
+ *
+ * @param el
+ */
 void SystemOverviewWidget::modifyDomElementForOnclick(QDomElement el)
 {
-    if (el.hasAttributeNS(OptimsocSystem::SYSDESC_NS, "idref")) {
-        QString idref = el.attributeNS(OptimsocSystem::SYSDESC_NS, "idref");
+    if (el.hasAttribute("optimsoc-idref")) {
+        QString idref = el.attribute("optimsoc-idref");
         // XXX: Sanitize idref!
         el.setAttribute("onclick", "optimsoc.handleIdClick('"+idref+"')");
     }
@@ -104,6 +118,17 @@ void SystemOverviewWidget::modifyDomElementForOnclick(QDomElement el)
     }
 }
 
+/**
+ * React to a click on a system element in the graphic
+ *
+ * The reactions to a click include two things:
+ * - the context menu of the element is shown if available. Implement
+ *   OptimsocSystemElement::contextMenu() if you want a context menu for the
+ *   element.
+ * - the elementClicked() signal is emitted
+ *
+ * @param idref the ID of the element which was clicked
+ */
 void SystemOverviewWidget::handleItemClicked(QString idref)
 {
     OptimsocSystemElement *element = m_optimsocSystem->elementById(idref);

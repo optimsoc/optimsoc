@@ -1,6 +1,24 @@
 OpTiMSoC GUI
 ============
 
+Build Dependencies
+------------------
+- Qt 4.8
+- libxslt
+- libxml2
+- libqwt
+- liboptimsochost
+
+Optional:
+- doxygen (for API documentation)
+
+On Debian/Ubuntu you can install all build dependencies with this command
+(after you have built and installed liboptimsochost, as it's described in the
+OpTiMSoC user guide):
+
+$> sudo apt-get install libqt4-gui libqt4-webkit libqt4-xml libqt4-dev \
+   libxslt1-dev libxml2-dev libqwt-dev
+
 Building
 --------
 
@@ -10,15 +28,14 @@ $> cmake ..
 $> make
 
 For a debug build, replace the cmake command above with
-$> cmake -DCMAKE_BUILD_TYPE=Debug ..
+$> cmake -DDEFINE_DEBUG=true ..
 
-For faster builds, you can also invoke make with the -jn argument, 
-replace "n" with the number of parallel build jobs (e.g. -j2 on a 
+For faster builds, you can also invoke make with the -jn argument,
+replace "n" with the number of parallel build jobs (e.g. -j2 on a
 dual-core machine).
 
 Development
 -----------
 
-Main development is done using Qt Creator. Simply open the CMakeLists.txt 
+Main development is done using Qt Creator. Simply open the CMakeLists.txt
 in this directory in Qt Creator and start coding.
-

@@ -67,20 +67,7 @@ OptimsocSystemFactory* OptimsocSystemFactory::instance()
  */
 OptimsocSystem* OptimsocSystemFactory::createSystemFromId(int systemId)
 {
-    // find the system descriptions directory
-    QString systemDescriptionsDir;
-    QProcessEnvironment sysenv = QProcessEnvironment::systemEnvironment();
-    if (sysenv.contains("OPTIMSOC_SYSTEM_DESCRIPTIONS")) {
-        systemDescriptionsDir = sysenv.value("OPTIMSOC_SYSTEM_DESCRIPTIONS");
-    } else if (sysenv.contains("OPTIMSOC")) {
-        systemDescriptionsDir = QString("%1/src/sw/host/system-descriptions")
-                                    .arg(sysenv.value("OPTIMSOC"));
-    } else {
-        qWarning("No system description path is set. Set the environment "
-                 "variable OPTIMSOC_SYSTEM_DESCRIPTIONS to a directory with "
-                 "the system description XML files.");
-        return NULL;
-    }
+    QString systemDescriptionsDir = OptimsocSystemFactory::getSysdescDir();
 
     // see if we have a suitable system description available
     QString sysDescFile = QString("%1/%2.xml")
@@ -141,4 +128,34 @@ void OptimsocSystemFactory::setCurrentSystem(OptimsocSystem *system)
 OptimsocSystem* OptimsocSystemFactory::currentSystem()
 {
     return s_currentSystem;
+}
+
+/**
+ * Get the directory containing the OpTiMSoC System Description XML files
+ *
+ * We search the following directories, specified by environment variables:
+ *
+ * 1) $OPTIMSOC_SYSTEM_DESCRIPTIONS
+ * 2) $OPTIMSOC/src/sw/host/system-descriptions
+ *
+ * @return the system description directory. The string might be null if no
+ *         valid directory was found. Check with QString::isNull() before before
+ *         using the value!
+ */
+QString OptimsocSystemFactory::getSysdescDir()
+{
+    QProcessEnvironment sysenv = QProcessEnvironment::systemEnvironment();
+    if (sysenv.contains("OPTIMSOC_SYSTEM_DESCRIPTIONS")) {
+        return sysenv.value("OPTIMSOC_SYSTEM_DESCRIPTIONS");
+    }
+
+    if (sysenv.contains("OPTIMSOC")) {
+        return QString("%1/src/sw/host/system-descriptions")
+                       .arg(sysenv.value("OPTIMSOC"));
+    }
+
+    qWarning("No system description path is set. Set the environment "
+             "variable OPTIMSOC_SYSTEM_DESCRIPTIONS to a directory with "
+             "the system description XML files.");
+    return QString();
 }
