@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2013 by the author(s)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Author(s):
+  Philipp Wagner <philipp.wagner@tum.de>
+
+================================================================================
+
+XML Schema for the OpTiMSoC System Description XML
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://www.optimsoc.org/xmlns/optimsoc-system"
+           xmlns:optimsoc="http://www.optimsoc.org/xmlns/optimsoc-system"
+           targetNamespace="http://www.optimsoc.org/xmlns/optimsoc-system"
+           elementFormDefault="qualified">
+
+  <xs:complexType name="tSystem">
+    <xs:sequence>
+      <xs:element name="meta" type="tMeta"/>
+      <xs:element name="layout" type="tLayout"/>
+      <xs:choice>
+        <xs:element name="meshnoc" type="tMeshnoc"/>
+        <xs:element name="genericnoc" type="tGenericnoc"/>
+        <!-- insert other NoC types here -->
+      </xs:choice>
+      <xs:element name="tiles" type="tTiles"/>
+    </xs:sequence>
+    <xs:attribute name="version" type="xs:string" use="required"/>
+    <xs:attribute name="systemid" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tMeta">
+    <xs:all minOccurs="0">
+      <xs:element name="author" type="xs:string"/>
+      <xs:element name="authoremail" type="xs:string"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="tLayout">
+    <xs:attribute name="src" type="xs:string" use="optional"/>
+    <xs:attribute name="autogen" type="xs:boolean" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="tMeshroutercon">
+    <xs:attribute name="x" type="xs:int" use="required"/>
+    <xs:attribute name="y" type="xs:int" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tTilecon">
+    <xs:attribute name="tile" type="xs:IDREF"/>
+  </xs:complexType>
+
+  <xs:complexType name="tConTile">
+    <xs:choice>
+      <xs:element name="meshroutercon" type="tMeshroutercon"/>
+      <xs:element name="tilecon" type="tTilecon"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="tLocallink">
+    <xs:sequence>
+      <xs:element name="con" type="tConTile" minOccurs="2" maxOccurs="2"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tLocallinks">
+    <xs:sequence>
+      <xs:element name="locallink" type="tLocallink" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tGenericnoc">
+    <xs:sequence>
+      <xs:element name="routers" type="tRouters"/>
+      <xs:element name="links" type="tLinks"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tRouters">
+    <xs:sequence>
+      <xs:element name="router" type="tRouter" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tRouter">
+    <xs:sequence>
+      <xs:element name="ports" type="tPorts"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tPorts">
+    <xs:sequence>
+      <xs:element name="port" type="tPort"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tPort">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tLinks">
+    <xs:sequence>
+      <xs:element name="link" type="tLink" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tLink">
+    <xs:sequence>
+      <!--
+      currently we only support point-to-point links, i.e. each link has two
+      connections
+      -->
+      <xs:element name="con" type="tConGeneric" minOccurs="2" maxOccurs="2"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tConGeneric">
+    <xs:choice>
+      <xs:element name="routercon" type="tRoutercon"/>
+      <xs:element name="tilecon" type="tTilecon"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="tRoutercon">
+    <xs:attribute name="router" type="xs:IDREF"/>
+    <xs:attribute name="port" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="tMeshnoc">
+    <xs:sequence>
+      <xs:element name="locallinks" type="tLocallinks"/>
+    </xs:sequence>
+    <xs:attribute name="xdim" type="xs:int" use="required"/>
+    <xs:attribute name="ydim" type="xs:int" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tTile">
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tCore">
+    <xs:attribute name="coreid" type="xs:int"/>
+  </xs:complexType>
+
+  <xs:complexType name="tCores">
+    <xs:sequence>
+      <xs:element name="core" type="tCore" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="tMemorySizeUnit">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="B"/>
+      <xs:enumeration value="K"/>
+      <xs:enumeration value="M"/>
+      <xs:enumeration value="G"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="tMemory">
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+    <xs:attribute name="memoryid" type="xs:int" use="required"/>
+    <xs:attribute name="size" type="xs:int" use="required"/>
+    <xs:attribute name="sizeunit" type="tMemorySizeUnit" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tComputetile">
+    <xs:complexContent>
+      <xs:extension base="tTile">
+        <xs:sequence>
+          <xs:element name="cores" type="tCores"/>
+          <xs:element name="memory" type="tMemory" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="computetileid" type="xs:int" use="required"/>
+        <xs:attribute name="type" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tMemorytile">
+    <xs:complexContent>
+      <xs:extension base="tTile">
+        <xs:attribute name="memorytileid" type="xs:int" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tTiles">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:choice>
+        <xs:element name="computetile" type="tComputetile"/>
+        <xs:element name="memorytile" type="tMemorytile"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="system" type="tSystem"/>
+</xs:schema>

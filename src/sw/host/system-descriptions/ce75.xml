@@ -10,96 +10,49 @@
     <authoremail>philipp.wagner@tum.de</authoremail>
   </meta>
 
-  <layout src="ce75.svg"/>
+  <layout autogen="true"/>
 
-  <genericnoc>
-    <routers>
-      <router id="r00">
-        <ports>
-          <port name="east"/>
-          <port name="south"/>
-          <port name="local"/>
-        </ports>
-      </router>
-      <router id="r01">
-        <ports>
-          <port name="west"/>
-          <port name="south"/>
-          <port name="local"/>
-        </ports>
-      </router>
-      <router id="r10">
-        <ports>
-          <port name="east"/>
-          <port name="north"/>
-          <port name="local"/>
-        </ports>
-      </router>
-      <router id="r11">
-        <ports>
-          <port name="west"/>
-          <port name="north"/>
-          <port name="local"/>
-        </ports>
-      </router>
-    </routers>
-
-    <links>
-      <link>
-        <con><routercon router="r00" port="east"/></con>
-        <con><routercon router="r01" port="west"/></con>
-      </link>
-      <link>
-        <con><routercon router="r01" port="south"/></con>
-        <con><routercon router="r11" port="north"/></con>
-      </link>
-      <link>
-        <con><routercon router="r11" port="west"/></con>
-        <con><routercon router="r10" port="east"/></con>
-      </link>
-      <link>
-        <con><routercon router="r10" port="north"/></con>
-        <con><routercon router="r00" port="south"/></con>
-      </link>
-      <link>
-        <con><routercon router="r00" port="local"/></con>
-        <con><tilecon tile="c0"/></con>
-      </link>
-      <link>
-        <con><routercon router="r01" port="local"/></con>
-        <con><tilecon tile="c1"/></con>
-      </link>
-      <link>
-        <con><routercon router="r10" port="local"/></con>
-        <con><tilecon tile="c2"/></con>
-      </link>
-      <link>
-        <con><routercon router="r11" port="local"/></con>
-        <con><tilecon tile="c3"/></con>
-      </link>
-    </links>
-  </genericnoc>
+  <meshnoc xdim="2" ydim="2">
+    <locallinks>
+      <locallink>
+        <con><meshroutercon x="0" y="0"/></con>
+        <con><tilecon tile="ct0"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="0" y="1"/></con>
+        <con><tilecon tile="ct1"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="0"/></con>
+        <con><tilecon tile="ct2"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="1"/></con>
+        <con><tilecon tile="ct3"/></con>
+      </locallink>
+    </locallinks>
+  </meshnoc>
 
   <tiles>
-    <computetile id="ct0" computetileid="0" cores="1" type="or1200">
+    <computetile id="ct0" computetileid="0" type="or1200">
       <cores>
         <core coreid="0"/>
       </cores>
       <memory id="ct0m0" memoryid="0" size="64" sizeunit="M" />
     </computetile>
-    <computetile id="ct1" computetileid="1" cores="1" type="or1200">
+    <computetile id="ct1" computetileid="1" type="or1200">
       <cores>
         <core coreid="1"/>
       </cores>
       <memory id="ct1m0" memoryid="1" size="64" sizeunit="M" />
     </computetile>
-    <computetile id="ct2" computetileid="2" cores="1" type="or1200">
+    <computetile id="ct2" computetileid="2" type="or1200">
       <cores>
         <core coreid="2"/>
       </cores>
       <memory id="ct2m0" memoryid="2" size="64" sizeunit="M" />
     </computetile>
-    <computetile id="ct3" computetileid="3" cores="1" type="or1200">
+    <computetile id="ct3" computetileid="3" type="or1200">
       <cores>
         <core coreid="3"/>
       </cores>
