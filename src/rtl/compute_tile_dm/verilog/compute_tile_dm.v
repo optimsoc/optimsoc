@@ -252,9 +252,9 @@ module compute_tile_dm(
     .s_@_\(.*\)_i (bussl_\2_o[\1][]),
     ); */
    compute_tile_dm_bus
-      #(.dw(32),
-        .aw(32),
-        .sw(4))
+      #(.DW(32),
+        .AW(32),
+        .SW(4))
       u_bus(/*AUTOINST*/
             // Outputs
             .m_0_dat_o                  (busms_dat_i[0][31:0]),  // Templated

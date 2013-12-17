@@ -1,112 +1,94 @@
-// Based on:
-// WISHBONE Connection Bus Top Level                             
-//  Author: Johny Chi, chisuhua@yahoo.com.cn
-//
-// Modified for the Wishbone Bus Generator
-//  Author: Stefan Wallentowitz, stefan.wallentowitz@tum.de
-//
-// Copyright (C) 2000, 2011 Authors and OPENCORES.ORG
-//
-// This source file may be used and distributed without         
-// restriction provided that this copyright statement is not    
-// removed from the file and that any derivative work contains  
-// the original copyright notice and the associated disclaimer. 
-//                                                              
-// This source file is free software; you can redistribute it   
-// and/or modify it under the terms of the GNU Lesser General   
-// Public License as published by the Free Software Foundation; 
-// either version 2.1 of the License, or (at your option) any   
-// later version.                                               
-//                                                              
-// This source is distributed in the hope that it will be       
-// useful, but WITHOUT ANY WARRANTY; without even the implied   
-// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      
-// PURPOSE.  See the GNU Lesser General Public License for more 
-// details.                                                     
-//                                                              
-// You should have received a copy of the GNU Lesser General    
-// Public License along with this source; if not, download it   
-// from http://www.opencores.org/lgpl.shtml
+/* Copyright (c) 2013 by the author(s)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * =============================================================================
+ *
+ * Round-robin Wishbone bus arbiter
+ *
+ *
+ *
+ * Author(s):
+ *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ */
+module compute_tile_dm_bus_arbiter(/*AUTOARG*/
+   // Outputs
+   gnt,
+   // Inputs
+   clk, rst, req
+   );
 
-// synthesis translate_off
-`include "timescale.v"
-// synthesis translate_on
+   parameter GRANT0 = 2'd0;
+   parameter GRANT1 = 2'd1;
+   parameter GRANT2 = 2'd2;
 
-// Automatically generated on: 10-01-2012 16:47:02
+   input        clk;
+   input        rst;
+   input  [2:0] req; // request input
+   output [1:0] gnt; // grant output
 
-module compute_tile_dm_bus_arbiter(clk, rst, req, gnt);
+   reg [1:0] state;
+   reg [1:0] state_nxt;
 
-   input                clk;
-   input                rst;
-   input [2:0]          req;            // Req input
-   output [1:0]         gnt;            // Grant output
+   assign gnt = state;
 
-   ///////////////////////////////////////////////////////////////////////
-   //
-   // Parameters
-   //
-
-
-   parameter    [1:0] grant0 = 2'd0, grant1 = 2'd1, grant2 = 2'd2;
-
-   ///////////////////////////////////////////////////////////////////////
-   //
-   // Local Registers and Wires
-   //
-
-   reg [1:0]            state, next_state;
-
-   ///////////////////////////////////////////////////////////////////////
-   //
-   //  Misc Logic 
-   //
-
-   assign       gnt = state;
-
-   always@(posedge clk or posedge rst)
-     if(rst)            state <= #1 grant0;
-     else               state <= #1 next_state;
-
-   ///////////////////////////////////////////////////////////////////////
-   //
-   // Next State Logic
-   //   - implements round robin arbitration algorithm
-   //   - switches grant if current req is dropped or next is asserted
-   //   - parks at last grant
-   //
-
-   always@(state or req )
-     begin
-        next_state = state;     // Default Keep State
-        case(state)             // synopsys parallel_case full_case
-
-          grant0:
-        if(!req[0]) begin
-        if(req[1]) next_state = grant1;
-        else
-        if(req[2]) next_state = grant2;
-             
-            end
-
-          grant1:
-        if(!req[1]) begin
-        if(req[2]) next_state = grant2;
-        else
-        if(req[0]) next_state = grant0;
-             
-            end
-
-          grant2:
-        if(!req[2]) begin
-        if(req[0]) next_state = grant0;
-        else
-        if(req[1]) next_state = grant1;
-             
-            end
-          default: begin
-             
-          end
-        endcase
+   always @(posedge clk or posedge rst) begin
+      if (rst)
+         state <= GRANT0;
+      else begin
+         state <= state_nxt;
+      end
    end
 
+   always @(state or req) begin
+      state_nxt = state;
+
+      case (state)
+         GRANT0: begin
+            if (!req[0]) begin
+               if (req[1]) begin
+                  state_nxt = GRANT1;
+               end else if (req[2]) begin
+                  state_nxt = GRANT2;
+               end
+            end
+         end
+
+         GRANT1: begin
+            if (!req[1]) begin
+               if (req[2]) begin
+                  state_nxt = GRANT2;
+               end else if (req[0]) begin
+                  state_nxt = GRANT0;
+               end
+            end
+         end
+
+         GRANT2: begin
+            if (!req[2]) begin
+               if (req[0]) begin
+                  state_nxt = GRANT0;
+               end else if (req[1]) begin
+                  state_nxt = GRANT1;
+               end
+            end
+         end
+      endcase
+   end
 endmodule
