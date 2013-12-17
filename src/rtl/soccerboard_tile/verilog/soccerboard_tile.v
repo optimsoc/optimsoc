@@ -1,10 +1,31 @@
+/* Copyright (c) 2013 by the author(s)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 `include "uart_defines.v"
 
 /*
-the sequence of cmds are: 
+the sequence of cmds are:
  write process:write write reg opcode->write sensor addr->write sensor reg position->write num of transfered data->write start command  (wait for 5ms and then repeat writing for 8 sensors)->wait for finish of ranging
  read process:->write read reg opcode->write sensor addr->write sensor reg position->write read data num->wait for the coming of data (repeat reading process for 8 sensors)
-   
+
  ***note:the frequency of system determines the waiting time, so be careful when changing system freq!**
  */
 
@@ -16,18 +37,18 @@ module soccerboard_tile(/*AUTOARG*/
    clk, clk_uart, rst, soccerrx_pad_i, noc_in_flit, noc_in_valid,
    noc_out_ready
    );
-   
+
    parameter VCHANNELS = 'bx;
    parameter USE_VCHANNEL = 'bx;
    parameter ID = 'bx;
-   
+
    parameter ph_dest_width = 5;
    parameter ph_cls_width = 3;
    parameter ph_src_width = 5;
-   
+
    parameter destination = 0;
    parameter pkt_class = 1;
-   
+
    parameter noc_data_width = 32;
    parameter noc_type_width = 2;
    parameter UART_BAUD_RATE = 250000;
@@ -41,48 +62,48 @@ module soccerboard_tile(/*AUTOARG*/
    wire [NOC_FLIT_WIDTH-1:0]  soccer_in_flit;
    wire [VCHANNELS-1:0]       soccer_in_valid;
    wire [VCHANNELS-1:0]       soccer_out_ready;
-   
+
    input clk, clk_uart;
    input rst;
 
    output soccertx_pad_o;
    input  soccerrx_pad_i;
-    
+
    input      [NOC_FLIT_WIDTH-1:0]  noc_in_flit;
    input      [VCHANNELS-1:0]       noc_in_valid;
    output     [VCHANNELS-1:0]       noc_in_ready;
    output     [NOC_FLIT_WIDTH-1:0]  noc_out_flit;
    output     [VCHANNELS-1:0]       noc_out_valid;
    input      [VCHANNELS-1:0]       noc_out_ready;
- 
+
    reg                              enable_sensor;
    reg                              nxt_enable_sensor;
    reg                              enable_servo;
    reg                              nxt_enable_servo;
    reg [15:0]                       servo_angle;
    reg [15:0]                       nxt_servo_angle;
-   
+
    reg [4:0]                        state;
-   reg [4:0]                        nxt_state;  
+   reg [4:0]                        nxt_state;
 
    reg                              valid;
    reg [7:0]                        cmd;
 
    reg [31:0]                        counter;
-   reg [31:0]                        nxt_counter;   
+   reg [31:0]                        nxt_counter;
    reg [7:0]                        sensor_addr;
    reg [7:0]                        nxt_sensor_addr;
- 
+
    reg [31:0]                           counter_i2c;
    reg [31:0]                           nxt_counter_i2c;
- 
+
    localparam STATE_IDLE = 0;
    localparam STATE_I2CWRREG = 1;
    localparam STATE_I2CWRADDR = 2;
    localparam STATE_I2CWRREGPOS = 3;
    localparam STATE_I2CWRNUM = 4;
    localparam STATE_I2CWRCMD = 5;
-   localparam STATE_I2CWRSW = 6;  
+   localparam STATE_I2CWRSW = 6;
    localparam STATE_I2CWAIT=7;
    localparam STATE_I2CRDREG = 8;
    localparam STATE_I2CRDADDR = 9;
@@ -100,8 +121,8 @@ module soccerboard_tile(/*AUTOARG*/
    localparam STATE_SERVOWRREGPOS = 21;
    localparam STATE_SERVOWRNUM = 22;
    localparam STATE_SERVOWRCMD = 23;
-   localparam STATE_SERVOWAIT = 24;   
-    
+   localparam STATE_SERVOWAIT = 24;
+
    assign soccer_in_valid = {{VCHANNELS-1{1'b0}},valid};
    assign soccer_in_flit =  {2'b11,24'h0,cmd};
    assign soccer_out_ready = noc_out_ready;
@@ -109,7 +130,7 @@ module soccerboard_tile(/*AUTOARG*/
    assign noc_out_valid =   {VCHANNELS{enable_sensor|enable_servo}} & soccer_out_valid;
    assign noc_in_ready =    soccer_in_ready;
 
-   
+
    always @(posedge clk) begin
       if (rst) begin
          state <= STATE_IDLE;
@@ -129,7 +150,7 @@ module soccerboard_tile(/*AUTOARG*/
          sensor_addr<=nxt_sensor_addr;
       end // else: !if(rst)
    end // always @ (posedge clk)
- 
+
   always @(*) begin
       nxt_enable_sensor = enable_sensor;
       nxt_enable_servo = enable_servo;
@@ -140,7 +161,7 @@ module soccerboard_tile(/*AUTOARG*/
          nxt_servo_angle=noc_in_flit[17:2];
       end
    end
-   
+
    always @(*) begin
       valid =  1'b0;
       cmd = 8'hx;
@@ -148,13 +169,13 @@ module soccerboard_tile(/*AUTOARG*/
       nxt_counter = counter;
       nxt_sensor_addr=sensor_addr;
       nxt_counter_i2c=counter_i2c;
-      
+
       case(state)
         STATE_IDLE: begin
-           if (enable_sensor) 
+           if (enable_sensor)
              begin
              nxt_state = STATE_I2CWRREG;
-             end 
+             end
            else if(enable_servo)
              begin
                 nxt_state = STATE_SERVOWRREG_L;
@@ -286,7 +307,7 @@ module soccerboard_tile(/*AUTOARG*/
               nxt_state=STATE_SERVOWAIT_L;
            end // else: !if(counter_i2c>=480000)
         end
-        
+
         STATE_I2CWRREG: begin
            valid = 1'b1;
            cmd=8'h1B;
@@ -353,7 +374,7 @@ module soccerboard_tile(/*AUTOARG*/
               nxt_counter_i2c=counter_i2c+1;
               nxt_state=STATE_I2CWRSW;
            end // else: !if(counter_i2c>=480000)
-           
+
            end
 
         STATE_I2CWAIT: begin
@@ -378,7 +399,7 @@ module soccerboard_tile(/*AUTOARG*/
               nxt_state = STATE_I2CRDREG;
            end
         end
-        
+
         STATE_I2CRDADDR: begin
            valid = 1'b1;
            cmd=sensor_addr;//address of sensor
@@ -388,7 +409,7 @@ module soccerboard_tile(/*AUTOARG*/
               nxt_state = STATE_I2CRDADDR;
            end
         end
-        
+
         STATE_I2CRDREGPOS: begin
            valid = 1'b1;
            cmd=8'h02;
@@ -408,7 +429,7 @@ module soccerboard_tile(/*AUTOARG*/
            end
         end
 
-  
+
         STATE_I2CEND: begin
            if(counter_i2c>=240000) begin//wait for Qfix to finish I2C protocol   Q: need to add wait for valid signal?
               nxt_counter_i2c=0;
@@ -428,12 +449,12 @@ module soccerboard_tile(/*AUTOARG*/
               nxt_state=STATE_I2CEND;
            end // else: !if(noc_out_valid==1'b1)
          end // case: STATE_I2CEND
-        
+
         default:
           nxt_state = STATE_IDLE;
-      endcase   
+      endcase
    end
- 
+
    uart_tile
    #(.UART_BAUD_RATE(UART_BAUD_RATE),.USE_VCHANNEL(USE_VCHANNEL),.ID(ID),.pkt_class(pkt_class))
      soccerboard_uart(
@@ -449,7 +470,7 @@ module soccerboard_tile(/*AUTOARG*/
          .srx_pad_i                     (soccerrx_pad_i),
          .noc_in_flit                   (soccer_in_flit[NOC_FLIT_WIDTH-1:0]),
          .noc_in_valid                  (soccer_in_valid[VCHANNELS-1:0]),
-         .noc_out_ready                 (soccer_out_ready[VCHANNELS-1:0]));   
-         
+         .noc_out_ready                 (soccer_out_ready[VCHANNELS-1:0]));
+
 
   endmodule
