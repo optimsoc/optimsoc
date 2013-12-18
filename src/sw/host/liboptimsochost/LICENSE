@@ -1,3 +1,4 @@
-liboptimsoc is licensed under LGPLv3+, the optimsoc_cli example is GPLv3+,
-since it uses the GNU readline library.
-For the full license texts, see COPYING.LESSER and examples/COPYING.
+liboptimsochost is licensed under MIT license, the optimsoc_cli example is
+GPLv3+, since it uses the GNU readline library.
+For the full license texts, see the file headers (for all MIT licensed code)
+and tools/COPYING.GPLv3 (for optimsoc_cli).

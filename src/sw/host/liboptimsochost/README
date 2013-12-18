@@ -1,7 +1,7 @@
 OpTiMSoC host library
 =====================
 
-liboptimsoc connects the PC host with an OpTiMSoC system using the USB
+liboptimsochost connects the PC host with an OpTiMSoC system using the USB
 interface of the debug system.
 
 An example command-line application is included to show some basic features
@@ -21,8 +21,8 @@ $> ./autogen.sh
 $> ./configure --enable-logging --enable-debug --enable-examples
 $> make
 
-You can now run the example in the examples directory or install 
-liboptimsoc with
+You can now run the example in the examples directory or install
+liboptimsochost with
 $> make install
 
 Documentation
