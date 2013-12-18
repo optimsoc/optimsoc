@@ -27,7 +27,7 @@ all: bootrom.hex bootrom_code.v
 bootrom.hex: bootrom.bin
 	bin2vmem bootrom.bin > bootrom.hex
 
-bootrom_code.v: bootrom.bin
+bootrom_code.v: bootrom.bin bin2vlogarray
 	cat bootrom_code.v.header > bootrom_code.v
 	cat bootrom.bin | ./bin2vlogarray >> bootrom_code.v
 
@@ -40,9 +40,12 @@ bootrom.dis: a.out
 a.out: boot.s
 	or32-elf-as boot.s
 
+bin2vlogarray: bin2vlogarray.c
+	gcc -Wall -o bin2vlogarray bin2vlogarray.c
+
 install:
 	cp -i bootrom_code.v ../../rtl/bootrom/verilog/
 
 clean:
-	rm -f a.out bootrom.bin bootrom.hex bootrom_code.v
+	rm -f a.out bootrom.bin bootrom.hex bootrom_code.v bin2vlogarray
 
