@@ -121,46 +121,11 @@ module system_2x2_cccc_ztex(
    wire sys_clk_disable;
    wire sys_clk_is_halted;
 
-   /*
-    * Manually insert I/O buffers
-    * When using DDR2 memory automatic I/O Insertation in Synplify needs to
-    * be disabled. TODO: This is not needed any more
-    */
-   wire rst_buf;
-   wire fx2_flaga_buf;
-   wire fx2_flagb_buf;
-   wire fx2_flagc_buf;
-   wire fx2_flagd_buf;
-   wire fx2_sloe_buf;
-   wire fx2_slrd_buf;
-   wire fx2_slwr_buf;
-   wire fx2_pktend_buf;
-   wire [1:0] fx2_fifoadr_buf;
-   wire [15:0] fx2_fd_in_buf;
-   wire [15:0] fx2_fd_out_buf;
-   wire fx2_ifclk_buf;
-
-   // clock
-   assign fx2_ifclk_buf = fx2_ifclk;
-
-   // input
-   assign rst_buf = rst;
-   assign fx2_flaga_buf = fx2_flaga;
-   assign fx2_flagb_buf = fx2_flagb;
-   assign fx2_flagc_buf = fx2_flagc;
-   assign fx2_flagd_buf = fx2_flagd;
-
-   // output
-   assign fx2_sloe = fx2_sloe_buf;
-   assign fx2_slrd = fx2_slrd_buf;
-   assign fx2_slwr = fx2_slwr_buf;
-   assign fx2_pktend = fx2_pktend_buf;
-   assign fx2_fifoadr = fx2_fifoadr_buf;
-
-   // inout
-   assign fx2_fd_in_buf = fx2_fd;
-   assign fx2_fd = (~fx2_slwr ? fx2_fd_out_buf : 16'hz);
-
+   // split FX2 inout port into separate input and output ports
+   wire [15:0] fx2_fd_in;
+   wire [15:0] fx2_fd_out;
+   assign fx2_fd_in = fx2_fd;
+   assign fx2_fd = (~fx2_slwr ? fx2_fd_out : 16'hz);
 
    // system control
    wire cpu_reset;
@@ -185,7 +150,7 @@ module system_2x2_cccc_ztex(
      #(.ENABLE_DDR_CLOCK(1))
 `endif
       u_clockmanager(.clk     (clk),
-                     .rst     (rst_buf),
+                     .rst     (rst),
                      .clk_ct  (clk_sys),
                      .clk_dbg (clk_dbg),
                      .clk_noc (),
@@ -298,17 +263,17 @@ module system_2x2_cccc_ztex(
             .rst(rst_sys),
 
             // FX2 interface
-            .fx2_clk(fx2_ifclk_buf),
-            .fx2_epout_fifo_empty(fx2_flaga_buf),
-            .fx2_epin_fifo_almost_full(fx2_flagd_buf),
-            .fx2_epin_fifo_full(fx2_flagc_buf),
-            .fx2_slrd(fx2_slrd_buf),
-            .fx2_slwr(fx2_slwr_buf),
-            .fx2_sloe(fx2_sloe_buf),
-            .fx2_pktend(fx2_pktend_buf),
-            .fx2_fifoadr(fx2_fifoadr_buf),
-            .fx2_fd_out(fx2_fd_out_buf),
-            .fx2_fd_in(fx2_fd_in_buf),
+            .fx2_clk(fx2_ifclk),
+            .fx2_epout_fifo_empty(fx2_flaga),
+            .fx2_epin_fifo_almost_full(fx2_flagd),
+            .fx2_epin_fifo_full(fx2_flagc),
+            .fx2_slrd(fx2_slrd),
+            .fx2_slwr(fx2_slwr),
+            .fx2_sloe(fx2_sloe),
+            .fx2_pktend(fx2_pktend),
+            .fx2_fifoadr(fx2_fifoadr),
+            .fx2_fd_out(fx2_fd_out),
+            .fx2_fd_in(fx2_fd_in),
 
             // Debug NoC interface
             .dbgnoc_out_ready(dbgnoc_in_ready),

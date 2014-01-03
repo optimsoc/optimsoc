@@ -140,9 +140,6 @@ set_option -enhanced_optimization 0
 set_option -run_prop_extract 1
 set_option -maxfan 10000
 
-# I/O insertation must be disabled for DDR2 memory
-# set OPTIMSOC_MANUAL_IOBUF above if you do this!
-#set_option -disable_io_insertion 1
 set_option -disable_io_insertion 0
 
 set_option -pipe 1
