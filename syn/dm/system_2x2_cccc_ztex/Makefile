@@ -32,23 +32,27 @@ OPTIMSOC_SYN_OUTDIR ?= .
 # "make bitgen_115b_bram")!
 BOARD_TARGET ?= 115d_ddr
 
+# The "synplify" executable. You can overwrite the default set here with an
+# environment variable, e.g. export SYNPLIFY=synplify_premier_dp
+SYNPLIFY ?= synplify
+
 synplify: synplify_$(BOARD_TARGET)
 
 bitgen: bitgen_$(BOARD_TARGET)
 
 flash: flash_$(BOARD_TARGET)
 
-synplify.prj:
-	synplify -batch synplify_project.tcl
+synplify.prj: synplify_project.tcl
+	$(SYNPLIFY) -batch synplify_project.tcl
 
 synplify_115b_ddr: synplify.prj
-	synplify -batch synplify.prj -impl rev_1_15b_ddr
+	$(SYNPLIFY) -batch synplify.prj -impl rev_1_15b_ddr
 
 synplify_115d_bram: synplify.prj
-	synplify -batch synplify.prj -impl rev_1_15d_bram
+	$(SYNPLIFY) -batch synplify.prj -impl rev_1_15d_bram
 
 synplify_115d_ddr: synplify.prj
-	synplify -batch synplify.prj -impl rev_1_15d_ddr
+	$(SYNPLIFY) -batch synplify.prj -impl rev_1_15d_ddr
 
 bitgen_115b_ddr: $(OPTIMSOC_SYN_OUTDIR)/rev_1_15b_ddr/pr_1/system_2x2_cccc_ztex.bit
 
