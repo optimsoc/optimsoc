@@ -1,7 +1,8 @@
-_xmsgs
-rev_*/
-synlog.tcl
-stdout.log
-synplify.prj
-xilinx_device_details.xml
+/_xmsgs
+/rev_*/
+/synlog.tcl
+/stdout.log
+/synplify.prj
+/synplify.prd
+/xilinx_device_details.xml
 
