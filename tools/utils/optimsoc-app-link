@@ -5,8 +5,8 @@
 if [ $# -lt 2 ]; then
    echo "Usage: optimsoc-app-link <system> <application>"
    echo "  where:"
-   echo "    <system> is either dm (or sm in future)"
-   echo "    <application> is an application, e.g. baremetal/hello_simple"
+   echo "    <system> is either baremetal (or gzll in future)"
+   echo "    <application> is an application, e.g. hello_simple"
    exit
 fi
 
@@ -19,13 +19,13 @@ fi
 
 mkdir $bname
 
-if [ ! -d ${OPTIMSOC}/src/sw/system/$1/apps/$2 ]; then
-    echo "Cannot find ${OPTIMSOC}/src/sw/system/$1/apps/$2"
+if [ ! -d ${OPTIMSOC}/src/sw/system/apps/$1/$2 ]; then
+    echo "Cannot find ${OPTIMSOC}/src/sw/system/apps/$1/$2"
     rmdir $bname
     exit
 fi
 
-for f in `find ${OPTIMSOC}/src/sw/system/$1/apps/$2 -type f`; do
-    bf=`echo $f | sed 's|'${OPTIMSOC}/src/sw/system/$1/apps/$2/'||'`
+for f in `find ${OPTIMSOC}/src/sw/system/apps/$1/$2 -type f`; do
+    bf=`echo $f | sed 's|'${OPTIMSOC}/src/sw/system/apps/$1/$2/'||'`
     ln -s $f $bname/$bf
 done
