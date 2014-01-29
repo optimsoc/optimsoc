@@ -114,7 +114,7 @@ module wb2sram(/*AUTOARG*/
    // assignments from wb to memory
    assign sram_ce = 1'b1;
    assign sram_we = wb_we_i & wb_ack_o;
-   assign sram_addr = word_addr;
+   assign sram_addr =(wb_we_i) ? word_addr_reg : word_addr;
    assign sram_din = wb_dat_i;
    assign sram_sel = wb_sel_i;
 
