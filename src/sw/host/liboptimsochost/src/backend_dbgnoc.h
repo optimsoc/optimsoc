@@ -125,6 +125,8 @@ int ob_dbgnoc_read_clkstats(struct optimsoc_backend_ctx *ctx,
                             uint32_t *sys_clk_halted);
 int ob_dbgnoc_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
                                  struct optimsoc_dbg_module *dbg_module);
+int ob_dbgnoc_stm_refresh_config(struct optimsoc_backend_ctx *ctx,
+                                 struct optimsoc_dbg_module *dbg_module);
 int ob_dbgnoc_mam_get_config(struct optimsoc_backend_ctx *ctx);
 
 #endif /* _BACKEND_DBGNOC_H_ */

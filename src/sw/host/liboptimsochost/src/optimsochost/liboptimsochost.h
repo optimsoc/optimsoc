@@ -82,6 +82,11 @@ struct optimsoc_itm_config {
     unsigned int core_id;
 };
 
+struct optimsoc_stm_config {
+    /** ID of the associated core */
+    unsigned int core_id;
+};
+
 /**
  * Configuration of a single MAM module
  */
@@ -178,6 +183,9 @@ int optimsoc_read_clkstats(struct optimsoc_ctx *ctx, uint32_t *sys_clk,
 int optimsoc_itm_get_config(struct optimsoc_ctx *ctx,
                             struct optimsoc_dbg_module *dbg_module,
                             struct optimsoc_itm_config **itm_config);
+int optimsoc_stm_get_config(struct optimsoc_ctx *ctx,
+                            struct optimsoc_dbg_module *dbg_module,
+                            struct optimsoc_stm_config **stm_config);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -7,7 +7,6 @@ Makefile.in
 /autom4te.cache
 /build-aux
 /config.*
-/configure
 /libtool
 /stamp-h1
 /INSTALL

@@ -63,6 +63,8 @@ struct optimsoc_backend_interface {
                          uint32_t* /*sys_clk_halted*/);
     int (*itm_refresh_config)(struct optimsoc_backend_ctx*,
                               struct optimsoc_dbg_module* /*dbg_module*/);
+    int (*stm_refresh_config)(struct optimsoc_backend_ctx*,
+                              struct optimsoc_dbg_module* /*dbg_module*/);
 };
 
 #endif /* _BACKENDS_H_ */

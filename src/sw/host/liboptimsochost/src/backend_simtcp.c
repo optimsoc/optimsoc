@@ -173,6 +173,7 @@ int ob_simtcp_new(struct optimsoc_backend_ctx **ctx,
     calls->nrm_set_sample_interval = &ob_simtcp_nrm_set_sample_interval;
     calls->read_clkstats = &ob_simtcp_read_clkstats;
     calls->itm_refresh_config = &ob_simtcp_itm_refresh_config;
+    calls->stm_refresh_config = &ob_simtcp_stm_refresh_config;
 
     *ctx = c;
 
@@ -328,6 +329,24 @@ int ob_simtcp_discover_system(struct optimsoc_backend_ctx *ctx)
                                 ctx->ctrl_msg_data[3];
     sysinfo->dbg_modules = calloc(sysinfo->dbg_module_count,
                                   sizeof(struct optimsoc_dbg_module));
+
+    /*
+     * Allocate memory for the ITM, STM and MAM configurations.
+     *
+     * We use the address in the Debug NoC as index for faster lookups.
+     * dbg_module_count contains the number of debug modules *in addition* to
+     * the TCM, so the highest address in the Debug NoC is
+     * |DBG_NOC_ADDR_TCM + dbg_module_count|. We also need to allocate space for
+     * address 0 (the external, i.e. USB or TCP, interface), thus the +1 below.
+     */
+    sysinfo->itm_config = calloc(sysinfo->dbg_module_count,
+                                 sizeof(struct optimsoc_itm_config*));
+    sysinfo->stm_config = calloc(sysinfo->dbg_module_count,
+                                 sizeof(struct optimsoc_stm_config*));
+    sysinfo->mam_config = calloc(sysinfo->dbg_module_count,
+                                 sizeof(struct optimsoc_mam_config*));
+
+
     ctx->sysinfo = sysinfo;
 
     // Free payload
@@ -435,4 +454,20 @@ int ob_simtcp_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
 {
     err(ctx->log_ctx, "Not implemented!\n");
     return -1;
+}
+
+int ob_simtcp_stm_refresh_config(struct optimsoc_backend_ctx *ctx,
+                                 struct optimsoc_dbg_module *dbg_module)
+{
+    // TODO: Correctly handle those
+
+    int dbgnoc_addr = dbg_module->dbgnoc_addr;
+
+    if (ctx->sysinfo->stm_config[dbgnoc_addr] == NULL) {
+        ctx->sysinfo->stm_config[dbgnoc_addr] = calloc(1, sizeof(struct optimsoc_stm_config));
+    }
+
+    ctx->sysinfo->stm_config[dbgnoc_addr]->core_id = dbgnoc_addr;
+
+    return 0;
 }

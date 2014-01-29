@@ -606,6 +606,30 @@ int optimsoc_itm_get_config(struct optimsoc_ctx *ctx,
     return 0;
 }
 
+OPTIMSOC_EXPORT
+int optimsoc_stm_get_config(struct optimsoc_ctx *ctx,
+                            struct optimsoc_dbg_module *dbg_module,
+                            struct optimsoc_stm_config **stm_config)
+{
+    int rv = ctx->backend_call.stm_refresh_config(ctx->backend_ctx, dbg_module);
+    if (rv < 0) {
+        err(ctx->log_ctx, "Unable to refresh ITM configuration.\n");
+    }
+
+    struct optimsoc_sysinfo *sysinfo = NULL;
+    rv = ctx->backend_call.get_sysinfo(ctx->backend_ctx, &sysinfo);
+    if (rv < 0) {
+        return rv;
+    }
+    if (sysinfo == NULL) {
+        err(ctx->log_ctx, "Run optimsoc_system_discover() first!\n");
+        return -1;
+    }
+
+    *stm_config = sysinfo->stm_config[dbg_module->dbgnoc_addr];
+    return 0;
+}
+
 /**
  * Free the contents of a optimsoc_sysinfo struct
  *

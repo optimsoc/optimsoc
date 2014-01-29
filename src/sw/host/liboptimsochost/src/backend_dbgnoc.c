@@ -228,6 +228,7 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
     calls->cpu_start = &ob_dbgnoc_cpu_start;
     calls->mem_write = &ob_dbgnoc_mem_write;
     calls->itm_refresh_config = &ob_dbgnoc_itm_refresh_config;
+    calls->stm_refresh_config = &ob_dbgnoc_stm_refresh_config;
 
     c->conn_calls = calloc(1, sizeof(struct ob_dbgnoc_connection_interface));
 
@@ -416,11 +417,16 @@ int ob_dbgnoc_discover_system(struct optimsoc_backend_ctx *ctx)
             dbg(ctx->log_ctx, "Got lisnoc32 address for NCM: %d, dbgnoc addr "
                               "is %d\n",
                 ctx->ncm_lisnoc_addr, ctx->ncm_dbgnoc_addr);
+        } else if (module_type == OPTIMSOC_MODULE_TYPE_ITM) {
+            unsigned int lower_pc = 0;
+            unsigned int upper_pc = 0;
+            register_write(ctx, addr, 2, 2, (uint16_t*) &lower_pc);
+            register_write(ctx, addr, 4, 2, (uint16_t*) &upper_pc);
         }
     }
 
     /*
-     * Allocate memory for the ITM and MAM configurations.
+     * Allocate memory for the ITM, STM and MAM configurations.
      *
      * We use the address in the Debug NoC as index for faster lookups.
      * dbg_module_count contains the number of debug modules *in addition* to
@@ -430,6 +436,8 @@ int ob_dbgnoc_discover_system(struct optimsoc_backend_ctx *ctx)
      */
     sysinfo->itm_config = calloc(sysinfo->dbg_module_count + DBG_NOC_ADDR_TCM + 1,
                                  sizeof(struct optimsoc_itm_config*));
+    sysinfo->stm_config = calloc(sysinfo->dbg_module_count + DBG_NOC_ADDR_TCM + 1,
+                                 sizeof(struct optimsoc_stm_config*));
     sysinfo->mam_config = calloc(sysinfo->dbg_module_count + DBG_NOC_ADDR_TCM + 1,
                                  sizeof(struct optimsoc_mam_config*));
 
@@ -1249,6 +1257,29 @@ int ob_dbgnoc_itm_refresh_config(struct optimsoc_backend_ctx *ctx,
     }
 
     ctx->sysinfo->itm_config[dbgnoc_addr]->core_id = data_out[0];
+    return 0;
+}
+
+/**
+ * Refresh the configuration of a single Instruction Trace Module (ITM)
+ */
+int ob_dbgnoc_stm_refresh_config(struct optimsoc_backend_ctx *ctx,
+                                 struct optimsoc_dbg_module *dbg_module)
+{
+    uint16_t data_out[1];
+    int dbgnoc_addr = dbg_module->dbgnoc_addr;
+    int rv = register_read(ctx, dbgnoc_addr, 0x01, 1, data_out);
+    if (rv < 0) {
+        err(ctx->log_ctx, "Unable to read STM configuration at Debug NoC "
+            "address %d.\n", dbgnoc_addr);
+        return -1;
+    }
+
+    if (ctx->sysinfo->stm_config[dbgnoc_addr] == NULL) {
+        ctx->sysinfo->stm_config[dbgnoc_addr] = calloc(1, sizeof(struct optimsoc_itm_config));
+    }
+
+    ctx->sysinfo->stm_config[dbgnoc_addr]->core_id = data_out[0];
     return 0;
 }
 

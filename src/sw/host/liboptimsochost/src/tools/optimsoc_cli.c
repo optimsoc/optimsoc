@@ -270,6 +270,7 @@ static void connect(optimsoc_backend_id backend,
 
     max_core_id = 0;
     struct optimsoc_itm_config *itm_config;
+    struct optimsoc_stm_config *stm_config;
 
     /* show system information and determine maximum core ID */
     printf("Connected to system.\n");
@@ -289,6 +290,13 @@ static void connect(optimsoc_backend_id backend,
             optimsoc_itm_get_config(ctx, &modules[i], &itm_config);
             if (itm_config->core_id > max_core_id) {
                 max_core_id = itm_config->core_id;
+            }
+        }
+
+        if (modules[i].module_type == OPTIMSOC_MODULE_TYPE_STM) {
+            optimsoc_stm_get_config(ctx, &modules[i], &stm_config);
+            if (stm_config->core_id > max_core_id) {
+                max_core_id = stm_config->core_id;
             }
         }
     }
