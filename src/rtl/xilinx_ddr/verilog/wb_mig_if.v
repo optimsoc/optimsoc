@@ -41,10 +41,6 @@ module wb_mig_if (/*AUTOARG*/
    rd_error_i
    );
 
-   parameter EN_BURSTS = 0; // do not activate yet
-   parameter WR_BURST_W = 4; // dont care atm
-   parameter RD_BURST_W = 4; // dont care atm
-
    // Wishbone connection
    output [31:0]   wb_dat_o;
    output          wb_ack_o;
@@ -113,19 +109,8 @@ module wb_mig_if (/*AUTOARG*/
    assign wr_data_o = wb_dat_i;
    assign wb_dat_o = rd_data_i;
 
-   wire [27:0]          addr_i = wb_adr_i[29:2];
-
-   reg [27:0] cmd_word_addr_s;
-   always @(posedge wb_clk_i) begin
-      if (wb_rst_i) begin
-         cmd_word_addr_s <= 28'b0;
-      end else begin
-         cmd_word_addr_s <= addr_i;
-      end
-   end
-
    // MIG allows only word wise addressing
-   assign cmd_byte_addr_o = {cmd_word_addr_s, 2'b0};
+   assign cmd_byte_addr_o = {wb_adr_i[29:2], 2'b0};
 
    assign wr_mask_o = ~wb_sel_i;
    assign cmd_bl_o = 6'b0;
@@ -136,27 +121,6 @@ module wb_mig_if (/*AUTOARG*/
    // WB to internal
 
    assign wb_active = wb_cyc_i & wb_stb_i;
-
-   //-------------------------------------------------------------------------------------
-   // Burst data generation
-   //
-   // To allow burst, some additional data informations need to be generated and stored.
-   // As we do not wait until all words have actually been cleared out of the FIFOs of
-   // the MIG, we cannot use its "wr_count_i" output and must count the amount of words
-   // that belong to the current burst our selves.
-   //-------------------------------------------------------------------------------------
-
-   reg [WR_BURST_W-1:0] burst_len;
-
-   always @(posedge wb_clk_i) begin
-      if (wb_rst_i) begin
-         burst_len <= {WR_BURST_W{1'b1}};
-      end else if(wb_cti_i == 3'b010 || wb_cti_i == 3'b111) begin
-         burst_len <= burst_len + 1;
-      end else if(cmd_en_o) begin
-         burst_len <= {WR_BURST_W{1'b1}};
-      end
-   end
 
    //-------------------------------------------------------------------------------------
    // Main FSM
@@ -171,9 +135,7 @@ module wb_mig_if (/*AUTOARG*/
    localparam READ_WAIT = 6'h3;
    localparam WRITE = 6'h4;
    localparam WRITE_CMD = 6'h5;
-   localparam WRITE_BURST_START = 6'h6;
-   localparam WRITE_CMD_EARLY = 6'h7;
-   localparam WRITE_WAIT = 6'h8;
+   localparam WRITE_CMD_WAIT = 6'h6;
 
    reg [5:0] wb_cstate;
    reg [5:0] wb_nstate;
@@ -186,142 +148,117 @@ module wb_mig_if (/*AUTOARG*/
       end
    end
 
-   always @(/*AS*/burst_len or cmd_full_i or rd_empty_i or rst
-            or wb_active or wb_cstate or wb_cti_i or wb_err_o
-            or wb_we_i or wr_full_i) begin
-      if (rst) begin
-         wb_nstate <= IDLE;
-      end else begin
-         case (wb_cstate)
-           IDLE, WRITE_CMD: begin
-              if (wb_err_o) begin
-                 wb_nstate <= IDLE;
-              end else if (wb_active & ~cmd_full_i) begin
-                 if (wb_we_i) begin
-                    if (~wr_full_i) begin
-                     //  if (!EN_BURSTS || wb_cti_i == 3'b000) begin
-                          wb_nstate <= WRITE;
-                     // // end else begin
-                     //     wb_nstate <= WRITE_BURST_START;
-                     //  end
-                    end else begin
-                       wb_nstate <= IDLE;
-                    end
-                 end else begin
-                    wb_nstate <= READ;
-                 end
-              end else begin
-                 wb_nstate <= IDLE;
-              end
-           end
-           READ: begin
-              wb_nstate <= READ_WAIT;
-           end
-           READ_WAIT: begin
-              if (~rd_empty_i) begin
-                 wb_nstate <= READ_ACK;
-              end else begin
-                 wb_nstate <= READ_WAIT;
-              end
-           end
-           READ_ACK: begin
-              wb_nstate <= IDLE;
-           end
-           WRITE, WRITE_CMD_EARLY: begin
-              if (!EN_BURSTS || wb_cti_i == 3'b000 || wb_cti_i == 3'b111) begin
-                 wb_nstate <= WRITE_CMD;
-              end else if (wb_cti_i == 3'b010 && &burst_len) begin
-                 wb_nstate <= WRITE_CMD_EARLY;
-              end else begin
-                 wb_nstate <= WRITE;
-              end
-           end
-           WRITE_WAIT: begin
-              if (!wr_full_i) begin
-                 wb_nstate <= WRITE;
-              end else begin
-                 wb_nstate <= WRITE_WAIT;
-              end
-           end
-           WRITE_BURST_START: begin
-              wb_nstate <= WRITE;
-           end
-           default: begin
-              wb_nstate <= IDLE;
-           end
-         endcase
-      end
-   end // always @ (posedge clk)
-
-   always @(wb_cstate) begin
-      case(wb_cstate)
+   always @(*) begin
+      rd_en_o = 0;
+      wr_en_o = 0;
+      cmd_en_o = 0;
+      wb_ack_o = 0;
+      instr = 0;
+      
+      case (wb_cstate)
         IDLE: begin
-           rd_en_o <= 0;
-           wr_en_o <= 0;
-           cmd_en_o <= 0;
-           wb_ack_o <= 0;
-           instr <= 0;
-        end
-        READ: begin
-           rd_en_o <= 0;
-           wr_en_o <= 0;
-           cmd_en_o <= 1;
-           wb_ack_o <= 0;
-           instr <= 1;
-        end
-        READ_WAIT: begin
-           rd_en_o <= 0;
-           wr_en_o <= 0;
-           cmd_en_o <= 0;
-           wb_ack_o <= 0;
-           instr <= 1;
-        end
-        READ_ACK: begin
-           rd_en_o <= 1;
-           wr_en_o <= 0;
-           cmd_en_o <= 0;
-           wb_ack_o <= 1;
-           instr <= 1;
-        end
-        WRITE: begin
-           rd_en_o <= 0;
-           wr_en_o <= 1;
-           cmd_en_o <= 0;
-           wb_ack_o <= 1;
-           instr <= 0;
-        end
-        WRITE_WAIT: begin
-           rd_en_o <= 0;
-           wr_en_o <= 0;
-           cmd_en_o <= 0;
-           wb_ack_o <= 0;
-           instr <= 0;
+           rd_en_o = 0;
+           wr_en_o = 0;
+           cmd_en_o = 0;
+           wb_ack_o = 0;
+           instr = 0;
+           
+           if (wb_err_o) begin
+              wb_nstate = IDLE;
+           end else if (wb_active) begin
+              if (wb_we_i) begin
+                 wb_nstate = WRITE;
+              end else begin
+                 wb_nstate = READ;
+              end
+           end else begin
+              wb_nstate = IDLE;
+           end
         end
         WRITE_CMD: begin
-           rd_en_o <= 0;
-           wr_en_o <= 0;
-           cmd_en_o <= 1;
-           wb_ack_o <= 0;
-           instr <= 0;
+           rd_en_o = 0;
+           wr_en_o = 0;
+           cmd_en_o = 1;
+           instr = 0;
+           if (~cmd_full_i) begin
+              wb_ack_o = 1;
+              wb_nstate = IDLE;
+           end else begin
+              wb_nstate = WRITE_CMD;
+           end
         end
-        WRITE_CMD_EARLY: begin
-           rd_en_o <= 0;
-           wr_en_o <= 1;
-           cmd_en_o <= 1;
-           wb_ack_o <= 0;
-           instr <= 0;
+        READ: begin
+           rd_en_o = 0;
+           wr_en_o = 0;
+           cmd_en_o = 1;
+           wb_ack_o = 0;
+           instr = 1;
+           if (~cmd_full_i) begin
+              wb_nstate = READ_WAIT;
+           end else begin
+              wb_nstate = READ;
+           end
+        end
+        READ_WAIT: begin
+           rd_en_o = 0;
+           wr_en_o = 0;
+           cmd_en_o = 0;
+           wb_ack_o = 0;
+           instr = 1;
+           if (~rd_empty_i) begin
+              wb_nstate = READ_ACK;
+           end else begin
+              wb_nstate = READ_WAIT;
+           end
+        end
+        READ_ACK: begin
+           rd_en_o = 1;
+           wr_en_o = 0;
+           cmd_en_o = 0;
+           instr = 1;
+           if (~rd_empty_i) begin
+              wb_ack_o = 1;
+              wb_nstate = IDLE;
+           end else begin
+              wb_nstate = READ_ACK;
+           end
+        end
+        WRITE: begin
+           rd_en_o = 0;
+           wr_en_o = 1;
+           cmd_en_o = 0;
+           wb_ack_o = 0;
+           instr = 0;
+
+           if (~wr_full_i) begin
+              if (~cmd_full_i) begin
+                 wb_nstate = WRITE_CMD;
+              end else begin
+                 wb_nstate = WRITE_CMD_WAIT;
+              end
+           end else begin
+              wb_nstate = WRITE;
+           end
+        end
+        WRITE_CMD_WAIT: begin
+           rd_en_o = 0;
+           wr_en_o = 0;
+           cmd_en_o = 0;
+           wb_ack_o = 0;
+           instr = 0;
+           if (~cmd_full_i) begin
+              wb_nstate = WRITE_CMD;
+           end else begin
+              wb_nstate = WRITE_CMD_WAIT;
+           end
         end
         default: begin
-           rd_en_o <= 0;
-           wr_en_o <= 0;
-           cmd_en_o <= 0;
-           wb_ack_o <= 0;
-           instr <= 0;
+           wb_nstate = IDLE;
         end
       endcase
    end
 
-endmodule // wb_mem_if
+endmodule // wb_mig_if
 
 // Local Variables:
 // verilog-library-directories:("../../*/verilog/" "*")
