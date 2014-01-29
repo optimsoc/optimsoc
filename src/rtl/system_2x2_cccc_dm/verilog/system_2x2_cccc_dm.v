@@ -30,6 +30,7 @@
 
 `include "lisnoc_def.vh"
 `include "optimsoc_def.vh"
+`include "dbg_config.vh"
 
 module system_2x2_cccc_dm(
 `ifdef OPTIMSOC_DEBUG_ENABLE_ITM
@@ -64,6 +65,7 @@ module system_2x2_cccc_dm(
    parameter MEM_FILE = "ct.vmem";
    parameter MEM_SIZE = 1*1024*1024; // 1 MByte
 
+   parameter CORES = 1;
 
    input clk, rst_sys, rst_cpu;
 
@@ -157,6 +159,8 @@ module system_2x2_cccc_dm(
       for (i=0; i<4; i=i+1) begin : gen_ct
          compute_tile_dm
             #(.ID(i),
+              .CORES(CORES),
+              .COREBASE(0),
               .MEM_SIZE(MEM_SIZE),
               .MEM_FILE(MEM_FILE))
             u_ct(// Outputs

@@ -32,23 +32,27 @@
 
 /*
  * BASE+
- * +-------------------------+
- * | 0x0 R: tile id          |
- * +-------------------------+
- * | 0x4 R: NoC x-dimension  |
- * +-------------------------+
- * | 0x8 R: NoC y-dimension  |
- * +-------------------------+
- * | 0xc R: configuration    |
- * |        bit 0: mp_simple |
- * |        bit 1: dma       |
- * +-------------------------+
+ * +----------------------------+
+ * | 0x0 R: tile id             |
+ * +----------------------------+
+ * | 0x4 R: NoC x-dimension     |
+ * +----------------------------+
+ * | 0x8 R: NoC y-dimension     |
+ * +----------------------------+
+ * | 0xc R: configuration       |
+ * |        bit 0: mp_simple    |
+ * |        bit 1: dma          |
+ * +----------------------------+
+ * | 0x10 R: core base id       |
+ * +----------------------------+
+ * | 0x14 R: tile core number   |
+ * +----------------------------+
+ * | 0x18 R: domain core number |
+ * +----------------------------+
  * |
  * .
  * .
  * |
- * +
- * | 0x200 
  */
 
 module networkadapter_conf(
@@ -72,10 +76,17 @@ module networkadapter_conf(
    parameter noc_ydim = 4;
    parameter num_dests = $clog2(noc_xdim*noc_ydim);
 
+   parameter COREBASE = 0;
+   parameter NUMCORES = 32'hx;
+   parameter DOMAIN_NUMCORES = 32'hx;
+
    parameter REG_TILEID = 0;
    parameter REG_XDIM   = 1;
    parameter REG_YDIM   = 2;
    parameter REG_CONF   = 3;
+   localparam REG_COREBASE = 4;
+   localparam REG_NUMCORES = 5;
+   localparam REG_DOMAIN_NUMCORES = 6;
 
    parameter REG_CDC      = 10'h80;
    parameter REG_CDC_DYN  = 10'h81;
@@ -123,6 +134,15 @@ module networkadapter_conf(
            data = 32'h0000_0000;
            data[CONF_MPSIMPLE] = mp_simple_present;
            data[CONF_DMA] = dma_present;
+        end
+        REG_COREBASE: begin
+           data = COREBASE;
+        end
+        REG_NUMCORES: begin
+           data = NUMCORES;
+        end
+        REG_DOMAIN_NUMCORES: begin
+           data = DOMAIN_NUMCORES;
         end
 
         REG_CDC: begin

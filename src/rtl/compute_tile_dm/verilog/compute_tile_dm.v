@@ -63,6 +63,12 @@ module compute_tile_dm(
 
    parameter ID       = 0;
    parameter CORES    = 1;
+   parameter COREBASE = 0;
+   parameter DOMAIN_NUMCORES = CORES;
+
+   parameter NR_MASTERS = CORES * 2 + 1;
+   parameter NR_SLAVES = 3;
+
    /* memory size in bytes */
    parameter MEM_SIZE = 30*1024; // 30 kByte
    parameter MEM_FILE = "ct.vmem";
@@ -138,206 +144,214 @@ module compute_tile_dm(
    wire          wb_mem_rst_i;
 `endif
 
-   wire [31:0]   busms_adr_o[0:2];
-   wire          busms_cyc_o[0:2];
-   wire [31:0]   busms_dat_o[0:2];
-   wire [3:0]    busms_sel_o[0:2];
-   wire          busms_stb_o[0:2];
-   wire          busms_we_o[0:2];
-   wire          busms_cab_o[0:2];
-   wire [2:0]    busms_cti_o[0:2];
-   wire [1:0]    busms_bte_o[0:2];
-   wire          busms_ack_i[0:2];
-   wire          busms_rty_i[0:2];
-   wire          busms_err_i[0:2];
-   wire [31:0]   busms_dat_i[0:2];
+   wire [31:0]   busms_adr_o[0:NR_MASTERS-1];
+   wire          busms_cyc_o[0:NR_MASTERS-1];
+   wire [31:0]   busms_dat_o[0:NR_MASTERS-1];
+   wire [3:0]    busms_sel_o[0:NR_MASTERS-1];
+   wire          busms_stb_o[0:NR_MASTERS-1];
+   wire          busms_we_o[0:NR_MASTERS-1];
+   wire          busms_cab_o[0:NR_MASTERS-1];
+   wire [2:0]    busms_cti_o[0:NR_MASTERS-1];
+   wire [1:0]    busms_bte_o[0:NR_MASTERS-1];
+   wire          busms_ack_i[0:NR_MASTERS-1];
+   wire          busms_rty_i[0:NR_MASTERS-1];
+   wire          busms_err_i[0:NR_MASTERS-1];
+   wire [31:0]   busms_dat_i[0:NR_MASTERS-1];
 
-   wire [31:0]   bussl_adr_i[0:2];
-   wire          bussl_cyc_i[0:2];
-   wire [31:0]   bussl_dat_i[0:2];
-   wire [3:0]    bussl_sel_i[0:2];
-   wire          bussl_stb_i[0:2];
-   wire          bussl_we_i[0:2];
-   wire          bussl_cab_i[0:2];
-   wire [2:0]    bussl_cti_i[0:2];
-   wire [1:0]    bussl_bte_i[0:2];
-   wire          bussl_ack_o[0:2];
-   wire          bussl_rty_o[0:2];
-   wire          bussl_err_o[0:2];
-   wire [31:0]   bussl_dat_o[0:2];
+   wire [31:0]   bussl_adr_i[0:NR_SLAVES-1];
+   wire          bussl_cyc_i[0:NR_SLAVES-1];
+   wire [31:0]   bussl_dat_i[0:NR_SLAVES-1];
+   wire [3:0]    bussl_sel_i[0:NR_SLAVES-1];
+   wire          bussl_stb_i[0:NR_SLAVES-1];
+   wire          bussl_we_i[0:NR_SLAVES-1];
+   wire          bussl_cab_i[0:NR_SLAVES-1];
+   wire [2:0]    bussl_cti_i[0:NR_SLAVES-1];
+   wire [1:0]    bussl_bte_i[0:NR_SLAVES-1];
+   wire          bussl_ack_o[0:NR_SLAVES-1];
+   wire          bussl_rty_o[0:NR_SLAVES-1];
+   wire          bussl_err_o[0:NR_SLAVES-1];
+   wire [31:0]   bussl_dat_o[0:NR_SLAVES-1];
 
-   wire [19:0]   pic_ints_i;
-   assign pic_ints_i[19:4] = 17'h0;
-   assign pic_ints_i[1:0] = 2'b00;
+   wire          snoop_enable;
+   wire [31:0]   snoop_adr;
 
-   /* or1200_module AUTO_TEMPLATE(
-    .clk_i          (clk),
-    .rst_i          (rst_cpu),
-    .bus_clk_i          (clk),
-    .bus_rst_i          (rst_cpu),
-    .dbg_.*_o       (),
-    .dbg_stall_i    (cpu_stall),
-    .dbg_ewt_i      (1'b0),
-    .dbg_stb_i      (1'b0),
-    .dbg_we_i       (1'b0),
-    .dbg_adr_i      (32'h00000000),
-    .dbg_dat_i      (32'h00000000),
-    .iwb_\(.*\)     (busms_\1[0][]),
-    .dwb_\(.*\)     (busms_\1[1][]),
-    ); */
-   or1200_module
-      #(.ID(0))
-      u_core0 (
+   wire [19:0]   pic_ints_i [0:CORES-1];
+   assign pic_ints_i[0][19:4] = 17'h0;
+   assign pic_ints_i[0][1:0] = 2'b00;
+
+   genvar        c, m;
+
+   wire [32*NR_MASTERS-1:0] busms_adr_o_flat;
+   wire [NR_MASTERS-1:0]    busms_cyc_o_flat;
+   wire [32*NR_MASTERS-1:0] busms_dat_o_flat;
+   wire [4*NR_MASTERS-1:0]  busms_sel_o_flat;
+   wire [NR_MASTERS-1:0]    busms_stb_o_flat;
+   wire [NR_MASTERS-1:0]    busms_we_o_flat;
+   wire [NR_MASTERS-1:0]    busms_cab_o_flat;
+   wire [3*NR_MASTERS-1:0]  busms_cti_o_flat;
+   wire [2*NR_MASTERS-1:0]  busms_bte_o_flat;
+   wire [NR_MASTERS-1:0]    busms_ack_i_flat;
+   wire [NR_MASTERS-1:0]    busms_rty_i_flat;
+   wire [NR_MASTERS-1:0]    busms_err_i_flat;
+   wire [32*NR_MASTERS-1:0] busms_dat_i_flat;
+
+   generate
+      for (m = 0; m < NR_MASTERS; m = m + 1) begin : gen_busms_flat
+         assign busms_adr_o_flat[32*(m+1)-1:32*m] = busms_adr_o[m];
+         assign busms_cyc_o_flat[m] = busms_cyc_o[m];
+         assign busms_dat_o_flat[32*(m+1)-1:32*m] = busms_dat_o[m];
+         assign busms_sel_o_flat[4*(m+1)-1:4*m] = busms_sel_o[m];
+         assign busms_stb_o_flat[m] = busms_stb_o[m];
+         assign busms_we_o_flat[m] = busms_we_o[m];
+         assign busms_cab_o_flat[m] = busms_cab_o[m];      
+         assign busms_cti_o_flat[3*(m+1)-1:3*m] = busms_cti_o[m];
+         assign busms_bte_o_flat[2*(m+1)-1:2*m] = busms_bte_o[m];
+         assign busms_ack_i[m] = busms_ack_i_flat[m];
+         assign busms_rty_i[m] = busms_rty_i_flat[m];
+         assign busms_err_i[m] = busms_err_i_flat[m];
+         assign busms_dat_i[m] = busms_dat_i_flat[32*(m+1)-1:32*m];
+      end
+   endgenerate
+   
+   generate
+      for (c = 1; c < CORES; c = c + 1) begin
+         assign pic_ints_i[c] = 20'h0;
+      end
+   endgenerate
+
+
+   generate
+      for (c = 0; c < CORES; c = c + 1) begin : gen_cores
+         /* mor1kx_module AUTO_TEMPLATE(
+          .clk_i          (clk),
+          .rst_i          (rst_cpu),
+          .bus_clk_i      (clk),
+          .bus_rst_i      (rst_cpu),
+          .dbg_.*_o       (),
+          .dbg_stall_i    (cpu_stall),
+          .dbg_ewt_i      (1'b0),
+          .dbg_stb_i      (1'b0),
+          .dbg_we_i       (1'b0),
+          .dbg_adr_i      (32'h00000000),
+          .dbg_dat_i      (32'h00000000),
+          .iwb_\(.*\)     (busms_\1[c*2][]),
+          .dwb_\(.*\)     (busms_\1[c*2+1][]),
+          .pic_ints_i     (pic_ints_i[c]),
+          .snoop_enable_i (snoop_enable),
+          .snoop_adr_i    (snoop_adr),
+          ); */
+         mor1kx_module
+               #(.ID(c))
+         u_core (
 `ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-            .trace_itm                  (trace_itm[`DEBUG_ITM_PORTWIDTH-1:0]),
+                 .trace_itm                  (trace_itm[`DEBUG_ITM_PORTWIDTH-1:0]),
 `endif
 `ifdef OPTIMSOC_DEBUG_ENABLE_STM
-            .trace_stm                  (trace_stm[`DEBUG_STM_PORTWIDTH-1:0]),
+                 .trace_stm                  (trace_stm[`DEBUG_STM_PORTWIDTH-1:0]),
 `endif
-               /*AUTOINST*/
-               // Outputs
-               .dbg_lss_o               (),                      // Templated
-               .dbg_is_o                (),                      // Templated
-               .dbg_wp_o                (),                      // Templated
-               .dbg_bp_o                (),                      // Templated
-               .dbg_dat_o               (),                      // Templated
-               .dbg_ack_o               (),                      // Templated
-               .iwb_cyc_o               (busms_cyc_o[0]),        // Templated
-               .iwb_adr_o               (busms_adr_o[0][31:0]),  // Templated
-               .iwb_stb_o               (busms_stb_o[0]),        // Templated
-               .iwb_we_o                (busms_we_o[0]),         // Templated
-               .iwb_sel_o               (busms_sel_o[0][3:0]),   // Templated
-               .iwb_dat_o               (busms_dat_o[0][31:0]),  // Templated
-               .iwb_bte_o               (busms_bte_o[0][1:0]),   // Templated
-               .iwb_cti_o               (busms_cti_o[0][2:0]),   // Templated
-               .dwb_cyc_o               (busms_cyc_o[1]),        // Templated
-               .dwb_adr_o               (busms_adr_o[1][31:0]),  // Templated
-               .dwb_stb_o               (busms_stb_o[1]),        // Templated
-               .dwb_we_o                (busms_we_o[1]),         // Templated
-               .dwb_sel_o               (busms_sel_o[1][3:0]),   // Templated
-               .dwb_dat_o               (busms_dat_o[1][31:0]),  // Templated
-               .dwb_bte_o               (busms_bte_o[1][1:0]),   // Templated
-               .dwb_cti_o               (busms_cti_o[1][2:0]),   // Templated
-               // Inputs
-               .clk_i                   (clk),                   // Templated
-               .bus_clk_i               (clk),                   // Templated
-               .rst_i                   (rst_cpu),               // Templated
-               .bus_rst_i               (rst_cpu),               // Templated
-               .dbg_stall_i             (cpu_stall),             // Templated
-               .dbg_ewt_i               (1'b0),                  // Templated
-               .dbg_stb_i               (1'b0),                  // Templated
-               .dbg_we_i                (1'b0),                  // Templated
-               .dbg_adr_i               (32'h00000000),          // Templated
-               .dbg_dat_i               (32'h00000000),          // Templated
-               .pic_ints_i              (pic_ints_i[19:0]),
-               .iwb_ack_i               (busms_ack_i[0]),        // Templated
-               .iwb_err_i               (busms_err_i[0]),        // Templated
-               .iwb_rty_i               (busms_rty_i[0]),        // Templated
-               .iwb_dat_i               (busms_dat_i[0][31:0]),  // Templated
-               .dwb_ack_i               (busms_ack_i[1]),        // Templated
-               .dwb_err_i               (busms_err_i[1]),        // Templated
-               .dwb_rty_i               (busms_rty_i[1]),        // Templated
-               .dwb_dat_i               (busms_dat_i[1][31:0]));         // Templated
+                 /*AUTOINST*/
+                 // Outputs
+                 .dbg_lss_o             (),                      // Templated
+                 .dbg_is_o              (),                      // Templated
+                 .dbg_wp_o              (),                      // Templated
+                 .dbg_bp_o              (),                      // Templated
+                 .dbg_dat_o             (),                      // Templated
+                 .dbg_ack_o             (),                      // Templated
+                 .iwb_cyc_o             (busms_cyc_o[c*2]),      // Templated
+                 .iwb_adr_o             (busms_adr_o[c*2][31:0]), // Templated
+                 .iwb_stb_o             (busms_stb_o[c*2]),      // Templated
+                 .iwb_we_o              (busms_we_o[c*2]),       // Templated
+                 .iwb_sel_o             (busms_sel_o[c*2][3:0]), // Templated
+                 .iwb_dat_o             (busms_dat_o[c*2][31:0]), // Templated
+                 .iwb_bte_o             (busms_bte_o[c*2][1:0]), // Templated
+                 .iwb_cti_o             (busms_cti_o[c*2][2:0]), // Templated
+                 .dwb_cyc_o             (busms_cyc_o[c*2+1]),    // Templated
+                 .dwb_adr_o             (busms_adr_o[c*2+1][31:0]), // Templated
+                 .dwb_stb_o             (busms_stb_o[c*2+1]),    // Templated
+                 .dwb_we_o              (busms_we_o[c*2+1]),     // Templated
+                 .dwb_sel_o             (busms_sel_o[c*2+1][3:0]), // Templated
+                 .dwb_dat_o             (busms_dat_o[c*2+1][31:0]), // Templated
+                 .dwb_bte_o             (busms_bte_o[c*2+1][1:0]), // Templated
+                 .dwb_cti_o             (busms_cti_o[c*2+1][2:0]), // Templated
+                 // Inputs
+                 .clk_i                 (clk),                   // Templated
+                 .bus_clk_i             (clk),                   // Templated
+                 .rst_i                 (rst_cpu),               // Templated
+                 .bus_rst_i             (rst_cpu),               // Templated
+                 .dbg_stall_i           (cpu_stall),             // Templated
+                 .dbg_ewt_i             (1'b0),                  // Templated
+                 .dbg_stb_i             (1'b0),                  // Templated
+                 .dbg_we_i              (1'b0),                  // Templated
+                 .dbg_adr_i             (32'h00000000),          // Templated
+                 .dbg_dat_i             (32'h00000000),          // Templated
+                 .pic_ints_i            (pic_ints_i[c]),         // Templated
+                 .iwb_ack_i             (busms_ack_i[c*2]),      // Templated
+                 .iwb_err_i             (busms_err_i[c*2]),      // Templated
+                 .iwb_rty_i             (busms_rty_i[c*2]),      // Templated
+                 .iwb_dat_i             (busms_dat_i[c*2][31:0]), // Templated
+                 .dwb_ack_i             (busms_ack_i[c*2+1]),    // Templated
+                 .dwb_err_i             (busms_err_i[c*2+1]),    // Templated
+                 .dwb_rty_i             (busms_rty_i[c*2+1]),    // Templated
+                 .dwb_dat_i             (busms_dat_i[c*2+1][31:0]), // Templated
+                 .snoop_enable_i        (snoop_enable),          // Templated
+                 .snoop_adr_i           (snoop_adr));            // Templated
 
-
-   assign busms_cab_o[0] = 1'b0;
-   assign busms_cab_o[1] = 1'b0;
-
-   /* compute_tile_dm_bus AUTO_TEMPLATE(
+         
+         assign busms_cab_o[c*2] = 1'b0;
+         assign busms_cab_o[c*2+1] = 1'b0;
+      end
+   endgenerate
+         
+   /* wb_bus_b3 AUTO_TEMPLATE(
     .clk_i      (clk),
     .rst_i      (rst_sys),
-    .m_@_\(.*\)_o (busms_\2_i[\1][]),
-    .m_@_\(.*\)_i (busms_\2_o[\1][]),
-    .s_@_\(.*\)_o (bussl_\2_i[\1][]),
-    .s_@_\(.*\)_i (bussl_\2_o[\1][]),
+    .m_\(.*\)_o (busms_\1_i_flat),
+    .m_\(.*\)_i (busms_\1_o_flat),
+    .s_\(.*\)_o ({bussl_\1_i[2],bussl_\1_i[1],bussl_\1_i[0]}),
+    .s_\(.*\)_i ({bussl_\1_o[2],bussl_\1_o[1],bussl_\1_o[0]}),
+    .snoop_en_o (snoop_enable),
+    .snoop_adr_o (snoop_adr),
+    .bus_hold (1'b0),
+    .bus_hold_ack (),
     ); */
-   compute_tile_dm_bus
-      #(.DW(32),
-        .AW(32),
-        .SW(4))
-      u_bus(/*AUTOINST*/
-            // Outputs
-            .m_0_dat_o                  (busms_dat_i[0][31:0]),  // Templated
-            .m_0_ack_o                  (busms_ack_i[0]),        // Templated
-            .m_0_err_o                  (busms_err_i[0]),        // Templated
-            .m_0_rty_o                  (busms_rty_i[0]),        // Templated
-            .m_1_dat_o                  (busms_dat_i[1][31:0]),  // Templated
-            .m_1_ack_o                  (busms_ack_i[1]),        // Templated
-            .m_1_err_o                  (busms_err_i[1]),        // Templated
-            .m_1_rty_o                  (busms_rty_i[1]),        // Templated
-            .m_2_dat_o                  (busms_dat_i[2][31:0]),  // Templated
-            .m_2_ack_o                  (busms_ack_i[2]),        // Templated
-            .m_2_err_o                  (busms_err_i[2]),        // Templated
-            .m_2_rty_o                  (busms_rty_i[2]),        // Templated
-            .s_0_dat_o                  (bussl_dat_i[0][31:0]),  // Templated
-            .s_0_adr_o                  (bussl_adr_i[0][31:0]),  // Templated
-            .s_0_sel_o                  (bussl_sel_i[0][3:0]),   // Templated
-            .s_0_we_o                   (bussl_we_i[0]),         // Templated
-            .s_0_cyc_o                  (bussl_cyc_i[0]),        // Templated
-            .s_0_stb_o                  (bussl_stb_i[0]),        // Templated
-            .s_0_cab_o                  (bussl_cab_i[0]),        // Templated
-            .s_0_cti_o                  (bussl_cti_i[0][2:0]),   // Templated
-            .s_0_bte_o                  (bussl_bte_i[0][1:0]),   // Templated
-            .s_1_dat_o                  (bussl_dat_i[1][31:0]),  // Templated
-            .s_1_adr_o                  (bussl_adr_i[1][31:0]),  // Templated
-            .s_1_sel_o                  (bussl_sel_i[1][3:0]),   // Templated
-            .s_1_we_o                   (bussl_we_i[1]),         // Templated
-            .s_1_cyc_o                  (bussl_cyc_i[1]),        // Templated
-            .s_1_stb_o                  (bussl_stb_i[1]),        // Templated
-            .s_1_cab_o                  (bussl_cab_i[1]),        // Templated
-            .s_1_cti_o                  (bussl_cti_i[1][2:0]),   // Templated
-            .s_1_bte_o                  (bussl_bte_i[1][1:0]),   // Templated
-            .s_2_dat_o                  (bussl_dat_i[2][31:0]),  // Templated
-            .s_2_adr_o                  (bussl_adr_i[2][31:0]),  // Templated
-            .s_2_sel_o                  (bussl_sel_i[2][3:0]),   // Templated
-            .s_2_we_o                   (bussl_we_i[2]),         // Templated
-            .s_2_cyc_o                  (bussl_cyc_i[2]),        // Templated
-            .s_2_stb_o                  (bussl_stb_i[2]),        // Templated
-            .s_2_cab_o                  (bussl_cab_i[2]),        // Templated
-            .s_2_cti_o                  (bussl_cti_i[2][2:0]),   // Templated
-            .s_2_bte_o                  (bussl_bte_i[2][1:0]),   // Templated
-            // Inputs
-            .clk_i                      (clk),                   // Templated
-            .rst_i                      (rst_sys),               // Templated
-            .m_0_dat_i                  (busms_dat_o[0][31:0]),  // Templated
-            .m_0_adr_i                  (busms_adr_o[0][31:0]),  // Templated
-            .m_0_sel_i                  (busms_sel_o[0][3:0]),   // Templated
-            .m_0_we_i                   (busms_we_o[0]),         // Templated
-            .m_0_cyc_i                  (busms_cyc_o[0]),        // Templated
-            .m_0_stb_i                  (busms_stb_o[0]),        // Templated
-            .m_0_cab_i                  (busms_cab_o[0]),        // Templated
-            .m_0_cti_i                  (busms_cti_o[0][2:0]),   // Templated
-            .m_0_bte_i                  (busms_bte_o[0][1:0]),   // Templated
-            .m_1_dat_i                  (busms_dat_o[1][31:0]),  // Templated
-            .m_1_adr_i                  (busms_adr_o[1][31:0]),  // Templated
-            .m_1_sel_i                  (busms_sel_o[1][3:0]),   // Templated
-            .m_1_we_i                   (busms_we_o[1]),         // Templated
-            .m_1_cyc_i                  (busms_cyc_o[1]),        // Templated
-            .m_1_stb_i                  (busms_stb_o[1]),        // Templated
-            .m_1_cab_i                  (busms_cab_o[1]),        // Templated
-            .m_1_cti_i                  (busms_cti_o[1][2:0]),   // Templated
-            .m_1_bte_i                  (busms_bte_o[1][1:0]),   // Templated
-            .m_2_dat_i                  (busms_dat_o[2][31:0]),  // Templated
-            .m_2_adr_i                  (busms_adr_o[2][31:0]),  // Templated
-            .m_2_sel_i                  (busms_sel_o[2][3:0]),   // Templated
-            .m_2_we_i                   (busms_we_o[2]),         // Templated
-            .m_2_cyc_i                  (busms_cyc_o[2]),        // Templated
-            .m_2_stb_i                  (busms_stb_o[2]),        // Templated
-            .m_2_cab_i                  (busms_cab_o[2]),        // Templated
-            .m_2_cti_i                  (busms_cti_o[2][2:0]),   // Templated
-            .m_2_bte_i                  (busms_bte_o[2][1:0]),   // Templated
-            .s_0_dat_i                  (bussl_dat_o[0][31:0]),  // Templated
-            .s_0_ack_i                  (bussl_ack_o[0]),        // Templated
-            .s_0_err_i                  (bussl_err_o[0]),        // Templated
-            .s_0_rty_i                  (bussl_rty_o[0]),        // Templated
-            .s_1_dat_i                  (bussl_dat_o[1][31:0]),  // Templated
-            .s_1_ack_i                  (bussl_ack_o[1]),        // Templated
-            .s_1_err_i                  (bussl_err_o[1]),        // Templated
-            .s_1_rty_i                  (bussl_rty_o[1]),        // Templated
-            .s_2_dat_i                  (bussl_dat_o[2][31:0]),  // Templated
-            .s_2_ack_i                  (bussl_ack_o[2]),        // Templated
-            .s_2_err_i                  (bussl_err_o[2]),        // Templated
-            .s_2_rty_i                  (bussl_rty_o[2]));       // Templated
+   wb_bus_b3
+     #(.MASTERS(NR_MASTERS),.SLAVES(NR_SLAVES),
+       .S0_RANGE_WIDTH(1),.S0_RANGE_MATCH(1'h0),
+       .S1_RANGE_WIDTH(4),.S1_RANGE_MATCH(4'he),
+       .S2_RANGE_WIDTH(4),.S2_RANGE_MATCH(4'hf))
+   u_bus(/*AUTOINST*/
+         // Outputs
+         .m_dat_o                       (busms_dat_i_flat),      // Templated
+         .m_ack_o                       (busms_ack_i_flat),      // Templated
+         .m_err_o                       (busms_err_i_flat),      // Templated
+         .m_rty_o                       (busms_rty_i_flat),      // Templated
+         .s_adr_o                       ({bussl_adr_i[2],bussl_adr_i[1],bussl_adr_i[0]}), // Templated
+         .s_dat_o                       ({bussl_dat_i[2],bussl_dat_i[1],bussl_dat_i[0]}), // Templated
+         .s_cyc_o                       ({bussl_cyc_i[2],bussl_cyc_i[1],bussl_cyc_i[0]}), // Templated
+         .s_stb_o                       ({bussl_stb_i[2],bussl_stb_i[1],bussl_stb_i[0]}), // Templated
+         .s_sel_o                       ({bussl_sel_i[2],bussl_sel_i[1],bussl_sel_i[0]}), // Templated
+         .s_we_o                        ({bussl_we_i[2],bussl_we_i[1],bussl_we_i[0]}), // Templated
+         .s_cti_o                       ({bussl_cti_i[2],bussl_cti_i[1],bussl_cti_i[0]}), // Templated
+         .s_bte_o                       ({bussl_bte_i[2],bussl_bte_i[1],bussl_bte_i[0]}), // Templated
+         .snoop_adr_o                   (snoop_adr),             // Templated
+         .snoop_en_o                    (snoop_enable),          // Templated
+         .bus_hold_ack                  (),                      // Templated
+         // Inputs
+         .clk_i                         (clk),                   // Templated
+         .rst_i                         (rst_sys),               // Templated
+         .m_adr_i                       (busms_adr_o_flat),      // Templated
+         .m_dat_i                       (busms_dat_o_flat),      // Templated
+         .m_cyc_i                       (busms_cyc_o_flat),      // Templated
+         .m_stb_i                       (busms_stb_o_flat),      // Templated
+         .m_sel_i                       (busms_sel_o_flat),      // Templated
+         .m_we_i                        (busms_we_o_flat),       // Templated
+         .m_cti_i                       (busms_cti_o_flat),      // Templated
+         .m_bte_i                       (busms_bte_o_flat),      // Templated
+         .s_dat_i                       ({bussl_dat_o[2],bussl_dat_o[1],bussl_dat_o[0]}), // Templated
+         .s_ack_i                       ({bussl_ack_o[2],bussl_ack_o[1],bussl_ack_o[0]}), // Templated
+         .s_err_i                       ({bussl_err_o[2],bussl_err_o[1],bussl_err_o[0]}), // Templated
+         .s_rty_i                       ({bussl_rty_o[2],bussl_rty_o[1],bussl_rty_o[0]}), // Templated
+         .bus_hold                      (1'b0));                         // Templated
 
 
    /* mam_wb_adapter AUTO_TEMPLATE(
@@ -441,13 +455,13 @@ module compute_tile_dm(
     *  +----+-----+
     *    3     2
     */
-   assign pic_ints_i[3:2] = {na_irq[0],|na_irq[DMA_ENTRIES:1]};
+   assign pic_ints_i[0][3:2] = {na_irq[0],|na_irq[DMA_ENTRIES:1]};
 
    /* networkadapter_ct AUTO_TEMPLATE(
     .clk(clk),
     .rst(rst_sys),
     .wbs_\(.*\)   (bussl_\1[1]),
-    .wbm_\(.*\)      (busms_\1[2]),
+    .wbm_\(.*\)      (busms_\1[NR_MASTERS-1]),
     .irq    (na_irq),
     );*/
    networkadapter_ct
@@ -455,7 +469,9 @@ module compute_tile_dm(
         .conf_dma(NA_ENABLE_DMA),
         .dma_entries(DMA_ENTRIES),
         .vchannels(VCHANNELS),
-        .noc_flit_width(NOC_FLIT_WIDTH))
+        .noc_flit_width(NOC_FLIT_WIDTH),
+        .NUMCORES(CORES), .COREBASE(COREBASE),
+        .DOMAIN_NUMCORES(DOMAIN_NUMCORES))
       u_na(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC
@@ -468,15 +484,15 @@ module compute_tile_dm(
            .noc_in_ready                (noc_in_ready[VCHANNELS-1:0]),
            .noc_out_flit                (noc_out_flit[NOC_FLIT_WIDTH-1:0]),
            .noc_out_valid               (noc_out_valid[VCHANNELS-1:0]),
-           .wbm_adr_o                   (busms_adr_o[2]),        // Templated
-           .wbm_cyc_o                   (busms_cyc_o[2]),        // Templated
-           .wbm_dat_o                   (busms_dat_o[2]),        // Templated
-           .wbm_sel_o                   (busms_sel_o[2]),        // Templated
-           .wbm_stb_o                   (busms_stb_o[2]),        // Templated
-           .wbm_we_o                    (busms_we_o[2]),         // Templated
-           .wbm_cab_o                   (busms_cab_o[2]),        // Templated
-           .wbm_cti_o                   (busms_cti_o[2]),        // Templated
-           .wbm_bte_o                   (busms_bte_o[2]),        // Templated
+           .wbm_adr_o                   (busms_adr_o[NR_MASTERS-1]), // Templated
+           .wbm_cyc_o                   (busms_cyc_o[NR_MASTERS-1]), // Templated
+           .wbm_dat_o                   (busms_dat_o[NR_MASTERS-1]), // Templated
+           .wbm_sel_o                   (busms_sel_o[NR_MASTERS-1]), // Templated
+           .wbm_stb_o                   (busms_stb_o[NR_MASTERS-1]), // Templated
+           .wbm_we_o                    (busms_we_o[NR_MASTERS-1]), // Templated
+           .wbm_cab_o                   (busms_cab_o[NR_MASTERS-1]), // Templated
+           .wbm_cti_o                   (busms_cti_o[NR_MASTERS-1]), // Templated
+           .wbm_bte_o                   (busms_bte_o[NR_MASTERS-1]), // Templated
            .wbs_ack_o                   (bussl_ack_o[1]),        // Templated
            .wbs_rty_o                   (bussl_rty_o[1]),        // Templated
            .wbs_err_o                   (bussl_err_o[1]),        // Templated
@@ -488,10 +504,10 @@ module compute_tile_dm(
            .noc_in_flit                 (noc_in_flit[NOC_FLIT_WIDTH-1:0]),
            .noc_in_valid                (noc_in_valid[VCHANNELS-1:0]),
            .noc_out_ready               (noc_out_ready[VCHANNELS-1:0]),
-           .wbm_ack_i                   (busms_ack_i[2]),        // Templated
-           .wbm_rty_i                   (busms_rty_i[2]),        // Templated
-           .wbm_err_i                   (busms_err_i[2]),        // Templated
-           .wbm_dat_i                   (busms_dat_i[2]),        // Templated
+           .wbm_ack_i                   (busms_ack_i[NR_MASTERS-1]), // Templated
+           .wbm_rty_i                   (busms_rty_i[NR_MASTERS-1]), // Templated
+           .wbm_err_i                   (busms_err_i[NR_MASTERS-1]), // Templated
+           .wbm_dat_i                   (busms_dat_i[NR_MASTERS-1]), // Templated
            .wbs_adr_i                   (bussl_adr_i[1]),        // Templated
            .wbs_cyc_i                   (bussl_cyc_i[1]),        // Templated
            .wbs_dat_i                   (bussl_dat_i[1]),        // Templated

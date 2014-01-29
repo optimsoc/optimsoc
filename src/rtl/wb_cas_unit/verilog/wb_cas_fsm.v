@@ -29,146 +29,151 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-module wb_cas_fsm(
-    input clk_i,
-    input rst_i,
-    input [31:0] core_adr_i,
-    input [31:0] core_dat_i,
-    input [3:0] core_sel_i,
-    input core_we_i,
-    input core_cyc_i,
-    input core_stb_i,
-    output [31:0] core_dat_o,
-    output core_ack_o,
-    output core_err_o,
-    output core_rty_o,
-    output [31:0] bus_adr_o,
-    output [31:0] bus_dat_o,
-    output [3:0] bus_sel_o,
-    output bus_we_o,
-    output bus_cyc_o,
-    output bus_stb_o,
-    input bus_ack_i,
-    input [31:0] bus_dat_i,
-    input bus_err_i,
-    input bus_rty_i
-    );
+module wb_cas_fsm(/*AUTOARG*/
+   // Outputs
+   core_dat_o, core_ack_o, core_err_o, core_rty_o, bus_adr_o,
+   bus_dat_o, bus_sel_o, bus_we_o, bus_cyc_o, bus_stb_o,
+   // Inputs
+   clk_i, rst_i, core_adr_i, core_dat_i, core_sel_i, core_we_i,
+   core_cyc_i, core_stb_i, bus_ack_i, bus_dat_i, bus_err_i, bus_rty_i
+   );
 
-assign core_err_o = 0;
-assign core_rty_o = 0;
+   input             clk_i;
+   input             rst_i;
+   input [31:0]      core_adr_i;
+   input [31:0]      core_dat_i;
+   input [3:0]       core_sel_i;
+   input             core_we_i;
+   input             core_cyc_i;
+   input             core_stb_i;
+   output reg [31:0] core_dat_o;
+   output reg        core_ack_o;
+   output            core_err_o;
+   output            core_rty_o;
+   output [31:0]     bus_adr_o;
+   output [31:0]     bus_dat_o;
+   output [3:0]      bus_sel_o;
+   output reg        bus_we_o;
+   output reg        bus_cyc_o;
+   output reg        bus_stb_o;
+   input             bus_ack_i;
+   input [31:0]      bus_dat_i;
+   input             bus_err_i;
+   input             bus_rty_i;
 
-assign bus_sel_o = 4'b1111;
+   localparam STATE_IDLE = 0;
+   localparam STATE_COMPARE = 1;
+   localparam STATE_SWAP = 2;
+   
+   reg [1:0]     state;
+   reg [1:0]     nxt_state;
 
-parameter state_00 = 11'b00000000001;
-parameter state_01 = 11'b00000000010;
-parameter state_02 = 11'b00000000100;
-parameter state_03 = 11'b00000001000;
-parameter state_04 = 11'b00000010000;
-parameter state_05 = 11'b00000100000;
-parameter state_06 = 11'b00001000000;
-parameter state_07 = 11'b00010000000;
-parameter state_08 = 11'b00100000000;
-parameter state_09 = 11'b01000000000;
-parameter state_10 = 11'b10000000000;
+   reg [31:0]    address;
+   reg [31:0]    nxt_address;
+   reg [31:0]    compare;
+   reg [31:0]    nxt_compare;
+   reg [31:0]    swap;
+   reg [31:0]    nxt_swap;
+   reg [31:0]    old;
+   reg [31:0]    nxt_old;
+   
+   assign {core_err_o, core_rty_o} = 2'b00;
 
-reg [31:0] address = 32'h00000000;
-reg [31:0] compare = 32'h00000000;
-reg [31:0] value   = 32'h00000000;
-reg [31:0] old_value = 32'h00000000;
+   assign bus_adr_o = address;
+   assign bus_dat_o = swap;
+   assign bus_sel_o = 4'hf;
+   
+   always @(*) begin
+      core_ack_o = 1'b0;
+      core_dat_o = 32'hx;
+      bus_cyc_o = 1'b0;
+      bus_stb_o = 1'b0;
+      bus_we_o = 1'b0;
 
-reg cycle = 0;
-reg strobe = 0;
-reg we = 0;
+      nxt_address = address;
+      nxt_compare = compare;
+      nxt_swap = swap;
+      nxt_old = old;
 
-(* FSM_ENCODING="ONE-HOT", SAFE_IMPLEMENTATION="YES", SAFE_RECOVERY_STATE="11'b00000000001" *) reg [10:0] state = state_00;
-
-always @ (posedge clk_i)
-begin
-        if (rst_i)
-        begin
-                state <= state_00;
-                cycle <= 0;
-                strobe <= 0;
+      nxt_state = state;
+      
+      case(state)
+        STATE_IDLE: begin
+           if (core_cyc_i && core_stb_i) begin
+              if (core_we_i) begin
+                 core_ack_o = 1'b1;
+                 if (core_adr_i[3:0] == 4'h0) begin
+                    nxt_address = core_dat_i;
+                 end else if (core_adr_i[3:0] == 4'h4) begin
+                    nxt_compare = core_dat_i;
+                 end else if (core_adr_i[3:0] == 4'h8) begin
+                    nxt_swap = core_dat_i;
+                 end else begin
+                    nxt_state = STATE_IDLE;
+                 end
+              end else begin // if (core_we_i)
+                 if (core_adr_i[3:0] == 4'h0) begin
+                    core_ack_o = 1'b1;
+                    core_dat_o = address;
+                 end else if (core_adr_i[3:0] == 4'h4) begin
+                    core_ack_o = 1'b1;
+                    core_dat_o = compare;
+                 end else if (core_adr_i[3:0] == 4'h8) begin
+                    core_ack_o = 1'b1;
+                    core_dat_o = swap;
+                 end else if (core_adr_i[3:0] == 4'hc) begin
+                    nxt_state = STATE_COMPARE;
+                 end else begin
+                    nxt_state = STATE_IDLE;
+                 end
+              end
+           end
+        end // case: STATE_IDLE
+        STATE_COMPARE: begin
+           bus_cyc_o = 1'b1;
+           bus_stb_o = 1'b1;
+           bus_we_o = 1'b0;
+           if (bus_ack_i) begin
+              nxt_old = bus_dat_i;
+              if (bus_dat_i == compare) begin
+                 nxt_state = STATE_SWAP;
+              end else begin
+                 core_ack_o = 1'b1;
+                 core_dat_o = bus_dat_i;
+                 nxt_state = STATE_IDLE;
+              end
+           end
+        end // case: STATE_COMPARE
+        STATE_SWAP: begin
+           bus_cyc_o = 1'b1;
+           bus_stb_o = 1'b1;
+           bus_we_o = 1'b1;
+           if (bus_ack_i) begin
+              nxt_state = STATE_IDLE;
+              core_ack_o = 1'b1;
+              core_dat_o = old;
+           end
         end
-        else 
-          case (state)
-                        state_00: begin
-                                if ( core_cyc_i & core_stb_i & core_we_i )
-                                        state <= state_01;
-                        end
-                        state_01: begin
-                                state <= state_02;
-                                address <= core_dat_i;
-                        end
-                        state_02: begin
-                                if ( core_cyc_i & core_stb_i & core_we_i )
-                                        state <= state_03;
-                        end
-                        state_03: begin
-                                state <= state_04;
-                                compare <= core_dat_i;
-                        end
-                        state_04: begin
-                                if ( core_cyc_i & core_stb_i & core_we_i )
-                                        state <= state_05;
-                        end
-                        state_05: begin
-                                state <= state_06;
-                                value <= core_dat_i;
-                        end
-                        state_06: begin
-                                if ( core_cyc_i & core_stb_i & ~core_we_i )
-                                begin
-                                        state <= state_07;
-                                        cycle <= 1;
-                                        strobe <= 1;
-                                end
-                        end
-                        state_07: begin
-                                if ( bus_ack_i )
-                                begin
-                                        strobe <= 0;
-                                        old_value <= bus_dat_i;
-                                        if ( bus_dat_i == compare )
-                                        begin
-                                                state <= state_08;
-                                        end
-                                        else
-                                        begin
-                                                state <= state_10;
-                                                cycle <= 0;
-                                        end
-                                end
-                        end
-                        state_08: begin
-                                we <= 1;
-                                strobe <= 1;
-                                state <= state_09;
-                        end
-                        state_09: begin
-                                if (bus_ack_i)
-                                begin
-                                        strobe <= 0;
-                                        cycle <= 0;
-                                        we <= 0;
-                                        state <= state_10;
-                                end
-                        end
-                        state_10: begin
-                                state <= state_00;                              
-                        end
-            default:
-              state <= state_00;
-                endcase
-end
+        default: begin
+           nxt_state = STATE_IDLE;
+        end
+      endcase
+   end 
+   
+   always @(posedge clk_i) begin
+      if (rst_i) begin
+         state <= STATE_IDLE;
+         address <= 32'hx;
+         compare <= 32'hx;
+         swap <= 32'hx;
+         old <= 32'hx;
+      end else begin
+         state <= nxt_state;
+         address <= nxt_address;
+         compare <= nxt_compare;
+         swap <= nxt_swap;
+         old <= nxt_old;
+      end
+   end
 
-assign core_ack_o = (state == state_01) | (state == state_03) | (state == state_05) | (state == state_10);
-
-assign bus_cyc_o = cycle;
-assign bus_stb_o = strobe;
-assign bus_adr_o = address;
-assign bus_dat_o = value;
-assign bus_we_o = we;
-
-assign core_dat_o = old_value;
 endmodule

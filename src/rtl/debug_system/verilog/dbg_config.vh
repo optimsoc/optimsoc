@@ -100,27 +100,28 @@
 `define MAX_DBGNOC_TO_USB_PACKET_LENGTH 32
 
 /*
- * +-----------+-------+
- * | wb_freeze | wb_pc |
- * +-----------+-------+
- *      32      31    0
+ * +--------+-----------------+
+ * | enable | program counter |
+ * +--------+-----------------+
+ *     32     31             0
  */
 `define DEBUG_ITM_PORTWIDTH 33
 
 /*
- * +----------+----------+-------+-----------+---------+
- * | rf_addrw | rf_dataw | rf_we | wb_freeze | wb_insn |
- * +----------+----------+-------+-----------+---------+
- *  70      66 65      34   33        32      31      0
+ * +--------+-------------+-----------+-------------+---------+
+ * | enable | instruction | writeback | wb register | wb data |
+ * +--------+-------------+-----------+-------------+---------+
+ *     70     69       38      37       36       32   31    0
  */
 `define DEBUG_STM_PORTWIDTH 71
-`define DEBUG_STM_RF_ADDRW_MSB  70
-`define DEBUG_STM_RF_ADDRW_LSB  66
-`define DEBUG_STM_RF_DATAW_MSB  65
-`define DEBUG_STM_RF_DATAW_LSB  34
-`define DEBUG_STM_RF_WE_MSB     33
-`define DEBUG_STM_RF_WE_LSB     33
-`define DEBUG_STM_WB_FREEZE_MSB 32
-`define DEBUG_STM_WB_FREEZE_LSB 32
-`define DEBUG_STM_WB_INSN_MSB   31
-`define DEBUG_STM_WB_INSN_LSB    0
+`define DEBUG_STM_ENABLE_MSB 70
+`define DEBUG_STM_ENABLE_LSB 70
+`define DEBUG_STM_INSN_MSB   69
+`define DEBUG_STM_INSN_LSB   38
+`define DEBUG_STM_WB_MSB     37
+`define DEBUG_STM_WB_LSB     37
+`define DEBUG_STM_WBREG_MSB  36
+`define DEBUG_STM_WBREG_LSB  32
+`define DEBUG_STM_WBDATA_MSB 31
+`define DEBUG_STM_WBDATA_LSB  0
+

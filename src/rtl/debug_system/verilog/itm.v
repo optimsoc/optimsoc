@@ -98,7 +98,7 @@ module itm(
    wire [31:0] cpu_wb_pc;
    wire        cpu_wb_freeze;
    assign cpu_wb_pc = trace_port[31:0];
-   assign cpu_wb_freeze = trace_port[32]|sys_clk_is_halted;
+   assign cpu_wb_freeze = !trace_port[32] | sys_clk_is_halted;
 
    // connection wires between the individual modules
    wire [`DBG_TIMESTAMP_WIDTH+32-1:0] uncompressed_trace;

@@ -55,6 +55,9 @@ module networkadapter_ct(
    parameter vchannels = `VCHANNELS;
 
    parameter tileid = 0;
+   parameter COREBASE = 0;
+   parameter NUMCORES = 32'hx;
+   parameter DOMAIN_NUMCORES = NUMCORES;
 
    parameter dma_generate_interrupt = 1;
    parameter dma_entries = 4;
@@ -199,7 +202,9 @@ module networkadapter_ct(
      #(.tileid(tileid),
        .noc_xdim(noc_xdim),.noc_ydim(noc_ydim),
        .mp_simple_present(conf_mp_simple),
-       .dma_present(conf_dma))
+       .dma_present(conf_dma),
+       .COREBASE(COREBASE), .NUMCORES(NUMCORES),
+       .DOMAIN_NUMCORES(DOMAIN_NUMCORES))
    u_conf(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC

@@ -1,0 +1,3 @@
+optimsoc_add_file mor1kx_module.v
+
+optimsoc_add_module mor1kx.capuccino

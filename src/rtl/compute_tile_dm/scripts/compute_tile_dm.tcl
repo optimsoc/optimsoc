@@ -1,12 +1,15 @@
 optimsoc_add_file compute_tile_dm.v
-optimsoc_add_file compute_tile_dm_bus.v
-optimsoc_add_file compute_tile_dm_bus_arbiter.v
+#optimsoc_add_file compute_tile_dm_bus.v
+#optimsoc_add_file compute_tile_dm_bus_arbiter.v
 
-optimsoc_add_module or1200_module
+optimsoc_add_module mor1kx_module
 optimsoc_add_module networkadapter_ct
 optimsoc_add_module bootrom
 optimsoc_add_module sram.plain
 optimsoc_add_module debug_system.mam_wb_adapter
+optimsoc_add_module wb_interconnect.bus
+
+optimsoc_add_module wb_cas_unit
 
 optimsoc_inc_dir $LISNOC_RTL
 optimsoc_inc_dir $OPTIMSOC_RTL/debug_system/verilog

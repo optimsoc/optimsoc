@@ -93,11 +93,11 @@ module stm(
    wire        cpu_wb_freeze;
    wire [31:0] cpu_wb_insn;
 
-   assign rf_addrw      = trace_port[`DEBUG_STM_RF_ADDRW_MSB:`DEBUG_STM_RF_ADDRW_LSB];
-   assign rf_dataw      = trace_port[`DEBUG_STM_RF_DATAW_MSB:`DEBUG_STM_RF_DATAW_LSB];
-   assign rf_we         = trace_port[`DEBUG_STM_RF_WE_MSB:`DEBUG_STM_RF_WE_LSB];
-   assign cpu_wb_freeze = trace_port[`DEBUG_STM_WB_FREEZE_MSB:`DEBUG_STM_WB_FREEZE_LSB];
-   assign cpu_wb_insn   = trace_port[`DEBUG_STM_WB_INSN_MSB:`DEBUG_STM_WB_INSN_LSB];
+   assign rf_addrw      = trace_port[`DEBUG_STM_WBREG_MSB:`DEBUG_STM_WBREG_LSB];
+   assign rf_dataw      = trace_port[`DEBUG_STM_WBDATA_MSB:`DEBUG_STM_WBDATA_LSB];
+   assign rf_we         = trace_port[`DEBUG_STM_WB_MSB:`DEBUG_STM_WB_LSB];
+   assign cpu_wb_freeze = !trace_port[`DEBUG_STM_ENABLE_MSB:`DEBUG_STM_ENABLE_LSB];
+   assign cpu_wb_insn   = trace_port[`DEBUG_STM_INSN_MSB:`DEBUG_STM_INSN_LSB];
       
    // connection wires between the individual modules
    wire [`DBG_TIMESTAMP_WIDTH+32+16-1:0] trace;
