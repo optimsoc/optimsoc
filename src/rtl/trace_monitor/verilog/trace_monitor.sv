@@ -80,9 +80,15 @@ module trace_monitor(/*AUTOARG*/
       termination = 0;
    end
 
+   reg terminated = 0;
+   
    always @(posedge clk) begin
       if (&{termination_all}) begin
-         $finish();
+         if (!terminated) begin
+            $write("Finished\n");
+            $finish();
+         end
+         terminated <= 1;
       end
 
       if (enable) begin
