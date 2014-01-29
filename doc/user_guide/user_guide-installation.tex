@@ -10,8 +10,8 @@ comes to synthesis such alternatives are even not available.
 
 \section{Prerequisites}
 
-Throughout this document some packages are required in your linux
-distribution. OpTiMSoC should principally work on all common linux
+Throughout this document some packages are required in your Linux
+distribution. OpTiMSoC should principally work on all common Linux
 distributions. In case you encounter problems in your system we highly
 encourage you to contact the OpTiMSoC maintainers to fix these
 problems. Nevertheless, we recommend Ubuntu 12.04 LTS as development
@@ -30,10 +30,15 @@ packages to be installed:
 \section{Get OpTiMSoC}
 
 OpTiMSoC does not come as an installation package, but is distributed
-as a git\footnote{http://www.git-scm.org} repository. Inside this
-repository (plus some external dependencies) you will need to compile
-and build some tools and libraries which is described later in this
-chapter.
+as a git\footnote{http://www.git-scm.org} repository. The repository
+is needed for two purposes. First, it is the installation source for
+tools and libraries. Second, the hardware sources, applications
+etc. are contained there to create your OpTiMSoC systems.
+
+It is generally a good idea to understand git, especially when you
+plan to contribute to OpTiMSoC. Nevertheless, we will give a more
+detailed explanation of how to get your personal copies of OpTiMSoC
+and (potentially) update them.
 
 Before you get started, you should clone the LISNoC and OpTiMSoC
 repository:
@@ -71,9 +76,11 @@ latest release, which is always available as \texttt{rel-current}:
 \end{alltt}
 
 For all work with OpTiMSoC you will need to have both repositories
-available. There is no installation procedure but everything is
-installed and developed in place at the moment. You will therefore
-need to set a few environment variables:
+available.
+
+In the future it is necessary for some scripts to know where to find
+everything. Therefore you need to set the following environement
+variables (e.g., in your \verb|.bashrc|):
 
 \begin{alltt}
 export LISNOC=\emph{/path/to/lisnoc/clone}
@@ -84,16 +91,23 @@ export OPTIMSOC_RTL=\$\{OPTIMSOC\}/src/rtl
 export OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
 \end{alltt}
 
-It is most convenient to set them in your \verb|.bashrc| (or similar).
-There are also bash scripts available in the base folders of both
-LISNoC and OpTiMSoC, that you need to source at the base folder of
-each of them:
+With the environment variables set, you can start using OpTiMSoC.
+
+\section{OpTiMSoC Installation Path}
+
+As mentioned before, some libraries and tools need to be built and
+then also installed. Those are used for all platforms you then create
+from the source tree.
+
+You can install the files whereever you want as some environment
+variables (\verb|PATH|, \verb|PKG_CONFIG_PATH|, etc.) help finding
+them. Throughout this document we will use
 
 \begin{alltt}
-\$> source source.sh
+/opt/optimsoc
 \end{alltt}
 
-With the environment variables set, you can start using OpTiMSoC.
+as installation path.
 
 \section{OpTiMSoC Toolchain}
 
@@ -121,14 +135,15 @@ scratch, because three options are available:
 \item Build everything from scratch
 \end{itemize}
 
-
 \subsubsection{Option 1: Download the entire toolchain}
 First of all you need the OpenRISC crosscompiler. There are many
-options available to get it or build it\footnote{\url{http://opencores.org/or1k/OpenRISC_GNU_tool_chain}}. The most simple
-approach is to download the prepacked
+options available to get it or build
+it\footnote{\url{http://opencores.org/or1k/OpenRISC_GNU_tool_chain}}.
+The most simple approach is to download the prepacked
 library\footnote{\url{ftp://ocuser:ocuser@openrisc.opencores.org/toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}
-Mirror: \url{http://lis.ei.tum.de/pub-download/mirror/opencores/openrisc-toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}} and extract it
-to \verb|/opt|.
+  Mirror:
+  \url{http://lis.ei.tum.de/pub-download/mirror/opencores/openrisc-toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}}
+and extract it to \verb|/opt|.
 
 \begin{alltt}
 \$> cd /opt
@@ -143,7 +158,7 @@ Set environment (e.g., in \verb|~/.bashrc|):
 
 \begin{alltt}
 export PATH=/opt/openrisc/toolchain/bin:\$\{PATH\}
-export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+export OPTIMSOC_NEWLIB=/opt/optimsoc/newlib
 \end{alltt}
 
 \subsubsection{Option 2: Build newlib for OpTiMSoC}
@@ -161,14 +176,36 @@ Go to the newlib directory:
 $> cd optimsoc-toolchain/newlib-1.18.0
 \end{verbatim}
 
-Create a build directory and configure and build in there (the target
-directory is recommended to be at \verb|/opt/newlib/optimsoc|):
+Two different targets need to be build: 
+\begin{itemize}
+\item the baremetal library which includes the exception vectors etc.
+  (\verb|newlib-baremetal|).
+\item the library for the (virtual) applications which uses syscalls
+  etc.  (\verb|newlib-virtualapps|)
+\end{itemize}
+
+You will need to build both of them separately. First create a build
+directory for the baremetal, configure and build:
 
 \begin{verbatim}
-$> mkdir build; cd build
-$> ../configure --target=optimsoc --prefix=/opt/newlib/optimsoc \
+$> mkdir build-baremetal; cd build-baremetal
+$> ../configure --target=optimsoc-baremetal \
+    --prefix=/opt/optimsoc/newlib \
     CC_FOR_TARGET=or32-elf-gcc AR_FOR_TARGET=or32-elf-ar \
     RANLIB_FOR_TARGET=or32-elf-ranlib
+$> make
+$> make install
+\end{verbatim}
+
+Next you need to build the second version of the newlib. Start from
+the newlib toplevel again:
+
+\begin{verbatim}
+$> mkdir build-virtualapps; cd build-virtualapps
+$> ../configure --target=optimsoc-virtualapps \
+    --prefix=/opt/optimsoc/newlib \
+    CC_FOR_TARGET=or32-elf-gcc AR_FOR_TARGET=or32-elf-ar \
+    RANLIB_FOR_TARGET=or32-elf-ranlib --enable-newlib-multithread
 $> make
 $> make install
 \end{verbatim}
@@ -176,7 +213,7 @@ $> make install
 Set environment (e.g., in \verb|~/.bashrc|):
 
 \begin{verbatim}
-export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+export OPTIMSOC_NEWLIB=/opt/optimsoc/newlib
 \end{verbatim}
 
 
@@ -190,20 +227,53 @@ In one of the next releases we will have machine support, e.g.,
 In the EDA field TCL is still the scripting language of choice.
 Fortunately, all of the EDA tools have a TCL scripting interface. To
 allow for easier creation of projects and compile RTL sources we added
-some TCL scripts for all modules and targets. The scripts can be found
-in \verb|tools/tcl|. You need the environment variable
-\verb|OPTIMSOC_TCL| to point there.
+some TCL scripts for all modules and targets. Beside the TCL scripts
+some Python scripts and utility programs are required by the OpTiMSoC
+platforms.
 
-You will need some additional scripts, e.g., \verb|bin2vmem| to
-initialize the memory during simulation. It is distributed with ORPSoC
-and also available in the OpTiMSoC repository under
-\verb|tools/utils|. Just compile it
+To install the tools simply run
 
-\begin{verbatim}
-$> make
-\end{verbatim}
+\begin{alltt}
+\$> \$OPTIMSOC/tools/install.sh /opt/optimsoc
+\end{alltt}
 
-and add it to your PATH.
+or replace your installation path accordingly. 
+
+\begin{alltt}
+OPTIMSOC_TCL=/opt/optimsoc/tools/tcl
+PATH=\$PATH:/opt/optimsoc/tools/utils
+\end{alltt}
+
+\subsection{System Software}
+
+The system software consist of the libraries itself and build
+infrastructure for your applications.
+
+The installation of the system software starts in the base folder
+(relative to the OpTiMSoC root) \verb|src/sw/system/|.
+
+%Autotools are used to check your platform and generate the configure
+%and the Makefiles:
+
+%\begin{alltt}
+%\$> ./autogen.sh
+%\end{alltt}
+
+%The rest of the installation is straight forward.
+
+To perform the installation run:
+
+\begin{alltt}
+\$> mkdir build
+\$> cd build
+\$> ../configure --prefix=/opt/optimsoc/systemsw/ --host=or32-elf \textbackslash
+    CC=or32-elf-gcc
+\$> make
+\$> make install
+\end{alltt}
+
+Configuration may fail when you did not set the \verb|OPTIMSOC_NEWLIB|
+environment variable.
 
 \subsection{Configuration}
 
@@ -213,17 +283,102 @@ you will have to add the environment variables as (example for bash):
 
 \begin{alltt}
 # OpTiMSoC toolchain
-export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC\}/tools/utils:\$\{PATH\}
-export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
-export OPTIMSOC_TCL=\$\{OPTIMSOC\}/tools/tcl
+export PATH=/opt/openrisc/toolchain/bin:/opt/optimsoc/tools/utils:\$\{PATH\}
+export OPTIMSOC_NEWLIB=/opt/optimsoc/newlib
+export OPTIMSOC_TCL=/opt/optimsoc/tools/tcl
+export PKG_CONFIG_PATH=/opt/optimsoc/systemsw/share/pkgconfig
 \end{alltt}
+
+\section{Host Software}
+
+The host software allows you to communicate with the system for
+control and debugging/diagnosis. \verb|liboptimsochost| is the basic
+library, which also has a command line interface. A graphical user
+interface complements this for easier visualization of the system.
+
+\subsection{liboptimsochost}
+
+The library is found in \verb|src/sw/host/liboptimsochost|.  Some
+tools are included with the library, the most important is the command
+line interface \verb|optimsoc_cli|. It can be used to communicate with
+the OpTiMSoC debug system on the command line. Recently, a Python
+scripting interface has been added. You will need the python
+development libraries for this to work when enabled via
+\verb|--enable-python-interface|.
+
+Build, make and install:
+
+\begin{verbatim}
+$> mkdir build
+$> cd build
+$> ../configure --prefix=/opt/optimsoc/host/ --enable-python-interface
+$> make
+$> make install
+\end{verbatim}
+
+Before proceeding you will need to set the correct paths:
+
+\begin{verbatim}
+export LD_LIBRARY_PATH=/opt/optimsoc/host/lib:${LD_LIBRARY_PATH}
+export PATH=/opt/optimsoc/host/bin:${PATH}
+\end{verbatim}
+
+\subsection{Graphical User Interface}
+
+\subsubsection{Prerequisites}
+
+For building you will need Qt:
+
+\begin{alltt}
+\$> sudo apt-get install libqt4-dev
+\end{alltt}
+
+In case you want to develop the GUI, install qtcreator:
+
+\begin{alltt}
+\$> sudo apt-get install qtcreator
+\end{alltt}
+
+\subsubsection{Building}
+
+The graphical user interface resides in
+\verb|src/sw/host/optimsocgui|. We use cmake here as it better
+integrates with the Qt toolchain (which is used for the GUI).
+
+To build it:
+
+\begin{alltt}
+\$> mkdir build
+\$> cd build
+\$> cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/optimsoc/host ..
+\$> make
+\$> make install
+\end{alltt}
+
+Afterwards you will find \verb|optimsocgui| in
+\verb|src/sw/host/optimsocgui/bin|.
+
+\section{ZTEX Tools}
+
+In case you are running the bitstreams on the FPGA you will need the
+ZTEX toolchain as it can be downloaded at \url{http://www.ztex.de}. We
+will in the following assume you downloaded it and unpacked it to
+\verb|/opt/ztex/| so that the folder \verb|/opt/ztex/java| exists. You
+will need to set the path accordingly:
+
+\begin{alltt}
+export PATH=/opt/ztex/bin:/opt/ztex/java/FWLoader:\$\{PATH\}
+\end{alltt}
+
+Furthermore you will need the small device compiler \verb|sdcc|.
 
 \section{SystemC, Verilator and SystemC Libraries}
 
 SystemC\footnote{\url{http://www.systemc.org}} is used as simulation
 library for both full system simulation based on Verilator and in
-future for abstracted simulations. You will therefore need to
-download, compile and install SystemC.
+future for abstracted simulations. In case you want to use either of
+them, you will therefore need to download, compile and install
+SystemC.
 
 In case you want to run the Verilator-based simulation examples or
 develop software using the Verilator-based simulation, you will need
@@ -298,7 +453,8 @@ Verilated Systems, Simulations and other. It can be found in
 \$> ./autogen.sh
 \$> mkdir build
 \$> cd build
-\$> ../configure --prefix=`pwd`/.. --with-systemc-inc-dir=\$\{SYSTEMC\}/include \textbackslash
+\$> ../configure --prefix=/opt/optimsoc/sysc \textbackslash
+      --with-systemc-inc-dir=\$\{SYSTEMC\}/include \textbackslash
       --with-systemc-lib-dir=\$\{SYSTEMC\}/lib-linux
 \$> make
 \$> make install
@@ -318,160 +474,6 @@ export VERILATOR\_ROOT=/opt/verilator
 export PATH=\$\{VERILATOR_ROOT\}/bin:\$\{PATH\}
 \end{alltt}
 
-\section{System Software}
-
-The system software consist of the libraries itself, some demo and
-benchmark applications plus the build infrastructure for them and your
-own application. The system libraries and the build infrastructure for
-applications are build in the following and installed in place.
-
-The applications themselves are not pre-built, but are compiled for a
-specific platform (e.g., in the tutorials) as they depend on the
-platform specifics (captured in \verb|optimsoc-sysconfig.c|) which are
-part of the software link process.
-
-The installation of the system software starts in the base folder
-(relative to the OpTiMSoC root) \verb|src/sw/system/dm|.
-
-Autotools are used to check your platform and generate the configure
-and the Makefiles:
-
-\begin{alltt}
-\$> ./autogen.sh
-\end{alltt}
-
-The rest of the installation is straight forward. As installation
-target it is currently recommended to install it in place meaning the
-libraries will be found in \verb|src/sw/system/dm/lib| etc. In future
-a unified global installation is envisioned, but for the moment that
-keeps stuff clear.
-
-To perform the installation run:
-
-\begin{alltt}
-\$> mkdir build
-\$> cd build
-\$> ../configure CFLAGS='-g -O0' --prefix=`pwd`/.. --host=or32-elf \textbackslash
-    CC=or32-elf-gcc
-\$> make
-\$> make install
-\end{alltt}
-
-Configuration may fail when you did not set the \verb|OPTIMSOC_NEWLIB|
-environment variable.
-
-After you have finished the installation, your future software builds
-need to know about the libraries. This is automatically done using
-pkgconfig. To let pkgconfig now where to find the OpTiMSoC libraries,
-set the environment variable:
-
-\begin{alltt}
-export PKG_CONFIG_PATH=\$\{OPTIMSOC\}/src/sw/system/dm/share/pkgconfig
-\end{alltt}
-
-or to your installation path accordingly.
-
-\section{Host Software}
-
-The host software allows you to communicate with the system for
-control and debugging/diagnosis. \verb|liboptimsochost| is the basic
-library, which also has a command line interface. A graphical user
-interface complements this for easier visualization of the system.
-
-\subsection{liboptimsochost}
-
-The library resides in \verb|src/sw/host/liboptimsochost|. We
-recommend to run the installation in place. First run autotools to
-generate configure and Makefiles:
-
-\begin{alltt}
-\$> ./autogen.sh
-\end{alltt}
-
-The library comes with tools, the most important is the command
-line interface \verb|optimsoc_cli|. It can be used to communicate with
-the OpTiMSoC debug system on the command line. Recently, a Python
-scripting interface has been added. You will need the python
-development libraries for this to work when enabled via
-\verb|--enable-python-interface|.
-
-Build, make and install:
-
-\begin{verbatim}
-$> mkdir build
-$> cd build
-$> ../configure --prefix=`pwd`/../ --enable-python-interface
-$> make
-$> make install
-\end{verbatim}
-
-You need to add the library to the library path to be available to the
-debug software and add the tools to the \verb|PATH| (if installed).
-
-
-\begin{verbatim}
-$> export LD_LIBRARY_PATH=${OPTIMSOC}/src/sw/host/liboptimsochost/lib:\
-     ${LD_LIBRARY_PATH}
-$> export PATH=${OPTIMSOC}/src/sw/host/liboptimsochost/bin:${PATH}
-\end{verbatim}
-
-\subsection{Graphical User Interface}
-
-\subsubsection{Prerequisites}
-
-For building you will need Qt:
-
-\begin{alltt}
-\$> sudo apt-get install libqt4-dev
-\end{alltt}
-
-In case you want to develop the GUI, install qtcreator:
-
-\begin{alltt}
-\$> sudo apt-get install qtcreator
-\end{alltt}
-
-\subsubsection{Building}
-
-The graphical user interface resides in
-\verb|src/sw/host/optimsocgui|. Again we recommend installing it in
-place. Instead of autotools we use cmake here as it better integrates
-with the Qt toolchain (which is used for the GUI).
-
-To build it:
-
-\begin{alltt}
-\$> mkdir build
-\$> cd build
-\$> cmake -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/.. ..
-\$> make
-\$> make install
-\end{alltt}
-
-Afterwards you will find \verb|optimsocgui| in
-\verb|src/sw/host/optimsocgui/bin|.
-
-\subsubsection{Configuration}
-You should add this to your PATH:
-
-\begin{alltt}
-\$> export PATH=\$\{OPTIMSOC\}/src/sw/host/optimsocgui/bin:\$PATH
-\end{alltt}
-
-\section{ZTEX Tools}
-
-In case you are running the bitstreams on the FPGA you will need the
-ZTEX toolchain as it can be downloaded at \url{http://www.ztex.de}. We
-will in the following assume you downloaded it and unpacked it to
-\verb|/opt/ztex/| so that the folder \verb|/opt/ztex/java| exists. You
-will need to set the path accordingly:
-
-\begin{alltt}
-export PATH=/opt/ztex/bin:/opt/ztex/java/FWLoader:\$\{PATH\}
-\end{alltt}
-
-Furthermore you will need the small device compiler \verb|sdcc|.
-
 \section{Configuration Summary}
 
 Check that you have the following environment variables set at this
@@ -485,12 +487,15 @@ export OPTIMSOC=\emph{/path/to/optimsoc/clone}
 export OPTIMSOC_RTL=\$\{OPTIMSOC\}/src/rtl
 export OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
 
+# Your OpTiMSoC installation path
+export OPTIMSOC_INSTALL=/opt/optimsoc
+
 # OpTiMSoC toolchain
-export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC\}/tools/utils:\$\{PATH\}
-export OPTIMSOC_NEWLIB=/opt/newlib/optimsoc
+export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC_INSTALL\}/tools/utils:\$\{PATH\}
+export OPTIMSOC_NEWLIB=\$\{OPTIMSOC_INSTALL\}/newlib/
 
 # TCL scripting
-export OPTIMSOC_TCL=\$\{OPTIMSOC\}/tools/tcl
+export OPTIMSOC_TCL=\$\{OPTIMSOC_INSTALL\}/tools/tcl
 
 # SystemC environment
 export SYSTEMC=/opt/systemc/2.3.0
@@ -501,22 +506,25 @@ export VERILATOR\_ROOT=/opt/verilator
 export PATH=\$\{VERILATOR_ROOT\}/bin:\$\{PATH\}
 
 # System software
-export PKG_CONFIG_PATH=\$\{OPTIMSOC\}/src/sw/system/dm/share/pkgconfig
+export PKG_CONFIG_PATH=\$\{OPTIMSOC_INSTALL\}/systemsw/share/pkgconfig
 
-# Host library and tools
-export LD_LIBRARY_PATH=\$\{OPTIMSOC\}/src/sw/host/liboptimsochost/lib:\$\{LD_LIBRARY_PATH\}
-export PATH=\$\{OPTIMSOC\}/src/sw/host/liboptimsochost/bin:\$\{PATH\}
-
-# GUI
-export PATH=\$\{OPTIMSOC\}/src/sw/host/optimsocgui/bin:\$\{PATH\}
-
+# Host library, tools and GUI
+export LD_LIBRARY_PATH=\$\{OPTIMSOC_INSTALL\}/host/lib:\$\{LD_LIBRARY_PATH\}
+export PATH=\$\{OPTIMSOC_INSTALL\}/bin:\$\{PATH\}
 \end{alltt}
 
 \section{Upgrade from rel-20130620}
 
 \begin{itemize}
-  \item The TCL interface has been added. Set \verb|OPTIMSOC_TCL| as
-    described above.
-  \item The previous liboptimsochost examples are now part of the
-    distribution as ``tools''. Please rebuild the library.
+\item The in-place installation has been changed to a unified
+  installation tree. You should reinstall.
+\item The newlib has changed to a baremetal and virtualapps. You need
+  to rebuild and install to different paths.
+\item The system software structure has been changed. We removed the
+  distinction between distributed and shared memory. Furthermore we
+  have baremetal and virtualapps here also. You need to rebuild.
+\item The TCL interface has been added. Set \verb|OPTIMSOC_TCL| as
+  described above.
+\item The previous liboptimsochost examples are now part of the
+  distribution as ``tools''. Please rebuild the library.
 \end{itemize}
