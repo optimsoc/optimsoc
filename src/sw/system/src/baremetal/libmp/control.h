@@ -49,7 +49,7 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
 
 uint32_t control_channel_connect(struct endpoint_handle *from, struct endpoint_handle *to);
 void control_channel_send(struct endpoint_handle *ep, uint8_t *data, uint32_t size);
-
+void control_channel_sendcredit(struct endpoint_handle *ep, int32_t credit);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

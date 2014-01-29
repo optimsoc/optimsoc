@@ -70,7 +70,7 @@ void control_msg_handler(unsigned int* buffer,int len) {
             rbuffer[1] = (int) -1;
         }
 
-        trace_ep_get_resp_send(src, rbuffer[1]);
+        trace_ep_get_resp_send(src, (struct endpoint*) rbuffer[1]);
         optimsoc_mp_simple_send(2,rbuffer);
         break;
     }
@@ -126,9 +126,9 @@ void control_msg_handler(unsigned int* buffer,int len) {
     }
     case CTRL_REQUEST_CHAN_CONNECT_REQ:
     {
-        struct endpoint *ep = buffer[1];
-        ep->remotedomain = buffer[2];
-        ep->remote = buffer[3];
+        struct endpoint *ep = (struct endpoint *) buffer[1];
+        ep->remotedomain = (uint32_t) buffer[2];
+        ep->remote = (struct endpoint *) buffer[3];
 
         rbuffer[0] = (src << OPTIMSOC_DEST_LSB) |
                 (1 << OPTIMSOC_CLASS_LSB) |
@@ -141,11 +141,11 @@ void control_msg_handler(unsigned int* buffer,int len) {
     }
     case CTRL_REQUEST_CHAN_DATA:
     {
-        struct endpoint *ep = buffer[1];
+        struct endpoint *ep = (struct endpoint *) buffer[1];
         uint32_t offset = buffer[2];
         uint32_t eom = buffer[3];
 
-        endpoint_write(ep, ep->buffer->write_ptr, offset, &buffer[4], len-4);
+        endpoint_write(ep, ep->buffer->write_ptr, offset, (uint32_t*) &buffer[4], len-4);
 
         if (eom) {
             ep->buffer->data_size[ep->buffer->write_ptr] = offset + len - 4;
@@ -158,7 +158,7 @@ void control_msg_handler(unsigned int* buffer,int len) {
     }
     case CTRL_REQUEST_CHAN_CREDIT:
     {
-        struct endpoint *ep = buffer[1];
+      struct endpoint *ep = (struct endpoint *) buffer[1];
         uint32_t credit = buffer[2];
 
         if (credit == 0) {

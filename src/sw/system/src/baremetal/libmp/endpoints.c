@@ -341,7 +341,6 @@ uint32_t endpoint_channel_get_fillstate(struct endpoint *ep) {
 void endpoint_channel_add_credit(struct endpoint *ep, uint32_t credit) {
     uint32_t old_credit, new_credit;
 
-    printf("Add credit to %p: %u\n", ep, credit);
     //    do {
         old_credit = ep->remotecredit;
         new_credit = old_credit + credit;

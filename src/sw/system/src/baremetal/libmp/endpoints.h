@@ -80,6 +80,10 @@ void endpoint_write(struct endpoint *ep, uint32_t ptr, uint32_t offset,
                     uint32_t *buffer, uint32_t size);
 void endpoint_write_complete(struct endpoint *ep, uint32_t ptr, uint32_t size);
 
+int endpoint_empty(struct endpoint *ep);
+int endpoint_full(struct endpoint *ep);
+uint32_t _endpoint_addptrwrap(struct endpoint *ep, uint32_t ptr, uint32_t add);
+
 int endpoint_msg_available(struct endpoint *ep);
 void endpoint_msg_recv(struct endpoint *ep, uint32_t *buffer,
                        uint32_t buffer_size, uint32_t *received);
