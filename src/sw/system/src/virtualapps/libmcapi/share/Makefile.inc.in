@@ -1,0 +1,31 @@
+OR32-CC ?= @OR32-CC@
+OR32-OBJDUMP ?= @OR32-OBJDUMP@
+OR32-OBJCOPY ?= @OR32-OBJCOPY@
+CFLAGS ?= -O0 -std=gnu99 -Wall
+
+BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-mcapi-simple-virtual)
+
+all: $(PROGRAM).elf $(PROGRAM).dis
+
+LIBS = $(shell pkg-config --libs --static optimsoc-mcapi-simple-virtual)
+INCS = $(shell pkg-config --cflags optimsoc-mcapi-simple-virtual)
+
+OTHER_OBJS = $(OTHER_SRCS:.c=.o)
+
+$(PROGRAM).elf: $(PROGRAM).o $(OTHER_OBJS)
+	$(OR32-CC) $(CFLAGS) -nostartfiles -nostdlib \
+	$(OPTIMSOC_NEWLIB)/optimsoc-runtimesystem/lib/crt0.o \
+	$(PROGRAM).o $(OTHER_OBJS) -o $@ \
+	$(LIBS) \
+	-L $(OPTIMSOC_NEWLIB)/optimsoc-runtimesystem/lib/ -lc -lm -lgcc \
+	$(LD_ADD)
+
+%.dis: %.elf
+	$(OR32-OBJDUMP) -D -S $^ > $@
+
+%.o: %.c
+	$(OR32-CC) $(CFLAGS) -c $(INCS) -I $(OPTIMSOC_NEWLIB)/optimsoc-runtimesystem/include -o $@ $^
+
+clean:
+	rm -f *.o *.elf *.dis
+

@@ -1,0 +1,13 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+datadir=@datadir@
+buildscriptdir=${datadir}/build/mtapi
+
+Name: Optimsoc MTAPI
+Description: OpTiMSoC MTAPI libraries
+Version: 0.1
+Requires.private: optimsoc-baremetal-runtime optimsoc-baremetal-mcapi-runtime
+Cflags: -I${prefix}/include/baremetal/mtapi
+Libs: -L${libdir} -lmtapi
+

@@ -1,0 +1,11 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+datadir=@datadir@
+
+Name: OpTiMSoC Baremetal MP with Runtime
+Description: OpTiMSoC Baremetal Message Passing with Runtime support
+Version: 0.1
+Cflags: -I${prefix}/include/baremetal/
+Libs: -L${libdir} -lmp-runtime
+

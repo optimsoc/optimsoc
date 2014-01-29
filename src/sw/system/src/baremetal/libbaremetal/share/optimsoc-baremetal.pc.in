@@ -1,0 +1,12 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+datadir=@datadir@
+buildscriptdir=${datadir}/build/baremetal
+
+Name: Optimsoc Baremtal
+Description: OpTiMSoC baremetal system libraries
+Version: @VERSION@
+Cflags: -I${prefix}/include/baremetal
+Libs: -L${libdir}/baremetal -lbaremetal
+
