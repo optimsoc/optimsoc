@@ -106,7 +106,7 @@ void ExecutionChart::systemChanged(OptimsocSystem* oldSystem,
     unsigned int row = 0;
     for (int i=0; i<tiles.size(); ++i) {
         QCPAxisRect *coreaxis = new QCPAxisRect(m_ui->widget_plot);
-        ExecutionChartPlotCore *plot = new ExecutionChartPlotCore(coreaxis->axis(QCPAxis::atBottom), coreaxis->axis(QCPAxis::atLeft), "core");
+        ExecutionChartPlotCore *plot = new ExecutionChartPlotCore(coreaxis->axis(QCPAxis::atBottom), coreaxis->axis(QCPAxis::atLeft), QString("Core %1").arg(i));
         m_ui->widget_plot->plotLayout()->addElement(row++, 0, coreaxis);
         coreaxis->setRangeZoom(Qt::Horizontal);
         coreaxis->setRangeDrag(Qt::Horizontal);
@@ -120,6 +120,22 @@ void ExecutionChart::systemChanged(OptimsocSystem* oldSystem,
 
         m_plotCores.resize(m_plotCores.size()+1);
         m_plotCores[i] = plot;
+
+        QCPAxisRect *loadaxis = new QCPAxisRect(m_ui->widget_plot);
+        ExecutionChartPlotLoad *plotload = new ExecutionChartPlotLoad(loadaxis->axis(QCPAxis::atBottom), loadaxis->axis(QCPAxis::atLeft));
+        m_ui->widget_plot->plotLayout()->addElement(row++, 0, loadaxis);
+        loadaxis->setRangeZoom(Qt::Horizontal);
+        loadaxis->setRangeDrag(Qt::Horizontal);
+
+        connect(loadaxis->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange,QCPRange)), this, SLOT(rangeChanged(QCPRange,QCPRange)));
+        connect(this, SIGNAL(rangeChange(QCPRange)), loadaxis->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
+
+        loadaxis->setMarginGroup(QCP::msLeft | QCP::msRight, m_ui->widget_plot_scale->axisRect(0)->marginGroup(QCP::msLeft));
+        loadaxis->setMinimumSize(10,50);
+        loadaxis->setMaximumSize(100000,50);
+
+        m_plotLoads.resize(m_plotLoads.size()+1);
+        m_plotLoads[i] = plotload;
     }
 }
 
@@ -157,12 +173,21 @@ void ExecutionChart::addTraceEvent(SoftwareTraceEvent event)
         if (tmp_extend > update_extend) {
             update_extend = tmp_extend;
         }
+        tmp_extend = m_plotLoads[event.core_id]->addSoftwareTrace(&event);
+        if (tmp_extend > update_extend) {
+            update_extend = tmp_extend;
+        }
     }
 
     if (update_extend > 0) {
         ExecutionChartPlotCore *coreplot;
         foreach(coreplot, m_plotCores) {
             coreplot->updateExtend(update_extend);
+        }
+
+        ExecutionChartPlotLoad *loadplot;
+        foreach(loadplot, m_plotLoads) {
+            loadplot->updateExtend(update_extend);
         }
 
         if (m_autoscroll) {

@@ -78,7 +78,12 @@ private:
                        QString text);
 
     unsigned int m_currentSectionDefinition;
+
+    bool m_handleExceptions;
+    bool m_inException;
+    int m_activeSection;
     QMap<unsigned int,QString> m_sectionNames;
+    static QMap<unsigned int,QString> m_globalSectionNames;
     bool m_inSection;
 
     ExecutionChartSection* m_currentSection;

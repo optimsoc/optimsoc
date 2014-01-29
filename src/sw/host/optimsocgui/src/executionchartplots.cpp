@@ -57,7 +57,19 @@ ExecutionChartPlotCore::ExecutionChartPlotCore(QCPAxis *keyaxis, QCPAxis *valuea
     m_traceCreators[0x20].push_back(section);
     m_traceCreators[0x21].push_back(section);
     m_traceCreators[0x22].push_back(section);
+    m_traceCreators[0x23].push_back(section);
+    m_traceCreators[0x24].push_back(section);
+    m_traceCreators[0x25].push_back(section);
     m_traceCreators[0x31].push_back(section);
+    m_traceCreators[0x32].push_back(section);
+    m_traceCreators[0x33].push_back(section);
+    m_traceCreators[0x34].push_back(section);
+    m_traceCreators[0x35].push_back(section);
+    m_traceCreators[0x36].push_back(section);
+    m_traceCreators[0x37].push_back(section);
+    m_traceCreators[0x38].push_back(section);
+    m_traceCreators[0x39].push_back(section);
+    m_traceCreators[0x3a].push_back(section);
     m_creators.append(section);
     m_creatorLayers.insert(LayerSections, section);
 
@@ -73,6 +85,7 @@ ExecutionChartPlotCore::ExecutionChartPlotCore(QCPAxis *keyaxis, QCPAxis *valuea
     valueaxis->setTickVector(ticks);
     valueaxis->setRange(0.0,1.0);
     valueaxis->setTickVectorLabels(ticklabels);
+    valueaxis->setLabel(corename);
 
     keyaxis->setVisible(false);
 
@@ -263,4 +276,45 @@ void ExecutionChartPlotCore::selectEvent(QMouseEvent *event, bool additive, cons
     ExecutionChartElementCreator *creator = map["creator"].value<ExecutionChartElementCreator*>();
 
     creator->selectEvent(event, additive, map["subdetails"], selectionStateChanged);
+}
+
+ExecutionChartPlotLoad::ExecutionChartPlotLoad(QCPAxis *keyaxis, QCPAxis *valueaxis)
+    : QCPGraph(keyaxis, valueaxis)
+{
+    keyaxis->setVisible(false);
+    valueaxis->setRange(0.0,4.0);
+    valueaxis->setAutoTicks(false);
+    QVector<double> ticks;
+    ticks.append(0.0);
+    ticks.append(4.0);
+    valueaxis->setTickVector(ticks);
+    valueaxis->grid()->setSubGridVisible(true);
+    valueaxis->setLabel("Load");
+    setPen(QPen(Qt::red));
+    setBrush(QBrush(QColor(255,0,0,100)));
+
+    m_current = 0;
+
+    QVector<double> keys; QVector<double> values;
+    keys.append(0.0); values.append(0.0);
+    addData(keys, values);
+}
+
+void ExecutionChartPlotLoad::updateExtend(unsigned int extend)
+{
+    QVector<double> keys; QVector<double> values;
+    keys.append(extend); values.append(m_current);
+    addData(keys, values);
+
+}
+
+unsigned int ExecutionChartPlotLoad::addSoftwareTrace(SoftwareTraceEvent *event)
+{
+    if (event->id == 0x30a) {
+        m_current = (double)event->value/16;
+        QVector<double> keys; QVector<double> values;
+        keys.append(event->timestamp); values.append(m_current);
+        addData(keys, values);
+    }
+    return event->timestamp;
 }

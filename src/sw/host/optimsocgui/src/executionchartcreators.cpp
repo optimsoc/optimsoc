@@ -37,10 +37,12 @@ ExecutionChartElementCreator::ExecutionChartElementCreator(ExecutionChartPlotCor
 }
 
 ExecutionChartSectionCreator::ExecutionChartSectionCreator(ExecutionChartPlotCore *plot)
-    : ExecutionChartElementCreator(plot), m_inSection(false), m_currentSection(0)
+    : ExecutionChartElementCreator(plot), m_inSection(false), m_currentSection(0), m_activeSection(-1), m_handleExceptions(false), m_inException(false)
 {
 
 }
+
+QMap<unsigned int, QString> ExecutionChartSectionCreator::m_globalSectionNames;
 
 unsigned int ExecutionChartSectionCreator::addTrace(SoftwareTraceEvent *event)
 {
@@ -60,10 +62,86 @@ unsigned int ExecutionChartSectionCreator::addTrace(SoftwareTraceEvent *event)
         }
         break;
     case 0x22:
-        createSection(event->timestamp, event->timestamp, (int) event->value, m_sectionNames[event->value]);
+        m_activeSection = (int) event->value;
+
+        if (!m_handleExceptions || !m_inException) {
+            if (m_sectionNames.find(m_activeSection) != m_sectionNames.end()) {
+                createSection(event->timestamp, event->timestamp, m_activeSection, m_sectionNames[m_activeSection]);
+            } else if (m_globalSectionNames.find(m_activeSection) != m_globalSectionNames.end()) {
+                createSection(event->timestamp, event->timestamp, m_activeSection, m_globalSectionNames[m_activeSection]);
+            }
+        }
+        break;
+    case 0x23:
+        // Activate exception handling for the sections
+        m_handleExceptions = true;
+    case 0x24:
+        // Return from exception
+        if (m_handleExceptions && m_inException) {
+            if (m_sectionNames.find(m_activeSection) != m_sectionNames.end()) {
+                createSection(event->timestamp, event->timestamp, m_activeSection, m_sectionNames[m_activeSection]);
+            } else if (m_globalSectionNames.find(m_activeSection) != m_globalSectionNames.end()) {
+                createSection(event->timestamp, event->timestamp, m_activeSection, m_globalSectionNames[m_activeSection]);
+            }
+        }
+        m_inException = false;
+        break;
+    case 0x25:
+        c = event->value & 0xff;
+        if (m_globalSectionNames.find(m_currentSectionDefinition) == m_sectionNames.end()) {
+            m_globalSectionNames[m_currentSectionDefinition] = c;
+        } else {
+            m_globalSectionNames[m_currentSectionDefinition] += c;
+        }
         break;
     case 0x31:
+        m_inException = true;
         createSection(event->timestamp, event->timestamp, -1, "System start");
+        break;
+    case 0x32:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Bus fault");
+        break;
+    case 0x33:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Data page fault");
+        break;
+    case 0x34:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Insn page fault");
+        break;
+    case 0x35:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Timer exception");
+        break;
+    case 0x36:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Alignment exception");
+        break;
+    case 0x37:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Illegal instruction");
+        break;
+    case 0x38:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Interrupt");
+        break;
+    case 0x39:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Data TLB miss");
+        break;
+    case 0x3a:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Instruction TLB miss");
+        break;
+    case 0x3b:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Range exception");
+        break;
+    case 0x3c:
+        m_inException = true;
+        createSection(event->timestamp, event->timestamp, -1, "Syscall");
+        break;
     default:
         break;
     }

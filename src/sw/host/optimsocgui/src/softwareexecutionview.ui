@@ -15,17 +15,22 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QTableView" name="softwareTraceTableView"/>
-     </item>
-     <item>
-      <widget class="QPlainTextEdit" name="stdoutTextEdit"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="ExecutionChart" name="executionChart" native="true"/>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <widget class="QWidget" name="">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QTableView" name="softwareTraceTableView"/>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="stdoutTextEdit"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="ExecutionChart" name="executionChart" native="true"/>
+    </widget>
    </item>
   </layout>
  </widget>

@@ -64,6 +64,7 @@ private slots:
 private:
     Ui::ExecutionChart *m_ui;
     QVector<ExecutionChartPlotCore*> m_plotCores;
+    QVector<ExecutionChartPlotLoad*> m_plotLoads;
     unsigned int m_currentMaximum;
     bool m_autoscroll;
     double m_zoomFactor;

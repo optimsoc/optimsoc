@@ -91,4 +91,16 @@ private:
     ExecutionChartElementCreator *m_currentSelection;
 };
 
+class ExecutionChartPlotLoad : public QCPGraph
+{
+    Q_OBJECT
+
+public:
+    ExecutionChartPlotLoad(QCPAxis *keyaxis, QCPAxis *valueaxis);
+    unsigned int addSoftwareTrace(SoftwareTraceEvent *event);
+
+    virtual void updateExtend(unsigned int extend);
+    double m_current;
+};
+
 #endif // EXECUTIONCHARTPLOTS_H
