@@ -176,7 +176,7 @@ Go to the newlib directory:
 $> cd optimsoc-toolchain/newlib-1.18.0
 \end{verbatim}
 
-Two different targets need to be build: 
+Two different targets need to be build:
 \begin{itemize}
 \item the baremetal library which includes the exception vectors etc.
   (\verb|newlib-baremetal|).
@@ -237,7 +237,7 @@ To install the tools simply run
 \$> \$OPTIMSOC/tools/install.sh /opt/optimsoc
 \end{alltt}
 
-or replace your installation path accordingly. 
+or replace your installation path accordingly.
 
 \begin{alltt}
 OPTIMSOC_TCL=/opt/optimsoc/tools/tcl
@@ -263,14 +263,14 @@ The installation of the system software starts in the base folder
 
 To perform the installation run:
 
-\begin{alltt}
-\$> mkdir build
-\$> cd build
-\$> ../configure --prefix=/opt/optimsoc/systemsw/ --host=or32-elf \textbackslash
+\begin{verbatim}
+$> mkdir build
+$> cd build
+$> ../configure --prefix=/opt/optimsoc/systemsw/ --host=or32-elf \
     CC=or32-elf-gcc
-\$> make
-\$> make install
-\end{alltt}
+$> make
+$> make install
+\end{verbatim}
 
 Configuration may fail when you did not set the \verb|OPTIMSOC_NEWLIB|
 environment variable.
