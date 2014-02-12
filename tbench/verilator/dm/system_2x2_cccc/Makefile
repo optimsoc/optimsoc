@@ -4,18 +4,24 @@ CXX ?= g++
 CFLAGS ?= -g -Wall
 VERILATOR ?= verilator
 
+INC=$(shell pkg-config --cflags optimsoc-sysc)
+LIB=$(shell pkg-config --libs optimsoc-sysc)
+
 main.o: main.cpp obj_dir/Vtb_system_2x2_cccc.a
 	$(CXX) $(CFLAGS) -I$(SYSTEMC)/include -I$(VERILATOR_ROOT)/include \
-		-I$(VERILATOR_ROOT)/include/vltstd -I $(OPTIMSOC_SYSC)/src/debug/ \
+		-I$(VERILATOR_ROOT)/include/vltstd $(INC)  \
 		-o main.o -c main.cpp
 
 main-vcd.o: main.cpp obj_dir/Vtb_system_2x2_cccc.a
 	$(CXX) $(CFLAGS) -I$(SYSTEMC)/include -I$(VERILATOR_ROOT)/include \
-		-I$(VERILATOR_ROOT)/include/vltstd -I$(OPTIMSOC_SYSC)/src/debug/ \
+		-I$(VERILATOR_ROOT)/include/vltstd $(INC) \
 		-DVCD_TRACE -o main-vcd.o -c main.cpp
 
+verilator.vc:
+	tclsh verilator.tcl
+
 obj_dir/Vtb_system_2x2_cccc.a:
-	$(VERILATOR) -sc -Wno-width -Wno-unoptflat -f tb_system_2x2_cccc.vc -trace
+	$(VERILATOR) -sc -Wno-width -Wno-unoptflat -f verilator.vc -trace
 	make -C obj_dir -f Vtb_system_2x2_cccc.mk
 
 verilated.o:
@@ -28,13 +34,13 @@ verilated_vcd_c.o:
 tb_system_2x2_cccc: obj_dir/Vtb_system_2x2_cccc.a main.o verilated.o verilated_vcd_c.o
 	$(CXX) $(CFLAGS) -o tb_system_2x2_cccc -pthread main.o \
 		obj_dir/Vtb_system_2x2_cccc__ALL.a verilated.o \
-		$(OPTIMSOC_SYSC)/lib/liboptimsocsysc.a \
+		$(LIB) \
 		$(SYSTEMC)/lib-linux/libsystemc.a verilated_vcd_c.o
 
 tb_system_2x2_cccc-vcd: obj_dir/Vtb_system_2x2_cccc.a main-vcd.o verilated.o verilated_vcd_c.o
 	$(CXX) $(CFLAGS) -o tb_system_2x2_cccc-vcd -pthread main-vcd.o \
 		obj_dir/Vtb_system_2x2_cccc__ALL.a verilated.o \
-		$(OPTIMSOC_SYSC)/lib/liboptimsocsysc.a \
+		$(LIB) \
 		$(SYSTEMC)/lib-linux/libsystemc.a verilated_vcd_c.o
 
 clean:

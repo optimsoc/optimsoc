@@ -1,7 +1,7 @@
 #include "obj_dir/Vtb_system_2x2_cccc__Syms.h"
 
-#include "VerilatedDebugConnector.h"
-#include "VerilatedSTM.h"
+#include <debug/VerilatedDebugConnector.h>
+#include <debug/VerilatedSTM.h>
 
 #include <verilated_vcd_c.h>
 
@@ -58,39 +58,19 @@ int sc_main(int argc, char *argv[])
     debugconn.rst_sys(rst_sys);
     debugconn.rst_cpu(rst_cpu);
 
-    VerilatedSTM stm0("STM0", &debugconn);
-    debugconn.registerDebugModule(&stm0);
-    stm0.setWbInsn(&system.v->u_system->gen_ct__BRA__0__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_insn);
-    stm0.setWbFreeze(&system.v->u_system->gen_ct__BRA__0__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_freeze);
-    stm0.setR3(&system.v->u_system->gen_ct__BRA__0__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_rf->rf_a->mem[3]);
-    stm0.setCoreId(0);
+    for (int i = 0; i < 4; i++) {
+      char *stm_name = (char*) malloc(8);
+      snprintf(stm_name, 7, "STM%d", i);
+      
+      VerilatedSTM * stm = new VerilatedSTM(stm_name, &debugconn);
+      debugconn.registerDebugModule(stm);
+      stm->setEnable(&system.v->trace_stm_enable[i]);
+      stm->setInsn(&system.v->trace_stm_insn[i]);
+      stm->setR3(&system.v->trace_stm_r3[i]);
+      stm->setCoreId(i);
 
-    VerilatedSTM stm1("STM1", &debugconn);
-    debugconn.registerDebugModule(&stm1);
-    stm1.setWbInsn(&system.v->u_system->gen_ct__BRA__1__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_insn);
-    stm1.setWbFreeze(&system.v->u_system->gen_ct__BRA__1__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_freeze);
-    stm1.setR3(&system.v->u_system->gen_ct__BRA__1__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_rf->rf_a->mem[3]);
-    stm1.setCoreId(1);
-
-    VerilatedSTM stm2("STM2", &debugconn);
-    debugconn.registerDebugModule(&stm2);
-    stm2.setWbInsn(&system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_insn);
-    stm2.setWbFreeze(&system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_freeze);
-    stm2.setR3(&system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_rf->rf_a->mem[3]);
-    stm2.setCoreId(2);
-
-    VerilatedSTM stm3("STM3", &debugconn);
-    debugconn.registerDebugModule(&stm3);
-    stm3.setWbInsn(&system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_insn);
-    stm3.setWbFreeze(&system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_freeze);
-    stm3.setR3(&system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_core0->u_cpu->or1200_cpu->or1200_rf->rf_a->mem[3]);
-    stm3.setCoreId(3);
-
-
-    stm0.clk(clk);
-    stm1.clk(clk);
-    stm2.clk(clk);
-    stm3.clk(clk);
+      stm->clk(clk);
+    }
 
     sc_start();
 
