@@ -682,6 +682,7 @@ static void display_help(void)
            "Command-line client to control an OpTiMSoC system.\n"
            "\n"
            "-i, --interactive  interactive mode\n"
+           "-s, --script       Python script to execute\n"
            "-b, --backend      select backend (see below)\n"
            "-o, --options      specify backend options (see below)\n"
            "                   Each option is a key-value pair in the form of\n"
@@ -701,11 +702,13 @@ static void display_help(void)
            " host  Hostname (default: localhost)\n"
            " port  Port (default: 23000)\n"
            "\n"
-           "Example:\n"
-           "Connect over USB to a FPGA-board running OpTiMSoC:\n"
+           "Examples:\n"
+           "Connect over USB to an FPGA-board running OpTiMSoC:\n"
            "  optimsoc_cli -i -bdbgnoc -oconn=usb\n"
            "Connect over TCP to a system simulation with debug emulator:\n"
-           "  optimsoc_cli -i -bdbgnoc -oconn=tcp,host=localhost,port=23000\n");
+           "  optimsoc_cli -i -bdbgnoc -oconn=tcp,host=localhost,port=23000\n"
+           "Execute a Python script for batch processing on an FPGA board:\n"
+           "  optimsoc_cli -s script.py -bdbgnoc -oconn=usb\n");
 }
 
 static void display_interactive_help(void)
