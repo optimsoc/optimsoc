@@ -8,4 +8,4 @@ Description: OpTiMSoC host communication library
 Version: @VERSION@
 Libs: -L${libdir} -loptimsochost
 Libs.private:
-Cflags: -I${includedir}
+Cflags: -I${includedir}/optimsochost
