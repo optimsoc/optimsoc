@@ -76,7 +76,7 @@ module sram_sp_impl_xilinx_spartan6(/*AUTOARG*/
    assign block_addr = addr >> WORD_AW;
    assign word_addr = addr[WORD_AW-1:0];
 
-   wire [31:0]    do_array [0:BLOCKNUM-1];
+   wire [31:0] do_array [0:BLOCKNUM-1];
 
    assign dout = do_array[block_addr];
 
@@ -86,6 +86,7 @@ module sram_sp_impl_xilinx_spartan6(/*AUTOARG*/
          RAMB16BWER
              #(.DATA_WIDTH_A (36))
          u_ram(.DOA    (do_array[i]),
+               .DOPA   (),
                .DIA    (din),
                .DIPA   (4'h0),
                .ADDRA  ({word_addr,2'b00,3'b000}), // | word in block | byte in word | bit in byte |
@@ -95,6 +96,7 @@ module sram_sp_impl_xilinx_spartan6(/*AUTOARG*/
                .REGCEA (1'b0),
                .CLKA   (clk),
                .DOB    (),
+               .DOPB   (),
                .DIB    (32'h0),
                .DIPB   (4'h0),
                .ADDRB  (14'h0),
