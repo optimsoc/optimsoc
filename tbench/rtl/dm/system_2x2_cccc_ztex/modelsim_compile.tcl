@@ -22,4 +22,9 @@ optimsoc_add_module sram.spartan6
 
 optimsoc_build_define OR1200_BOOT_ADR=32'h100
 
+# override the RAM settings in optimsoc_def.vh for simulation
+optimsoc_build_define OPTIMSOC_SRAM_IMPLEMENTATION="PLAIN"
+optimsoc_build_define OPTIMSOC_SRAM_VALIDATE_ADDRESS
+
 optimsoc_build
+

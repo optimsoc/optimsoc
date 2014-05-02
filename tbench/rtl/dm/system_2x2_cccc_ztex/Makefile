@@ -28,7 +28,7 @@ work:
 	if [ ! -d work ]; then vlib work; fi
 
 build: work
-	vlog -lint -f tb_system_2x2_cccc_ztex.vc
+	vsim -c -do modelsim_compile.tcl
 	sccom -Wall $(OPTIMSOC_SYSC)/src/debug/FX2EmulationDebugConnector.cpp \
 		-I /usr/include/x86_64-linux-gnu/
 	sccom -link
