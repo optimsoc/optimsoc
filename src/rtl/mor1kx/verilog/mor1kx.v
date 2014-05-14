@@ -33,7 +33,8 @@ module mor1kx
    dwbm_err_i, dwbm_ack_i, dwbm_dat_i, dwbm_rty_i, avm_d_readdata_i,
    avm_d_waitrequest_i, avm_d_readdatavalid_i, avm_i_readdata_i,
    avm_i_waitrequest_i, avm_i_readdatavalid_i, irq_i, du_addr_i,
-   du_stb_i, du_dat_i, du_we_i, du_stall_i, multicore_coreid_i
+   du_stb_i, du_dat_i, du_we_i, du_stall_i, multicore_coreid_i,
+   multicore_numcores_i
    );
 
    parameter OPTION_OPERAND_WIDTH	= 32;
@@ -92,6 +93,7 @@ module mor1kx
    parameter FEATURE_EXT		= "NONE";
    parameter FEATURE_CMOV		= "ENABLED";
    parameter FEATURE_FFL1		= "ENABLED";
+   parameter FEATURE_ATOMIC		= "ENABLED";
 
    parameter FEATURE_CUST1		= "NONE";
    parameter FEATURE_CUST2		= "NONE";
@@ -180,6 +182,8 @@ module mor1kx
 
    // The multicore core identifier
    input [OPTION_OPERAND_WIDTH-1:0]  multicore_coreid_i;
+   // The number of cores
+   input [OPTION_OPERAND_WIDTH-1:0]  multicore_numcores_i;
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -497,6 +501,7 @@ module mor1kx
 	     .FEATURE_EXT(FEATURE_EXT),
 	     .FEATURE_CMOV(FEATURE_CMOV),
 	     .FEATURE_FFL1(FEATURE_FFL1),
+	     .FEATURE_ATOMIC(FEATURE_ATOMIC),
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
 	     .FEATURE_CUST3(FEATURE_CUST3),
@@ -563,6 +568,7 @@ module mor1kx
       .spr_bus_ack_pcu_i		(),			 // Templated
       .spr_bus_dat_fpu_i		(),			 // Templated
       .spr_bus_ack_fpu_i		(),			 // Templated
-      .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]));
+      .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]),
+      .multicore_numcores_i		(multicore_numcores_i[OPTION_OPERAND_WIDTH-1:0]));
 
 endmodule // mor1kx

@@ -84,6 +84,8 @@ module mor1kx_ctrl_cappuccino
 
     input 			      ctrl_flag_set_i,
     input 			      ctrl_flag_clear_i,
+    input 			      atomic_flag_set_i,
+    input 			      atomic_flag_clear_i,
 
     input [OPTION_OPERAND_WIDTH-1:0]  pc_ctrl_i,
 
@@ -206,11 +208,13 @@ module mor1kx_ctrl_cappuccino
     input 			      spr_bus_ack_pcu_i,
     input [OPTION_OPERAND_WIDTH-1:0]  spr_bus_dat_fpu_i,
     input 			      spr_bus_ack_fpu_i,
+    input [OPTION_OPERAND_WIDTH-1:0]  spr_gpr_dat_i,
     output [15:0] 		      spr_sr_o,
 
     output reg 			      ctrl_bubble_o,
-    
-    input [OPTION_OPERAND_WIDTH-1:0]  multicore_coreid_i
+
+    input [OPTION_OPERAND_WIDTH-1:0]  multicore_coreid_i,
+    input [OPTION_OPERAND_WIDTH-1:0]  multicore_numcores_i
     );
 
    // Internal signals
@@ -316,6 +320,40 @@ module mor1kx_ctrl_cappuccino
    wire [31:0] 			     spr_pccfgr;
    wire [31:0] 			     spr_fpcsr;
    wire [31:0] 			     spr_isr [0:7];
+
+   // Only in multicore implementation:
+   // Implementation specific registers 0 and 1 are used as registers
+   // during exceptions or for kernel specific data
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr0;
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr1;
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr2;
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr3;
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr4;
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr5;
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr6;
+   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr7;
+
+   generate
+      if (FEATURE_MULTICORE != "NONE") begin
+	 assign spr_isr[0] = spr_isr0;
+	 assign spr_isr[1] = spr_isr1;
+	 assign spr_isr[2] = spr_isr2;
+	 assign spr_isr[3] = spr_isr3;
+	 assign spr_isr[4] = spr_isr4;
+	 assign spr_isr[5] = spr_isr5;
+	 assign spr_isr[6] = spr_isr6;
+	 assign spr_isr[7] = spr_isr7;
+      end else begin
+	 assign spr_isr[0] = 0;
+	 assign spr_isr[1] = 0;
+	 assign spr_isr[2] = 0;
+	 assign spr_isr[3] = 0;
+	 assign spr_isr[4] = 0;
+	 assign spr_isr[5] = 0;
+	 assign spr_isr[6] = 0;
+	 assign spr_isr[7] = 0;
+      end // else: !if(FEATURE_MULTICORE != "NONE")
+   endgenerate
 
    assign  b = ctrl_rfb_i;
 
@@ -444,8 +482,11 @@ module mor1kx_ctrl_cappuccino
 			     cpu_stall;
 
    // Flag output
-   assign ctrl_flag_o = (!ctrl_flag_clear_i & spr_sr[`OR1K_SPR_SR_F]) |
-			ctrl_flag_set_i;
+   wire ctrl_flag_clear = ctrl_flag_clear_i | atomic_flag_clear_i;
+   wire ctrl_flag_set = ctrl_flag_set_i | atomic_flag_set_i;
+
+   assign ctrl_flag_o = (!ctrl_flag_clear & spr_sr[`OR1K_SPR_SR_F]) |
+			ctrl_flag_set;
 
    // Carry output
    assign ctrl_carry_o = (!ctrl_carry_clear_i & spr_sr[`OR1K_SPR_SR_CY]) |
@@ -601,8 +642,8 @@ module mor1kx_ctrl_cappuccino
        end
      else if (padv_ctrl)
        begin
-	  spr_sr[`OR1K_SPR_SR_F   ] <= ctrl_flag_set_i ? 1 :
-				       ctrl_flag_clear_i ? 0 :
+	  spr_sr[`OR1K_SPR_SR_F   ] <= ctrl_flag_set ? 1 :
+				       ctrl_flag_clear ? 0 :
 				       spr_sr[`OR1K_SPR_SR_F   ];
 	  spr_sr[`OR1K_SPR_SR_CY   ] <= ctrl_carry_set_i ? 1 :
 					ctrl_carry_clear_i ? 0 :
@@ -637,6 +678,44 @@ module mor1kx_ctrl_cappuccino
        end
      else if (spr_we & spr_addr==`OR1K_SPR_ESR0_ADDR)
        spr_esr <= spr_write_dat[SPR_SR_WIDTH-1:0];
+
+   // Implementation specific registers
+   always @(posedge clk `OR_ASYNC_RST) begin
+      if (rst) begin
+	 spr_isr0 <= {OPTION_OPERAND_WIDTH{1'bx}};
+	 spr_isr1 <= {OPTION_OPERAND_WIDTH{1'bx}};
+	 spr_isr2 <= {OPTION_OPERAND_WIDTH{1'bx}};
+	 spr_isr3 <= {OPTION_OPERAND_WIDTH{1'bx}};
+	 spr_isr4 <= {OPTION_OPERAND_WIDTH{1'bx}};
+	 spr_isr5 <= {OPTION_OPERAND_WIDTH{1'bx}};
+	 spr_isr6 <= {OPTION_OPERAND_WIDTH{1'bx}};
+	 spr_isr7 <= {OPTION_OPERAND_WIDTH{1'bx}};
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR)) begin
+	 spr_isr0 <= spr_write_dat;
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 1)) begin
+	 spr_isr1 <= spr_write_dat;
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 2)) begin
+	 spr_isr2 <= spr_write_dat;
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 3)) begin
+	 spr_isr3 <= spr_write_dat;
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 4)) begin
+	 spr_isr4 <= spr_write_dat;
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 5)) begin
+	 spr_isr5 <= spr_write_dat;
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 6)) begin
+	 spr_isr6 <= spr_write_dat;
+      end else if ((FEATURE_MULTICORE != "NONE") &&
+		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 7)) begin
+	 spr_isr7 <= spr_write_dat;
+      end
+   end
 
    always @(posedge clk `OR_ASYNC_RST)
      if (rst)
@@ -777,16 +856,6 @@ module mor1kx_ctrl_cappuccino
       .spr_fpcsr			(spr_fpcsr[31:0]),
       .spr_avr				(spr_avr[31:0]));
 
-   /* Implementation-specific registers */
-   assign spr_isr[0] = 0;
-   assign spr_isr[1] = 0;
-   assign spr_isr[2] = 0;
-   assign spr_isr[3] = 0;
-   assign spr_isr[4] = 0;
-   assign spr_isr[5] = 0;
-   assign spr_isr[6] = 0;
-   assign spr_isr[7] = 0;
-
    // System group (0) SPR data out
    always @*
      case(spr_addr)
@@ -852,12 +921,16 @@ module mor1kx_ctrl_cappuccino
 	 // If the multicore feature is activated this address returns the
 	 // core identifier, 0 otherwise
 	 spr_sys_group_read = (FEATURE_MULTICORE == "ENABLED") ? multicore_coreid_i : 0;
+       `OR1K_SPR_NUMCORES_ADDR:
+	 // If the multicore feature is activated this address returns the
+	 // core identifier, 0 otherwise
+	 spr_sys_group_read = (FEATURE_MULTICORE == "ENABLED") ? multicore_numcores_i : 0;
        
        default: begin
 	  // GPR read
 	  if (spr_addr >= `OR1K_SPR_GPR0_ADDR &&
 	      spr_addr < (`OR1K_SPR_GPR0_ADDR + 32))
-	    spr_sys_group_read = b; // Register file
+	    spr_sys_group_read = spr_gpr_dat_i; // Register file
 	  else
 	    // Invalid address - read as zero
 	    spr_sys_group_read = 0;
@@ -867,9 +940,11 @@ module mor1kx_ctrl_cappuccino
    /* System group read data MUX in */
    assign spr_internal_read_dat[0] = spr_sys_group_read;
    /* System group ack generation */
-   /* TODO - might be delay for register file reads! */
-   assign spr_access_ack[0] = 1;
+   reg spr_sys_group_ack;
+   always @(posedge clk)
+     spr_sys_group_ack <= spr_read_access | spr_write_access;
 
+   assign spr_access_ack[0] = spr_sys_group_ack;
 
    /* Generate data to the register file for mfspr operations */
    assign mfspr_dat_o = spr_internal_read_dat[spr_addr[14:11]];
@@ -1198,6 +1273,10 @@ module mor1kx_ctrl_cappuccino
 	     spr_dmr1 <= 0;
 	   else if (spr_we && spr_addr==`OR1K_SPR_DMR1_ADDR)
 	     spr_dmr1[23:0] <= spr_write_dat[23:0];
+
+	 /* DMR2 */
+	 always @(posedge clk)
+	   spr_dmr2 <= 0;
 
 	 /* DSR */
 	 always @(posedge clk `OR_ASYNC_RST)

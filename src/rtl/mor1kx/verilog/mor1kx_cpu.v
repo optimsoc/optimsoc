@@ -33,7 +33,7 @@ module mor1kx_cpu(/*AUTOARG*/
    spr_bus_dat_immu_i, spr_bus_ack_immu_i, spr_bus_dat_mac_i,
    spr_bus_ack_mac_i, spr_bus_dat_pmu_i, spr_bus_ack_pmu_i,
    spr_bus_dat_pcu_i, spr_bus_ack_pcu_i, spr_bus_dat_fpu_i,
-   spr_bus_ack_fpu_i, multicore_coreid_i
+   spr_bus_ack_fpu_i, multicore_coreid_i, multicore_numcores_i
    );
 
 
@@ -97,6 +97,7 @@ module mor1kx_cpu(/*AUTOARG*/
    parameter FEATURE_EXT		= "NONE";
    parameter FEATURE_CMOV		= "NONE";
    parameter FEATURE_FFL1		= "NONE";
+   parameter FEATURE_ATOMIC		= "ENABLED";
 
    parameter FEATURE_CUST1		= "NONE";
    parameter FEATURE_CUST2		= "NONE";
@@ -148,8 +149,8 @@ module mor1kx_cpu(/*AUTOARG*/
    output [`OR1K_INSN_WIDTH-1:0]     traceport_exec_insn_o;
    output [OPTION_OPERAND_WIDTH-1:0] traceport_exec_wbdata_o;
    output [OPTION_RF_ADDR_WIDTH-1:0] traceport_exec_wbreg_o;
-   output 			     traceport_exec_wben_o;   
-   
+   output 			     traceport_exec_wben_o;
+
    // SPR accesses to external units (cache, mmu, etc.)
    output [15:0] 		     spr_bus_addr_o;
    output 			     spr_bus_we_o;
@@ -171,6 +172,8 @@ module mor1kx_cpu(/*AUTOARG*/
 
    // The multicore core identifier
    input [OPTION_OPERAND_WIDTH-1:0]  multicore_coreid_i;
+   // The number of cores
+   input [OPTION_OPERAND_WIDTH-1:0]  multicore_numcores_i;
    
    wire [`OR1K_INSN_WIDTH-1:0] 	     monitor_execute_insn/* verilator public */;   
    wire 			     monitor_execute_advance/* verilator public */;
@@ -238,6 +241,7 @@ module mor1kx_cpu(/*AUTOARG*/
 	     .FEATURE_EXT(FEATURE_EXT),
 	     .FEATURE_CMOV(FEATURE_CMOV),
 	     .FEATURE_FFL1(FEATURE_FFL1),
+	     .FEATURE_ATOMIC(FEATURE_ATOMIC),
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
 	     .FEATURE_CUST3(FEATURE_CUST3),
@@ -298,7 +302,8 @@ module mor1kx_cpu(/*AUTOARG*/
 	    .spr_bus_ack_pcu_i		(spr_bus_ack_pcu_i),
 	    .spr_bus_dat_fpu_i		(spr_bus_dat_fpu_i[OPTION_OPERAND_WIDTH-1:0]),
 	    .spr_bus_ack_fpu_i		(spr_bus_ack_fpu_i),
-	    .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]));
+	    .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]),
+	    .multicore_numcores_i	(multicore_numcores_i[OPTION_OPERAND_WIDTH-1:0]));
 
 	 // synthesis translate_off
 `ifndef SYNTHESIS

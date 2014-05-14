@@ -49,7 +49,8 @@ module mor1kx_module (
    );
 
    parameter ID = 0;
-
+   parameter NUMCORES = 1;
+   
    parameter CPU_IMPLEMENTATION = "CAPPUCCINO";
 
    input          clk_i;
@@ -190,6 +191,7 @@ module mor1kx_module (
     .avm_.*_i (1'h0),
     
     .multicore_coreid_i (ID),
+    .multicore_numcores_i (NUMCORES),
     .traceport_\(.*\) (traceport_\1),
 
     ); */
@@ -199,6 +201,8 @@ module mor1kx_module (
    mor1kx
      #(.FEATURE_DATACACHE               ("ENABLED"),
        .FEATURE_INSTRUCTIONCACHE        ("ENABLED"),
+       .OPTION_DCACHE_WAYS              (1),
+       .OPTION_ICACHE_WAYS              (1),
        .FEATURE_DMMU                    ("ENABLED"),
        .FEATURE_IMMU                    ("ENABLED"),
        .IBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
@@ -266,7 +270,8 @@ module mor1kx_module (
 	   .du_dat_i			(dbg_dat_i[31:0]),	 // Templated
 	   .du_we_i			(dbg_we_i),		 // Templated
 	   .du_stall_i			(dbg_stall_i),		 // Templated
-	   .multicore_coreid_i		(ID));			 // Templated
+	   .multicore_coreid_i		(ID),			 // Templated
+	   .multicore_numcores_i	(NUMCORES));		 // Templated
 
    /* wb_cas_unit AUTO_TEMPLATE(
     .clk_i          (bus_clk_i),

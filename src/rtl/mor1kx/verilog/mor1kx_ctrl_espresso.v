@@ -932,7 +932,7 @@ module mor1kx_ctrl_espresso
        `OR1K_SPR_COREID_ADDR:
 	 // If the multicore feature is activated this address returns the
 	 // core identifier, 0 otherwise
-	 spr_sys_group_read = FEATURE_MULTICORE ? multicore_coreid_i : 0;
+	 spr_sys_group_read = (FEATURE_MULTICORE != "NONE") ? multicore_coreid_i : 0;
        
        default: begin
           /* GPR read */
@@ -1305,6 +1305,10 @@ module mor1kx_ctrl_espresso
              spr_dmr1 <= 0;
            else if (spr_we && spr_addr==`OR1K_SPR_DMR1_ADDR)
              spr_dmr1[23:0] <= spr_write_dat[23:0];
+
+         /* DMR2 */
+         always @(posedge clk)
+           spr_dmr2 <= 0;
 
          /* DSR */
          always @(posedge clk `OR_ASYNC_RST)

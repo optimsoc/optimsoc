@@ -91,6 +91,11 @@ module mor1kx_dcache
    // width of this is 0 for OPTION_DCACHE_LIMIT_WIDTH==1
    localparam TAG_LRU_WIDTH = OPTION_DCACHE_WAYS*(OPTION_DCACHE_WAYS-1) >> 1;
 
+   // We have signals for the LRU which are not used for one way
+   // caches. To avoid signal width [-1:0] this generates [0:0]
+   // vectors for them, which are removed automatically then.
+   localparam TAG_LRU_WIDTH_BITS = (OPTION_DCACHE_WAYS >= 2) ? TAG_LRU_WIDTH : 1;
+
    // Compute the total sum of the entry elements
    localparam TAGMEM_WIDTH = TAGMEM_WAY_WIDTH * OPTION_DCACHE_WAYS + TAG_LRU_WIDTH;
 
@@ -121,13 +126,15 @@ module mor1kx_dcache
 
    // The data from the tag memory
    wire [TAGMEM_WIDTH-1:0] 	      tag_dout;
-   wire [TAG_LRU_WIDTH-1:0] 	      tag_lru_out;
+   wire [TAG_LRU_WIDTH_BITS-1:0]      tag_lru_out;
    wire [TAGMEM_WAY_WIDTH-1:0] 	      tag_way_out [OPTION_DCACHE_WAYS-1:0];
 
    // The data to the tag memory
    wire [TAGMEM_WIDTH-1:0] 	      tag_din;
-   reg [TAG_LRU_WIDTH-1:0] 	      tag_lru_in;
+   reg [TAG_LRU_WIDTH_BITS-1:0]       tag_lru_in;
    reg [TAGMEM_WAY_WIDTH-1:0] 	      tag_way_in [OPTION_DCACHE_WAYS-1:0];
+
+   reg [TAGMEM_WAY_WIDTH-1:0] 	      tag_way_save[OPTION_DCACHE_WAYS-1:0];
 
    // Whether to write to the tag memory in this cycle
    reg 				      tag_we;
@@ -162,8 +169,8 @@ module mor1kx_dcache
 
    // The current LRU history as read from tag memory and the update
    // value after we accessed it to write back to tag memory.
-   wire [TAG_LRU_WIDTH-1:0]           current_lru_history;
-   wire [TAG_LRU_WIDTH-1:0]           next_lru_history;
+   wire [TAG_LRU_WIDTH_BITS-1:0]      current_lru_history;
+   wire [TAG_LRU_WIDTH_BITS-1:0]      next_lru_history;
 
    // Intermediate signals to ease debugging
    wire [TAG_WIDTH-1:0]               check_way_tag [OPTION_DCACHE_WAYS-1:0];
@@ -223,15 +230,14 @@ module mor1kx_dcache
 
    assign hit = |way_hit;
 
-   integer w;
-
+   integer w0;
    always @(*) begin
       cpu_dat_o = {OPTION_OPERAND_WIDTH{1'bx}};
 
       // Put correct way on the data port
-      for (w = 0; w < OPTION_DCACHE_WAYS; w = w + 1) begin
-         if (way_hit[w] | (refill_hit & tag_save_lru[w])) begin
-            cpu_dat_o = way_dout[w];
+      for (w0 = 0; w0 < OPTION_DCACHE_WAYS; w0 = w0 + 1) begin
+         if (way_hit[w0] | (refill_hit & tag_save_lru[w0])) begin
+            cpu_dat_o = way_dout[w0];
          end
       end
    end
@@ -293,6 +299,7 @@ module mor1kx_dcache
     * determined if a cache hit should cause a refill or if a write should
     * really be executed.
     */
+   integer w1;
    always @(posedge clk `OR_ASYNC_RST) begin
       if (rst | dbus_err_i) begin
 	 state <= IDLE;
@@ -334,11 +341,17 @@ module mor1kx_dcache
                     // on refill. Always one when only one way.
                     tag_save_lru <= (OPTION_DCACHE_WAYS==1) | lru;
 
+		    for (w1 = 0; w1 < OPTION_DCACHE_WAYS; w1 = w1 + 1) begin
+		       tag_way_save[w1] <= tag_way_out[w1];
+		    end
+
 		    state <= REFILL;
 		 end else if (cpu_we_i | write_pending) begin
 		    state <= WRITE;
+		 end else if (invalidate) begin
+		    state <= IDLE;
 		 end
-	      end else if (!dc_enable_i) begin
+	      end else if (!dc_enable_i | invalidate) begin
 		 state <= IDLE;
 	      end
 	   end
@@ -379,12 +392,12 @@ module mor1kx_dcache
 
    // This is the combinational part of the state machine that
    // interfaces the tag and way memories.
-
+   integer w2;
    always @(*) begin
       // Default is to keep data, don't write and don't access
       tag_lru_in = tag_lru_out;
-      for (w = 0; w < OPTION_DCACHE_WAYS; w = w + 1) begin
-         tag_way_in[w] = tag_way_out[w];
+      for (w2 = 0; w2 < OPTION_DCACHE_WAYS; w2 = w2 + 1) begin
+         tag_way_in[w2] = tag_way_out[w2];
       end
 
       tag_we = 1'b0;
@@ -451,9 +464,9 @@ module mor1kx_dcache
 
 	      /* Invalidate the way on the first write */
 	      if (refill_valid == 0) begin
-		 for (w = 0; w < OPTION_DCACHE_WAYS; w = w + 1) begin
-                    if (tag_save_lru[w]) begin
-                       tag_way_in[w][TAGMEM_WAY_VALID] = 1'b0;
+		 for (w2 = 0; w2 < OPTION_DCACHE_WAYS; w2 = w2 + 1) begin
+                    if (tag_save_lru[w2]) begin
+                       tag_way_in[w2][TAGMEM_WAY_VALID] = 1'b0;
                     end
                  end
 
@@ -464,9 +477,10 @@ module mor1kx_dcache
               // filled way with the LRU history, the tag and set
               // valid to 1.
 	      if (refill_done) begin
-		 for (w = 0; w < OPTION_DCACHE_WAYS; w = w + 1) begin
-                    if (tag_save_lru[w]) begin
-                       tag_way_in[w] = { 1'b1, tag_wtag };
+		 for (w2 = 0; w2 < OPTION_DCACHE_WAYS; w2 = w2 + 1) begin
+		    tag_way_in[w2] = tag_way_save[w2];
+                    if (tag_save_lru[w2]) begin
+                       tag_way_in[w2] = { 1'b1, tag_wtag };
                     end
                  end
                  tag_lru_in = next_lru_history;
@@ -481,8 +495,8 @@ module mor1kx_dcache
 
 	   // Lazy invalidation, invalidate everything that matches tag address
            tag_lru_in = 0;
-           for (w = 0; w < OPTION_DCACHE_WAYS; w = w + 1) begin
-              tag_way_in[w] = 0;
+           for (w2 = 0; w2 < OPTION_DCACHE_WAYS; w2 = w2 + 1) begin
+              tag_way_in[w2] = 0;
            end
 
 	   tag_we = 1'b1;
@@ -533,7 +547,7 @@ module mor1kx_dcache
 	       // Inputs
 	       .current			(current_lru_history),	 // Templated
 	       .access			(access));		 // Templated
-      end // if (OPTIMSOC_DCACHE_WAYS >= 2)
+      end // if (OPTION_DCACHE_WAYS >= 2)
    endgenerate
 
    mor1kx_simple_dpram_sclk
