@@ -10,22 +10,22 @@ if [ $# -lt 2 ]; then
    exit
 fi
 
-bname="`basename $2`.lnk"
+folder=${2/\//_}.lnk
 
-if [ -d $bname ]; then
+if [ -d $folder ]; then
     echo "directory $bname already exists"
     exit
 fi
 
-mkdir $bname
+mkdir $folder
 
 if [ ! -d ${OPTIMSOC}/src/sw/system/apps/$1/$2 ]; then
     echo "Cannot find ${OPTIMSOC}/src/sw/system/apps/$1/$2"
-    rmdir $bname
+    rmdir $folder
     exit
 fi
 
 for f in `find ${OPTIMSOC}/src/sw/system/apps/$1/$2 -type f`; do
     bf=`echo $f | sed 's|'${OPTIMSOC}/src/sw/system/apps/$1/$2/'||'`
-    ln -s $f $bname/$bf
+    ln -s $f $folder/$bf
 done
