@@ -95,3 +95,18 @@ function integer clog2_width;
       end
    end
 endfunction
+
+function [23:0] index2string;
+   input [11:0] index;
+   integer      hundreds;
+   integer      tens;
+   integer      ones;
+   begin
+      hundreds = (index) / 100;
+      tens = (index - (hundreds * 100)) / 10;
+      ones = (index - (hundreds * 100) - (tens * 10));
+      index2string[23:16] = hundreds + 8'd48;
+      index2string[15:8] = tens + 8'd48;
+      index2string[7:0] = ones + 8'd48;
+   end
+endfunction
