@@ -1,4 +1,0 @@
-SUBDIRS = libmcapi libruntime
-
-
-
