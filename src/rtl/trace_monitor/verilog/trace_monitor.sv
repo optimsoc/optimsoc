@@ -97,7 +97,7 @@ module trace_monitor(/*AUTOARG*/
                count++;
             end else begin
                if (count > 0) begin
-                  $fwrite(tracefile, "[%t, %0d] %3d, 0x%08x\n", $time, ID, count, wb_pc);
+                  $fwrite(tracefile, "[%0t, %0d] %3d, 0x%08x\n", $time, ID, count, wb_pc);
                   $fflush(tracefile);
                   count <= 0;
                end
