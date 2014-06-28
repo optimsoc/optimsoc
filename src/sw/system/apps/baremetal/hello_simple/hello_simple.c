@@ -27,33 +27,8 @@
  */
 
 #include <stdio.h>
-#include <optimsoc.h>
 
-unsigned int mylock;
-
-void lock(void* addr) {
-  volatile unsigned int ack = 0;
-  do {
-    REG32(0xe0300000) = addr;
-    ack = 0;
-    while(ack == 0x00) {
-      ack = REG32(0xe0300008);
-      OPTIMSOC_TRACE(0x70,ack);
-    }
-  } while(ack > 1);
-}
-
-void unlock(void* addr) {
-    unsigned int ack = 0;
-    REG32(0xe0300004) = addr;
-    while(ack == 0x00) {
-        ack = REG32(0xe0300008);
-    }
-}
-
-void main() {
-  //  lock((void*) &mylock);
+int main() {
   printf("Hello World!\n");
-  //  unlock((void*) &mylock);
-  //  printf("%p\n",malloc(4));
+  return 0;
 }

@@ -28,9 +28,11 @@
 
 #include <stdio.h> // For printf
 
-#include <optimsoc.h>
+#include <optimsoc-mp.h>
 #include <or1k-support.h>
 #include <optimsoc-baremetal.h>
+
+#define __DYNAMIC_REENT__
 #include <assert.h>
 
 // In this example every rank except 0 sends a simple message to rank 0.
@@ -53,7 +55,7 @@ void recv(unsigned int *buffer,int len) {
     source_rank = optimsoc_tilerank(source_tile);
 
     // Print hello for this
-    printf("Hello World from %d!\n",source_rank);
+//    printf("Hello World from %d!\n",source_rank);
 
     // Count up received messages
     hello_received++;
@@ -61,13 +63,13 @@ void recv(unsigned int *buffer,int len) {
 
 // The main function
 void main() {
-    // Initialize optimsoc library
+  // Initialize optimsoc library
     optimsoc_init(0);
     optimsoc_mp_simple_init();
-    or1k_enable_interrupts();
 
     // Add handler for received messages (of class 0)
     optimsoc_mp_simple_addhandler(0,&recv);
+    or1k_interrupts_enable();
 
     // Determine tiles rank
     int rank = optimsoc_ctrank();

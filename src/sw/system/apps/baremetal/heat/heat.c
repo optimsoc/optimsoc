@@ -26,7 +26,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-#include <optimsoc.h>
 #include <optimsoc-baremetal.h>
 #include <or1k-support.h>
 
@@ -152,7 +151,7 @@ int main() {
     // time a packet arrives.
     optimsoc_mp_simple_addhandler(0,&recv);
 
-    or1k_enable_interrupts();
+    or1k_interrupts_enable();
 
     // Determine my rank and total number
     rank = optimsoc_ctrank();
