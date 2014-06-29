@@ -187,6 +187,7 @@ module mor1kx_cpu_espresso
    wire			decode_op_jal_o;	// From mor1kx_decode of mor1kx_decode.v
    wire			decode_op_jbr_o;	// From mor1kx_decode of mor1kx_decode.v
    wire			decode_op_jr_o;		// From mor1kx_decode of mor1kx_decode.v
+   wire			decode_op_lsu_atomic_o;	// From mor1kx_decode of mor1kx_decode.v
    wire			decode_op_lsu_load_o;	// From mor1kx_decode of mor1kx_decode.v
    wire			decode_op_lsu_store_o;	// From mor1kx_decode of mor1kx_decode.v
    wire			decode_op_mfspr_o;	// From mor1kx_decode of mor1kx_decode.v
@@ -340,6 +341,7 @@ module mor1kx_cpu_espresso
       .decode_op_alu_o			(decode_op_alu_o),
       .decode_op_lsu_load_o		(decode_op_lsu_load_o),
       .decode_op_lsu_store_o		(decode_op_lsu_store_o),
+      .decode_op_lsu_atomic_o		(decode_op_lsu_atomic_o),
       .decode_lsu_length_o		(decode_lsu_length_o[1:0]),
       .decode_lsu_zext_o		(decode_lsu_zext_o),
       .decode_op_mfspr_o		(decode_op_mfspr_o),
