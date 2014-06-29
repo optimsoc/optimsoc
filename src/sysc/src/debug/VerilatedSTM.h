@@ -51,13 +51,13 @@ public:
     {
         m_coreid = coreid;
     }
-    void setWbInsn(uint32_t *wb_insn)
+    void setInsn(uint32_t *wb_insn)
     {
-        m_wb_insn = wb_insn;
+        m_insn = wb_insn;
     }
-    void setWbFreeze(uint8_t *wb_freeze)
+    void setEnable(uint8_t *enable)
     {
-        m_wb_freeze = wb_freeze;
+        m_enable = enable;
     }
     void setR3(uint32_t *r3)
     {
@@ -66,8 +66,8 @@ public:
 
 private:
     uint32_t m_coreid;
-    uint32_t *m_wb_insn;
-    uint8_t *m_wb_freeze;
+    uint32_t *m_insn;
+    uint8_t *m_enable;
     uint32_t *m_r3;
 };
 

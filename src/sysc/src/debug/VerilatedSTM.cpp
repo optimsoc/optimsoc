@@ -60,7 +60,7 @@ protected:
 };
 
 VerilatedSTM::VerilatedSTM(sc_module_name name, DebugConnector *dbgconn) :
-        DebugModule(name, dbgconn), m_wb_insn(NULL), m_wb_freeze(NULL),
+        DebugModule(name, dbgconn), m_insn(NULL), m_enable(NULL),
         m_coreid(0), m_r3(NULL)
 {
     SC_METHOD(monitor);
@@ -91,11 +91,11 @@ void VerilatedSTM::monitor()
 {
     STMTracePacket packet;
     packet.coreid = m_coreid;
-    if (*m_wb_freeze != 0) {
+    if (*m_enable == 0) {
         return;
     }
-    if ((*m_wb_insn >> 24) == 0x15) {
-        unsigned int K = *m_wb_insn & 0xffff;
+    if ((*m_insn >> 24) == 0x15) {
+        unsigned int K = *m_insn & 0xffff;
         uint32_t val = *m_r3;
 
         if (K > 0) {

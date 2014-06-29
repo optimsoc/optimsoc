@@ -31,7 +31,28 @@ liboptimsocsysc_la_SOURCES =\
     debug/VerilatedDebugConnector.cpp \
     debug/VerilatedSTM.cpp \
     debug/TracePacket.cpp
-    
+
 liboptimsocsysc_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 liboptimsocsysc_la_CPPFLAGS = $(AM_CPPFLAGS)
+liboptimsocsysc_debugincdir = $(includedir)/debug
+liboptimsocsysc_debuginc_HEADERS = debug/VerilatedDebugConnector.h \
+	debug/DebugModule.h \
+	debug/DebugConnector.h \
+	debug/TracePacket.h \
+	debug/VerilatedSTM.h
 
+# prepare pkg-config file
+share/%.pc: share/%.pc.in Makefile
+	$(AM_V_GEN)$(MKDIR_P) share; \
+	$(SED) \
+	-e 's,@VERSION\@,$(VERSION),g' \
+	-e 's,@prefix\@,$(prefix),g' \
+	-e 's,@datadir\@,$(datadir),g' \
+	-e 's,@libdir\@,$(libdir),g' \
+	-e 's,@includedir\@,$(includedir),g' \
+	< $< > $@ || rm $@
+
+pkgconfigdir = $(datadir)/pkgconfig
+pkgconfig_DATA = share/optimsoc-sysc.pc
+EXTRA_DIST = share/optimsoc-sysc.pc.in
+CLEANFILES = share/optimsoc-sysc.pc
