@@ -30,3 +30,6 @@ const uint8_t  _optimsoc_has_uart = 0;
 const uint16_t _optimsoc_uarttile = 0;
 const uint8_t  _optimsoc_uart_lcd_enable = 0;
 
+const uint32_t _board_mem_base = 0;
+const uint32_t _board_mem_size = 1*1024*1024;
+const uint32_t _board_clk_freq = 40000000;

@@ -1,7 +1,3 @@
-# intermediate files during build
-/*.o
-/obj_dir
-
 # output files
 tb_system_2x2_cccc
 tb_system_2x2_cccc-vcd

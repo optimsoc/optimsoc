@@ -20,7 +20,7 @@ main-vcd.o: main.cpp obj_dir/Vtb_system_2x2_cccc.a
 verilator.vc:
 	tclsh verilator.tcl
 
-obj_dir/Vtb_system_2x2_cccc.a:
+obj_dir/Vtb_system_2x2_cccc.a: verilator.vc
 	$(VERILATOR) -sc -Wno-width -Wno-unoptflat -f verilator.vc -trace
 	make -C obj_dir -f Vtb_system_2x2_cccc.mk
 

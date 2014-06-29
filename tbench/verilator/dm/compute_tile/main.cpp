@@ -1,7 +1,7 @@
 #include "obj_dir/Vtb_compute_tile__Syms.h"
 
-#include "VerilatedDebugConnector.h"
-#include "VerilatedSTM.h"
+#include "debug/VerilatedDebugConnector.h"
+#include "debug/VerilatedSTM.h"
 
 #include <verilated_vcd_c.h>
 
@@ -38,7 +38,7 @@ int sc_main(int argc, char *argv[])
     ct.rst_sys(rst_sys);
     ct.cpu_stall(cpu_stall);
 
-    ct.v->u_compute_tile->u_ram->memory->do_readmemh();
+    ct.v->u_compute_tile->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
 
 #ifdef VCD_TRACE
     tracemon trace("trace");
@@ -58,9 +58,9 @@ int sc_main(int argc, char *argv[])
 
     VerilatedSTM stm("STM", &debugconn);
     debugconn.registerDebugModule(&stm);
-    stm.setWbInsn(&ct.v->u_compute_tile->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_insn);
-    stm.setWbFreeze(&ct.v->u_compute_tile->u_core0->u_cpu->or1200_cpu->or1200_ctrl->wb_freeze);
-    stm.setR3(&ct.v->u_compute_tile->u_core0->u_cpu->or1200_cpu->or1200_rf->rf_a->mem[3]);
+    stm.setEnable(&ct.v->trace_stm_enable[0]);
+    stm.setInsn(&ct.v->trace_stm_insn[0]);
+    stm.setR3(&ct.v->trace_stm_r3[0]);
     stm.setCoreId(0);
 
     stm.clk(clk);
