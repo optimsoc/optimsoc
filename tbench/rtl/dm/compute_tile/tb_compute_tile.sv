@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2014 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "timescale.v"
+`include "dbg_config.vh"
 
 module tb_compute_tile();
 
@@ -56,6 +56,40 @@ module tb_compute_tile();
    wire [VCHANNELS-1:0] noc_out_valid;
    reg [VCHANNELS-1:0] noc_out_ready;
 
+   parameter NUMCORES = 1;
+
+   wire [`DEBUG_ITM_PORTWIDTH-1:0] trace_itm;
+   wire [`DEBUG_STM_PORTWIDTH-1:0] trace_stm;
+
+   wire [`DEBUG_STM_PORTWIDTH-1:0] trace_stm_array  [0:NUMCORES-1]; 
+   wire                            trace_stm_enable [0:NUMCORES-1];
+   wire [31:0]                     trace_stm_insn   [0:NUMCORES-1];
+   wire                            trace_stm_wben   [0:NUMCORES-1];
+   wire [4:0]                      trace_stm_wbreg  [0:NUMCORES-1];
+   wire [31:0]                     trace_stm_wbdata [0:NUMCORES-1];
+   wire [31:0]                     trace_stm_r3     [0:NUMCORES-1];
+
+   genvar                          i;
+   
+   generate
+      for (i = 0; i < NUMCORES; i++) begin
+         assign trace_stm_array[i] = trace_stm[(i+1)*`DEBUG_STM_PORTWIDTH-1:`DEBUG_STM_PORTWIDTH*i];
+         assign trace_stm_enable[i] = trace_stm_array[i][`DEBUG_STM_ENABLE_MSB:`DEBUG_STM_ENABLE_LSB];
+         assign trace_stm_insn[i] = trace_stm_array[i][`DEBUG_STM_INSN_MSB:`DEBUG_STM_INSN_LSB];
+         assign trace_stm_wben[i] = trace_stm_array[i][`DEBUG_STM_WB_MSB:`DEBUG_STM_WB_LSB];
+         assign trace_stm_wbreg[i] = trace_stm_array[i][`DEBUG_STM_WBREG_MSB:`DEBUG_STM_WBREG_LSB];
+         assign trace_stm_wbdata[i] = trace_stm_array[i][`DEBUG_STM_WBDATA_MSB:`DEBUG_STM_WBDATA_LSB];
+
+         r3_checker
+           u_r3_checker(.clk(clk),
+                        .valid(trace_stm_enable[i]),
+                        .we (trace_stm_wben[i]),
+                        .addr (trace_stm_wbreg[i]),
+                        .data (trace_stm_wbdata[i]),
+                        .r3 (trace_stm_r3[i]));
+      end
+   endgenerate
+
    compute_tile_dm
       #(.ID(0),
         .CORES(1),
@@ -65,6 +99,8 @@ module tb_compute_tile();
                      .noc_in_ready      (noc_in_ready[VCHANNELS-1:0]),
                      .noc_out_flit      (noc_out_flit[NOC_FLIT_WIDTH-1:0]),
                      .noc_out_valid     (noc_out_valid[VCHANNELS-1:0]),
+                     .trace_itm         (trace_itm),
+                     .trace_stm         (trace_stm),
                      // Inputs
                      .clk               (clk),
                      .rst_cpu           (rst_cpu),
@@ -77,11 +113,11 @@ module tb_compute_tile();
    wire termination;
 
    /* trace_monitor AUTO_TEMPLATE(
-    .enable  (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze),
-    .wb_pc   (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc),
-    .wb_insn (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn),
-    .r3      (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]),
-    .supv    (u_compute_tile.u_core0.u_cpu.or1200_cpu.supv),
+    .enable  (trace_stm_enable[0]),
+    .wb_pc   (trace_itm[31:0]),
+    .wb_insn (trace_stm_insn[0]),
+    .r3      (trace_stm_r3[0]),
+    .supv    (),
     .termination  (termination),
     .termination_all (termination),
     ); */
@@ -94,11 +130,11 @@ module tb_compute_tile();
              .termination               (termination),           // Templated
              // Inputs
              .clk                       (clk),
-             .enable                    (~u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze), // Templated
-             .wb_pc                     (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc), // Templated
-             .wb_insn                   (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn), // Templated
-             .r3                        (u_compute_tile.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]), // Templated
-             .termination_all           (termination));           // Templated
+             .enable                    (trace_stm_enable[0]),   // Templated
+             .wb_pc                     (trace_itm[31:0]),       // Templated
+             .wb_insn                   (trace_stm_insn[0]),     // Templated
+             .r3                        (trace_stm_r3[0]),       // Templated
+             .termination_all           (termination));          // Templated
 
 
 
