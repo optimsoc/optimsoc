@@ -10,6 +10,7 @@ TEXFILES = refman-preamble.tex \
 	   refman-tracedebugging.tex \
 	   refman-systemsoftware.tex \
 	   refman-documentation.tex \
+	   refman-toolchain.tex \
 	   ../docoverview.tex
 
 all: pdf html

@@ -44,8 +44,8 @@ Before you get started, you should clone the LISNoC and OpTiMSoC
 repository:
 
 \begin{verbatim}
-$> git clone http://lis.ei.tum.de/git/lisnoc.git
-$> git clone http://lis.ei.tum.de/git/optimsoc.git
+$> git clone https://github.com/TUM-LIS/lisnoc.git
+$> git clone https://github.com/TUM-LIS/optimsoc.git
 \end{verbatim}
 
 After cloning you will have the main branch at its latest state. This
@@ -127,100 +127,43 @@ $> sudo apt-get install libgmp3c2
 \subsection{Compiler and C Library}
 
 In most cases you will not need to build the entire toolchain from
-scratch, because three options are available:
+scratch, because two options are available:
 
 \begin{itemize}
 \item Download the entire toolchain
-\item Build the newlib with your OpenRISC toolchain
 \item Build everything from scratch
 \end{itemize}
 
 \subsubsection{Option 1: Download the entire toolchain}
-First of all you need the OpenRISC crosscompiler. There are many
-options available to get it or build
-it\footnote{\url{http://opencores.org/or1k/OpenRISC_GNU_tool_chain}}.
-The most simple approach is to download the prepacked
-library\footnote{\url{ftp://ocuser:ocuser@openrisc.opencores.org/toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}
-  Mirror:
-  \url{http://lis.ei.tum.de/pub-download/mirror/opencores/openrisc-toolchain/openrisc-toolchain-ocsvn-rev789.tar.bz2}}
-and extract it to \verb|/opt|.
+
+You can download pre-built packages with the crosscompiler toolchain
+from \url{http://lis.ei.tum.de/pub-download/optimsoc/toolchain}. The
+standard installation directory is \verb|/opt/optimsoc-toolchain| to
+where you need to unzip the latest toolchain. To change the
+installation path you can either build it manually, as described in
+the reference manual, or you can relocate the installation that
+contains static references (untested).
+
+Follow these steps:
 
 \begin{alltt}
 \$> cd /opt
-\$> sudo tar -xjf openrisc-toolchain-ocsvn-rev789.tar.bz2
+\$> mkdir optimsoc-toolchain
+\$> cd optimsoc-toolchain
+\$> wget http://lis.ei.tum.de/pub-download/optimsoc/toolchain/current.tgz
+\$> tar -xjf current.tgz
 \end{alltt}
-
-Next you need our prepacked newlib library. Download the current
-version\footnote{\url{http://lis.ei.tum.de/pub-download/optimsoc/toolchain/newlib/optimsoc-newlib-current.tgz}}
-and extract it to \verb|/opt|.
 
 Set environment (e.g., in \verb|~/.bashrc|):
 
 \begin{alltt}
-export PATH=/opt/openrisc/toolchain/bin:\$\{PATH\}
-export OPTIMSOC_NEWLIB=/opt/optimsoc/newlib
+export PATH=/opt/optimsoc-toolchain/bin:\$\{PATH\}
 \end{alltt}
 
-\subsubsection{Option 2: Build newlib for OpTiMSoC}
+\subsubsection{Option 2: Build the whole toolchain}
 
-Clone the development from the repository to a directory suitable for
-you:
-
-\begin{verbatim}
-$> git clone http://lis.ei.tum.de/git/optimsoc-toolchain.git
-\end{verbatim}
-
-Go to the newlib directory:
-
-\begin{verbatim}
-$> cd optimsoc-toolchain/newlib-1.18.0
-\end{verbatim}
-
-Two different targets need to be build:
-\begin{itemize}
-\item the baremetal library which includes the exception vectors etc.
-  (\verb|newlib-baremetal|).
-\item the library for the (virtual) applications which uses syscalls
-  etc.  (\verb|newlib-virtualapps|)
-\end{itemize}
-
-You will need to build both of them separately. First create a build
-directory for the baremetal, configure and build:
-
-\begin{verbatim}
-$> mkdir build-baremetal; cd build-baremetal
-$> ../configure --target=optimsoc-baremetal \
-    --prefix=/opt/optimsoc/newlib \
-    CC_FOR_TARGET=or32-elf-gcc AR_FOR_TARGET=or32-elf-ar \
-    RANLIB_FOR_TARGET=or32-elf-ranlib
-$> make
-$> make install
-\end{verbatim}
-
-Next you need to build the second version of the newlib. Start from
-the newlib toplevel again:
-
-\begin{verbatim}
-$> mkdir build-virtualapps; cd build-virtualapps
-$> ../configure --target=optimsoc-virtualapps \
-    --prefix=/opt/optimsoc/newlib \
-    CC_FOR_TARGET=or32-elf-gcc AR_FOR_TARGET=or32-elf-ar \
-    RANLIB_FOR_TARGET=or32-elf-ranlib --enable-newlib-multithread
-$> make
-$> make install
-\end{verbatim}
-
-Set environment (e.g., in \verb|~/.bashrc|):
-
-\begin{verbatim}
-export OPTIMSOC_NEWLIB=/opt/optimsoc/newlib
-\end{verbatim}
-
-
-\subsubsection{Option 3: Build the whole toolchain}
-
-In one of the next releases we will have machine support, e.g.,
-\verb|or32-elf-gcc -moptimsoc|.
+Please consider the Reference Guide for information how to build the
+toolchain manually.
 
 \subsection{TCL Environment \& Additional Scripts}
 
@@ -266,8 +209,8 @@ To perform the installation run:
 \begin{verbatim}
 $> mkdir build
 $> cd build
-$> ../configure --prefix=/opt/optimsoc/systemsw/ --host=or32-elf \
-    CC=or32-elf-gcc
+$> ../configure --prefix=/opt/optimsoc/systemsw/ --host=or1k-elf \
+    CC=optimsoc-elf-gcc
 $> make
 $> make install
 \end{verbatim}
