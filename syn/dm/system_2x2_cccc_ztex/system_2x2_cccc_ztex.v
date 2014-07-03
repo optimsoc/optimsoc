@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2014 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,11 +48,12 @@ module system_2x2_cccc_ztex(
 
    /*AUTOARG*/
    // Outputs
-   fx2_sloe, fx2_slrd, fx2_slwr, fx2_pktend, fx2_fifoadr,
+   fx2_sloe_n, fx2_slrd_n, fx2_slwr_n, fx2_pktend_n, fx2_fifoadr,
    // Inouts
    fx2_fd,
    // Inputs
-   clk, rst, fx2_ifclk, fx2_flaga, fx2_flagb, fx2_flagc, fx2_flagd
+   clk, fx2_ifclk, fx2_com_rst, fx2_logic_rst, fx2_flaga_n,
+   fx2_flagb_n, fx2_flagc_n, fx2_flagd_n
    );
 
    // 32 MByte for each of the four compute tiles (128 MByte total)
@@ -76,22 +77,23 @@ module system_2x2_cccc_ztex(
    localparam DBG_NOC_CONF_VCHANNEL = 0;
    localparam DBG_NOC_TRACE_VCHANNEL = 1;
 
-   // Clock and resets inputs
+   // Clock
    input clk;
-   input rst;
 
    // FX2 USB interface
-   input fx2_ifclk;
+   input        fx2_ifclk;
+   input        fx2_com_rst;
+   input        fx2_logic_rst;
    inout [15:0] fx2_fd;
-   output fx2_sloe;
-   output fx2_slrd;
-   output fx2_slwr;
-   output fx2_pktend;
+   output       fx2_sloe_n;
+   output       fx2_slrd_n;
+   output       fx2_slwr_n;
+   output       fx2_pktend_n;
    output [1:0] fx2_fifoadr;
-   input fx2_flaga;
-   input fx2_flagb;
-   input fx2_flagc;
-   input fx2_flagd;
+   input        fx2_flaga_n;
+   input        fx2_flagb_n;
+   input        fx2_flagc_n;
+   input        fx2_flagd_n;
 
    // MCB connection
 `ifdef OPTIMSOC_CTRAM_WIRES
@@ -121,12 +123,6 @@ module system_2x2_cccc_ztex(
    wire sys_clk_disable;
    wire sys_clk_is_halted;
 
-   // split FX2 inout port into separate input and output ports
-   wire [15:0] fx2_fd_in;
-   wire [15:0] fx2_fd_out;
-   assign fx2_fd_in = fx2_fd;
-   assign fx2_fd = (~fx2_slwr ? fx2_fd_out : 16'hz);
-
    // system control
    wire cpu_reset;
    wire cpu_stall;
@@ -145,12 +141,14 @@ module system_2x2_cccc_ztex(
    wire rst_sys;
    wire rst_cpu;
 
+   wire glip_ctrl_logic_rst;
+
    clockmanager_ztex115
 `ifdef OPTIMSOC_CTRAM_WIRES
      #(.ENABLE_DDR_CLOCK(1))
 `endif
       u_clockmanager(.clk     (clk),
-                     .rst     (rst),
+                     .rst     (glip_ctrl_logic_rst),
                      .clk_ct  (clk_sys),
                      .clk_dbg (clk_dbg),
                      .clk_noc (),
@@ -247,35 +245,87 @@ module system_2x2_cccc_ztex(
                // Inputs
                .clk                     (clk_sys),               // Templated
                .rst_sys                 (rst_sys),               // Templated
-               .rst_cpu                 (rst_cpu));              // Templated
+               .rst_cpu                 (rst_cpu));               // Templated
 
-   // USB interface
-   usb_dbg_if
+   // Cypress FX2 USB interface using GLIP
+   wire        glip_fifo_out_valid;
+   wire        glip_fifo_out_ready;
+   wire [15:0] glip_fifo_out_data;
+   wire        glip_fifo_in_valid;
+   wire        glip_fifo_in_ready;
+   wire [15:0] glip_fifo_in_data;
+
+   wire glip_com_rst;
+
+   glip_cypressfx2_toplevel
+      u_glip(// Clock and reset
+             .clk                       (clk_dbg),
+
+             // XXX: Feeding rst_sys to the rst input of GLIP is a workaround
+             // In order to support hot-attach, GLIP has separate communication
+             // and logic reset signals. But resetting the communication also
+             // requires the Debug NoC -> FIFO communication to be reset to a
+             // well-known starting point (i.e. the beginning of a NoC packet).
+             // This is currently not implemented. If the communication starts
+             // in the middle of a packet, there is no way for the receiver to
+             // synchronize to the data stream. As a workaround, we simply
+             // reset the whole system when connecting, thus no hot-attach
+             // capability, and make sure we also reset the communication
+             // interface when the system is reset.
+             .rst                       (rst_sys),
+
+             .com_rst                   (glip_com_rst),
+
+             // FX2 Interface
+             .fx2_sloe_n                (fx2_sloe_n),
+             .fx2_slrd_n                (fx2_slrd_n),
+             .fx2_slwr_n                (fx2_slwr_n),
+             .fx2_pktend_n              (fx2_pktend_n),
+             .fx2_fifoadr               (fx2_fifoadr[1:0]),
+             .fx2_ifclk                 (fx2_ifclk),
+             .fx2_com_rst               (fx2_com_rst),
+             .fx2_logic_rst             (fx2_logic_rst),
+             .fx2_flaga_n               (fx2_flaga_n),
+             .fx2_flagb_n               (fx2_flagb_n),
+             .fx2_flagc_n               (fx2_flagc_n),
+             .fx2_flagd_n               (fx2_flagd_n),
+             .fx2_fd                    (fx2_fd[15:0]),
+
+             // FIFO Interface
+             .fifo_out_ready            (glip_fifo_out_ready),
+             .fifo_in_valid             (glip_fifo_in_valid),
+             .fifo_in_data              (glip_fifo_in_data),
+             .fifo_out_valid            (glip_fifo_out_valid),
+             .fifo_out_data             (glip_fifo_out_data),
+             .fifo_in_ready             (glip_fifo_in_ready),
+
+             // Control interface
+             .ctrl_logic_rst            (glip_ctrl_logic_rst));
+
+   fifo_dbg_if
       #(.DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
         .DBG_NOC_USB_VCHANNEL(DBG_NOC_CONF_VCHANNEL))
-      u_usb(.clk_sys(clk_dbg),
-            .rst(rst_sys),
+      u_fifo_dbg_if(.clk(clk_dbg),
+                    // This module is a "high level protocol" for GLIP, use the
+                    // provided communication reset signal from GLIP; see also
+                    // the comment on u_glip.rst above.
+                    .rst(glip_com_rst),
 
-            // FX2 interface
-            .fx2_clk(fx2_ifclk),
-            .fx2_epout_fifo_empty(fx2_flaga),
-            .fx2_epin_fifo_almost_full(fx2_flagd),
-            .fx2_epin_fifo_full(fx2_flagc),
-            .fx2_slrd(fx2_slrd),
-            .fx2_slwr(fx2_slwr),
-            .fx2_sloe(fx2_sloe),
-            .fx2_pktend(fx2_pktend),
-            .fx2_fifoadr(fx2_fifoadr),
-            .fx2_fd_out(fx2_fd_out),
-            .fx2_fd_in(fx2_fd_in),
+                    // FIFO Interface
+                    .fifo_out_valid     (glip_fifo_out_valid),
+                    .fifo_out_data      (glip_fifo_out_data),
+                    .fifo_in_ready      (glip_fifo_in_ready),
+                    .fifo_out_ready     (glip_fifo_out_ready),
+                    .fifo_in_valid      (glip_fifo_in_valid),
+                    .fifo_in_data       (glip_fifo_in_data),
 
-            // Debug NoC interface
-            .dbgnoc_out_ready(dbgnoc_in_ready),
-            .dbgnoc_out_flit(dbgnoc_in_flit),
-            .dbgnoc_out_valid(dbgnoc_in_valid),
-            .dbgnoc_in_ready(dbgnoc_out_ready),
-            .dbgnoc_in_flit(dbgnoc_out_flit),
-            .dbgnoc_in_valid(dbgnoc_out_valid));
+                    // Debug NoC interface
+                    .dbgnoc_out_ready(dbgnoc_in_ready),
+                    .dbgnoc_out_flit(dbgnoc_in_flit),
+                    .dbgnoc_out_valid(dbgnoc_in_valid),
+                    .dbgnoc_in_ready(dbgnoc_out_ready),
+                    .dbgnoc_in_flit(dbgnoc_out_flit),
+                    .dbgnoc_in_valid(dbgnoc_out_valid));
 
    // debug system
    debug_system
@@ -441,7 +491,7 @@ module system_2x2_cccc_ztex(
            .wbm3_stb_i                  (wb_mem_stb_i[3]),       // Templated
            .wbm3_we_i                   (wb_mem_we_i[3]),        // Templated
            .wbm3_clk_i                  (clk_sys),               // Templated
-           .wbm3_rst_i                  (rst_sys));              // Templated
+           .wbm3_rst_i                  (rst_sys));               // Templated
 `endif
 
    `include "optimsoc_functions.vh"

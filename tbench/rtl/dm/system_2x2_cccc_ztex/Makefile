@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 by the author(s)
+# Copyright (c) 2012-2014 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@ work:
 
 build: work
 	vsim -c -do modelsim_compile.tcl
-	sccom -Wall $(OPTIMSOC)/src/sysc/src/debug/FX2EmulationDebugConnector.cpp \
+	sccom -Wall glip_tcp_toplevel.cpp \
 		-I /usr/include/x86_64-linux-gnu/
 	sccom -link
 

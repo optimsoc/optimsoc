@@ -7,20 +7,23 @@ project -new
 
 optimsoc_inc_dir $SYNDIR
 optimsoc_add_file $SYNDIR/system_2x2_cccc_ztex.ucf
+optimsoc_add_file $SYNDIR/system_2x2_cccc_ztex.sdc
 optimsoc_add_file $SYNDIR/system_2x2_cccc_ztex.fdc
 optimsoc_add_file $SYNDIR/system_2x2_cccc_ztex.v
-optimsoc_add_file $SYNDIR/fifo_usb_dual.ngc
-optimsoc_add_file $SYNDIR/fifo_usb_dual.v
-optimsoc_add_file $SYNDIR/fifo_usb_to_noc.ngc
-optimsoc_add_file $SYNDIR/fifo_usb_to_noc.v
 
 optimsoc_add_file $OPTIMSOC/syn/ipcores/xilinx/ztex_ddr/ztex_1_15_mig_39.edf
 optimsoc_add_file $SYNDIR/system_2x2_cccc_ztex_ddr.ucf
 
+# GLIP communication interface
+optimsoc_add_file $SYNDIR/fx2.ucf
+optimsoc_add_file $SYNDIR/fx2.sdc
+optimsoc_add_file $SYNDIR/glip_cypressfx2_toplevel.v
+optimsoc_add_module cdc
+
 optimsoc_add_module system_2x2_cccc_dm
 optimsoc_add_module debug_system
 optimsoc_add_module clockmanager.ztex115
-optimsoc_add_module usb_dbg_if
+optimsoc_add_module fifo_dbg_if
 optimsoc_add_module xilinx_ddr.ztex
 optimsoc_add_module sram.spartan6
 
@@ -91,7 +94,7 @@ set_option -symbolic_fsm_compiler 1
 set_option -compiler_compatible 0
 set_option -resource_sharing 1
 set_option -multi_file_compilation_unit 1
-set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf"
+set_option -ucf "$SYNDIR/fx2.ucf $SYNDIR/system_2x2_cccc_ztex.ucf"
 
 #automatic place and route (vendor) options
 set_option -write_apr_constraint 1
@@ -168,7 +171,7 @@ set_option -symbolic_fsm_compiler 1
 set_option -compiler_compatible 0
 set_option -resource_sharing 1
 set_option -multi_file_compilation_unit 1
-set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_ddr.ucf"
+set_option -ucf "$SYNDIR/fx2.ucf $SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_ddr.ucf"
 
 #automatic place and route (vendor) options
 set_option -write_apr_constraint 1
@@ -246,7 +249,7 @@ set_option -symbolic_fsm_compiler 1
 set_option -compiler_compatible 0
 set_option -resource_sharing 1
 set_option -multi_file_compilation_unit 1
-set_option -ucf "$SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_ddr.ucf"
+set_option -ucf "$SYNDIR/fx2.ucf $SYNDIR/system_2x2_cccc_ztex.ucf $SYNDIR/system_2x2_cccc_ztex_ddr.ucf"
 
 #automatic place and route (vendor) options
 set_option -write_apr_constraint 1
