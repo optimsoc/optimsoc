@@ -53,6 +53,13 @@ void optimsoc_log(struct optimsoc_log_ctx *ctx,
     va_end(args);
 }
 
+void optimsoc_vlog(struct optimsoc_log_ctx *ctx,
+                   int priority, const char *file, int line, const char *fn,
+                   const char *format, va_list args)
+{
+    ctx->log_fn(ctx, priority, file, line, fn, format, args);
+}
+
 /**
  * Default logging function: log to STDERR
  */

@@ -60,6 +60,10 @@ void optimsoc_log(struct optimsoc_log_ctx *ctx,
                   const char *format, ...)
                   __attribute__((format(printf, 6, 7)));
 
+void optimsoc_vlog(struct optimsoc_log_ctx *ctx,
+                   int priority, const char *file, int line, const char *fn,
+                   const char *format, va_list args);
+
 void optimsoc_log_set_log_fn(struct optimsoc_log_ctx *ctx,
                              optimsoc_log_fn log_fn);
 int optimsoc_log_get_priority(struct optimsoc_log_ctx *ctx);

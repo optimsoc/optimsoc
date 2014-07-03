@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2014 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,17 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-#include <stdio.h>
+
+#include <assert.h>
+#include <errno.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <assert.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "backend_dbgnoc.h"
-#include "backend_dbgnoc_usb.h"
-#include "backend_dbgnoc_tcp.h"
 
 const int NUM_SAMPLES_PER_TRANSFER = 256;
 
@@ -63,6 +63,11 @@ const int MEM_WRITE_ACK_TIMEOUT = 60;
  * Timeout in seconds for register reads
  */
 const int REGISTER_READ_TIMEOUT = 60;
+
+/**
+ * Timeout in milliseconds to read data from the NoC (i.e. the GLIP backend)
+ */
+const int NOC_DATA_READ_TIMEOUT = 2*1000;
 /**
  * Expect the answer for a register read request with in this number of
  * packets, otherwise the read is considered to have failed.
@@ -170,11 +175,23 @@ struct optimsoc_backend_ctx {
     /** system information */
     struct optimsoc_sysinfo *sysinfo;
 
-    /** Connection context */
-    struct ob_dbgnoc_connection_ctx *conn_ctx;
-
-    struct ob_dbgnoc_connection_interface *conn_calls;
+    /** GLIP context */
+    struct glip_ctx *glip_ctx;
 };
+
+/**
+ * Forward GLIP debug messages to liboptimsochost's log system
+ *
+ * This function is registered as log handler in GLIP and simply forwards
+ * all messages.
+ */
+void ob_dbgnoc_glip_log(struct glip_ctx *gctx, int priority,
+                        const char *file, int line, const char *fn,
+                        const char *format, va_list args)
+{
+    struct optimsoc_backend_ctx *octx = glip_get_caller_ctx(gctx);
+    optimsoc_vlog(octx->log_ctx, priority, file, line, fn, format, args);
+}
 
 int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
                   struct optimsoc_backend_interface *calls,
@@ -210,7 +227,7 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
     c->log_ctx = log_ctx;
     c->sysinfo = NULL;
 
-    /* set the common calls */
+    /* set the backend calls */
     calls->cpu_stall = &ob_dbgnoc_cpu_stall;
     calls->cpu_reset = &ob_dbgnoc_cpu_reset;
     calls->itm_register_callback = &ob_dbgnoc_itm_register_callback;
@@ -230,29 +247,37 @@ int ob_dbgnoc_new(struct optimsoc_backend_ctx **ctx,
     calls->itm_refresh_config = &ob_dbgnoc_itm_refresh_config;
     calls->stm_refresh_config = &ob_dbgnoc_stm_refresh_config;
 
-    c->conn_calls = calloc(1, sizeof(struct ob_dbgnoc_connection_interface));
-
-    /* initialize the connection context */
+    /*
+     * XXX: reusing options is not really safe as its definition of the options
+     * struct might change over time. Find a better solution here!
+     */
     switch (connid) {
     case OPTIMSOC_DBGNOC_USB:
-        rv = ob_dbgnoc_usb_new(&c->conn_ctx, c->conn_calls, log_ctx,
-                               num_options, options);
+        rv = glip_new(&c->glip_ctx, "cypressfx2", (struct glip_option*)options, num_options);
         break;
     case OPTIMSOC_DBGNOC_TCP:
-        rv = ob_dbgnoc_tcp_new(&c->conn_ctx, c->conn_calls, log_ctx,
-                               num_options, options);
+        rv = glip_new(&c->glip_ctx, "tcp", (struct glip_option*)options, num_options);
         break;
     default:
         rv = -1;
         break;
     }
+    if (rv != 0) {
+        err(c->log_ctx, "Unable to initialize GLIP for connection: %d\n", rv);
+        return -1;
+    }
 
-    return rv;
+    /* setup GLIP logging to go through liboptimsochost logging */
+    glip_set_caller_ctx(c->glip_ctx, c);
+    glip_set_log_priority(c->glip_ctx, optimsoc_log_get_priority(c->log_ctx));
+    glip_set_log_fn(c->glip_ctx, ob_dbgnoc_glip_log);
+
+    return 0;
 }
 
 int ob_dbgnoc_free(struct optimsoc_backend_ctx *ctx)
 {
-    ctx->conn_calls->free(ctx->conn_ctx);
+    glip_free(ctx->glip_ctx);
 
     if (ctx->rcv_lisnoc16_pkg.flit_data) {
         free(ctx->rcv_lisnoc16_pkg.flit_data);
@@ -274,7 +299,7 @@ int ob_dbgnoc_connect(struct optimsoc_backend_ctx *ctx)
 {
     int rv;
 
-    rv = ctx->conn_calls->connect(ctx->conn_ctx);
+    rv = glip_open(ctx->glip_ctx, 1);
     if (rv < 0) {
         return rv;
     }
@@ -322,7 +347,7 @@ int ob_dbgnoc_disconnect(struct optimsoc_backend_ctx *ctx)
     /* XXX: This cannot be non-zero at this point, but better safe than sorry! */
     ctx->signal_rcv_lisnoc16_pkg = 0;
 
-    int rv = ctx->conn_calls->disconnect(ctx->conn_ctx);
+    int rv = glip_close(ctx->glip_ctx);
     if (rv < 0) {
         return rv;
     }
@@ -332,12 +357,17 @@ int ob_dbgnoc_disconnect(struct optimsoc_backend_ctx *ctx)
 
 int ob_dbgnoc_connected(struct optimsoc_backend_ctx *ctx)
 {
-    return ctx->conn_calls->connected(ctx->conn_ctx);
+    return glip_is_connected(ctx->glip_ctx);
 }
 
 int ob_dbgnoc_reset(struct optimsoc_backend_ctx *ctx)
 {
-    ctx->conn_calls->reset(ctx->conn_ctx);
+    int rv = glip_logic_reset(ctx->glip_ctx);
+    if (rv != 0) {
+        return rv;
+    }
+    /* wait 100 ms for the system to be reset */
+    usleep(100*1000);
     return 0;
 }
 
@@ -612,22 +642,28 @@ void* receive_thread(void* ctx_void)
                                              sizeof(uint32_t));
 
     while (1) {
-        /* clear buffer */
-        for (int i=NUM_SAMPLES_PER_TRANSFER; i<2*NUM_SAMPLES_PER_TRANSFER; i++) {
-            buffer_rx[i] = 0;
+        /* clear lower part of the buffer */
+        memset(&buffer_rx[NUM_SAMPLES_PER_TRANSFER], 0,
+               NUM_SAMPLES_PER_TRANSFER);
+
+        /* read data from GLIP */
+        size_t bytes_read;
+        rv = glip_read_b(ctx->glip_ctx, 0, NUM_SAMPLES_PER_TRANSFER * 2,
+                         (uint8_t*)&buffer_rx[NUM_SAMPLES_PER_TRANSFER],
+                         &bytes_read,
+                         NOC_DATA_READ_TIMEOUT);
+        if (bytes_read == 0 && rv == -ETIMEDOUT) {
+            /* timed out with no data read -- try again */
+            continue;
         }
-
-        rv = ctx->conn_calls->read_fn(ctx->conn_ctx,
-                                      buffer_rx + NUM_SAMPLES_PER_TRANSFER,
-                                      NUM_SAMPLES_PER_TRANSFER);
-
-        if (rv < 0) {
-            /* probably a timeout, i.e. no data to read. try again. */
+        if (rv != 0 && rv != -ETIMEDOUT) {
+            err(ctx->log_ctx, "Unable to read data from GLIP backend. "
+                "rv = %d\n", rv);
             continue;
         }
 
 #ifdef DEBUG_DUMP_DATA
-        fprintf(stderr, "Received %d data bytes from backend:\n  ", rv);
+        fprintf(stderr, "Received %zu data bytes from backend:\n  ", bytes_read);
         for (int i=NUM_SAMPLES_PER_TRANSFER; i<2*NUM_SAMPLES_PER_TRANSFER; i++) {
             fprintf(stderr, "%04x  ", buffer_rx[i]);
             if ((i-NUM_SAMPLES_PER_TRANSFER) % 12 == 11) fprintf(stderr, "\n  ");
@@ -656,6 +692,16 @@ void* receive_thread(void* ctx_void)
                  * packet. Copy this block to the first half of the buffer and
                  * adjust the position pointers. The new block will be written
                  * to the second half of the buffer.
+                 *
+                 * XXX: This transfer in blocks is rather unflexible and causes
+                 * problems with chunked/partial transfers. Better use a real
+                 * FIFO here, e.g. cbuf from GLIP.
+                 * Currently, the OpTiMSoC debug system always sends us a whole
+                 * block of 256 samples; we only need to ensure that we receive
+                 * the whole block before processing it. This is why we have a
+                 * rather large timeout value on glip_read_b() above (in the
+                 * area of seconds). If we switch to a proper FIFO, we can
+                 * reduce this timeout to something more sensible (e.g. 10 ms).
                  */
                 for (int copy_pos=0; copy_pos<NUM_SAMPLES_PER_TRANSFER;
                      copy_pos++) {
@@ -986,7 +1032,6 @@ int lisnoc16_send_packets(struct optimsoc_backend_ctx *ctx,
                           struct lisnoc16_packet packets[], int length)
 {
     int length_transfer;
-    int length_transfer_rounded;
     uint16_t* data_transfer;
     int rv;
 
@@ -1010,14 +1055,7 @@ int lisnoc16_send_packets(struct optimsoc_backend_ctx *ctx,
         length_transfer += packets[i].len + 1;
     }
 
-    /*
-     * we can only transfer in blocks of NUM_SAMPLES_PER_TRANSFER bytes
-     */
-    length_transfer_rounded = ((length_transfer /
-                                NUM_SAMPLES_PER_TRANSFER)
-                               + 1) * NUM_SAMPLES_PER_TRANSFER;
-
-    data_transfer = calloc(length_transfer_rounded, sizeof(uint16_t));
+    data_transfer = calloc(length_transfer, sizeof(uint16_t));
     if (!data_transfer) {
         rv = -ENOMEM;
         goto free_return;
@@ -1033,29 +1071,31 @@ int lisnoc16_send_packets(struct optimsoc_backend_ctx *ctx,
         }
     }
 
-    dbg(ctx->log_ctx, "Transferring %d samples over backend for %d payload "
-                      "words.\n", length_transfer_rounded, length_transfer);
+    dbg(ctx->log_ctx, "Transferring %d payload words.\n", length_transfer);
 
 
 #ifdef DEBUG_DUMP_DATA
-    fprintf(stderr, "Sending %d samples:\n  ", length_transfer_rounded);
-    for (int i=0; i<length_transfer_rounded; i++) {
+    fprintf(stderr, "Sending %d payload words:\n  ", length_transfer);
+    for (int i=0; i<length_transfer; i++) {
         fprintf(stderr, "%04x  ", data_transfer[i]);
         if (i % 12 == 11) fprintf(stderr, "\n  ");
     }
     fprintf(stderr, "\n");
 #endif
 
-    for (int i = 0; i < length_transfer_rounded / NUM_SAMPLES_PER_TRANSFER; i++) {
-        int ret = ctx->conn_calls->write_fn(ctx->conn_ctx,
-                                            &data_transfer[i*NUM_SAMPLES_PER_TRANSFER],
-                                            NUM_SAMPLES_PER_TRANSFER);
-
-        if (ret < 0) {
-            err(ctx->log_ctx, "Transfer failed.\n");
-            rv = -1;
-            goto free_return;
+    size_t bytes_written;
+    int ret = glip_write_b(ctx->glip_ctx, 0,
+                           length_transfer * 2 /* uint16 -> uint8 */,
+                           (uint8_t*)data_transfer, &bytes_written, 0);
+    if (ret != 0) {
+        if (ret == -ETIMEDOUT) {
+            err(ctx->log_ctx, "Transfer timed out, %zu of %d bytes written.",
+                bytes_written, length_transfer * 2);
+        } else {
+            err(ctx->log_ctx, "Transfer failed: %d\n", ret);
         }
+        rv = -1;
+        goto free_return;
     }
 
     rv = 0;

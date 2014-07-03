@@ -201,9 +201,6 @@ void optimsoc_set_log_priority(struct optimsoc_ctx *ctx, int priority)
 /**
  * Connect to the OpTiMSoC system via backend.
  *
- * Note: This resets the whole system after connection.
- *
- * \todo Reset only the communication infrastructure and not the whole system.
  * \ingroup lib
  */
 OPTIMSOC_EXPORT
@@ -405,10 +402,6 @@ int optimsoc_mem_write(struct optimsoc_ctx *ctx, unsigned int memory_id,
 
 /**
  * Reset the whole system
- *
- * This is done using a special control message, that triggers custom code
- * in the ztex firmware, that in turn triggers the a reset pin of the FPGA.
- * All send/receive FIFOs of the FX2 chip are cleared as well.
  *
  * \param ctx library context
  *

@@ -1,9 +1,9 @@
 AC_PREREQ(2.60)
 AC_INIT([optimsochost],
         [0.1],
-        [mail@philipp-wagner.com],
+        [philipp.wagner@tum.de],
         [optimsochost],
-        [http://www.lis.ei.tum.de/?id=optimsoc])
+        [http://www.optimsoc.org])
 AC_CONFIG_SRCDIR([src/liboptimsochost.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax no-dist-gzip dist-xz subdir-objects])
@@ -44,23 +44,10 @@ AS_IF([test "x$enable_debug" = "xyes"], [
     AC_DEFINE(DEBUG, [1], [Debug messages.])
 ])
 
-# check for libusb 1.0
-#
-# The libusb function libusb_error_string() was introduced with libusb 1.0.9.
-# To enable compilation with older libusb versions, we can use a fallback
-# implementation if libusb is too old.
-# XXX: Replace with a proper feature test instead of testing for the version
-#      number.
-PKG_CHECK_MODULES([libusb], [libusb-1.0 > 1.0.8],
-[
-    AC_DEFINE(LIBUSB_HAS_ERROR_STRING, [1], [Define to 1 if libusb has libusb_error_string() function.])
-],
-[
-    PKG_CHECK_MODULES([libusb], [libusb-1.0 > 1.0.0])
-])
-AC_SUBST([libusb_CFLAGS])
-AC_SUBST([libusb_LIBS])
-
+# check for GLIP
+PKG_CHECK_MODULES([libglip], [libglip >= 0.1])
+AC_SUBST([libglip_CFLAGS])
+AC_SUBST([libglip_LIBS])
 
 # check for libreadline
 AC_CHECK_LIB([readline], [readline], [
@@ -94,14 +81,14 @@ AM_CFLAGS="-Wall \
     -ffunction-sections \
     -fdata-sections \
     -pthread \
-    ${libusb_CFLAGS}"
+    ${libglip_CFLAGS}"
 AC_SUBST([AM_CFLAGS])
 
 AM_LDFLAGS="-Wl,--gc-sections \
     -Wl,--as-needed \
     -pthread \
     -lrt \
-    ${libusb_LIBS}"
+    ${libglip_LIBS}"
 AC_SUBST(AM_LDFLAGS)
 
 AC_CONFIG_HEADERS(config.h)

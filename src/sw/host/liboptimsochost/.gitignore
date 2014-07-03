@@ -11,6 +11,7 @@ Makefile.in
 /stamp-h1
 /INSTALL
 /*.pc
+/configure
 
 # Eclipse project files
 /.project

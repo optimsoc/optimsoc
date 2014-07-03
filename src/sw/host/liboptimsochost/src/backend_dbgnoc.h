@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2014 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,13 @@
 #define _BACKEND_DBGNOC_H_
 
 #include <inttypes.h>
+#include <libglip.h>
 #include <pthread.h>
 
 #include <optimsochost/liboptimsochost.h>
 #include "log.h"
 #include "backends.h"
+
 
 extern const int DBG_NOC_ADDR_TCM; /* from liboptimsochost.c */
 
@@ -102,16 +104,6 @@ int ob_dbgnoc_mem_write(struct optimsoc_backend_ctx *ctx,
                         const uint8_t* data, unsigned int data_len);
 int ob_dbgnoc_cpu_stall(struct optimsoc_backend_ctx *ctx, int do_stall);
 int ob_dbgnoc_cpu_reset(struct optimsoc_backend_ctx *ctx);
-
-int lisnoc16_send_packets(struct optimsoc_backend_ctx *ctx,
-                          struct lisnoc16_packet packets[], int length);
-int lisnoc32_send_packets(struct optimsoc_backend_ctx *ctx,
-                          struct lisnoc32_packet packets[], int length);
-void* receive_thread(void* ctx_void);
-int register_read(struct optimsoc_backend_ctx *ctx, int module_addr,
-                  int reg_addr, int burst_len, uint16_t *data);
-int register_write(struct optimsoc_backend_ctx *ctx, int module_addr,
-                   int reg_addr, int burst_len, const uint16_t *data);
 int ob_dbgnoc_itm_register_callback(struct optimsoc_backend_ctx *ctx,
                                     optimsoc_itm_cb cb);
 int ob_dbgnoc_nrm_register_callback(struct optimsoc_backend_ctx *ctx,
@@ -129,4 +121,17 @@ int ob_dbgnoc_stm_refresh_config(struct optimsoc_backend_ctx *ctx,
                                  struct optimsoc_dbg_module *dbg_module);
 int ob_dbgnoc_mam_get_config(struct optimsoc_backend_ctx *ctx);
 
+/* private functions */
+int lisnoc16_send_packets(struct optimsoc_backend_ctx *ctx,
+                          struct lisnoc16_packet packets[], int length);
+int lisnoc32_send_packets(struct optimsoc_backend_ctx *ctx,
+                          struct lisnoc32_packet packets[], int length);
+void* receive_thread(void* ctx_void);
+int register_read(struct optimsoc_backend_ctx *ctx, int module_addr,
+                  int reg_addr, int burst_len, uint16_t *data);
+int register_write(struct optimsoc_backend_ctx *ctx, int module_addr,
+                   int reg_addr, int burst_len, const uint16_t *data);
+void ob_dbgnoc_glip_log(struct glip_ctx *gctx, int priority,
+                        const char *file, int line, const char *fn,
+                        const char *format, va_list args);
 #endif /* _BACKEND_DBGNOC_H_ */

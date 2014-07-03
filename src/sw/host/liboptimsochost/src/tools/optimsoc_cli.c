@@ -262,6 +262,12 @@ static void connect(optimsoc_backend_id backend,
         exit(EXIT_FAILURE);
     }
 
+    err = optimsoc_reset(ctx);
+    if (err < 0) {
+        printf("Unable to reset to target system.\n");
+        exit(EXIT_FAILURE);
+    }
+
     err = optimsoc_discover_system(ctx);
     if (err < 0) {
         printf("System discovery failed.\n");

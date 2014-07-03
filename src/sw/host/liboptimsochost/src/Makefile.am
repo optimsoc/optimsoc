@@ -32,9 +32,7 @@ liboptimsochost_la_SOURCES =\
 	liboptimsochost.c \
 	log.c \
 	backend_simtcp.c \
-	backend_dbgnoc.c \
-	backend_dbgnoc_tcp.c \
-	backend_dbgnoc_usb.c
+	backend_dbgnoc.c
 
 liboptimsochost_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 liboptimsochost_la_CPPFLAGS = $(AM_CPPFLAGS) -include $(top_builddir)/config.h
