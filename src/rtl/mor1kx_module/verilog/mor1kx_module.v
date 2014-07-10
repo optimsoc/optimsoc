@@ -143,7 +143,7 @@ module mor1kx_module (
    wire dbg_stall_o;
 
    mor1kx
-     #(.FEATURE_DATACACHE               ("ENABLED"),
+     #(.FEATURE_DATACACHE               ("DISABLED"),
        .OPTION_DCACHE_LIMIT_WIDTH	(31),
        .FEATURE_INSTRUCTIONCACHE        ("ENABLED"),
        .OPTION_DCACHE_WAYS              (1),

@@ -83,7 +83,7 @@ module compute_tile_dm(
 
    input cpu_stall;
 
-   output [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace;
+   output [`DEBUG_TRACE_EXEC_WIDTH*CORES-1:0] trace;
 
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    input [31:0]  wb_mam_adr_o;
@@ -229,6 +229,7 @@ module compute_tile_dm(
           .pic_ints_i     (pic_ints_i[c]),
           .snoop_enable_i (snoop_enable),
           .snoop_adr_i    (snoop_adr),
+          .trace          (trace[`DEBUG_TRACE_EXEC_WIDTH*(c+1)-1:`DEBUG_TRACE_EXEC_WIDTH*c]),
           ); */
          mor1kx_module
                #(.ID(c))
@@ -257,7 +258,7 @@ module compute_tile_dm(
                  .dwb_dat_o             (busms_dat_o[c*2+1][31:0]), // Templated
                  .dwb_bte_o             (busms_bte_o[c*2+1][1:0]), // Templated
                  .dwb_cti_o             (busms_cti_o[c*2+1][2:0]), // Templated
-                 .trace                 (trace[`DEBUG_TRACE_EXEC_WIDTH-1:0]),
+                 .trace                 (trace[`DEBUG_TRACE_EXEC_WIDTH*(c+1)-1:`DEBUG_TRACE_EXEC_WIDTH*c]), // Templated
                  // Inputs
                  .clk_i                 (clk),                   // Templated
                  .bus_clk_i             (clk),                   // Templated
