@@ -152,7 +152,7 @@ module system_2x2_cccc_dm(
          compute_tile_dm
             #(.ID(i),
               .CORES(CORES),
-              .COREBASE(0),
+              .COREBASE(i*CORES),
               .MEM_SIZE(MEM_SIZE),
               .MEM_FILE(MEM_FILE))
             u_ct(// Outputs
