@@ -100,28 +100,26 @@
 `define MAX_DBGNOC_TO_USB_PACKET_LENGTH 32
 
 /*
- * +--------+-----------------+
- * | enable | program counter |
- * +--------+-----------------+
- *     32     31             0
+ * This is the execution traceport in a single signal
+ *
+ * Bit 102: enable
+ * Bit 101-70: program counter
+ * Bit 69-38: instruction
+ * Bit 37: writeback enable
+ * Bit 36-32: writeback register
+ * Bit 31-0: writeback data
  */
-`define DEBUG_ITM_PORTWIDTH 33
-
-/*
- * +--------+-------------+-----------+-------------+---------+
- * | enable | instruction | writeback | wb register | wb data |
- * +--------+-------------+-----------+-------------+---------+
- *     70     69       38      37       36       32   31    0
- */
-`define DEBUG_STM_PORTWIDTH 71
-`define DEBUG_STM_ENABLE_MSB 70
-`define DEBUG_STM_ENABLE_LSB 70
-`define DEBUG_STM_INSN_MSB   69
-`define DEBUG_STM_INSN_LSB   38
-`define DEBUG_STM_WB_MSB     37
-`define DEBUG_STM_WB_LSB     37
-`define DEBUG_STM_WBREG_MSB  36
-`define DEBUG_STM_WBREG_LSB  32
-`define DEBUG_STM_WBDATA_MSB 31
-`define DEBUG_STM_WBDATA_LSB  0
+`define DEBUG_TRACE_EXEC_WIDTH      103
+`define DEBUG_TRACE_EXEC_ENABLE_MSB 102
+`define DEBUG_TRACE_EXEC_ENABLE_LSB 102
+`define DEBUG_TRACE_EXEC_PC_MSB     101
+`define DEBUG_TRACE_EXEC_PC_LSB     70
+`define DEBUG_TRACE_EXEC_INSN_MSB   69
+`define DEBUG_TRACE_EXEC_INSN_LSB   38
+`define DEBUG_TRACE_EXEC_WBEN_MSB   37
+`define DEBUG_TRACE_EXEC_WBEN_LSB   37
+`define DEBUG_TRACE_EXEC_WBREG_MSB  36
+`define DEBUG_TRACE_EXEC_WBREG_LSB  32
+`define DEBUG_TRACE_EXEC_WBDATA_MSB 31
+`define DEBUG_TRACE_EXEC_WBDATA_LSB  0
 

@@ -58,9 +58,10 @@ int sc_main(int argc, char *argv[])
 
     VerilatedSTM stm("STM", &debugconn);
     debugconn.registerDebugModule(&stm);
-    stm.setEnable(&ct.v->trace_stm_enable[0]);
-    stm.setInsn(&ct.v->trace_stm_insn[0]);
-    stm.setR3(&ct.v->trace_stm_r3[0]);
+    stm.setEnable(&ct.v->trace_enable[0]);
+    stm.setInsn(&ct.v->trace_insn[0]);
+    stm.setPC(&ct.v->trace_pc[0]);
+    stm.setR3(&ct.v->trace_r3[0]);
     stm.setCoreId(0);
 
     stm.clk(clk);

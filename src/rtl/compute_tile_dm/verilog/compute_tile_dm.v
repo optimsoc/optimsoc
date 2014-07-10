@@ -31,12 +31,6 @@
 `include "dbg_config.vh"
 
 module compute_tile_dm(
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   trace_itm,
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   trace_stm,
-`endif
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    wb_mam_adr_o, wb_mam_cyc_o, wb_mam_dat_o, wb_mam_sel_o, wb_mam_stb_o,
    wb_mam_we_o, wb_mam_cab_o, wb_mam_cti_o, wb_mam_bte_o, wb_mam_ack_i,
@@ -50,7 +44,7 @@ module compute_tile_dm(
 `endif
    /*AUTOARG*/
    // Outputs
-   noc_in_ready, noc_out_flit, noc_out_valid,
+   noc_in_ready, noc_out_flit, noc_out_valid, trace,
    // Inputs
    clk, rst_cpu, rst_sys, noc_in_flit, noc_in_valid, noc_out_ready,
    cpu_stall
@@ -89,12 +83,8 @@ module compute_tile_dm(
 
    input cpu_stall;
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   output [`DEBUG_ITM_PORTWIDTH-1:0] trace_itm;
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   output [`DEBUG_STM_PORTWIDTH-1:0] trace_stm;
-`endif
+   output [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace;
+
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    input [31:0]  wb_mam_adr_o;
    input         wb_mam_cyc_o;
@@ -243,12 +233,6 @@ module compute_tile_dm(
          mor1kx_module
                #(.ID(c))
          u_core (
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-                 .trace_itm                  (trace_itm[`DEBUG_ITM_PORTWIDTH-1:0]),
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-                 .trace_stm                  (trace_stm[`DEBUG_STM_PORTWIDTH-1:0]),
-`endif
                  /*AUTOINST*/
                  // Outputs
                  .dbg_lss_o             (),                      // Templated
@@ -273,6 +257,7 @@ module compute_tile_dm(
                  .dwb_dat_o             (busms_dat_o[c*2+1][31:0]), // Templated
                  .dwb_bte_o             (busms_bte_o[c*2+1][1:0]), // Templated
                  .dwb_cti_o             (busms_cti_o[c*2+1][2:0]), // Templated
+                 .trace                 (trace[`DEBUG_TRACE_EXEC_WIDTH-1:0]),
                  // Inputs
                  .clk_i                 (clk),                   // Templated
                  .bus_clk_i             (clk),                   // Templated

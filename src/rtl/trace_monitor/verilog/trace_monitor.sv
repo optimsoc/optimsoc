@@ -127,17 +127,32 @@ module trace_monitor(/*AUTOARG*/
                     is_newline <= 0;
                  end
               end // case: 16'h0004
-              16'h0023: begin
-                 case (wb_pc[11:8])
-                   1: $display("[%t, %0d] Software reset", $time, ID);
-                   default: $display("[%t, %0d] Exception #%d occured", $time, ID, wb_pc[11:8]);
-                 endcase
-              end
               default: begin
                  $display("[%t, %0d] Event 0x%x: 0x%x", $time, ID, wb_insn[15:0], r3);
               end
             endcase
+         end // if (wb_insn[31:16] == 16'h1500)
+         else if ((wb_pc[31:12] == 0) && (wb_pc[7:0] == 0)) begin
+            case (wb_pc[11:8])
+              1: $display("[%t, %0d] Software reset", $time, ID);
+              2: $display("[%t, %0d] Bus error exception", $time, ID);
+              3: $display("[%t, %0d] Data page fault exception", $time, ID);
+              4: $display("[%t, %0d] Instruction page fault exception", $time, ID);
+              5: $display("[%t, %0d] Tick timer interrupt exception", $time, ID);
+              6: $display("[%t, %0d] Alignment exception", $time, ID);
+              7: $display("[%t, %0d] Illegal instruction exception", $time, ID);
+              8: $display("[%t, %0d] External interrupt exception", $time, ID);
+              9: $display("[%t, %0d] D-TLB miss exception", $time, ID);
+              10: $display("[%t, %0d] I-TLB miss exception", $time, ID);
+              11: $display("[%t, %0d] Range exception", $time, ID);
+              12: $display("[%t, %0d] System call exception", $time, ID);
+              13: $display("[%t, %0d] Trap exception", $time, ID);
+            endcase
+         end // if ((wb_pc[31:12] == 0) && (wb_pc[7:0] == 0))
+         else if (wb_insn[31:0] == 32'h24000000) begin
+            $display("[%t, %0d] Return from exception", $time, ID);
          end
+
       end // if (enable)
    end
 

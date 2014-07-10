@@ -55,6 +55,9 @@ public:
     {
         m_insn = wb_insn;
     }
+    void setPC(uint32_t *pc) {
+        m_pc = pc;
+    }
     void setEnable(uint8_t *enable)
     {
         m_enable = enable;
@@ -67,6 +70,7 @@ public:
 private:
     uint32_t m_coreid;
     uint32_t *m_insn;
+    uint32_t *m_pc;
     uint8_t *m_enable;
     uint32_t *m_r3;
 };

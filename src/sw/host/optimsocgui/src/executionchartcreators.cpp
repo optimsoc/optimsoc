@@ -50,6 +50,48 @@ unsigned int ExecutionChartSectionCreator::addTrace(SoftwareTraceEvent *event)
     switch(event->id) {
     case 0x1:
         createSection(event->timestamp, event->timestamp, -1, "Exited");
+        break;
+    case 0x10:
+        m_inException = true;
+        switch (event->value) {
+        case 0x1:
+            createSection(event->timestamp, event->timestamp, -1, "System start");
+            break;
+        case 0x2:
+            createSection(event->timestamp, event->timestamp, -1, "Bus fault");
+            break;
+        case 0x3:
+            createSection(event->timestamp, event->timestamp, -1, "Data page fault");
+            break;
+        case 0x4:
+            createSection(event->timestamp, event->timestamp, -1, "Insn page fault");
+            break;
+        case 0x5:
+            createSection(event->timestamp, event->timestamp, -1, "Timer exception");
+            break;
+        case 0x6:
+            createSection(event->timestamp, event->timestamp, -1, "Alignment exception");
+            break;
+        case 0x7:
+            createSection(event->timestamp, event->timestamp, -1, "Illegal instruction");
+            break;
+        case 0x8:
+            createSection(event->timestamp, event->timestamp, -1, "Interrupt");
+            break;
+        case 0x9:
+            createSection(event->timestamp, event->timestamp, -1, "Data TLB miss");
+            break;
+        case 0xa:
+            createSection(event->timestamp, event->timestamp, -1, "Instruction TLB miss");
+            break;
+        case 0xb:
+            createSection(event->timestamp, event->timestamp, -1, "Range exception");
+            break;
+        case 0xc:
+            createSection(event->timestamp, event->timestamp, -1, "Syscall");
+            break;
+        }
+        break;
     case 0x20:
         m_currentSectionDefinition = event->value;
         break;
@@ -75,7 +117,7 @@ unsigned int ExecutionChartSectionCreator::addTrace(SoftwareTraceEvent *event)
     case 0x23:
         // Activate exception handling for the sections
         m_handleExceptions = true;
-    case 0x24:
+    case 0x11:
         // Return from exception
         if (m_handleExceptions && m_inException) {
             if (m_sectionNames.find(m_activeSection) != m_sectionNames.end()) {
@@ -88,59 +130,11 @@ unsigned int ExecutionChartSectionCreator::addTrace(SoftwareTraceEvent *event)
         break;
     case 0x25:
         c = event->value & 0xff;
-        if (m_globalSectionNames.find(m_currentSectionDefinition) == m_sectionNames.end()) {
+        if (m_globalSectionNames.find(m_currentSectionDefinition) == m_globalSectionNames.end()) {
             m_globalSectionNames[m_currentSectionDefinition] = c;
         } else {
             m_globalSectionNames[m_currentSectionDefinition] += c;
         }
-        break;
-    case 0x31:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "System start");
-        break;
-    case 0x32:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Bus fault");
-        break;
-    case 0x33:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Data page fault");
-        break;
-    case 0x34:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Insn page fault");
-        break;
-    case 0x35:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Timer exception");
-        break;
-    case 0x36:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Alignment exception");
-        break;
-    case 0x37:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Illegal instruction");
-        break;
-    case 0x38:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Interrupt");
-        break;
-    case 0x39:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Data TLB miss");
-        break;
-    case 0x3a:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Instruction TLB miss");
-        break;
-    case 0x3b:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Range exception");
-        break;
-    case 0x3c:
-        m_inException = true;
-        createSection(event->timestamp, event->timestamp, -1, "Syscall");
         break;
     default:
         break;

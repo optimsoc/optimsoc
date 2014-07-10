@@ -166,8 +166,7 @@ module system_2x2_cccc_ztex(
                      .sys_halt (sys_clk_disable),
                      .sys_is_halted (sys_clk_is_halted));
 
-   wire [`DEBUG_ITM_PORTWIDTH*4-1:0] trace_itm;
-   wire [`DEBUG_STM_PORTWIDTH*4-1:0] trace_stm;
+   wire [`DEBUG_TRACE_EXEC_WIDTH*4-1:0] trace;
 
 
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
@@ -213,12 +212,7 @@ module system_2x2_cccc_ztex(
       #(.MEM_SIZE(MEM_SIZE),
         .MEM_FILE(MEM_FILE))
       u_system(
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-               .trace_itm                  (trace_itm[4*`DEBUG_ITM_PORTWIDTH-1:0]),
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-               .trace_stm                  (trace_stm[4*`DEBUG_STM_PORTWIDTH-1:0]),
-`endif
+               .trace                  (trace[4*`DEBUG_TRACE_EXEC_WIDTH-1:0]),
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
                .wb_mam_ack_i               (wb_mam_ack_i),
                .wb_mam_rty_i               (wb_mam_rty_i),
@@ -318,12 +312,8 @@ module system_2x2_cccc_ztex(
                    .start_cpu           (start_cpu),
                    .sys_clk_is_halted   (sys_clk_is_halted),
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-                   .itm_ports_flat      (trace_itm),
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-                   .stm_ports_flat      (trace_stm),
-`endif
+                   .trace_ports_flat      (trace),
+
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
                    .wb_mam_ack_i        (wb_mam_ack_i),
                    .wb_mam_rty_i        (wb_mam_rty_i),

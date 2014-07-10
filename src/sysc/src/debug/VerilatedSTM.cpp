@@ -61,7 +61,7 @@ protected:
 
 VerilatedSTM::VerilatedSTM(sc_module_name name, DebugConnector *dbgconn) :
         DebugModule(name, dbgconn), m_insn(NULL), m_enable(NULL),
-        m_coreid(0), m_r3(NULL)
+        m_coreid(0), m_r3(NULL), m_pc(NULL)
 {
     SC_METHOD(monitor);
     sensitive << clk.neg();
@@ -89,6 +89,7 @@ uint16_t VerilatedSTM::read(uint16_t address, uint16_t *size, char** data)
 
 void VerilatedSTM::monitor()
 {
+    assert(m_pc && m_insn && m_enable);
     STMTracePacket packet;
     packet.coreid = m_coreid;
     if (*m_enable == 0) {
@@ -104,5 +105,17 @@ void VerilatedSTM::monitor()
             packet.value = val;
             m_dbgconn->sendTrace(this, packet);
         }
+    } else if (*m_insn == 0x24000000) {
+        packet.timestamp = sc_time_stamp().value() / 1000;
+        packet.id = 0x11;
+        packet.value = *m_pc;
+        m_dbgconn->sendTrace(this, packet);
+    } else if (((*m_pc & 0xf00) != 0) &&
+               ((*m_pc & 0xff) == 0) &&
+               ((*m_pc & 0xfffff000) == 0)) {
+            packet.timestamp = sc_time_stamp().value() / 1000;
+            packet.id = 0x10;
+            packet.value = (*m_pc & 0xf00) >> 8;
+            m_dbgconn->sendTrace(this, packet);
     }
 }

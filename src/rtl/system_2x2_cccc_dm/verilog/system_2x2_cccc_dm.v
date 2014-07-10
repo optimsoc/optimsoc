@@ -33,12 +33,6 @@
 `include "dbg_config.vh"
 
 module system_2x2_cccc_dm(
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   trace_itm,
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   trace_stm,
-`endif
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    wb_mam_adr_o, wb_mam_cyc_o, wb_mam_dat_o, wb_mam_sel_o, wb_mam_stb_o,
    wb_mam_we_o, wb_mam_cab_o, wb_mam_cti_o, wb_mam_bte_o, wb_mam_ack_i,
@@ -51,6 +45,8 @@ module system_2x2_cccc_dm(
    wb_mem_dat_o,
 `endif
    /*AUTOARG*/
+   // Outputs
+   trace,
    // Inputs
    clk, rst_sys, rst_cpu
    );
@@ -69,12 +65,8 @@ module system_2x2_cccc_dm(
 
    input clk, rst_sys, rst_cpu;
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   output [`DEBUG_ITM_PORTWIDTH*4-1:0] trace_itm;
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   output [`DEBUG_STM_PORTWIDTH*4-1:0] trace_stm;
-`endif
+   output [`DEBUG_TRACE_EXEC_WIDTH*4-1:0] trace;
+
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    input [4*32-1:0]   wb_mam_adr_o;
    input [4*1-1:0]    wb_mam_cyc_o;
@@ -152,7 +144,7 @@ module system_2x2_cccc_dm(
              .link2_out_ready_i         (link_in_ready[2]),      // Templated
              .link3_in_flit_i           (link_out_flit[3]),      // Templated
              .link3_in_valid_i          (link_out_valid[3]),     // Templated
-             .link3_out_ready_i         (link_in_ready[3]));      // Templated
+             .link3_out_ready_i         (link_in_ready[3]));     // Templated
 
    genvar i;
    generate
@@ -164,12 +156,7 @@ module system_2x2_cccc_dm(
               .MEM_SIZE(MEM_SIZE),
               .MEM_FILE(MEM_FILE))
             u_ct(// Outputs
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-                 .trace_itm                  (trace_itm[(`DEBUG_ITM_PORTWIDTH*(i+1))-1:`DEBUG_ITM_PORTWIDTH*i]),
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-                 .trace_stm                  (trace_stm[(`DEBUG_STM_PORTWIDTH*(i+1))-1:`DEBUG_STM_PORTWIDTH*i]),
-`endif
+                 .trace                      (trace[(`DEBUG_TRACE_EXEC_WIDTH*(i+1))-1:`DEBUG_TRACE_EXEC_WIDTH*i]),
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
                  .wb_mam_ack_i               (wb_mam_ack_i[i]),
                  .wb_mam_rty_i               (wb_mam_rty_i[i]),

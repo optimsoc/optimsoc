@@ -72,7 +72,7 @@ module stm(
    // from the Global Timestamp Provider (GTP)
    input [`DBG_TIMESTAMP_WIDTH-1:0] timestamp;
 
-   input [`DEBUG_STM_PORTWIDTH-1:0] trace_port;
+   input [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace_port;
 
    // Debug NoC interface
    output [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_out_flit;
@@ -86,19 +86,6 @@ module stm(
    output sys_clk_disable;
    input  sys_clk_is_halted;
    
-   // Control signals from the traced CPU core
-   wire [4:0]  rf_addrw;
-   wire [31:0] rf_dataw;
-   wire        rf_we;
-   wire        cpu_wb_freeze;
-   wire [31:0] cpu_wb_insn;
-
-   assign rf_addrw      = trace_port[`DEBUG_STM_WBREG_MSB:`DEBUG_STM_WBREG_LSB];
-   assign rf_dataw      = trace_port[`DEBUG_STM_WBDATA_MSB:`DEBUG_STM_WBDATA_LSB];
-   assign rf_we         = trace_port[`DEBUG_STM_WB_MSB:`DEBUG_STM_WB_LSB];
-   assign cpu_wb_freeze = !trace_port[`DEBUG_STM_ENABLE_MSB:`DEBUG_STM_ENABLE_LSB];
-   assign cpu_wb_insn   = trace_port[`DEBUG_STM_INSN_MSB:`DEBUG_STM_INSN_LSB];
-      
    // connection wires between the individual modules
    wire [`DBG_TIMESTAMP_WIDTH+32+16-1:0] trace;
    wire                                  trace_valid;
@@ -106,19 +93,16 @@ module stm(
    wire                                  trace_delayed_valid;
   
    stm_trace_collector
-      u_trace_collector(.clk(clk),
-                        .rst(rst),
+      u_trace_collector(.clk            (clk),
+                        .rst            (rst),
 `ifdef OPTIMSOC_CLOCKDOMAINS
-                        .clk_cdc (clk_cdc),
+                        .clk_cdc        (clk_cdc),
 `endif
-                        .trace_out(trace),
-                        .trace_enable(trace_valid),
-                        .rf_addrw(rf_addrw),
-                        .rf_dataw(rf_dataw),
-                        .rf_we(rf_we),
-                        .cpu_wb_insn(cpu_wb_insn),
-                        .cpu_wb_freeze(cpu_wb_freeze|sys_clk_is_halted), 
-                        .timestamp(timestamp));
+                        .trace_out      (trace),
+                        .trace_enable   (trace_valid),
+                        .trace_port     (trace_port),
+                        .sys_clk_halted (sys_clk_is_halted),
+                        .timestamp      (timestamp));
 
    stm_data_sr
      #(.DELAY_CYCLES(`DBG_TRIGGER_DELAY),

@@ -29,18 +29,12 @@
  */
 
 module mor1kx_module (
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-                      trace_itm,
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-                      trace_stm,
-`endif
    /*AUTOARG*/
    // Outputs
    dbg_lss_o, dbg_is_o, dbg_wp_o, dbg_bp_o, dbg_dat_o, dbg_ack_o,
    iwb_cyc_o, iwb_adr_o, iwb_stb_o, iwb_we_o, iwb_sel_o, iwb_dat_o,
    iwb_bte_o, iwb_cti_o, dwb_cyc_o, dwb_adr_o, dwb_stb_o, dwb_we_o,
-   dwb_sel_o, dwb_dat_o, dwb_bte_o, dwb_cti_o,
+   dwb_sel_o, dwb_dat_o, dwb_bte_o, dwb_cti_o, trace,
    // Inputs
    clk_i, bus_clk_i, rst_i, bus_rst_i, dbg_stall_i, dbg_ewt_i,
    dbg_stb_i, dbg_we_i, dbg_adr_i, dbg_dat_i, pic_ints_i, iwb_ack_i,
@@ -108,41 +102,21 @@ module mor1kx_module (
    input           snoop_enable_i;
    input [31:0]    snoop_adr_i;
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   output [`DEBUG_ITM_PORTWIDTH-1:0] trace_itm;
-`endif
+   output [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace;
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   output [`DEBUG_STM_PORTWIDTH-1:0] trace_stm;
-`endif
+   wire [31:0] 				traceport_exec_insn_o;// From u_cpu of mor1kx.v
+   wire [31:0] 				traceport_exec_pc_o;	// From u_cpu of mor1kx.v
+   wire 				traceport_exec_valid_o;	// From u_cpu of mor1kx.v
+   wire [31:0] 				traceport_exec_wbdata_o;// From u_cpu of mor1kx.v
+   wire 				traceport_exec_wben_o;	// From u_cpu of mor1kx.v
+   wire [4:0] 				traceport_exec_wbreg_o;// From u_cpu of mor1kx.v
 
-   wire [31:0] traceport_exec_insn_o;// From u_cpu of mor1kx.v
-   wire [31:0]		traceport_exec_pc_o;	// From u_cpu of mor1kx.v
-   wire			traceport_exec_valid_o;	// From u_cpu of mor1kx.v
-   wire [31:0]		traceport_exec_wbdata_o;// From u_cpu of mor1kx.v
-   wire			traceport_exec_wben_o;	// From u_cpu of mor1kx.v
-   wire [4:0] 		traceport_exec_wbreg_o;// From u_cpu of mor1kx.v
-
-   /*
-    * +-------+-----------------+
-    * | valid | program counter |
-    * +-------+-----------------+
-    */
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   assign trace_itm = { traceport_exec_valid_o, traceport_exec_pc_o };
-`endif
-
-   /*
-    * +-------+-------------+-----------+----------+------+
-    * | valid | instruction | writeback | register | data |
-    * +-------+-------------+-----------+----------+------+
-    */
-
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   assign trace_stm = { traceport_exec_valid_o, traceport_exec_insn_o, 
-			traceport_exec_wben_o, traceport_exec_wbreg_o,
-			traceport_exec_wbdata_o };
-`endif
+   assign trace[`DEBUG_TRACE_EXEC_ENABLE_MSB] = traceport_exec_valid_o;
+   assign trace[`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB] = traceport_exec_pc_o;
+   assign trace[`DEBUG_TRACE_EXEC_INSN_MSB:`DEBUG_TRACE_EXEC_INSN_LSB] = traceport_exec_insn_o;
+   assign trace[`DEBUG_TRACE_EXEC_WBEN_MSB] = traceport_exec_wben_o;
+   assign trace[`DEBUG_TRACE_EXEC_WBREG_MSB:`DEBUG_TRACE_EXEC_WBREG_LSB] = traceport_exec_wbreg_o;
+   assign trace[`DEBUG_TRACE_EXEC_WBDATA_MSB:`DEBUG_TRACE_EXEC_WBDATA_LSB] = traceport_exec_wbdata_o;
 
    wire            core_ack_i;  // normal termination
    wire            core_err_i;  // termination w/ error
@@ -200,6 +174,7 @@ module mor1kx_module (
 
    mor1kx
      #(.FEATURE_DATACACHE               ("ENABLED"),
+       .OPTION_DCACHE_LIMIT_WIDTH	(31),
        .FEATURE_INSTRUCTIONCACHE        ("ENABLED"),
        .OPTION_DCACHE_WAYS              (1),
        .OPTION_ICACHE_WAYS              (1),

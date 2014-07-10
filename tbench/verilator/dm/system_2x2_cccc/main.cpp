@@ -64,9 +64,10 @@ int sc_main(int argc, char *argv[])
       
       VerilatedSTM * stm = new VerilatedSTM(stm_name, &debugconn);
       debugconn.registerDebugModule(stm);
-      stm->setEnable(&system.v->trace_stm_enable[i]);
-      stm->setInsn(&system.v->trace_stm_insn[i]);
-      stm->setR3(&system.v->trace_stm_r3[i]);
+      stm->setEnable(&system.v->trace_enable[i]);
+      stm->setInsn(&system.v->trace_insn[i]);
+      stm->setPC(&system.v->trace_pc[i]);
+      stm->setR3(&system.v->trace_r3[i]);
       stm->setCoreId(i);
 
       stm->clk(clk);

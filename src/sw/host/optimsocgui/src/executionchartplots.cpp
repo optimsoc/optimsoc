@@ -54,22 +54,13 @@ ExecutionChartPlotCore::ExecutionChartPlotCore(QCPAxis *keyaxis, QCPAxis *valuea
     ExecutionChartSectionCreator *section =
             new ExecutionChartSectionCreator(this);
     m_traceCreators[0x1].push_back(section);
+    m_traceCreators[0x10].push_back(section);
     m_traceCreators[0x20].push_back(section);
     m_traceCreators[0x21].push_back(section);
     m_traceCreators[0x22].push_back(section);
     m_traceCreators[0x23].push_back(section);
     m_traceCreators[0x24].push_back(section);
     m_traceCreators[0x25].push_back(section);
-    m_traceCreators[0x31].push_back(section);
-    m_traceCreators[0x32].push_back(section);
-    m_traceCreators[0x33].push_back(section);
-    m_traceCreators[0x34].push_back(section);
-    m_traceCreators[0x35].push_back(section);
-    m_traceCreators[0x36].push_back(section);
-    m_traceCreators[0x37].push_back(section);
-    m_traceCreators[0x38].push_back(section);
-    m_traceCreators[0x39].push_back(section);
-    m_traceCreators[0x3a].push_back(section);
     m_creators.append(section);
     m_creatorLayers.insert(LayerSections, section);
 

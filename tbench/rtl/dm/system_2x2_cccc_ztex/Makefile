@@ -29,7 +29,7 @@ work:
 
 build: work
 	vsim -c -do modelsim_compile.tcl
-	sccom -Wall $(OPTIMSOC_SYSC)/src/debug/FX2EmulationDebugConnector.cpp \
+	sccom -Wall $(OPTIMSOC)/src/sysc/src/debug/FX2EmulationDebugConnector.cpp \
 		-I /usr/include/x86_64-linux-gnu/
 	sccom -link
 

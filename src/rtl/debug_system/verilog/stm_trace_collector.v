@@ -40,8 +40,7 @@ module stm_trace_collector(
    // Outputs
    trace_out, trace_enable,
    // Inputs
-   clk, rst, rf_addrw, rf_dataw, rf_we, cpu_wb_insn, cpu_wb_freeze,
-   timestamp
+   clk, rst, trace_port, timestamp, sys_clk_halted
    );
 
    localparam R3_ADDR = 3; // R3
@@ -51,6 +50,11 @@ module stm_trace_collector(
    localparam L_NOP_LSB = 16'h0000; // 16'h0000 indicates a normal NOP without
                                     // any debugging purpose
 
+   localparam L_RFE = 32'h24000000;
+
+   localparam STM_INDEX_EXCEPTION = 16'h10;
+   localparam STM_INDEX_RFE = 16'h11;
+
    localparam TRACE_WIDTH = `DBG_TIMESTAMP_WIDTH+32+16;
 
    input clk;
@@ -59,20 +63,30 @@ module stm_trace_collector(
    input clk_cdc;
 `endif
 
-
-   // Control signals from the traced CPU core
-   input [4:0] rf_addrw;
-   input [31:0] rf_dataw;
-   input        rf_we;
-   input [31:0] cpu_wb_insn;
-   input        cpu_wb_freeze;
+   input [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace_port;
 
    // from the Global Timestamp Provider (GTP)
    input [`DBG_TIMESTAMP_WIDTH-1:0] timestamp;
 
    // to the ring buffer
-   output [TRACE_WIDTH-1:0] trace_out;
-   output                                  trace_enable;
+   output [TRACE_WIDTH-1:0]         trace_out;
+   output                           trace_enable;
+
+   input                            sys_clk_halted;
+
+   wire                             trace_port_enable;
+   wire [31:0]                      trace_port_pc;
+   wire [31:0]                      trace_port_insn;
+   wire                             trace_port_wb_en;
+   wire [4:0]                       trace_port_wb_reg;
+   wire [31:0]                      trace_port_wb_data;
+
+   assign trace_port_enable  = trace_port[`DEBUG_TRACE_EXEC_ENABLE_MSB];
+   assign trace_port_pc      = trace_port[`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB];
+   assign trace_port_insn    = trace_port[`DEBUG_TRACE_EXEC_INSN_MSB:`DEBUG_TRACE_EXEC_INSN_LSB];
+   assign trace_port_wb_en   = trace_port[`DEBUG_TRACE_EXEC_WBEN_MSB];
+   assign trace_port_wb_reg  = trace_port[`DEBUG_TRACE_EXEC_WBREG_MSB:`DEBUG_TRACE_EXEC_WBREG_LSB];
+   assign trace_port_wb_data = trace_port[`DEBUG_TRACE_EXEC_WBDATA_MSB:`DEBUG_TRACE_EXEC_WBDATA_LSB];
 
    wire                                 clk_sample;
 `ifdef OPTIMSOC_CLOCKDOMAINS
@@ -115,9 +129,9 @@ module stm_trace_collector(
       if (rst) begin
          r3_data <= 0;
       end else begin
-         if (rf_we && (rf_addrw == R3_ADDR)) begin
+         if (trace_port_enable && trace_port_wb_en && (trace_port_wb_reg == R3_ADDR)) begin
             // latch new value of R3
-            r3_data <= rf_dataw;
+            r3_data <= trace_port_wb_data;
          end else begin
             // keep old value of R3
             r3_data <= r3_data;
@@ -130,12 +144,23 @@ module stm_trace_collector(
          trace_out_cdc <= {TRACE_WIDTH{1'bx}};
          trace_enable_cdc <= 0;
       end else begin
-         if ((cpu_wb_insn [31:16] == L_NOP_MSB) && (cpu_wb_insn[15:0]!= L_NOP_LSB) && !cpu_wb_freeze) begin
-            // system is running
-            // l.nop with debugging information detected
-            // trace value of r3 and LSB of l.nop
-            trace_out_cdc <={timestamp, r3_data, cpu_wb_insn[15:0]};
-            trace_enable_cdc <= 1;
+         if (trace_port_enable && !sys_clk_halted) begin
+            if ((trace_port_pc[31:12] == 20'h0) &&
+                (trace_port_pc[7:0] == 8'h0)) begin
+               trace_out_cdc <= {timestamp, {28'h0, trace_port_pc[11:8]}, STM_INDEX_EXCEPTION};
+               trace_enable_cdc <= 1;
+            end else if ((trace_port_insn[31:16] == L_NOP_MSB) && (trace_port_insn[15:0]!= L_NOP_LSB)) begin
+               // system is running
+               // l.nop with debugging information detected
+               // trace value of r3 and LSB of l.nop
+               trace_out_cdc <= {timestamp, r3_data, trace_port_insn[15:0]};
+               trace_enable_cdc <= 1;
+            end else if (trace_port_insn[31:0] == L_RFE) begin
+               trace_out_cdc <= {timestamp, 32'h0, STM_INDEX_RFE};
+            end else begin
+               trace_out_cdc <= {TRACE_WIDTH{1'bx}};
+               trace_enable_cdc <= 0;
+            end
          end else begin
             trace_out_cdc <= {TRACE_WIDTH{1'bx}};
             trace_enable_cdc <= 0;

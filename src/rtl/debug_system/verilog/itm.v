@@ -76,7 +76,7 @@ module itm(
    // from the Global Timestamp Provider (GTP)
    input [`DBG_TIMESTAMP_WIDTH-1:0] timestamp;
 
-   input [`DEBUG_ITM_PORTWIDTH-1:0] trace_port;
+   input [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace_port;
 
    // Debug NoC interface
    output [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_out_flit;
@@ -97,8 +97,8 @@ module itm(
    // Control signals from the traced CPU core
    wire [31:0] cpu_wb_pc;
    wire        cpu_wb_freeze;
-   assign cpu_wb_pc = trace_port[31:0];
-   assign cpu_wb_freeze = !trace_port[32] | sys_clk_is_halted;
+   assign cpu_wb_pc = trace_port[`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB];
+   assign cpu_wb_freeze = !trace_port[`DEBUG_TRACE_EXEC_ENABLE_MSB] | sys_clk_is_halted;
 
    // connection wires between the individual modules
    wire [`DBG_TIMESTAMP_WIDTH+32-1:0] uncompressed_trace;

@@ -32,14 +32,12 @@
 `include "lisnoc_def.vh"
 `include "optimsoc_def.vh"
 
+`include "dbg_config.vh"
+
 module system_4x4_c_dm(
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   trace_itm,
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   trace_stm,
-`endif
    /*AUTOARG*/
+   // Outputs
+   trace,
    // Inputs
    clk, rst_sys, rst_cpu
    );
@@ -57,12 +55,7 @@ module system_4x4_c_dm(
 
    input clk, rst_sys, rst_cpu;
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   output [`DEBUG_ITM_PORTWIDTH*16-1:0] trace_itm;
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   output [`DEBUG_STM_PORTWIDTH*16-1:0] trace_stm;
-`endif
+   output [`DEBUG_TRACE_EXEC_WIDTH*16-1:0] trace;
 
    // Flits from NoC->tiles
    wire [NOC_FLIT_WIDTH-1:0] link_in_flit[0:15];
@@ -182,7 +175,7 @@ module system_4x4_c_dm(
              .link14_out_ready_i        (link_in_ready[14]),     // Templated
              .link15_in_flit_i          (link_out_flit[15]),     // Templated
              .link15_in_valid_i         (link_out_valid[15]),    // Templated
-             .link15_out_ready_i        (link_in_ready[15]));     // Templated
+             .link15_out_ready_i        (link_in_ready[15]));    // Templated
 
    genvar i;
    generate
@@ -192,12 +185,7 @@ module system_4x4_c_dm(
               .MEM_SIZE(MEM_SIZE),
               .MEM_FILE(MEM_FILE))
             u_ct(// Outputs
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-                 .trace_itm                  (trace_itm[(`DEBUG_ITM_PORTWIDTH*(i+1))-1:`DEBUG_ITM_PORTWIDTH*i]),
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-                 .trace_stm                  (trace_stm[(`DEBUG_STM_PORTWIDTH*(i+1))-1:`DEBUG_STM_PORTWIDTH*i]),
-`endif
+                 .trace                      (trace[(`DEBUG_TRACE_EXEC_WIDTH*(i+1))-1:`DEBUG_TRACE_EXEC_WIDTH*i]),
                  .noc_in_ready               (link_in_ready[i][VCHANNELS-1:0]),
                  .noc_out_flit               (link_out_flit[i][NOC_FLIT_WIDTH-1:0]),
                  .noc_out_valid              (link_out_valid[i][VCHANNELS-1:0]),

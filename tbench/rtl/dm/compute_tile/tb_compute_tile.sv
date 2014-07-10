@@ -58,35 +58,36 @@ module tb_compute_tile();
 
    parameter NUMCORES = 1;
 
-   wire [`DEBUG_ITM_PORTWIDTH-1:0] trace_itm;
-   wire [`DEBUG_STM_PORTWIDTH-1:0] trace_stm;
+   wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace;
 
-   wire [`DEBUG_STM_PORTWIDTH-1:0] trace_stm_array  [0:NUMCORES-1]; 
-   wire                            trace_stm_enable [0:NUMCORES-1];
-   wire [31:0]                     trace_stm_insn   [0:NUMCORES-1];
-   wire                            trace_stm_wben   [0:NUMCORES-1];
-   wire [4:0]                      trace_stm_wbreg  [0:NUMCORES-1];
-   wire [31:0]                     trace_stm_wbdata [0:NUMCORES-1];
-   wire [31:0]                     trace_stm_r3     [0:NUMCORES-1];
+   wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace_array [0:NUMCORES-1];
+   wire                            trace_enable   [0:NUMCORES-1];
+   wire [31:0]                     trace_insn     [0:NUMCORES-1];
+   wire [31:0]                     trace_pc       [0:NUMCORES-1];
+   wire                            trace_wben     [0:NUMCORES-1];
+   wire [4:0]                      trace_wbreg    [0:NUMCORES-1];
+   wire [31:0]                     trace_wbdata   [0:NUMCORES-1];
+   wire [31:0]                     trace_r3       [0:NUMCORES-1];
 
    genvar                          i;
    
    generate
       for (i = 0; i < NUMCORES; i++) begin
-         assign trace_stm_array[i] = trace_stm[(i+1)*`DEBUG_STM_PORTWIDTH-1:`DEBUG_STM_PORTWIDTH*i];
-         assign trace_stm_enable[i] = trace_stm_array[i][`DEBUG_STM_ENABLE_MSB:`DEBUG_STM_ENABLE_LSB];
-         assign trace_stm_insn[i] = trace_stm_array[i][`DEBUG_STM_INSN_MSB:`DEBUG_STM_INSN_LSB];
-         assign trace_stm_wben[i] = trace_stm_array[i][`DEBUG_STM_WB_MSB:`DEBUG_STM_WB_LSB];
-         assign trace_stm_wbreg[i] = trace_stm_array[i][`DEBUG_STM_WBREG_MSB:`DEBUG_STM_WBREG_LSB];
-         assign trace_stm_wbdata[i] = trace_stm_array[i][`DEBUG_STM_WBDATA_MSB:`DEBUG_STM_WBDATA_LSB];
+         assign trace_array[i] = trace[(i+1)*`DEBUG_TRACE_EXEC_WIDTH-1:`DEBUG_TRACE_EXEC_WIDTH*i];
+         assign trace_enable[i] = trace_array[i][`DEBUG_TRACE_EXEC_ENABLE_MSB:`DEBUG_TRACE_EXEC_ENABLE_LSB];
+         assign trace_insn[i] = trace_array[i][`DEBUG_TRACE_EXEC_INSN_MSB:`DEBUG_TRACE_EXEC_INSN_LSB];
+         assign trace_pc[i] = trace_array[i][`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB];
+         assign trace_wben[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBEN_MSB:`DEBUG_TRACE_EXEC_WBEN_LSB];
+         assign trace_wbreg[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBREG_MSB:`DEBUG_TRACE_EXEC_WBREG_LSB];
+         assign trace_wbdata[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBDATA_MSB:`DEBUG_TRACE_EXEC_WBDATA_LSB];
 
          r3_checker
            u_r3_checker(.clk(clk),
-                        .valid(trace_stm_enable[i]),
-                        .we (trace_stm_wben[i]),
-                        .addr (trace_stm_wbreg[i]),
-                        .data (trace_stm_wbdata[i]),
-                        .r3 (trace_stm_r3[i]));
+                        .valid(trace_enable[i]),
+                        .we (trace_wben[i]),
+                        .addr (trace_wbreg[i]),
+                        .data (trace_wbdata[i]),
+                        .r3 (trace_r3[i]));
       end
    endgenerate
 
@@ -99,8 +100,7 @@ module tb_compute_tile();
                      .noc_in_ready      (noc_in_ready[VCHANNELS-1:0]),
                      .noc_out_flit      (noc_out_flit[NOC_FLIT_WIDTH-1:0]),
                      .noc_out_valid     (noc_out_valid[VCHANNELS-1:0]),
-                     .trace_itm         (trace_itm),
-                     .trace_stm         (trace_stm),
+                     .trace             (trace),
                      // Inputs
                      .clk               (clk),
                      .rst_cpu           (rst_cpu),
@@ -113,10 +113,10 @@ module tb_compute_tile();
    wire termination;
 
    /* trace_monitor AUTO_TEMPLATE(
-    .enable  (trace_stm_enable[0]),
-    .wb_pc   (trace_itm[31:0]),
-    .wb_insn (trace_stm_insn[0]),
-    .r3      (trace_stm_r3[0]),
+    .enable  (trace_enable[0]),
+    .wb_pc   (trace_pc[0]),
+    .wb_insn (trace_insn[0]),
+    .r3      (trace_r3[0]),
     .supv    (),
     .termination  (termination),
     .termination_all (termination),
@@ -130,10 +130,10 @@ module tb_compute_tile();
              .termination               (termination),           // Templated
              // Inputs
              .clk                       (clk),
-             .enable                    (trace_stm_enable[0]),   // Templated
-             .wb_pc                     (trace_itm[31:0]),       // Templated
-             .wb_insn                   (trace_stm_insn[0]),     // Templated
-             .r3                        (trace_stm_r3[0]),       // Templated
+             .enable                    (trace_enable[0]),       // Templated
+             .wb_pc                     (trace_pc[0]),           // Templated
+             .wb_insn                   (trace_insn[0]),         // Templated
+             .r3                        (trace_r3[0]),           // Templated
              .termination_all           (termination));          // Templated
 
 

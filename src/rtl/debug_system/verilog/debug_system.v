@@ -46,12 +46,6 @@ module debug_system(
                     noc32_in_ready, noc32_out_flit, noc32_out_valid,
                     noc32_in_flit, noc32_in_valid, noc32_out_ready,
 `endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-                    itm_ports_flat,
-`endif
-`ifdef OPTIMSOC_DEBUG_ENABLE_STM
-                    stm_ports_flat,
-`endif
 `ifdef OPTIMSOC_DEBUG_ENABLE_NRM
                     nrm_ports_flat,
 `endif
@@ -79,7 +73,7 @@ module debug_system(
    sys_clk_disable, cpu_stall, cpu_reset, start_cpu,
    // Inputs
    clk, rst, dbgnoc_in_flit, dbgnoc_in_valid, dbgnoc_out_ready,
-   sys_clk_is_halted
+   trace_ports_flat, sys_clk_is_halted
    );
 
    // ITM: number of debugged CPU cores
@@ -209,20 +203,15 @@ module debug_system(
  `endif
 `endif
 
-   // ITM: CPU core debugging interface
-`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
-   input [DEBUG_ITM_CORE_COUNT*`DEBUG_ITM_PORTWIDTH-1:0] itm_ports_flat;
- `ifdef OPTIMSOC_CLOCKDOMAINS
-   input [DEBUG_ITM_CORE_COUNT-1:0]                      clk_itm;
- `endif
-`endif
+   input [DEBUG_STM_CORE_COUNT*`DEBUG_TRACE_EXEC_WIDTH-1:0] trace_ports_flat;
 
-   // STM: CPU core debugging interface
+`ifdef OPTIMSOC_CLOCKDOMAINS
+`ifdef OPTIMSOC_DEBUG_ENABLE_ITM
+   input [DEBUG_ITM_CORE_COUNT-1:0]                      clk_itm;
+`endif
 `ifdef OPTIMSOC_DEBUG_ENABLE_STM
-   input [DEBUG_STM_CORE_COUNT*`DEBUG_STM_PORTWIDTH-1:0] stm_ports_flat;
- `ifdef OPTIMSOC_CLOCKDOMAINS
    input [DEBUG_ITM_CORE_COUNT-1:0]                      clk_stm;
- `endif
+`endif
 `endif
 
    // NRM: NoC Router data
@@ -475,7 +464,7 @@ module debug_system(
 
                .trigger_out(), // FIXME: connect to CTM
 
-               .trace_port(itm_ports_flat[(i+1)*`DEBUG_ITM_PORTWIDTH-1:i*`DEBUG_ITM_PORTWIDTH]),
+               .trace_port(trace_ports_flat[(i+1)*`DEBUG_TRACE_EXEC_WIDTH-1:i*`DEBUG_TRACE_EXEC_WIDTH]),
                .sys_clk_is_halted (sys_clk_is_halted),
                .trigger_in (1'b0),
 
@@ -507,10 +496,10 @@ module debug_system(
 
                .timestamp(timestamp),
 
-               .trace_port(stm_ports_flat[(i+1)*`DEBUG_STM_PORTWIDTH-1:i*`DEBUG_STM_PORTWIDTH]),
+               .trace_port(trace_ports_flat[(i+1)*`DEBUG_TRACE_EXEC_WIDTH-1:i*`DEBUG_TRACE_EXEC_WIDTH]),
                .sys_clk_is_halted (sys_clk_is_halted),
 
-               .sys_clk_disable(sys_clk_disable_sub[DEBUG_ITM_CORE_COUNT+i]));
+               .sys_clk_disable(sys_clk_disable_sub[DEBUG_STM_CORE_COUNT+i]));
       end // for (i=0;i<DEBUG_STM_CORE_COUNT;i=i+1)
    endgenerate
 `endif
