@@ -29,7 +29,7 @@ AC_INIT([optimsoc-baremetal-libs],
         [http://www.optimsoc.org])
 
 
-AC_CONFIG_SRCDIR([src/libbaremetal/critical.c])
+AC_CONFIG_SRCDIR([src/libbaremetal/util.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax no-dist-gzip dist-xz subdir-objects])
 
