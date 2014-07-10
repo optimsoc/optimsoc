@@ -143,6 +143,14 @@ static inline unsigned int optimsoc_get_relcoreid(void) {
     return or1k_mfspr(SPR_COREID);
 }
 
+static inline unsigned int optimsoc_get_tilenumcores(void) {
+    return or1k_mfspr(SPR_NUMCORES);
+}
+
+static inline unsigned int optimsoc_get_abscoreid(void) {
+    return REG32(OPTIMSOC_NA_CONF_COREBASE) + optimsoc_get_relcoreid();
+}
+
 /**
  * Get the number of compute tiles
  *
