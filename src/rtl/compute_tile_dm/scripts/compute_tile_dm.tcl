@@ -9,7 +9,5 @@ optimsoc_add_module sram.plain
 optimsoc_add_module debug_system.mam_wb_adapter
 optimsoc_add_module wb_interconnect.bus
 
-optimsoc_add_module wb_cas_unit
-
 optimsoc_inc_dir $LISNOC_RTL
 optimsoc_inc_dir $OPTIMSOC_RTL/debug_system/verilog
