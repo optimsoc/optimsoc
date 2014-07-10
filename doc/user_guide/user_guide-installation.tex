@@ -14,10 +14,10 @@ Throughout this document some packages are required in your Linux
 distribution. OpTiMSoC should principally work on all common Linux
 distributions. In case you encounter problems in your system we highly
 encourage you to contact the OpTiMSoC maintainers to fix these
-problems. Nevertheless, we recommend Ubuntu 12.04 LTS as development
-system and can ensure OpTiMSoC will work on it as we also work on it.
-In the following we will refer to Ubuntu/Debian commands to install
-packages, that will run under Ubuntu 12.04 LTS.
+problems. Nevertheless, we recommend Ubuntu 12.04 or 14.04 LTS as
+development system and can ensure OpTiMSoC will work on it as we also
+work on it. In the following we will refer to Ubuntu/Debian commands
+to install packages, that will run under Ubuntu 12.04 and 14.04 LTS.
 
 Independent of the components you plan to use, you will need some
 packages to be installed:
@@ -95,16 +95,17 @@ With the environment variables set, you can start using OpTiMSoC.
 
 \section{OpTiMSoC Installation Path}
 
-As mentioned before, some libraries and tools need to be built and
-then also installed. Those are used for all platforms you then create
-from the source tree.
+As mentioned before, some parts of OpTiMSoC (libraries and tools) need
+to be built and then also installed. Those are common for different
+platforms you create.
 
 You can install the files whereever you want as some environment
 variables (\verb|PATH|, \verb|PKG_CONFIG_PATH|, etc.) help finding
-them. Throughout this document we will use
+them. Throughout this document we use the environment variable
+\verb|OPTIMSOC_INSTALLATION|, which we recommend to be set to
 
 \begin{alltt}
-/opt/optimsoc
+export OPTIMSOC_INSTALLATION=/opt/optimsoc
 \end{alltt}
 
 as installation path.
@@ -112,8 +113,8 @@ as installation path.
 \section{OpTiMSoC Toolchain}
 
 The toolchain of OpTiMSoC currently consists of the standard OpenRISC
-crosscompiler and a newlib port (based on the OpenRISC newlib) plus a
-few small utility programs and scripts.
+crosscompiler with multicore extensions plus a few small utility
+programs and scripts.
 
 \subsection{Prerequisites}
 
@@ -127,28 +128,23 @@ $> sudo apt-get install libgmp3c2
 \subsection{Compiler and C Library}
 
 In most cases you will not need to build the entire toolchain from
-scratch, because two options are available:
-
-\begin{itemize}
-\item Download the entire toolchain
-\item Build everything from scratch
-\end{itemize}
+scratch, but download the pre-compiled toolchain.
 
 \subsubsection{Option 1: Download the entire toolchain}
 
 You can download pre-built packages with the crosscompiler toolchain
 from \url{http://lis.ei.tum.de/pub-download/optimsoc/toolchain}. The
-standard installation directory is \verb|/opt/optimsoc-toolchain| to
+standard installation directory is \verb|/opt/optimsoc/toolchain| to
 where you need to unzip the latest toolchain. To change the
-installation path you can either build it manually, as described in
-the reference manual, or you can relocate the installation that
-contains static references (untested).
+installation path you can either build it manually as described in the
+reference manual, or you can relocate the installation that contains
+static references (untested).
 
 Follow these steps:
 
 \begin{alltt}
-\$> cd /opt
-\$> mkdir optimsoc-toolchain
+\$> cd /opt/optimsoc
+\$> mkdir toolchain
 \$> cd optimsoc-toolchain
 \$> wget http://lis.ei.tum.de/pub-download/optimsoc/toolchain/current.tgz
 \$> tar -xjf current.tgz
