@@ -1387,7 +1387,10 @@ module mor1kx_cpu_cappuccino
 	       traceport_exec_insn_o <= traceport_stage_exec_insn;
 	    end
 
-	    traceport_exec_pc_o <= pc_execute_to_ctrl;
+	    traceport_exec_pc_o <= (pipeline_flush_o &&
+				    (traceport_stage_exec_insn == 32'h24000000)) ?
+				   pc_decode_to_execute :
+				   pc_execute_to_ctrl;
 	    if (!traceport_waitexec) begin
 	       if (padv_ctrl_o & !ctrl_bubble_o) begin
 		  if (!execute_waiting_o) begin
@@ -1396,6 +1399,9 @@ module mor1kx_cpu_cappuccino
 		     traceport_exec_valid_o <= 1'b0;
 		     traceport_waitexec <= 1'b1;
 		  end
+	       end else if (pipeline_flush_o &&
+			    (traceport_stage_exec_insn == 32'h24000000)) begin
+		  traceport_exec_valid_o <= 1'b1;
 	       end else begin
 		  traceport_exec_valid_o <= 1'b0;
 	       end
