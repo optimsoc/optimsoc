@@ -124,10 +124,10 @@ module mor1kx_module (
     .dwbm_\(.*\)      (dwb_\1[]),
     .iwbm_\(.*\)      (iwb_\1[]),
 
-    .du_addr_i (dbg_adr_i),
+    .du_addr_i (dbg_adr_i[15:0]),
     .du_\(.*\) (dbg_\1[]),
 
-    .irq_i                      ({11'b0,pic_ints_i}),
+    .irq_i                      ({12'b0,pic_ints_i}),
     
     .avm_.*_o (),
     .avm_d_readdata_i (32'h0),
@@ -209,8 +209,8 @@ module mor1kx_module (
 	   .avm_i_readdata_i		(32'h0),		 // Templated
 	   .avm_i_waitrequest_i		(1'h0),			 // Templated
 	   .avm_i_readdatavalid_i	(1'h0),			 // Templated
-	   .irq_i			({11'b0,pic_ints_i}),	 // Templated
-	   .du_addr_i			(dbg_adr_i),		 // Templated
+	   .irq_i			({12'b0,pic_ints_i}),	 // Templated
+	   .du_addr_i			(dbg_adr_i[15:0]),	 // Templated
 	   .du_stb_i			(dbg_stb_i),		 // Templated
 	   .du_dat_i			(dbg_dat_i[31:0]),	 // Templated
 	   .du_we_i			(dbg_we_i),		 // Templated
