@@ -36,7 +36,7 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-`include "timescale.v"
+`include "dbg_config.vh"
 
 module tb_system_4x4_c();
 
@@ -51,48 +51,66 @@ module tb_system_4x4_c();
    // enable instruction trace output
    localparam ENABLE_TRACE = 0;
 
-   system_4x4_c_dm
-      #(.MEM_FILE(MEM_FILE),
-        .MEM_SIZE(MEM_SIZE))
-      u_system(.clk                      (clk),
-               .rst_sys                  (rst_sys),
-               .rst_cpu                  (rst_cpu));
+   localparam NUM_CORES = 16;
 
-   wire [15:0] termination;
+   wire [NUM_CORES-1:0] termination;
 
-   function [23:0] index2string;
-      input [11:0] index;
-      integer hundreds;
-      integer tens;
-      integer ones;
-      begin
-         hundreds = (index) / 100;
-         tens = (index - (hundreds * 100)) / 10;
-         ones = (index - (hundreds * 100) - (tens * 10));
-         index2string[23:16] = hundreds + 8'd48;
-         index2string[15:8] = tens + 8'd48;
-         index2string[7:0] = ones + 8'd48;
-      end
-   endfunction
+   wire [`DEBUG_TRACE_EXEC_WIDTH*NUM_CORES-1:0] trace;
+
+   wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace_array [0:NUM_CORES-1];
+   wire                               trace_enable [0:NUM_CORES-1];
+   wire [31:0]                        trace_pc [0:NUM_CORES-1];
+   wire [31:0]                        trace_insn [0:NUM_CORES-1];
+   wire                               trace_wben [0:NUM_CORES-1];
+   wire [4:0]                         trace_wbreg [0:NUM_CORES-1];
+   wire [31:0]                        trace_wbdata [0:NUM_CORES-1];
+   wire [31:0]                        trace_r3 [0:NUM_CORES-1];
 
    genvar i;
+
    generate
-      for (i=0; i<16; i=i+1) begin : gen_mon
+      for (i=0; i<NUM_CORES; i=i+1) begin : gen_mon
+         assign trace_array[i] = trace[(i+1)*`DEBUG_TRACE_EXEC_WIDTH-1:`DEBUG_TRACE_EXEC_WIDTH*i];
+         assign trace_enable[i] = trace_array[i][`DEBUG_TRACE_EXEC_ENABLE_MSB:`DEBUG_TRACE_EXEC_ENABLE_LSB];
+         assign trace_insn[i] = trace_array[i][`DEBUG_TRACE_EXEC_INSN_MSB:`DEBUG_TRACE_EXEC_INSN_LSB];
+         assign trace_pc[i] = trace_array[i][`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB];
+         assign trace_wben[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBEN_MSB:`DEBUG_TRACE_EXEC_WBEN_LSB];
+         assign trace_wbreg[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBREG_MSB:`DEBUG_TRACE_EXEC_WBREG_LSB];
+         assign trace_wbdata[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBDATA_MSB:`DEBUG_TRACE_EXEC_WBDATA_LSB];
+
+         r3_checker
+           u_r3_checker(.clk   (clk),
+                        .valid (trace_enable[i]),
+                        .we    (trace_wben[i]),
+                        .addr  (trace_wbreg[i]),
+                        .data  (trace_wbdata[i]),
+                        .r3    (trace_r3[i]));
+
+         /* trace_monitor AUTO_TEMPLATE(
+          .enable  (trace_enable[i]),
+          .wb_pc   (trace_pc[i]),
+          .wb_insn (trace_insn[i]),
+          .r3      (trace_r3[i]),
+          .supv    (),
+          .termination  (termination[i]),
+          .termination_all (termination),
+          ); */
          trace_monitor
-            #(.ID                              (i),
-              .ENABLE_TRACE                    (ENABLE_TRACE),
-              .STDOUT_FILENAME                 ({"stdout.", index2string(i)}),
-              .TRACEFILE_FILENAME              ({"trace.", index2string(i)}),
-              .TERM_CROSS_NUM                  (16))
-             u_mon(// Outputs
-                   .termination                (termination[i]),
-                   // Inputs
-                   .clk                        (clk),
-                   .enable                     (~u_system.gen_ct[i].u_ct.u_core0.u_cpu.or1200_cpu.or1200_except.wb_freeze),
-                   .wb_pc                      (u_system.gen_ct[i].u_ct.u_core0.u_cpu.or1200_cpu.or1200_except.wb_pc),
-                   .wb_insn                    (u_system.gen_ct[i].u_ct.u_core0.u_cpu.or1200_cpu.or1200_ctrl.wb_insn),
-                   .r3                         (u_system.gen_ct[i].u_ct.u_core0.u_cpu.or1200_cpu.or1200_rf.rf_a.mem[3]),
-                   .termination_all            (termination));
+           #(.STDOUT_FILENAME                 ({"stdout.", index2string(i)}),
+             .TRACEFILE_FILENAME              ({"trace.", index2string(i)}),
+             .ENABLE_TRACE                    (ENABLE_TRACE),
+             .ID(i),
+             .TERM_CROSS_NUM(NUM_CORES))
+         u_mon0(/*AUTOINST*/
+                // Outputs
+                .termination            (termination[i]),        // Templated
+                // Inputs
+                .clk                    (clk),
+                .enable                 (trace_enable[i]),       // Templated
+                .wb_pc                  (trace_pc[i]),           // Templated
+                .wb_insn                (trace_insn[i]),         // Templated
+                .r3                     (trace_r3[i]),           // Templated
+                .termination_all        (termination));          // Templated
       end
    endgenerate
 
@@ -106,6 +124,16 @@ module tb_system_4x4_c();
    end
 
    always clk = #1.25 ~clk;
+
+   system_4x4_c_dm
+      #(.MEM_FILE(MEM_FILE),
+        .MEM_SIZE(MEM_SIZE))
+      u_system(.clk                      (clk),
+               .rst_sys                  (rst_sys),
+               .rst_cpu                  (rst_cpu),
+               .trace                    (trace));
+
+   `include "optimsoc_functions.vh"
 
 endmodule
 
