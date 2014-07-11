@@ -20,9 +20,7 @@
  *
  * =============================================================================
  *
- * This is a wrapper module for the OpenRISC processor that adds
- * the compare-and-swap (CAS) unit on the data port to allow for atomic
- * accesses to data elements.
+ * This is a wrapper module for the OpenRISC processor
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
@@ -65,7 +63,7 @@ module mor1kx_module (
    output [31:0]  dbg_dat_o;    // External Data Output
    output         dbg_ack_o;    // External Data Acknowledge (not WB compatible)
 
-   input [19:0]   pic_ints_i;
+   input [31:0]   pic_ints_i;
 
    //
    // Instruction WISHBONE interface
@@ -127,7 +125,7 @@ module mor1kx_module (
     .du_addr_i (dbg_adr_i[15:0]),
     .du_\(.*\) (dbg_\1[]),
 
-    .irq_i                      ({12'b0,pic_ints_i}),
+    .irq_i                      (pic_ints_i),
     
     .avm_.*_o (),
     .avm_d_readdata_i (32'h0),
@@ -209,7 +207,7 @@ module mor1kx_module (
 	   .avm_i_readdata_i		(32'h0),		 // Templated
 	   .avm_i_waitrequest_i		(1'h0),			 // Templated
 	   .avm_i_readdatavalid_i	(1'h0),			 // Templated
-	   .irq_i			({12'b0,pic_ints_i}),	 // Templated
+	   .irq_i			(pic_ints_i),		 // Templated
 	   .du_addr_i			(dbg_adr_i[15:0]),	 // Templated
 	   .du_stb_i			(dbg_stb_i),		 // Templated
 	   .du_dat_i			(dbg_dat_i[31:0]),	 // Templated

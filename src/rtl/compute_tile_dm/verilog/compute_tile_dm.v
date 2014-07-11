@@ -165,8 +165,8 @@ module compute_tile_dm(
    wire          snoop_enable;
    wire [31:0]   snoop_adr;
 
-   wire [19:0]   pic_ints_i [0:CORES-1];
-   assign pic_ints_i[0][19:4] = 17'h0;
+   wire [31:0]   pic_ints_i [0:CORES-1];
+   assign pic_ints_i[0][31:4] = 17'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
 
    genvar        c, m;
@@ -205,7 +205,7 @@ module compute_tile_dm(
    
    generate
       for (c = 1; c < CORES; c = c + 1) begin
-         assign pic_ints_i[c] = 20'h0;
+         assign pic_ints_i[c] = 31'h0;
       end
    endgenerate
 
