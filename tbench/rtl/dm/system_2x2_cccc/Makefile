@@ -9,5 +9,8 @@ build: work
 sim:
 	vsim -voptargs=+acc -c work.tb_system_2x2_cccc -do "run -all"
 
+sim-dualcore:
+	vsim -voptargs=+acc -c work.tb_system_2x2_cccc -G CORES_PER_TILE=2 -do "run -all"
+
 clean:
 	rm -rf work

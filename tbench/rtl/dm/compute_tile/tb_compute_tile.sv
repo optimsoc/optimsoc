@@ -58,18 +58,21 @@ module tb_compute_tile();
 
    parameter NUMCORES = 1;
 
-   wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace;
+   wire [`DEBUG_TRACE_EXEC_WIDTH*NUMCORES-1:0] trace;
 
-   wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace_array [0:NUMCORES-1];
-   wire                            trace_enable   [0:NUMCORES-1];
-   wire [31:0]                     trace_insn     [0:NUMCORES-1];
-   wire [31:0]                     trace_pc       [0:NUMCORES-1];
-   wire                            trace_wben     [0:NUMCORES-1];
-   wire [4:0]                      trace_wbreg    [0:NUMCORES-1];
-   wire [31:0]                     trace_wbdata   [0:NUMCORES-1];
-   wire [31:0]                     trace_r3       [0:NUMCORES-1];
+   wire [`DEBUG_TRACE_EXEC_WIDTH*NUMCORES-1:0] trace_array [0:NUMCORES-1];
+   wire                                        trace_enable   [0:NUMCORES-1];
+   wire [31:0]                                 trace_insn     [0:NUMCORES-1];
+   wire [31:0]                                 trace_pc       [0:NUMCORES-1];
+   wire                                        trace_wben     [0:NUMCORES-1];
+   wire [4:0]                                  trace_wbreg    [0:NUMCORES-1];
+   wire [31:0]                                 trace_wbdata   [0:NUMCORES-1];
+   wire [31:0]                                 trace_r3       [0:NUMCORES-1];
+   
 
-   genvar                          i;
+   wire [NUMCORES-1:0]                         termination;
+
+   genvar                                      i;
    
    generate
       for (i = 0; i < NUMCORES; i++) begin
@@ -88,12 +91,39 @@ module tb_compute_tile();
                         .addr (trace_wbreg[i]),
                         .data (trace_wbdata[i]),
                         .r3 (trace_r3[i]));
+
+            /* trace_monitor AUTO_TEMPLATE(
+             .enable  (trace_enable[i]),
+             .wb_pc   (trace_pc[i]),
+             .wb_insn (trace_insn[i]),
+             .r3      (trace_r3[i]),
+             .supv    (),
+             .termination  (termination[i]),
+             .termination_all (termination),
+             ); */
+         trace_monitor
+           #(.STDOUT_FILENAME({"stdout.",index2string(i)}),
+             .TRACEFILE_FILENAME({"trace.",index2string(i)}),
+             .ENABLE_TRACE(0),
+             .ID(i),
+             .TERM_CROSS_NUM(NUMCORES))
+         u_mon0(/*AUTOINST*/
+                // Outputs
+                .termination            (termination[i]),        // Templated
+                // Inputs
+                .clk                    (clk),
+                .enable                 (trace_enable[i]),       // Templated
+                .wb_pc                  (trace_pc[i]),           // Templated
+                .wb_insn                (trace_insn[i]),         // Templated
+                .r3                     (trace_r3[i]),           // Templated
+                .termination_all        (termination));          // Templated
+
       end
    endgenerate
 
    compute_tile_dm
       #(.ID(0),
-        .CORES(1),
+        .CORES(NUMCORES),
         .MEM_SIZE(1*1024*1024), // 1 MB
         .MEM_FILE("ct.vmem"))
       u_compute_tile(// Outputs
@@ -110,34 +140,6 @@ module tb_compute_tile();
                      .noc_out_ready     (noc_out_ready[VCHANNELS-1:0]),
                      .cpu_stall         (cpu_stall));
 
-   wire termination;
-
-   /* trace_monitor AUTO_TEMPLATE(
-    .enable  (trace_enable[0]),
-    .wb_pc   (trace_pc[0]),
-    .wb_insn (trace_insn[0]),
-    .r3      (trace_r3[0]),
-    .supv    (),
-    .termination  (termination),
-    .termination_all (termination),
-    ); */
-   trace_monitor
-      #(.STDOUT_FILENAME("stdout"),
-        .TRACEFILE_FILENAME("trace"),
-        .ENABLE_TRACE(1))
-      u_mon0(/*AUTOINST*/
-             // Outputs
-             .termination               (termination),           // Templated
-             // Inputs
-             .clk                       (clk),
-             .enable                    (trace_enable[0]),       // Templated
-             .wb_pc                     (trace_pc[0]),           // Templated
-             .wb_insn                   (trace_insn[0]),         // Templated
-             .r3                        (trace_r3[0]),           // Templated
-             .termination_all           (termination));          // Templated
-
-
-
    initial begin
       clk = 1'b1;
       rst_sys = 1'b1;
@@ -152,6 +154,7 @@ module tb_compute_tile();
 
    always clk = #1.25 ~clk;
 
+   `include "optimsoc_functions.vh"
 endmodule
 
 // Local Variables:

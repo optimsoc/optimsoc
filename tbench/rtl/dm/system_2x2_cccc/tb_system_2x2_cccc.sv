@@ -47,7 +47,9 @@ module tb_system_2x2_cccc();
    localparam MEM_FILE = "ct.vmem";
    localparam MEM_SIZE = 1*1024*1024; // 1 MByte
 
-   localparam NUM_CORES = 4;   
+   localparam NUM_TILES = 4;
+   parameter CORES_PER_TILE = 1;
+   localparam NUM_CORES = NUM_TILES * CORES_PER_TILE;
    
    // enable instruction trace output
    localparam ENABLE_TRACE = 0;
@@ -68,7 +70,7 @@ module tb_system_2x2_cccc();
    genvar                          i;
    
    generate
-      for (i = 0; i < 4; i++) begin
+      for (i = 0; i < NUM_CORES; i++) begin
          assign trace_array[i] = trace[(i+1)*`DEBUG_TRACE_EXEC_WIDTH-1:`DEBUG_TRACE_EXEC_WIDTH*i];
          assign trace_enable[i] = trace_array[i][`DEBUG_TRACE_EXEC_ENABLE_MSB:`DEBUG_TRACE_EXEC_ENABLE_LSB];
          assign trace_insn[i] = trace_array[i][`DEBUG_TRACE_EXEC_INSN_MSB:`DEBUG_TRACE_EXEC_INSN_LSB];
@@ -95,11 +97,11 @@ module tb_system_2x2_cccc();
           .termination_all (termination),
           ); */
          trace_monitor
-           #(.STDOUT_FILENAME                 ({"stdout.", index2string(i)}),
-             .TRACEFILE_FILENAME              ({"trace.", index2string(i)}),
-             .ENABLE_TRACE(1),
-             .ID(i),
-             .TERM_CROSS_NUM(NUM_CORES))
+           #(.STDOUT_FILENAME    ({"stdout.", index2string(i)}),
+             .TRACEFILE_FILENAME ({"trace.", index2string(i)}),
+             .ENABLE_TRACE       (ENABLE_TRACE),
+             .ID                 (i),
+             .TERM_CROSS_NUM     (NUM_CORES))
          u_mon0(/*AUTOINST*/
                 // Outputs
                 .termination            (termination[i]),        // Templated
@@ -114,8 +116,9 @@ module tb_system_2x2_cccc();
    endgenerate
 
    system_2x2_cccc_dm
-      #(.MEM_FILE(MEM_FILE),
-        .MEM_SIZE(MEM_SIZE))
+      #(.CORES        (CORES_PER_TILE),
+        .MEM_FILE     (MEM_FILE),
+        .MEM_SIZE     (MEM_SIZE))
       u_system(.clk                      (clk),
                .rst_sys                  (rst_sys),
                .rst_cpu                  (rst_cpu),

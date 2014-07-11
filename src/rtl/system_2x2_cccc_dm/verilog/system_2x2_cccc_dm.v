@@ -65,7 +65,7 @@ module system_2x2_cccc_dm(
 
    input clk, rst_sys, rst_cpu;
 
-   output [`DEBUG_TRACE_EXEC_WIDTH*4-1:0] trace;
+   output [`DEBUG_TRACE_EXEC_WIDTH*4*CORES-1:0] trace;
 
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    input [4*32-1:0]   wb_mam_adr_o;
@@ -156,7 +156,7 @@ module system_2x2_cccc_dm(
               .MEM_SIZE(MEM_SIZE),
               .MEM_FILE(MEM_FILE))
             u_ct(// Outputs
-                 .trace                      (trace[(`DEBUG_TRACE_EXEC_WIDTH*(i+1))-1:`DEBUG_TRACE_EXEC_WIDTH*i]),
+                 .trace                      (trace[(`DEBUG_TRACE_EXEC_WIDTH*CORES*(i+1))-1:`DEBUG_TRACE_EXEC_WIDTH*CORES*i]),
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
                  .wb_mam_ack_i               (wb_mam_ack_i[i]),
                  .wb_mam_rty_i               (wb_mam_rty_i[i]),
