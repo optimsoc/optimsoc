@@ -111,7 +111,7 @@ module trace_monitor(/*AUTOARG*/
                  // ignore..
               end
               16'h0001: begin
-                 $display("[%t, %0d] Terminated at address 0x%x", $time, ID, wb_pc);
+                 $display("[%t, %0d] Terminated at address 0x%x (status: %d)", $time, ID, wb_pc, r3);
                  termination = 1;
               end
               16'h0004: begin
