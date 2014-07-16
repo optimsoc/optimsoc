@@ -41,12 +41,14 @@ endif
 LIBS += $(shell pkg-config --libs --static optimsoc-baremetal)
 INCS += $(shell pkg-config --cflags optimsoc-baremetal)
 
+EXTRA_OBJS = $(EXTRA_SRCS:.c=.o)
+
 $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 	@PROGRAM=$(PROGRAM) sh $(BUILDSCRIPTS)/create_pgas_binary.sh 
 
-$(PROGRAM).elf: $(PROGRAM).o optimsoc-sysconfig.o
+$(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS) optimsoc-sysconfig.o
 	$(CC_FOR_TARGET) $(CFLAGS) -Wall \
-	$(PROGRAM).o optimsoc-sysconfig.o -o $@ \
+	$(PROGRAM).o  $(EXTRA_OBJS) optimsoc-sysconfig.o -o $@ \
 	$(LIBS)
 
 optimsoc-sysconfig.o: ../optimsoc-sysconfig.c
