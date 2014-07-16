@@ -23,8 +23,8 @@
 
 lib_LTLIBRARIES = liboptimsocsysc.la
 
-AM_CPPFLAGS = $(SYSTEMC_CPPFLAGS)
-AM_LDFLAGS = $(SYSTEMC_LDFLAGS)
+AM_CPPFLAGS = $(SYSTEMC_CFLAGS)
+AM_LDFLAGS = $(SYSTEMC_LIBS)
 
 liboptimsocsysc_la_SOURCES =\
     debug/DebugConnector.cpp \

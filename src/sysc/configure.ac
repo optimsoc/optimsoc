@@ -52,20 +52,9 @@ AC_PREFIX_DEFAULT([/usr])
 AC_PROG_SED
 AC_PROG_MKDIR_P
 
-AC_ARG_WITH([systemc-inc-dir],
-    [AS_HELP_STRING([--with-systemc-inc-dir],
-                    [location of the systemc include directory])],
-     [SYSTEMC_CPPFLAGS="-I$withval"],
-     [AC_MSG_FAILURE([You need to set the SystemC include dir])])
-
-AC_ARG_WITH([systemc-lib-dir],
-    [AS_HELP_STRING([--with-systemc-lib-dir],
-                    [location of the systemc library directory])],
-     [SYSTEMC_LDFLAGS="-L$withval -lsystemc"],
-     [AC_MSG_FAILURE([You need to set the SystemC library dir])])
-
-AC_SUBST([SYSTEMC_CPPFLAGS])
-AC_SUBST([SYSTEMC_LDFLAGS])
+PKG_CHECK_MODULES([SYSTEMC], [systemc], , )
+AC_SUBST([SYSTEMC_CFLAGS])
+AC_SUBST([SYSTEMC_LIBS])
 
 AC_CONFIG_FILES([
         Makefile

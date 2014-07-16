@@ -2,8 +2,7 @@
 
 autoreconf --install --symlink
 
-args="--prefix=\`pwd\`/.. --with-systemc-inc-dir=\${SYSTEMC}/include \
---with-systemc-lib-dir=\${SYSTEMC}/lib-linux"
+args="--prefix=/opt/optimsoc/sysc"
 
 echo
 echo "----------------------------------------------------------------"
