@@ -46,3 +46,4 @@ tb_system_2x2_cccc-vcd: obj_dir/Vtb_system_2x2_cccc.a main-vcd.o verilated.o ver
 clean:
 	rm -rf obj_dir *.o tb_system_2x2_cccc tb_system_2x2_cccc-vcd
 
+.PHONY: verilator.vc

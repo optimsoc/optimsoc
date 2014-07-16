@@ -46,3 +46,4 @@ tb_system_4x4_c-vcd: obj_dir/Vtb_system_4x4_c.a main-vcd.o verilated.o verilated
 clean:
 	rm -rf obj_dir *.o tb_system_4x4_cccc tb_system_4x4_cccc-vcd
 
+.PHONY: verilator.vc

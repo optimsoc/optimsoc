@@ -46,3 +46,4 @@ tb_compute_tile-vcd: obj_dir/Vtb_compute_tile.a main-vcd.o verilated.o verilated
 clean:
 	rm -rf obj_dir *.o tb_compute_tile tb_compute_tile-vcd
 
+.PHONY: verilator.vc
