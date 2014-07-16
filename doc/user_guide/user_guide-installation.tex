@@ -145,15 +145,15 @@ Follow these steps:
 \begin{alltt}
 \$> cd /opt/optimsoc
 \$> mkdir toolchain
-\$> cd optimsoc-toolchain
-\$> wget http://lis.ei.tum.de/pub-download/optimsoc/toolchain/current.tgz
-\$> tar -xjf current.tgz
+\$> cd toolchain
+\$> wget http://lis.ei.tum.de/pub-download/optimsoc/toolchain/optimsoc-toolchain-current.tgz
+\$> tar -xjf optimsoc-toolchain-current.tgz
 \end{alltt}
 
-Set environment (e.g., in \verb|~/.bashrc|):
+Set your environment (e.g., in \verb|~/.bashrc|):
 
 \begin{alltt}
-export PATH=/opt/optimsoc-toolchain/bin:\$\{PATH\}
+export PATH=\$OPTIMSOC_INSTALLATION/toolchain/bin:\$\{PATH\}
 \end{alltt}
 
 \subsubsection{Option 2: Build the whole toolchain}
@@ -173,14 +173,14 @@ platforms.
 To install the tools simply run
 
 \begin{alltt}
-\$> \$OPTIMSOC/tools/install.sh /opt/optimsoc
+\$> \$OPTIMSOC/tools/install.sh \$OPTIMSOC_INSTALLATION
 \end{alltt}
 
 or replace your installation path accordingly.
 
 \begin{alltt}
-OPTIMSOC_TCL=/opt/optimsoc/tools/tcl
-PATH=\$PATH:/opt/optimsoc/tools/utils
+OPTIMSOC_TCL=\$OPTIMSOC_INSTALLATION/tools/tcl
+PATH=\$PATH:\$OPTIMSOC_INSTALLATION/tools/utils
 \end{alltt}
 
 \subsection{System Software}
@@ -205,14 +205,10 @@ To perform the installation run:
 \begin{verbatim}
 $> mkdir build
 $> cd build
-$> ../configure --prefix=/opt/optimsoc/systemsw/ --host=or1k-elf \
-    CC=optimsoc-elf-gcc
+$> ../configure --prefix=$OPTIMSOC_INSTALLATION/systemsw/ --host=or1k-elf
 $> make
 $> make install
 \end{verbatim}
-
-Configuration may fail when you did not set the \verb|OPTIMSOC_NEWLIB|
-environment variable.
 
 \subsection{Configuration}
 
@@ -222,10 +218,9 @@ you will have to add the environment variables as (example for bash):
 
 \begin{alltt}
 # OpTiMSoC toolchain
-export PATH=/opt/openrisc/toolchain/bin:/opt/optimsoc/tools/utils:\$\{PATH\}
-export OPTIMSOC_NEWLIB=/opt/optimsoc/newlib
-export OPTIMSOC_TCL=/opt/optimsoc/tools/tcl
-export PKG_CONFIG_PATH=/opt/optimsoc/systemsw/share/pkgconfig
+export PATH=\$OPTIMSOC_INSTALLATION/toolchain/bin:\$OPTIMSOC_INSTALLATION/tools/utils:\$\{PATH\}
+export OPTIMSOC_TCL=\$OPTIMSOC_INSTALLATION/tools/tcl
+export PKG_CONFIG_PATH=\$OPTIMSOC_INSTALLATION/systemsw/share/pkgconfig
 \end{alltt}
 
 \section{Host Software}
@@ -250,7 +245,7 @@ Build, make and install:
 \begin{verbatim}
 $> mkdir build
 $> cd build
-$> ../configure --prefix=/opt/optimsoc/host/ --enable-python-interface
+$> ../configure --prefix=\$OPTIMSOC_INSTALLATION/host/ --enable-python-interface
 $> make
 $> make install
 \end{verbatim}
@@ -258,8 +253,8 @@ $> make install
 Before proceeding you will need to set the correct paths:
 
 \begin{verbatim}
-export LD_LIBRARY_PATH=/opt/optimsoc/host/lib:${LD_LIBRARY_PATH}
-export PATH=/opt/optimsoc/host/bin:${PATH}
+export LD_LIBRARY_PATH=\$OPTIMSOC_INSTALLATION/host/lib:${LD_LIBRARY_PATH}
+export PATH=\$OPTIMSOC_INSTALLATION/host/bin:${PATH}
 \end{verbatim}
 
 \subsection{Graphical User Interface}
@@ -289,7 +284,7 @@ To build it:
 \begin{alltt}
 \$> mkdir build
 \$> cd build
-\$> cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/optimsoc/host ..
+\$> cmake -DCMAKE_INSTALL_PREFIX:PATH=\$OPTIMSOC_INSTALLATION/host ..
 \$> make
 \$> make install
 \end{alltt}
@@ -328,13 +323,23 @@ the folder if necessary.
 
 \subsection{SystemC}
 
-First you need to register at the SystemC website and download the
-SystemC package (\verb|systemc-2.3.0.tgz|). For installation create
-the base folder and build directory:
+In case you already have SystemC installed (e.g., in the latest
+version 2.3.1), you simply need to set the \verb|PKG_CONFIG_PATH|
+properly to where the \verb|systemc.pc| file is found. In the latest
+version this is for example:
+
+\begin{alltt}
+export PKG_CONFIG_PATH=\$PKG_CONFIG_PATH:\$SYSTEMC/lib-linux64/pkgconfig
+\end{alltt}
+
+If you don't have SystemC installed, first you need to register at the
+SystemC website and download the SystemC package
+(\verb|systemc-2.3.1.tgz|). For installation create the base folder
+and build directory:
 
 \begin{alltt}
 \$> sudo mkdir /opt/systemc
-\$> sudo mkdir /opt/systemc/2.3.0
+\$> sudo mkdir /opt/systemc/2.3.1
 \$> sudo mkdir /opt/systemc/build
 \end{alltt}
 
@@ -342,24 +347,25 @@ Copy the gzip file from above to the build dir, become superuser, move
 there and extract it:
 
 \begin{alltt}
-\$> sudo cp systemc-2.3.0.tgz /opt/systemc/build
+\$> sudo cp systemc-2.3.1.tgz /opt/systemc/build
 \$> cd /opt/systemc/build
-\$> sudo tar -xzf systemc-2.3.0.tgz
+\$> sudo tar -xzf systemc-2.3.1.tgz
 \end{alltt}
 
 Create a build object directory, configure in there, build, install,
 done!
 
 \begin{alltt}
-\$> cd systemc-2.3.0
+\$> cd systemc-2.3.1
 \$> sudo mkdir objdir
 \$> sudo cd objdir
-\$> sudo ../configure --prefix=/opt/systemc/2.3.0
+\$> sudo ../configure --prefix=/opt/systemc/2.3.1
 \$> sudo make
 \$> sudo make install
 \end{alltt}
 
-You will now find SystemC in \verb|/opt/systemc/2.3.0|.
+You will now find SystemC in \verb|/opt/systemc/2.3.1| and need to set
+\verb|PKG_CONFIG_PATH| as described above.
 
 \subsection{Verilator}
 
@@ -392,12 +398,13 @@ Verilated Systems, Simulations and other. It can be found in
 \$> ./autogen.sh
 \$> mkdir build
 \$> cd build
-\$> ../configure --prefix=/opt/optimsoc/sysc \textbackslash
-      --with-systemc-inc-dir=\$\{SYSTEMC\}/include \textbackslash
-      --with-systemc-lib-dir=\$\{SYSTEMC\}/lib-linux
+\$> ../configure --prefix=\$OPTIMSOC_INSTALLATION/sysc
 \$> make
 \$> make install
 \end{alltt}
+
+When SystemC is not found, make sure \verb|PKG_CONFIG_PATH| is
+correctly set.
 
 \subsection{Configuration}
 
@@ -406,7 +413,6 @@ You will need the following environment variables (e.g., in bash):
 \begin{alltt}
 # SystemC environment
 export SYSTEMC=/opt/systemc/2.3.0
-export SYSTEMC_INCLUDE=\$\{SYSTEMC\}/include
 
 # Verilator environment
 export VERILATOR\_ROOT=/opt/verilator
@@ -427,14 +433,14 @@ export OPTIMSOC_RTL=\$\{OPTIMSOC\}/src/rtl
 export OPTIMSOC_SYSC=\$\{OPTIMSOC\}/src/sysc
 
 # Your OpTiMSoC installation path
-export OPTIMSOC_INSTALL=/opt/optimsoc
+export OPTIMSOC_INSTALLATION=/opt/optimsoc
 
 # OpTiMSoC toolchain
-export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC_INSTALL\}/tools/utils:\$\{PATH\}
-export OPTIMSOC_NEWLIB=\$\{OPTIMSOC_INSTALL\}/newlib/
+export PATH=/opt/openrisc/toolchain/bin:\$\{OPTIMSOC_INSTALLATION\}/tools/utils:\$\{PATH\}
+export OPTIMSOC_NEWLIB=\$\{OPTIMSOC_INSTALLATION\}/newlib/
 
 # TCL scripting
-export OPTIMSOC_TCL=\$\{OPTIMSOC_INSTALL\}/tools/tcl
+export OPTIMSOC_TCL=\$\{OPTIMSOC_INSTALLATION\}/tools/tcl
 
 # SystemC environment
 export SYSTEMC=/opt/systemc/2.3.0
@@ -445,11 +451,11 @@ export VERILATOR\_ROOT=/opt/verilator
 export PATH=\$\{VERILATOR_ROOT\}/bin:\$\{PATH\}
 
 # System software
-export PKG_CONFIG_PATH=\$\{OPTIMSOC_INSTALL\}/systemsw/share/pkgconfig
+export PKG_CONFIG_PATH=\$\{OPTIMSOC_INSTALLATION\}/systemsw/share/pkgconfig
 
 # Host library, tools and GUI
-export LD_LIBRARY_PATH=\$\{OPTIMSOC_INSTALL\}/host/lib:\$\{LD_LIBRARY_PATH\}
-export PATH=\$\{OPTIMSOC_INSTALL\}/bin:\$\{PATH\}
+export LD_LIBRARY_PATH=\$\{OPTIMSOC_INSTALLATION\}/host/lib:\$\{LD_LIBRARY_PATH\}
+export PATH=\$\{OPTIMSOC_INSTALLATION\}/bin:\$\{PATH\}
 \end{alltt}
 
 \section{Upgrade from rel-20130620}
@@ -457,8 +463,7 @@ export PATH=\$\{OPTIMSOC_INSTALL\}/bin:\$\{PATH\}
 \begin{itemize}
 \item The in-place installation has been changed to a unified
   installation tree. You should reinstall.
-\item The newlib has changed to a baremetal and virtualapps. You need
-  to rebuild and install to different paths.
+\item The newlib has been removed.
 \item The system software structure has been changed. We removed the
   distinction between distributed and shared memory. Furthermore we
   have baremetal and virtualapps here also. You need to rebuild.
