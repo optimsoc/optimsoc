@@ -1,0 +1,5 @@
+config.guess
+depcomp
+install-sh
+ltmain.sh
+missing
