@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+2x2 CCCC system
+-->
+<system xmlns="http://www.optimsoc.org/xmlns/optimsoc-system"
+        version="1"
+        systemid="0x2">
+  <meta>
+    <author>Philipp Wagner</author>
+    <authoremail>philipp.wagner@tum.de</authoremail>
+  </meta>
+
+  <layout autogen="true"/>
+
+  <meshnoc xdim="2" ydim="2">
+    <locallinks>
+      <locallink>
+        <con><meshroutercon x="0" y="0"/></con>
+        <con><tilecon tile="ct0"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="0" y="1"/></con>
+        <con><tilecon tile="ct1"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="0"/></con>
+        <con><tilecon tile="ct2"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="1"/></con>
+        <con><tilecon tile="ct3"/></con>
+      </locallink>
+    </locallinks>
+  </meshnoc>
+
+  <tiles>
+    <computetile id="ct0" computetileid="0" type="or1200">
+      <cores>
+        <core coreid="0"/>
+      </cores>
+      <memory id="ct0m0" memoryid="0" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct1" computetileid="1" type="or1200">
+      <cores>
+        <core coreid="1"/>
+      </cores>
+      <memory id="ct1m0" memoryid="1" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct2" computetileid="2" type="or1200">
+      <cores>
+        <core coreid="2"/>
+      </cores>
+      <memory id="ct2m0" memoryid="2" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct3" computetileid="3" type="or1200">
+      <cores>
+        <core coreid="3"/>
+      </cores>
+      <memory id="ct3m0" memoryid="3" size="64" sizeunit="M" />
+    </computetile>
+  </tiles>
+</system>
