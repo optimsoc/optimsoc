@@ -26,6 +26,14 @@ int optimsoc_ctnum(void) {
   return _optimsoc_compute_tile_num;
 }
 
+uint32_t optimsoc_mainmem_size() {
+  return _optimsoc_mainmem_size;
+}
+
+uint32_t optimsoc_mainmem_tile() {
+  return _optimsoc_mainmem_tile;
+}
+
 uint32_t optimsoc_noc_maxpacketsize(void) {
   return 8;
 }
