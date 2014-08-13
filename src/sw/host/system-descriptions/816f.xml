@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+4x4 all compute system
+-->
+<system xmlns="http://www.optimsoc.org/xmlns/optimsoc-system"
+        version="1"
+        systemid="0x816f">
+  <meta>
+    <author>Stefan Wallentowitz</author>
+    <authoremail>stefan.wallentowitz@tum.de</authoremail>
+  </meta>
+
+  <layout autogen="true"/>
+
+  <meshnoc xdim="4" ydim="4">
+    <locallinks>
+      <locallink>
+        <con><meshroutercon x="0" y="0"/></con>
+        <con><tilecon tile="ct0"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="0" y="1"/></con>
+        <con><tilecon tile="ct1"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="0" y="2"/></con>
+        <con><tilecon tile="ct2"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="0" y="3"/></con>
+        <con><tilecon tile="ct3"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="0"/></con>
+        <con><tilecon tile="ct4"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="1"/></con>
+        <con><tilecon tile="ct5"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="2"/></con>
+        <con><tilecon tile="ct6"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="1" y="3"/></con>
+        <con><tilecon tile="ct7"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="2" y="0"/></con>
+        <con><tilecon tile="ct8"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="2" y="1"/></con>
+        <con><tilecon tile="ct9"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="2" y="2"/></con>
+        <con><tilecon tile="ct10"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="2" y="3"/></con>
+        <con><tilecon tile="ct11"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="3" y="0"/></con>
+        <con><tilecon tile="ct12"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="3" y="1"/></con>
+        <con><tilecon tile="ct13"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="3" y="2"/></con>
+        <con><tilecon tile="ct14"/></con>
+      </locallink>
+      <locallink>
+        <con><meshroutercon x="3" y="3"/></con>
+        <con><tilecon tile="ct15"/></con>
+      </locallink>
+    </locallinks>
+  </meshnoc>
+
+  <tiles>
+    <computetile id="ct0" computetileid="0" type="or1200">
+      <cores>
+        <core coreid="0"/>
+      </cores>
+      <memory id="ct0m0" memoryid="0" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct1" computetileid="1" type="or1200">
+      <cores>
+        <core coreid="1"/>
+      </cores>
+      <memory id="ct1m0" memoryid="1" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct2" computetileid="2" type="or1200">
+      <cores>
+        <core coreid="2"/>
+      </cores>
+      <memory id="ct2m0" memoryid="2" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct3" computetileid="3" type="or1200">
+      <cores>
+        <core coreid="3"/>
+      </cores>
+      <memory id="ct3m0" memoryid="3" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct4" computetileid="4" type="or1200">
+      <cores>
+        <core coreid="4"/>
+      </cores>
+      <memory id="ct4m0" memoryid="4" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct5" computetileid="5" type="or1200">
+      <cores>
+        <core coreid="5"/>
+      </cores>
+      <memory id="ct5m0" memoryid="5" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct6" computetileid="6" type="or1200">
+      <cores>
+        <core coreid="6"/>
+      </cores>
+      <memory id="ct6m0" memoryid="6" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct7" computetileid="7" type="or1200">
+      <cores>
+        <core coreid="7"/>
+      </cores>
+      <memory id="ct7m0" memoryid="7" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct8" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="8"/>
+      </cores>
+      <memory id="ct8m0" memoryid="8" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct9" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="9"/>
+      </cores>
+      <memory id="ct9m0" memoryid="9" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct10" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="10"/>
+      </cores>
+      <memory id="ct10m0" memoryid="10" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct11" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="11"/>
+      </cores>
+      <memory id="ct11m0" memoryid="11" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct12" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="12"/>
+      </cores>
+      <memory id="ct12m0" memoryid="12" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct13" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="13"/>
+      </cores>
+      <memory id="ct13m0" memoryid="13" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct14" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="14"/>
+      </cores>
+      <memory id="ct14m0" memoryid="14" size="64" sizeunit="M" />
+    </computetile>
+    <computetile id="ct15" computetileid="8" type="or1200">
+      <cores>
+        <core coreid="15"/>
+      </cores>
+      <memory id="ct15m0" memoryid="15" size="64" sizeunit="M" />
+    </computetile>
+  </tiles>
+</system>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Single compute tile
+-->
+<system xmlns="http://www.optimsoc.org/xmlns/optimsoc-system"
+        version="1"
+        systemid="0xc200">
+  <meta>
+    <author>Philipp Wagner</author>
+    <authoremail>philipp.wagner@tum.de</authoremail>
+  </meta>
+
+  <layout autogen="true"/>
+
+  <meshnoc xdim="1" ydim="1">
+    <locallinks>
+      <locallink>
+        <con><meshroutercon x="0" y="0"/></con>
+        <con><tilecon tile="ct0"/></con>
+      </locallink>
+    </locallinks>
+  </meshnoc>
+
+  <tiles>
+    <computetile id="ct0" computetileid="0" type="or1200">
+      <cores>
+        <core coreid="0"/>
+      </cores>
+      <memory id="ct0m0" memoryid="0" size="64" sizeunit="M" />
+    </computetile>
+  </tiles>
+</system>

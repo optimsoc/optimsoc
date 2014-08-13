@@ -66,7 +66,7 @@ int sc_main(int argc, char *argv[])
     trace.vcd = &vcd;
 #endif
 
-    VerilatedDebugConnector debugconn("DebugConnector", 0x15);
+    VerilatedDebugConnector debugconn("DebugConnector", 0x816f);
     debugconn.rst_sys(rst_sys);
     debugconn.rst_cpu(rst_cpu);
 
