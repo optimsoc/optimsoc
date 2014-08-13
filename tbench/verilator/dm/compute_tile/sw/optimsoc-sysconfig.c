@@ -19,7 +19,8 @@ const uint8_t _optimsoc_max_cores_per_compute_tile = 1;
 const uint32_t _optimsoc_stacksize = 0x2000;
 
 // Memory tiles
-const uint32_t _optimsoc_mainmem_size = 1*1024*1024;
+const uint32_t _optimsoc_mainmem_size = 0;
+const uint32_t _optimsoc_mainmem_tile = 0xffffffff;
 
 // Hostlink tiles
 const uint8_t  _optimsoc_has_hostlink = 0;

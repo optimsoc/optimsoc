@@ -20,6 +20,7 @@ const uint32_t _optimsoc_stacksize = 0x2000;
 
 // Memory tiles
 const uint32_t _optimsoc_mainmem_size = 0; // not needed
+const uint32_t _optimsoc_mainmem_tile = 0xffffffff; // not needed
 
 // Hostlink tiles
 const uint8_t  _optimsoc_has_hostlink = 0;
