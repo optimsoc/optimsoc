@@ -67,6 +67,9 @@ module compute_tile_dm(
    parameter MEM_SIZE = 30*1024; // 30 kByte
    parameter MEM_FILE = "ct.vmem";
 
+   parameter GLOBAL_MEMORY_SIZE = 32'h0;
+   parameter GLOBAL_MEMORY_TILE = 32'hx;
+   
    parameter NA_ENABLE_DMA = 1;
    parameter DMA_ENTRIES = 4;
    // TODO: make define out of it
@@ -457,7 +460,9 @@ module compute_tile_dm(
         .vchannels(VCHANNELS),
         .noc_flit_width(NOC_FLIT_WIDTH),
         .NUMCORES(CORES), .COREBASE(COREBASE),
-        .DOMAIN_NUMCORES(DOMAIN_NUMCORES))
+        .DOMAIN_NUMCORES(DOMAIN_NUMCORES),
+        .GLOBAL_MEMORY_SIZE(GLOBAL_MEMORY_SIZE),
+        .GLOBAL_MEMORY_TILE(GLOBAL_MEMORY_TILE))
       u_na(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC

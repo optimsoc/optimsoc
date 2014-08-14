@@ -49,6 +49,10 @@
  * +----------------------------+
  * | 0x18 R: domain core number |
  * +----------------------------+
+ * | 0x1c R: global memory size |
+ * +----------------------------+
+ * | 0x20 R: global memory tile |
+ * +----------------------------+
  * |
  * .
  * .
@@ -79,6 +83,8 @@ module networkadapter_conf(
    parameter COREBASE = 0;
    parameter NUMCORES = 32'hx;
    parameter DOMAIN_NUMCORES = 32'hx;
+   parameter GLOBAL_MEMORY_SIZE = 32'h0;
+   parameter GLOBAL_MEMORY_TILE = 32'hx;
 
    parameter REG_TILEID = 0;
    parameter REG_XDIM   = 1;
@@ -87,7 +93,9 @@ module networkadapter_conf(
    localparam REG_COREBASE = 4;
    localparam REG_NUMCORES = 5;
    localparam REG_DOMAIN_NUMCORES = 6;
-
+   localparam REG_GMEM_SIZE = 7;
+   localparam REG_GMEM_TILE = 8;  
+   
    parameter REG_CDC      = 10'h80;
    parameter REG_CDC_DYN  = 10'h81;
    parameter REG_CDC_CONF = 10'h82;
@@ -144,7 +152,13 @@ module networkadapter_conf(
         REG_DOMAIN_NUMCORES: begin
            data = DOMAIN_NUMCORES;
         end
-
+        REG_GMEM_SIZE: begin
+           data = GLOBAL_MEMORY_SIZE;
+        end
+        REG_GMEM_TILE: begin
+           data = GLOBAL_MEMORY_TILE;
+        end
+        
         REG_CDC: begin
 `ifdef OPTIMSOC_CLOCKDOMAINS
            data = 32'b1;

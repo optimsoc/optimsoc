@@ -59,6 +59,9 @@ module networkadapter_ct(
    parameter NUMCORES = 32'hx;
    parameter DOMAIN_NUMCORES = NUMCORES;
 
+   parameter GLOBAL_MEMORY_SIZE = 32'h0;
+   parameter GLOBAL_MEMORY_TILE = 32'hx;
+
    parameter dma_generate_interrupt = 1;
    parameter dma_entries = 4;
 
@@ -204,7 +207,9 @@ module networkadapter_ct(
        .mp_simple_present(conf_mp_simple),
        .dma_present(conf_dma),
        .COREBASE(COREBASE), .NUMCORES(NUMCORES),
-       .DOMAIN_NUMCORES(DOMAIN_NUMCORES))
+       .DOMAIN_NUMCORES(DOMAIN_NUMCORES),
+       .GLOBAL_MEMORY_SIZE(GLOBAL_MEMORY_SIZE),
+       .GLOBAL_MEMORY_TILE(GLOBAL_MEMORY_TILE))
    u_conf(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC

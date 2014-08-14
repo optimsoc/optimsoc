@@ -171,7 +171,9 @@ module system_2x2_cccm_dm(
               .CORES(CORES),
               .COREBASE(i*CORES),
               .MEM_SIZE(CT_MEM_SIZE),
-              .MEM_FILE(CT_MEM_FILE))
+              .MEM_FILE(CT_MEM_FILE),
+              .GLOBAL_MEMORY_SIZE(MT_MEM_SIZE),
+              .GLOBAL_MEMORY_TILE(3))
             u_ct(// Outputs
                  .trace                      (trace[(`DEBUG_TRACE_EXEC_WIDTH*CORES*(i+1))-1:`DEBUG_TRACE_EXEC_WIDTH*CORES*i]),
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
