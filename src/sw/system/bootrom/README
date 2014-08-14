@@ -1,0 +1,11 @@
+This is the OpTiMSoC bootrom code. The assembler code is built into Verilog 
+code and included during synthesis.
+
+To build the code, run
+
+$> make
+
+and install the resulting .v-file with
+
+$> make install
+
