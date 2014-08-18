@@ -53,6 +53,8 @@
  * +----------------------------+
  * | 0x20 R: global memory tile |
  * +----------------------------+
+ * | 0x24 R: local memory size  |
+ * +----------------------------+
  * |
  * .
  * .
@@ -85,6 +87,7 @@ module networkadapter_conf(
    parameter DOMAIN_NUMCORES = 32'hx;
    parameter GLOBAL_MEMORY_SIZE = 32'h0;
    parameter GLOBAL_MEMORY_TILE = 32'hx;
+   parameter LOCAL_MEMORY_SIZE = 32'hx;
 
    parameter REG_TILEID = 0;
    parameter REG_XDIM   = 1;
@@ -95,6 +98,7 @@ module networkadapter_conf(
    localparam REG_DOMAIN_NUMCORES = 6;
    localparam REG_GMEM_SIZE = 7;
    localparam REG_GMEM_TILE = 8;  
+   localparam REG_LMEM_SIZE = 9;
    
    parameter REG_CDC      = 10'h80;
    parameter REG_CDC_DYN  = 10'h81;
@@ -157,6 +161,9 @@ module networkadapter_conf(
         end
         REG_GMEM_TILE: begin
            data = GLOBAL_MEMORY_TILE;
+        end
+        REG_LMEM_SIZE: begin
+           data = LOCAL_MEMORY_SIZE;
         end
         
         REG_CDC: begin
