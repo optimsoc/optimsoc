@@ -47,7 +47,6 @@ module mor1kx_cpu_espresso
    parameter OPTION_ICACHE_WAYS		= 2;
    parameter FEATURE_IMMU		= "NONE";
    parameter FEATURE_IMMU_HW_TLB_RELOAD = "NONE";
-   parameter FEATURE_PIC		= "ENABLED";
    parameter FEATURE_TIMER		= "ENABLED";
    parameter FEATURE_DEBUGUNIT		= "NONE";
    parameter FEATURE_PERFCOUNTERS	= "NONE";
@@ -58,12 +57,15 @@ module mor1kx_cpu_espresso
    parameter FEATURE_TRAP		= "ENABLED";
    parameter FEATURE_RANGE		= "ENABLED";
 
+   parameter FEATURE_PIC		= "ENABLED";
    parameter OPTION_PIC_TRIGGER		= "LEVEL";
+   parameter OPTION_PIC_NMI_WIDTH	= 0;
 
    parameter FEATURE_DSX		= "NONE";
    parameter FEATURE_FASTCONTEXTS	= "NONE";
    parameter FEATURE_OVERFLOW		= "NONE";
-   
+   parameter FEATURE_CARRY_FLAG		= "ENABLED";
+
    parameter OPTION_RF_ADDR_WIDTH	= 5;
    parameter OPTION_RF_WORDS		= 32;
 
@@ -79,7 +81,10 @@ module mor1kx_cpu_espresso
    parameter FEATURE_EXT		= "NONE";
    parameter FEATURE_CMOV		= "NONE";
    parameter FEATURE_FFL1		= "NONE";
-   
+   parameter FEATURE_MSYNC		= "NONE";
+   parameter FEATURE_PSYNC		= "NONE";
+   parameter FEATURE_CSYNC		= "NONE";
+
    parameter FEATURE_CUST1		= "NONE";
    parameter FEATURE_CUST2		= "NONE";
    parameter FEATURE_CUST3		= "NONE";
@@ -222,6 +227,7 @@ module mor1kx_cpu_espresso
    wire [OPTION_OPERAND_WIDTH-1:0] lsu_result_o;// From mor1kx_lsu_espresso of mor1kx_lsu_espresso.v
    wire			lsu_valid_o;		// From mor1kx_lsu_espresso of mor1kx_lsu_espresso.v
    wire [OPTION_OPERAND_WIDTH-1:0] mfspr_dat_o;	// From mor1kx_ctrl_espresso of mor1kx_ctrl_espresso.v
+   wire [OPTION_OPERAND_WIDTH-1:0] mul_result_o;// From mor1kx_execute_alu of mor1kx_execute_alu.v
    wire			next_fetch_done_o;	// From mor1kx_fetch_espresso of mor1kx_fetch_espresso.v
    wire			overflow_clear_o;	// From mor1kx_execute_alu of mor1kx_execute_alu.v
    wire			overflow_set_o;		// From mor1kx_execute_alu of mor1kx_execute_alu.v
@@ -291,6 +297,7 @@ module mor1kx_cpu_espresso
 
    /* mor1kx_decode AUTO_TEMPLATE (
     .decode_insn_i			(insn_fetch_to_decode),
+    .decode_op_lsu_atomic_o             (),
     ); */
    mor1kx_decode
      #(
@@ -309,6 +316,9 @@ module mor1kx_cpu_espresso
        .FEATURE_EXT(FEATURE_EXT),
        .FEATURE_CMOV(FEATURE_CMOV),
        .FEATURE_FFL1(FEATURE_FFL1),
+       .FEATURE_MSYNC(FEATURE_MSYNC),
+       .FEATURE_PSYNC(FEATURE_PSYNC),
+       .FEATURE_CSYNC(FEATURE_CSYNC),
        .FEATURE_CUST1(FEATURE_CUST1),
        .FEATURE_CUST2(FEATURE_CUST2),
        .FEATURE_CUST3(FEATURE_CUST3),
@@ -341,7 +351,7 @@ module mor1kx_cpu_espresso
       .decode_op_alu_o			(decode_op_alu_o),
       .decode_op_lsu_load_o		(decode_op_lsu_load_o),
       .decode_op_lsu_store_o		(decode_op_lsu_store_o),
-      .decode_op_lsu_atomic_o		(decode_op_lsu_atomic_o),
+      .decode_op_lsu_atomic_o		(),			 // Templated
       .decode_lsu_length_o		(decode_lsu_length_o[1:0]),
       .decode_lsu_zext_o		(decode_lsu_zext_o),
       .decode_op_mfspr_o		(decode_op_mfspr_o),
@@ -370,7 +380,8 @@ module mor1kx_cpu_espresso
       .decode_insn_i			(insn_fetch_to_decode));	 // Templated
 
    /* mor1kx_execute_alu AUTO_TEMPLATE (
-    .padv_i				(padv_execute_o),    
+    .padv_execute_i			(padv_execute_o),
+    .padv_ctrl_i			(1'b1),
     .opc_alu_i			        (decode_opc_alu_o),
     .opc_alu_secondary_i		(decode_opc_alu_secondary_o),
     .imm16_i				(decode_imm16_o),
@@ -434,11 +445,13 @@ module mor1kx_cpu_espresso
       .overflow_clear_o			(overflow_clear_o),
       .alu_result_o			(alu_result_o[OPTION_OPERAND_WIDTH-1:0]),
       .alu_valid_o			(alu_valid_o),
+      .mul_result_o			(mul_result_o[OPTION_OPERAND_WIDTH-1:0]),
       .adder_result_o			(adder_result_o[OPTION_OPERAND_WIDTH-1:0]),
       // Inputs
       .clk				(clk),
       .rst				(rst),
-      .padv_i				(padv_execute_o),	 // Templated
+      .padv_execute_i			(padv_execute_o),	 // Templated
+      .padv_ctrl_i			(1'b1),			 // Templated
       .opc_alu_i			(decode_opc_alu_o),	 // Templated
       .opc_alu_secondary_i		(decode_opc_alu_secondary_o), // Templated
       .imm16_i				(decode_imm16_o),	 // Templated
@@ -652,6 +665,7 @@ module mor1kx_cpu_espresso
        .FEATURE_PIC(FEATURE_PIC),
        .FEATURE_TIMER(FEATURE_TIMER),
        .OPTION_PIC_TRIGGER(OPTION_PIC_TRIGGER),
+       .OPTION_PIC_NMI_WIDTH(OPTION_PIC_NMI_WIDTH),
        .FEATURE_DSX(FEATURE_DSX),
        .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
        .FEATURE_OVERFLOW(FEATURE_OVERFLOW),

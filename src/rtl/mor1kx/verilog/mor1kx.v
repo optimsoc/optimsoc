@@ -34,7 +34,7 @@ module mor1kx
    avm_d_waitrequest_i, avm_d_readdatavalid_i, avm_i_readdata_i,
    avm_i_waitrequest_i, avm_i_readdatavalid_i, irq_i, du_addr_i,
    du_stb_i, du_dat_i, du_we_i, du_stall_i, multicore_coreid_i,
-   multicore_numcores_i
+   multicore_numcores_i, snoop_adr_i, snoop_en_i
    );
 
    parameter OPTION_OPERAND_WIDTH	= 32;
@@ -43,7 +43,7 @@ module mor1kx
 
    parameter FEATURE_DATACACHE		= "NONE";
    parameter OPTION_DCACHE_BLOCK_WIDTH	= 5;
-   parameter OPTION_DCACHE_SET_WIDTH	= 8;
+   parameter OPTION_DCACHE_SET_WIDTH	= 9;
    parameter OPTION_DCACHE_WAYS		= 2;
    parameter OPTION_DCACHE_LIMIT_WIDTH	= 32;
    parameter FEATURE_DMMU		= "NONE";
@@ -52,14 +52,13 @@ module mor1kx
    parameter OPTION_DMMU_WAYS		= 1;
    parameter FEATURE_INSTRUCTIONCACHE	= "NONE";
    parameter OPTION_ICACHE_BLOCK_WIDTH	= 5;
-   parameter OPTION_ICACHE_SET_WIDTH	= 8;
+   parameter OPTION_ICACHE_SET_WIDTH	= 9;
    parameter OPTION_ICACHE_WAYS		= 2;
    parameter OPTION_ICACHE_LIMIT_WIDTH	= 32;
    parameter FEATURE_IMMU		= "NONE";
    parameter FEATURE_IMMU_HW_TLB_RELOAD = "NONE";
    parameter OPTION_IMMU_SET_WIDTH	= 6;
    parameter OPTION_IMMU_WAYS		= 1;
-   parameter FEATURE_PIC		= "ENABLED";
    parameter FEATURE_TIMER		= "ENABLED";
    parameter FEATURE_DEBUGUNIT		= "NONE";
    parameter FEATURE_PERFCOUNTERS	= "NONE";
@@ -72,12 +71,16 @@ module mor1kx
    parameter FEATURE_TRAP		= "ENABLED";
    parameter FEATURE_RANGE		= "ENABLED";
 
+   parameter FEATURE_PIC		= "ENABLED";
    parameter OPTION_PIC_TRIGGER		= "LEVEL";
+   parameter OPTION_PIC_NMI_WIDTH	= 0;
 
    parameter FEATURE_DSX		= "ENABLED";
-   parameter FEATURE_FASTCONTEXTS	= "NONE";
    parameter FEATURE_OVERFLOW		= "ENABLED";
+   parameter FEATURE_CARRY_FLAG		= "ENABLED";
 
+   parameter FEATURE_FASTCONTEXTS	= "NONE";
+   parameter OPTION_RF_NUM_SHADOW_GPR	= 0;
    parameter OPTION_RF_ADDR_WIDTH	= 5;
    parameter OPTION_RF_WORDS		= 32;
 
@@ -178,12 +181,15 @@ module mor1kx
    output [`OR1K_INSN_WIDTH-1:0]     traceport_exec_insn_o;
    output [OPTION_OPERAND_WIDTH-1:0] traceport_exec_wbdata_o;
    output [OPTION_RF_ADDR_WIDTH-1:0] traceport_exec_wbreg_o;
-   output 			     traceport_exec_wben_o;   
+   output 			     traceport_exec_wben_o;
 
    // The multicore core identifier
    input [OPTION_OPERAND_WIDTH-1:0]  multicore_coreid_i;
    // The number of cores
    input [OPTION_OPERAND_WIDTH-1:0]  multicore_numcores_i;
+
+   input [31:0] 		     snoop_adr_i;
+   input 			     snoop_en_i;
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -487,9 +493,12 @@ module mor1kx
 	     .FEATURE_TRAP(FEATURE_TRAP),
 	     .FEATURE_RANGE(FEATURE_RANGE),
 	     .OPTION_PIC_TRIGGER(OPTION_PIC_TRIGGER),
+	     .OPTION_PIC_NMI_WIDTH(OPTION_PIC_NMI_WIDTH),
 	     .FEATURE_DSX(FEATURE_DSX),
-	     .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
 	     .FEATURE_OVERFLOW(FEATURE_OVERFLOW),
+	     .FEATURE_CARRY_FLAG(FEATURE_CARRY_FLAG),
+	     .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
+	     .OPTION_RF_NUM_SHADOW_GPR(OPTION_RF_NUM_SHADOW_GPR),
 	     .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
 	     .OPTION_RF_WORDS(OPTION_RF_WORDS),
 	     .OPTION_RESET_PC(OPTION_RESET_PC),
@@ -569,6 +578,8 @@ module mor1kx
       .spr_bus_dat_fpu_i		(),			 // Templated
       .spr_bus_ack_fpu_i		(),			 // Templated
       .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]),
-      .multicore_numcores_i		(multicore_numcores_i[OPTION_OPERAND_WIDTH-1:0]));
+      .multicore_numcores_i		(multicore_numcores_i[OPTION_OPERAND_WIDTH-1:0]),
+      .snoop_adr_i			(snoop_adr_i[31:0]),
+      .snoop_en_i			(snoop_en_i));
 
 endmodule // mor1kx

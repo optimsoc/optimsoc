@@ -19,9 +19,8 @@
 
   contains PIC logic
 
-  Copyright (C) 2012 Authors
-
-  Author(s): Julius Baxter <juliusbaxter@gmail.com>
+  Copyright (C) 2012 Julius Baxter <juliusbaxter@gmail.com>
+  Copyright (C) 2012-2013 Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
 
 ***************************************************************************** */
 
@@ -51,20 +50,23 @@ module mor1kx_ctrl_cappuccino
     parameter FEATURE_IMMU = "NONE",
     parameter OPTION_IMMU_SET_WIDTH = 6,
     parameter OPTION_IMMU_WAYS = 1,
-    parameter FEATURE_PIC = "ENABLED",
     parameter FEATURE_TIMER = "ENABLED",
     parameter FEATURE_DEBUGUNIT = "NONE",
     parameter FEATURE_PERFCOUNTERS = "NONE",
     parameter FEATURE_PMU = "NONE",
     parameter FEATURE_MAC = "NONE",
     parameter FEATURE_FPU = "NONE",
-    parameter FEATURE_MULTICORE = 0,
+    parameter FEATURE_MULTICORE = "NONE",
 
+    parameter FEATURE_PIC = "ENABLED",
     parameter OPTION_PIC_TRIGGER = "LEVEL",
+    parameter OPTION_PIC_NMI_WIDTH = 0,
 
     parameter FEATURE_DSX ="NONE",
     parameter FEATURE_FASTCONTEXTS = "NONE",
+    parameter OPTION_RF_NUM_SHADOW_GPR = 0,
     parameter FEATURE_OVERFLOW = "NONE",
+    parameter FEATURE_CARRY_FLAG = "ENABLED",
 
     parameter SPR_SR_WIDTH = 16,
     parameter SPR_SR_RESET_VALUE = 16'h8001
@@ -123,7 +125,7 @@ module mor1kx_ctrl_cappuccino
     input 			      fetch_valid_i,
     input 			      decode_valid_i,
     input 			      execute_valid_i,
-    input 			      execute_waiting_i,
+    input 			      ctrl_valid_i,
 
     input 			      fetch_exception_taken_i,
 
@@ -209,6 +211,7 @@ module mor1kx_ctrl_cappuccino
     input [OPTION_OPERAND_WIDTH-1:0]  spr_bus_dat_fpu_i,
     input 			      spr_bus_ack_fpu_i,
     input [OPTION_OPERAND_WIDTH-1:0]  spr_gpr_dat_i,
+    input 			      spr_gpr_ack_i,
     output [15:0] 		      spr_sr_o,
 
     output reg 			      ctrl_bubble_o,
@@ -237,6 +240,7 @@ module mor1kx_ctrl_cappuccino
    reg 				     execute_delay_slot;
    reg 				     ctrl_delay_slot;
 
+   wire				     execute_waiting;
    reg 				     execute_waiting_r;
 
    reg 				     decode_execute_halt;
@@ -282,9 +286,9 @@ module mor1kx_ctrl_cappuccino
 
    /* DU internal control signals */
    wire 			     du_access;
-   wire 			     cpu_stall;
+   reg 				     cpu_stall;
    wire 			     du_restart_from_stall;
-   wire [5:0] 			     pstep;
+   reg [5:0] 			     pstep;
    wire 			     stepping;
    wire 			     stepped_into_delay_slot;
    reg 				     stepped_into_exception;
@@ -320,40 +324,6 @@ module mor1kx_ctrl_cappuccino
    wire [31:0] 			     spr_pccfgr;
    wire [31:0] 			     spr_fpcsr;
    wire [31:0] 			     spr_isr [0:7];
-
-   // Only in multicore implementation:
-   // Implementation specific registers 0 and 1 are used as registers
-   // during exceptions or for kernel specific data
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr0;
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr1;
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr2;
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr3;
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr4;
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr5;
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr6;
-   reg [OPTION_OPERAND_WIDTH-1:0]    spr_isr7;
-
-   generate
-      if (FEATURE_MULTICORE != "NONE") begin
-	 assign spr_isr[0] = spr_isr0;
-	 assign spr_isr[1] = spr_isr1;
-	 assign spr_isr[2] = spr_isr2;
-	 assign spr_isr[3] = spr_isr3;
-	 assign spr_isr[4] = spr_isr4;
-	 assign spr_isr[5] = spr_isr5;
-	 assign spr_isr[6] = spr_isr6;
-	 assign spr_isr[7] = spr_isr7;
-      end else begin
-	 assign spr_isr[0] = 0;
-	 assign spr_isr[1] = 0;
-	 assign spr_isr[2] = 0;
-	 assign spr_isr[3] = 0;
-	 assign spr_isr[4] = 0;
-	 assign spr_isr[5] = 0;
-	 assign spr_isr[6] = 0;
-	 assign spr_isr[7] = 0;
-      end // else: !if(FEATURE_MULTICORE != "NONE")
-   endgenerate
 
    assign  b = ctrl_rfb_i;
 
@@ -451,17 +421,19 @@ module mor1kx_ctrl_cappuccino
 				{19'd0,`OR1K_TT_VECTOR,8'd0};
        endcase // casex (...
 
-   assign padv_fetch_o = !execute_waiting_i & !cpu_stall & !decode_bubble_i
+   assign execute_waiting = !execute_valid_i;
+
+   assign padv_fetch_o = !execute_waiting & !cpu_stall & !decode_bubble_i
 			 & (!stepping | (stepping & pstep[0] & !fetch_valid_i));
 
-   assign padv_decode_o = fetch_valid_i & !execute_waiting_i &
+   assign padv_decode_o = fetch_valid_i & !execute_waiting &
 			  !decode_execute_halt & !cpu_stall
 			  & (!stepping | (stepping & pstep[1]));
 
-   assign padv_execute_o = ((decode_valid_i & !execute_waiting_i &
+   assign padv_execute_o = ((decode_valid_i & !execute_waiting &
 			     /* Stop fetch before exception branch continuing */
 			     !(exception_r & fetch_exception_taken_i)) |
-			    (!execute_waiting_i & execute_waiting_r &
+			    (!execute_waiting & execute_waiting_r &
 			     fetch_valid_i) |
 			    // Case where execute became ready before fetch
 			    // after delay in execute stage
@@ -489,8 +461,9 @@ module mor1kx_ctrl_cappuccino
 			ctrl_flag_set;
 
    // Carry output
-   assign ctrl_carry_o = (!ctrl_carry_clear_i & spr_sr[`OR1K_SPR_SR_CY]) |
-			 ctrl_carry_set_i;
+   assign ctrl_carry_o = FEATURE_CARRY_FLAG!="NONE" &
+			 (!ctrl_carry_clear_i & spr_sr[`OR1K_SPR_SR_CY] |
+			 ctrl_carry_set_i);
 
    // Ctrl stage pipeline advance signal is one cycle behind execute stage's
    always @(posedge clk `OR_ASYNC_RST)
@@ -502,9 +475,9 @@ module mor1kx_ctrl_cappuccino
    always @(posedge clk `OR_ASYNC_RST)
      if (rst)
        execute_waiting_r <= 0;
-     else if (!execute_waiting_i)
+     else if (!execute_waiting)
        execute_waiting_r <= 0;
-     else if (decode_valid_i & execute_waiting_i)
+     else if (decode_valid_i & execute_waiting)
        execute_waiting_r <= 1;
 
    always @(posedge clk `OR_ASYNC_RST)
@@ -558,7 +531,7 @@ module mor1kx_ctrl_cappuccino
        waiting_for_fetch <= 0;
      else if (fetch_valid_i)
        waiting_for_fetch <= 0;
-     else if (!execute_waiting_i & execute_waiting_r & !fetch_valid_i)
+     else if (!execute_waiting & execute_waiting_r & !fetch_valid_i)
        waiting_for_fetch <= 1;
 
 
@@ -628,7 +601,8 @@ module mor1kx_ctrl_cappuccino
 	  if (FEATURE_FASTCONTEXTS!="NONE")
 	    spr_sr[`OR1K_SPR_SR_CE  ] <= spr_write_dat[`OR1K_SPR_SR_CE  ];
 
-	  spr_sr[`OR1K_SPR_SR_CY  ] <= spr_write_dat[`OR1K_SPR_SR_CY  ];
+	  if (FEATURE_CARRY_FLAG!="NONE")
+	    spr_sr[`OR1K_SPR_SR_CY] <= spr_write_dat[`OR1K_SPR_SR_CY];
 
 	  if (FEATURE_OVERFLOW!="NONE") begin
 	     spr_sr[`OR1K_SPR_SR_OV  ] <= spr_write_dat[`OR1K_SPR_SR_OV  ];
@@ -645,9 +619,11 @@ module mor1kx_ctrl_cappuccino
 	  spr_sr[`OR1K_SPR_SR_F   ] <= ctrl_flag_set ? 1 :
 				       ctrl_flag_clear ? 0 :
 				       spr_sr[`OR1K_SPR_SR_F   ];
-	  spr_sr[`OR1K_SPR_SR_CY   ] <= ctrl_carry_set_i ? 1 :
-					ctrl_carry_clear_i ? 0 :
-					spr_sr[`OR1K_SPR_SR_CY   ];
+
+	  if (FEATURE_CARRY_FLAG!="NONE")
+	    spr_sr[`OR1K_SPR_SR_CY] <= ctrl_carry_set_i ? 1 :
+				       ctrl_carry_clear_i ? 0 :
+				       spr_sr[`OR1K_SPR_SR_CY];
 	  if (FEATURE_OVERFLOW!="NONE")
 	    spr_sr[`OR1K_SPR_SR_OV   ] <= ctrl_overflow_set_i ? 1 :
 				ctrl_overflow_clear_i ? 0 :
@@ -671,51 +647,15 @@ module mor1kx_ctrl_cappuccino
 	       else if (ctrl_overflow_clear_i)
 		 spr_esr[`OR1K_SPR_SR_OV] <= 1'b0;
 	    end
-	  if (ctrl_carry_set_i)
-	    spr_esr[`OR1K_SPR_SR_CY] <= 1'b1;
-	  else if (ctrl_carry_clear_i)
-	    spr_esr[`OR1K_SPR_SR_CY] <= 1'b0;
+	  if (FEATURE_CARRY_FLAG!="NONE") begin
+	     if (ctrl_carry_set_i)
+	       spr_esr[`OR1K_SPR_SR_CY] <= 1'b1;
+	     else if (ctrl_carry_clear_i)
+	       spr_esr[`OR1K_SPR_SR_CY] <= 1'b0;
+	  end
        end
      else if (spr_we & spr_addr==`OR1K_SPR_ESR0_ADDR)
        spr_esr <= spr_write_dat[SPR_SR_WIDTH-1:0];
-
-   // Implementation specific registers
-   always @(posedge clk `OR_ASYNC_RST) begin
-      if (rst) begin
-	 spr_isr0 <= {OPTION_OPERAND_WIDTH{1'bx}};
-	 spr_isr1 <= {OPTION_OPERAND_WIDTH{1'bx}};
-	 spr_isr2 <= {OPTION_OPERAND_WIDTH{1'bx}};
-	 spr_isr3 <= {OPTION_OPERAND_WIDTH{1'bx}};
-	 spr_isr4 <= {OPTION_OPERAND_WIDTH{1'bx}};
-	 spr_isr5 <= {OPTION_OPERAND_WIDTH{1'bx}};
-	 spr_isr6 <= {OPTION_OPERAND_WIDTH{1'bx}};
-	 spr_isr7 <= {OPTION_OPERAND_WIDTH{1'bx}};
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR)) begin
-	 spr_isr0 <= spr_write_dat;
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 1)) begin
-	 spr_isr1 <= spr_write_dat;
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 2)) begin
-	 spr_isr2 <= spr_write_dat;
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 3)) begin
-	 spr_isr3 <= spr_write_dat;
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 4)) begin
-	 spr_isr4 <= spr_write_dat;
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 5)) begin
-	 spr_isr5 <= spr_write_dat;
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 6)) begin
-	 spr_isr6 <= spr_write_dat;
-      end else if ((FEATURE_MULTICORE != "NONE") &&
-		   spr_we && (spr_addr==`OR1K_SPR_ISR0_ADDR + 7)) begin
-	 spr_isr7 <= spr_write_dat;
-      end
-   end
 
    always @(posedge clk `OR_ASYNC_RST)
      if (rst)
@@ -760,35 +700,29 @@ module mor1kx_ctrl_cappuccino
      else if (padv_ctrl)
        spr_ppc <= pc_ctrl_i;
 
-   wire [31:0] spr_npc_workaround;
-/*   assign spr_npc_workaround = (du_npc_write ? du_dat_i :
-                                du_npc_written ? spr_npc :
-                                stepped_into_rfe ? spr_epcr :
-                                stepped_into_delay_slot ? last_branch_target_pc :
-                                stepped_into_exception ? exception_pc_addr : 
-                                pc_ctrl_i + 4);*/
-
-	assign spr_npc_workaround = pc_ctrl_i + 4;
-
    // Generate the NPC for SPR accesses
    always @(posedge clk `OR_ASYNC_RST)
      if (rst)
        spr_npc <= OPTION_RESET_PC;
-     else 
-       spr_npc <= spr_npc_workaround;
-       
-/*     else if (du_npc_write)
+     else if (du_npc_write)
        spr_npc <= du_dat_i;
      else if (du_npc_written)
        spr_npc <= spr_npc;
-     else if (stepped_into_rfe)
-       spr_npc <= spr_epcr;
-     else if (stepped_into_delay_slot)
-       spr_npc <= last_branch_target_pc;
-     else if (stepped_into_exception)
-       spr_npc <= exception_pc_addr;
-     else
-       spr_npc <= pc_ctrl_i + 4;*/
+     else if (stepping) begin
+	if (stepped_into_rfe)
+	  spr_npc <= spr_epcr;
+	else if (stepped_into_delay_slot)
+	  spr_npc <= last_branch_target_pc;
+	else if (stepped_into_exception)
+	  spr_npc <= exception_pc_addr;
+	else
+	  spr_npc <= pc_ctrl_i + 4;
+     end else if (stall_on_trap & padv_ctrl & except_trap_i)
+       spr_npc <= pc_ctrl_i;
+     else if (cpu_stall & padv_ctrl)
+       spr_npc <= ctrl_delay_slot ? pc_ctrl_i - 4 : pc_ctrl_i;
+     else if (!cpu_stall)
+       spr_npc <= pc_execute_i;
 
    // Exception Vector Address
    always @(posedge clk `OR_ASYNC_RST)
@@ -816,6 +750,7 @@ module mor1kx_ctrl_cappuccino
        .OPTION_PIC_TRIGGER		(OPTION_PIC_TRIGGER),
        .FEATURE_DSX			(FEATURE_DSX),
        .FEATURE_FASTCONTEXTS		(FEATURE_FASTCONTEXTS),
+       .OPTION_RF_NUM_SHADOW_GPR	(OPTION_RF_NUM_SHADOW_GPR),
        .FEATURE_OVERFLOW		(FEATURE_OVERFLOW),
        .FEATURE_DATACACHE		(FEATURE_DATACACHE),
        .OPTION_DCACHE_BLOCK_WIDTH	(OPTION_DCACHE_BLOCK_WIDTH),
@@ -855,6 +790,16 @@ module mor1kx_ctrl_cappuccino
       .spr_pccfgr			(spr_pccfgr[31:0]),
       .spr_fpcsr			(spr_fpcsr[31:0]),
       .spr_avr				(spr_avr[31:0]));
+
+   /* Implementation-specific registers */
+   assign spr_isr[0] = 0;
+   assign spr_isr[1] = 0;
+   assign spr_isr[2] = 0;
+   assign spr_isr[3] = 0;
+   assign spr_isr[4] = 0;
+   assign spr_isr[5] = 0;
+   assign spr_isr[6] = 0;
+   assign spr_isr[7] = 0;
 
    // System group (0) SPR data out
    always @*
@@ -920,16 +865,15 @@ module mor1kx_ctrl_cappuccino
        `OR1K_SPR_COREID_ADDR:
 	 // If the multicore feature is activated this address returns the
 	 // core identifier, 0 otherwise
-	 spr_sys_group_read = (FEATURE_MULTICORE == "ENABLED") ? multicore_coreid_i : 0;
+	 spr_sys_group_read = (FEATURE_MULTICORE != "NONE") ? multicore_coreid_i : 0;
        `OR1K_SPR_NUMCORES_ADDR:
 	 // If the multicore feature is activated this address returns the
 	 // core identifier, 0 otherwise
-	 spr_sys_group_read = (FEATURE_MULTICORE == "ENABLED") ? multicore_numcores_i : 0;
+	 spr_sys_group_read = (FEATURE_MULTICORE != "NONE") ? multicore_numcores_i : 0;
        
        default: begin
 	  // GPR read
-	  if (spr_addr >= `OR1K_SPR_GPR0_ADDR &&
-	      spr_addr < (`OR1K_SPR_GPR0_ADDR + 32))
+	  if (spr_addr[15:9] == 7'h02)
 	    spr_sys_group_read = spr_gpr_dat_i; // Register file
 	  else
 	    // Invalid address - read as zero
@@ -940,11 +884,8 @@ module mor1kx_ctrl_cappuccino
    /* System group read data MUX in */
    assign spr_internal_read_dat[0] = spr_sys_group_read;
    /* System group ack generation */
-   reg spr_sys_group_ack;
-   always @(posedge clk)
-     spr_sys_group_ack <= spr_read_access | spr_write_access;
 
-   assign spr_access_ack[0] = spr_sys_group_ack;
+   assign spr_access_ack[0] = (spr_addr[15:9] == 7'h02) ? spr_gpr_ack_i : 1;
 
    /* Generate data to the register file for mfspr operations */
    assign mfspr_dat_o = spr_internal_read_dat[spr_addr[14:11]];
@@ -965,7 +906,10 @@ module mor1kx_ctrl_cappuccino
 	  .spr_dat_i		(spr_write_dat),
 	  );*/
 	 mor1kx_pic
-	  #(.OPTION_PIC_TRIGGER(OPTION_PIC_TRIGGER))
+	  #(
+	    .OPTION_PIC_TRIGGER(OPTION_PIC_TRIGGER),
+	    .OPTION_PIC_NMI_WIDTH(OPTION_PIC_NMI_WIDTH)
+	    )
 	 mor1kx_pic
 	   (/*AUTOINST*/
 	    // Outputs
@@ -1106,7 +1050,9 @@ module mor1kx_ctrl_cappuccino
 			     /* PIC Group */
 			     spr_addr[15:11]==5'h09 ||
 			     /* Tick Group */
-			     spr_addr[15:11]==5'h0a);
+			     spr_addr[15:11]==5'h0a) ||
+			     // GPR
+			     spr_addr[15:9]==7'h02;
 
    generate
       if (FEATURE_DEBUGUNIT!="NONE") begin : du
@@ -1115,7 +1061,6 @@ module mor1kx_ctrl_cappuccino
 
 	 reg 				du_ack;
 	 reg 				du_stall_r;
-	 reg [5:0] 			pstep_r;
 	 reg [1:0] 			branch_step;
 
 	 assign du_access = du_stb_i;
@@ -1142,12 +1087,15 @@ module mor1kx_ctrl_cappuccino
 	   du_read_dat <= spr_internal_read_dat[spr_group];
 
 	 assign du_dat_o = du_read_dat;
-	 /* TODO: check into only letting stall go high when we've gracefully
-	  completed the instruction currently in the ctrl stage.
-	  Why? Potentially an instruction like l.mfspr from an external unit
-	  hasn't completed fully, gets interrupted, and it's assumed it's
-	  completed, but actually hasn't. */
-	 assign cpu_stall = du_stall_i | du_restart_from_stall;
+
+	 always @(posedge clk)
+	   if (rst)
+	     cpu_stall <= 0;
+	   else if (!du_stall_i)
+	     cpu_stall <= 0;
+	   else if (padv_execute_o & !execute_bubble_i & du_stall_i |
+		    du_stall_o)
+	     cpu_stall <= 1;
 
 	 /* goes out to the debug interface and comes back 1 cycle later
 	  via du_stall_i */
@@ -1200,19 +1148,18 @@ module mor1kx_ctrl_cappuccino
 
 	 always @(posedge clk `OR_ASYNC_RST)
 	   if (rst)
-	     pstep_r <= 0;
+	     pstep <= 0;
 	   else if (du_restart_from_stall & stepping)
-	     pstep_r <= 6'h1;
+	     pstep <= 6'h1;
 	   else if ((pstep[0] & fetch_valid_i) |
 		    /* decode is always single cycle */
 		    (pstep[1] & padv_decode_o) |
+		    /* execute stage */
 		    (pstep[2] & (execute_valid_i | ctrl_stage_exceptions)) |
-		    /* ctrl stage can deassert execute_valid */
-		    (pstep[3] & (execute_valid_i | ctrl_stage_exceptions)) |
+		    /* ctrl stage */
+		    (pstep[3] & (ctrl_valid_i | ctrl_stage_exceptions)) |
 		    pstep[4])
-	     pstep_r <= {pstep_r[4:0],1'b0};
-
-	 assign pstep = pstep_r;
+	     pstep <= {pstep[4:0],1'b0};
 
 	 always @(posedge clk `OR_ASYNC_RST)
 	   if (rst)
@@ -1298,7 +1245,6 @@ module mor1kx_ctrl_cappuccino
       else
 	begin : no_du
 	   assign du_access = 0;
-	   assign cpu_stall = 0;
 	   assign du_stall_o = 0;
 	   assign du_ack_o = 0;
 	   assign du_restart_o = 0;
@@ -1317,6 +1263,7 @@ module mor1kx_ctrl_cappuccino
 		spr_dsr <= 0;
 		spr_drr <= 0;
 		du_npc_written <= 0;
+		cpu_stall <= 0;
 	     end
 	end
    endgenerate

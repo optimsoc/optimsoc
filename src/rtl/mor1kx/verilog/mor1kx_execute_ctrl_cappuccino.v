@@ -23,7 +23,7 @@ module mor1kx_execute_ctrl_cappuccino
     parameter OPTION_RESET_PC = {{(OPTION_OPERAND_WIDTH-13){1'b0}},
 				 `OR1K_RESET_VECTOR,8'd0},
     parameter OPTION_RF_ADDR_WIDTH = 5,
-    parameter FEATURE_OVERFLOW = "NONE"
+    parameter FEATURE_MULTIPLIER = "THREESTAGE"
     )
    (
     input 				  clk,
@@ -45,7 +45,8 @@ module mor1kx_execute_ctrl_cappuccino
     input 				  execute_except_trap_i,
 
     input 				  pipeline_flush_i,
-    input 				  du_stall_i,
+
+    input 				  op_mul_i,
 
     input 				  op_lsu_load_i,
     input 				  op_lsu_store_i,
@@ -103,6 +104,8 @@ module mor1kx_execute_ctrl_cappuccino
 
     output reg [OPTION_OPERAND_WIDTH-1:0] pc_ctrl_o,
 
+    output reg 				  ctrl_op_mul_o,
+
     output reg 				  ctrl_op_lsu_load_o,
     output reg 				  ctrl_op_lsu_store_o,
     output reg 				  ctrl_op_lsu_atomic_o,
@@ -126,19 +129,23 @@ module mor1kx_execute_ctrl_cappuccino
     output reg 				  ctrl_except_align_o,
     output reg 				  ctrl_except_trap_o,
 
-    output 				  execute_waiting_o,
-
-    output 				  execute_valid_o
+    output 				  execute_valid_o,
+    output 				  ctrl_valid_o
     );
 
-   // ALU, LSU or MTSPR/MFSPR stall execution, nothing else can
-   assign execute_waiting_o = (ctrl_op_lsu_load_o | ctrl_op_lsu_store_o) &
-			      !lsu_valid_i |
-			      ctrl_op_mfspr_o & !ctrl_mfspr_ack_i |
-			      ctrl_op_mtspr_o & !ctrl_mtspr_ack_i |
-			      !alu_valid_i;
+   wire 				  ctrl_stall;
+   wire 				  execute_stall;
 
-   assign execute_valid_o = !execute_waiting_o;
+   // LSU or MTSPR/MFSPR can stall from ctrl stage
+   assign ctrl_stall = (ctrl_op_lsu_load_o | ctrl_op_lsu_store_o) &
+		       !lsu_valid_i |
+		       ctrl_op_mfspr_o & !ctrl_mfspr_ack_i |
+		       ctrl_op_mtspr_o & !ctrl_mtspr_ack_i;
+   assign ctrl_valid_o = !ctrl_stall;
+
+   // Execute stage can be stalled from ctrl stage and by ALU
+   assign execute_stall = ctrl_stall | !alu_valid_i;
+   assign execute_valid_o = !execute_stall;
 
    always @(posedge clk `OR_ASYNC_RST)
      if (rst) begin
@@ -152,7 +159,7 @@ module mor1kx_execute_ctrl_cappuccino
 	ctrl_except_dbus_o <= 0;
 	ctrl_except_align_o <= 0;
      end
-     else if (pipeline_flush_i & !du_stall_i) begin
+     else if (pipeline_flush_i) begin
 	ctrl_except_ibus_err_o <= 0;
 	ctrl_except_itlb_miss_o <= 0;
 	ctrl_except_ipagefault_o <= 0;
@@ -208,10 +215,8 @@ module mor1kx_execute_ctrl_cappuccino
 	ctrl_flag_clear_o <= flag_clear_i;
 	ctrl_carry_set_o <= carry_set_i;
 	ctrl_carry_clear_o <= carry_clear_i;
-	if (FEATURE_OVERFLOW!="NONE") begin
-	   ctrl_overflow_set_o <= overflow_set_i;
-	   ctrl_overflow_clear_o <= overflow_clear_i;
-	end
+	ctrl_overflow_set_o <= overflow_set_i;
+	ctrl_overflow_clear_o <= overflow_clear_i;
      end
 
    // pc_ctrl should not advance when a nop bubble moves from execute to
@@ -222,14 +227,28 @@ module mor1kx_execute_ctrl_cappuccino
      else if (padv_i & !execute_bubble_i)
        pc_ctrl_o <= pc_execute_i;
 
+   //
    // The pipeline flush comes when the instruction that has caused
    // an exception or the instruction that has been interrupted is in
    // ctrl stage, so the padv_execute signal has to have higher prioity
    // than the pipeline flush in order to not accidently kill a valid
    // instruction coming in from execute stage.
    //
-   // The tail of the pipeline should also not be flushed when the
-   // pipeline_flush have been caused by a debug unit stall.
+
+generate
+if (FEATURE_MULTIPLIER=="PIPELINED") begin
+   always @(posedge clk `OR_ASYNC_RST)
+     if (rst)
+       ctrl_op_mul_o <= 0;
+     else if (padv_i)
+       ctrl_op_mul_o <= op_mul_i;
+     else if (pipeline_flush_i)
+       ctrl_op_mul_o <= 0;
+end else begin
+   always @(posedge clk)
+       ctrl_op_mul_o <= 0;
+end
+endgenerate
 
    always @(posedge clk `OR_ASYNC_RST)
      if (rst) begin
@@ -238,7 +257,7 @@ module mor1kx_execute_ctrl_cappuccino
      end else if (padv_i) begin
 	ctrl_op_mfspr_o <= op_mfspr_i;
 	ctrl_op_mtspr_o <= op_mtspr_i;
-     end else if (pipeline_flush_i & !du_stall_i) begin
+     end else if (pipeline_flush_i) begin
 	ctrl_op_mfspr_o <= 0;
 	ctrl_op_mtspr_o <= 0;
      end
@@ -248,7 +267,7 @@ module mor1kx_execute_ctrl_cappuccino
        ctrl_op_rfe_o <= 0;
      else if (padv_i)
        ctrl_op_rfe_o <= op_rfe_i;
-     else if (pipeline_flush_i & !du_stall_i)
+     else if (pipeline_flush_i)
        ctrl_op_rfe_o <= 0;
 
    always @(posedge clk `OR_ASYNC_RST)
@@ -265,7 +284,7 @@ module mor1kx_execute_ctrl_cappuccino
 	ctrl_op_lsu_load_o <= op_lsu_load_i;
 	ctrl_op_lsu_store_o <= op_lsu_store_i;
 	ctrl_op_lsu_atomic_o <= op_lsu_atomic_i;
-     end else if (pipeline_flush_i & !du_stall_i) begin
+     end else if (pipeline_flush_i) begin
 	ctrl_op_lsu_load_o <= 0;
 	ctrl_op_lsu_store_o <= 0;
 	ctrl_op_lsu_atomic_o <= 0;
@@ -289,7 +308,7 @@ module mor1kx_execute_ctrl_cappuccino
        // 2) Signaling a need to bypass from control stage, when it really
        //    should be a bypass from wb stage.
        ctrl_rf_wb_o <= 0;
-     else if (pipeline_flush_i & !du_stall_i)
+     else if (pipeline_flush_i)
        ctrl_rf_wb_o <= 0;
 
    always @(posedge clk)
@@ -299,7 +318,7 @@ module mor1kx_execute_ctrl_cappuccino
    // load and mfpsr can stall from ctrl stage, so we have to hold off the
    // write back on them
    always @(posedge clk `OR_ASYNC_RST)
-     if (rst | (pipeline_flush_i & !du_stall_i))
+     if (rst | pipeline_flush_i)
        wb_rf_wb_o <= 0;
      else if (ctrl_op_mfspr_o)
        wb_rf_wb_o <= ctrl_rf_wb_o & ctrl_mfspr_ack_i;

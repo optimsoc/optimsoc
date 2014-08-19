@@ -109,7 +109,7 @@ module mor1kx_dmmu
    always @(posedge clk `OR_ASYNC_RST)
      if (rst)
        spr_bus_ack <= 0;
-     else if (spr_bus_stb_i & (spr_bus_addr_i[15:11] == 5'd1) && !spr_bus_ack)
+     else if (spr_bus_stb_i & spr_bus_addr_i[15:11] == 5'd1)
        spr_bus_ack <= 1;
      else
        spr_bus_ack <= 0;

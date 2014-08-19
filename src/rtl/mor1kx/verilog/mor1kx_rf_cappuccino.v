@@ -18,6 +18,8 @@
 
 module mor1kx_rf_cappuccino
   #(
+    parameter FEATURE_FASTCONTEXTS = "NONE",
+    parameter OPTION_RF_NUM_SHADOW_GPR = 0,
     parameter OPTION_RF_ADDR_WIDTH = 5,
     parameter OPTION_RF_WORDS = 32,
     parameter FEATURE_DEBUGUNIT = "NONE",
@@ -38,6 +40,7 @@ module mor1kx_rf_cappuccino
     input 			      fetch_rf_adr_valid_i,
 
     // GPR numbers
+    input [OPTION_RF_ADDR_WIDTH-1:0]  fetch_rfa_adr_i,
     input [OPTION_RF_ADDR_WIDTH-1:0]  fetch_rfb_adr_i,
 
     input [OPTION_RF_ADDR_WIDTH-1:0]  decode_rfa_adr_i,
@@ -49,6 +52,10 @@ module mor1kx_rf_cappuccino
 
     // SPR interface
     input [15:0] 		      spr_bus_addr_i,
+    input 			      spr_bus_stb_i,
+    input 			      spr_bus_we_i,
+    input [OPTION_OPERAND_WIDTH-1:0]  spr_bus_dat_i,
+    output 			      spr_gpr_ack_o,
     output [OPTION_OPERAND_WIDTH-1:0] spr_gpr_dat_o,
 
     // Write back signal indications
@@ -61,21 +68,29 @@ module mor1kx_rf_cappuccino
 
     input 			      pipeline_flush_i,
 
+    output [OPTION_OPERAND_WIDTH-1:0] decode_rfa_o,
     output [OPTION_OPERAND_WIDTH-1:0] decode_rfb_o,
     output [OPTION_OPERAND_WIDTH-1:0] execute_rfa_o,
     output [OPTION_OPERAND_WIDTH-1:0] execute_rfb_o
     );
 
+   localparam RF_ADDR_WIDTH = OPTION_RF_ADDR_WIDTH *
+			      (OPTION_RF_NUM_SHADOW_GPR+1);
+   localparam RF_WORDS = OPTION_RF_WORDS * (OPTION_RF_NUM_SHADOW_GPR+1);
+
    wire [OPTION_OPERAND_WIDTH-1:0]    rfa_ram_o;
    wire [OPTION_OPERAND_WIDTH-1:0]    rfb_ram_o;
 
    reg [OPTION_OPERAND_WIDTH-1:0]     wb_hazard_result;
+   reg [OPTION_OPERAND_WIDTH-1:0]     execute_rfa;
    reg [OPTION_OPERAND_WIDTH-1:0]     execute_rfb;
 
    wire 			      rfa_rden;
    wire 			      rfb_rden;
 
    wire 			      rf_wren;
+   wire [RF_ADDR_WIDTH-1:0] 	      rf_wradr;
+   wire [OPTION_OPERAND_WIDTH-1:0]    rf_wrdat;
 
    reg 				      flushing;
 
@@ -146,26 +161,52 @@ module mor1kx_rf_cappuccino
 
    // Bypassing to decode stage
    //
-   // Bypassing is only done to port B, since the only instructions
-   // that need register output in decode stage is the jump to register
-   // instructions, which all use port B as its input.
-
    // Since the decode stage doesn't read from the register file, we have to
    // save any writes to the current read addresses in decode stage until
    // fetch latch in new values.
    // When fetch latch in the new values, and a writeback happens at the
    // same time, we bypass that value too.
-   reg 				  use_last_wb_b;
-   reg 				  wb_to_decode_bypass_b;
-   reg [OPTION_OPERAND_WIDTH-1:0] wb_to_decode_result;
+
+   // Port A
+   reg 				  use_last_wb_a;
+   reg 				  wb_to_decode_bypass_a;
+   reg [OPTION_OPERAND_WIDTH-1:0] wb_to_decode_result_a;
    always @(posedge clk)
      if (fetch_rf_adr_valid_i) begin
-	wb_to_decode_result <= result_i;
+	wb_to_decode_result_a <= result_i;
+	wb_to_decode_bypass_a <= wb_rf_wb_i & (wb_rfd_adr_i == fetch_rfa_adr_i);
+	use_last_wb_a <= 0;
+     end else if (wb_rf_wb_i) begin
+	if (decode_rfa_adr_i == wb_rfd_adr_i) begin
+	   wb_to_decode_result_a <= result_i;
+	   use_last_wb_a <= 1;
+	end
+     end
+
+   wire execute_to_decode_bypass_a;
+   assign execute_to_decode_bypass_a = ctrl_rf_wb_i &
+				       (ctrl_rfd_adr_i == decode_rfa_adr_i);
+
+   wire ctrl_to_decode_bypass_a;
+   assign ctrl_to_decode_bypass_a = use_last_wb_a | wb_rf_wb_i &
+				    (wb_rfd_adr_i == decode_rfa_adr_i);
+
+   wire [OPTION_OPERAND_WIDTH-1:0] ctrl_to_decode_result_a;
+   assign ctrl_to_decode_result_a = use_last_wb_a ?
+				  wb_to_decode_result_a : result_i;
+
+   // Port B
+   reg 				  use_last_wb_b;
+   reg 				  wb_to_decode_bypass_b;
+   reg [OPTION_OPERAND_WIDTH-1:0] wb_to_decode_result_b;
+   always @(posedge clk)
+     if (fetch_rf_adr_valid_i) begin
+	wb_to_decode_result_b <= result_i;
 	wb_to_decode_bypass_b <= wb_rf_wb_i & (wb_rfd_adr_i == fetch_rfb_adr_i);
 	use_last_wb_b <= 0;
      end else if (wb_rf_wb_i) begin
 	if (decode_rfb_adr_i == wb_rfd_adr_i) begin
-	   wb_to_decode_result <= result_i;
+	   wb_to_decode_result_b <= result_i;
 	   use_last_wb_b <= 1;
 	end
      end
@@ -178,19 +219,25 @@ module mor1kx_rf_cappuccino
    assign ctrl_to_decode_bypass_b = use_last_wb_b | wb_rf_wb_i &
 				    (wb_rfd_adr_i == decode_rfb_adr_i);
 
-   wire [OPTION_OPERAND_WIDTH-1:0] ctrl_to_decode_result;
-   assign ctrl_to_decode_result = use_last_wb_b ?
-				  wb_to_decode_result : result_i;
+   wire [OPTION_OPERAND_WIDTH-1:0] ctrl_to_decode_result_b;
+   assign ctrl_to_decode_result_b = use_last_wb_b ?
+				  wb_to_decode_result_b : result_i;
+
+
+   assign decode_rfa_o = execute_to_decode_bypass_a ? ctrl_alu_result_i :
+			 ctrl_to_decode_bypass_a ? ctrl_to_decode_result_a :
+			 wb_to_decode_bypass_a ? wb_to_decode_result_a :
+			 rfa_ram_o;
 
    assign decode_rfb_o = execute_to_decode_bypass_b ? ctrl_alu_result_i :
-			 ctrl_to_decode_bypass_b ? ctrl_to_decode_result :
-			 wb_to_decode_bypass_b ? wb_to_decode_result :
+			 ctrl_to_decode_bypass_b ? ctrl_to_decode_result_b :
+			 wb_to_decode_bypass_b ? wb_to_decode_result_b :
 			 rfb_ram_o;
 
    assign execute_rfa_o = execute_hazard_a ? execute_hazard_result :
 			  ctrl_hazard_a ? ctrl_hazard_result :
 			  wb_hazard_a ? wb_hazard_result :
-			  rfa_ram_o;
+			  execute_rfa;
 
    assign execute_rfb_o = execute_hazard_b ? execute_hazard_result :
 			  ctrl_hazard_b ? ctrl_hazard_result :
@@ -198,36 +245,66 @@ module mor1kx_rf_cappuccino
 			  execute_rfb;
 
    always @(posedge clk)
-     if (padv_decode_i)
-       execute_rfb <= decode_rfb_o;
+     if (padv_decode_i) begin
+	execute_rfa <= decode_rfa_o;
+	execute_rfb <= decode_rfb_o;
+     end
 
-   assign rfa_rden = padv_decode_i;
-   assign rfb_rden = fetch_rf_adr_valid_i;
+generate
+if (FEATURE_DEBUGUNIT!="NONE" || FEATURE_FASTCONTEXTS!="NONE" ||
+    OPTION_RF_NUM_SHADOW_GPR > 0) begin
+   wire 			   spr_gpr_we;
+   wire 			   spr_gpr_re;
+   assign spr_gpr_we = (spr_bus_addr_i[15:9] == 7'h2) &
+		       spr_bus_stb_i & spr_bus_we_i;
+   assign spr_gpr_re = (spr_bus_addr_i[15:9] == 7'h2) &
+		       spr_bus_stb_i & !spr_bus_we_i & !padv_ctrl_i;
+
+   reg 	spr_gpr_read_ack;
+   always @(posedge clk)
+     spr_gpr_read_ack <= spr_gpr_re;
+
+   assign spr_gpr_ack_o = spr_gpr_we & !wb_rf_wb_i |
+			  spr_gpr_re & spr_gpr_read_ack;
+
+   assign rf_wren =  wb_rf_wb_i | spr_gpr_we;
+   assign rf_wradr = wb_rf_wb_i ? wb_rfd_adr_i : spr_bus_addr_i;
+   assign rf_wrdat = wb_rf_wb_i ? result_i : spr_bus_dat_i;
+end else begin
+   assign spr_gpr_ack_o = 1;
+
    assign rf_wren =  wb_rf_wb_i;
+   assign rf_wradr = wb_rfd_adr_i;
+   assign rf_wrdat = result_i;
+end
+endgenerate
+
+   assign rfa_rden = fetch_rf_adr_valid_i;
+   assign rfb_rden = fetch_rf_adr_valid_i;
 
    mor1kx_rf_ram
      #(
        .OPTION_OPERAND_WIDTH(OPTION_OPERAND_WIDTH),
-       .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
-       .OPTION_RF_WORDS(OPTION_RF_WORDS)
+       .OPTION_RF_ADDR_WIDTH(RF_ADDR_WIDTH),
+       .OPTION_RF_WORDS(RF_WORDS)
        )
      rfa
      (
       .clk(clk),
       .rst(rst),
-      .rdad_i(decode_rfa_adr_i),
+      .rdad_i(fetch_rfa_adr_i),
       .rden_i(rfa_rden),
       .rdda_o(rfa_ram_o),
-      .wrad_i(wb_rfd_adr_i),
+      .wrad_i(rf_wradr),
       .wren_i(rf_wren),
-      .wrda_i(result_i)
+      .wrda_i(rf_wrdat)
       );
 
    mor1kx_rf_ram
      #(
        .OPTION_OPERAND_WIDTH(OPTION_OPERAND_WIDTH),
-       .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
-       .OPTION_RF_WORDS(OPTION_RF_WORDS)
+       .OPTION_RF_ADDR_WIDTH(RF_ADDR_WIDTH),
+       .OPTION_RF_WORDS(RF_WORDS)
        )
    rfb
      (
@@ -236,29 +313,30 @@ module mor1kx_rf_cappuccino
       .rdad_i(fetch_rfb_adr_i),
       .rden_i(rfb_rden),
       .rdda_o(rfb_ram_o),
-      .wrad_i(wb_rfd_adr_i),
+      .wrad_i(rf_wradr),
       .wren_i(rf_wren),
-      .wrda_i(result_i)
+      .wrda_i(rf_wrdat)
       );
 
 generate
-if (FEATURE_DEBUGUNIT!="NONE") begin : rfspr_gen
+if (FEATURE_DEBUGUNIT!="NONE" || FEATURE_FASTCONTEXTS!="NONE" ||
+    OPTION_RF_NUM_SHADOW_GPR > 0) begin : rfspr_gen
    mor1kx_rf_ram
      #(
        .OPTION_OPERAND_WIDTH(OPTION_OPERAND_WIDTH),
-       .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
-       .OPTION_RF_WORDS(OPTION_RF_WORDS)
+       .OPTION_RF_ADDR_WIDTH(RF_ADDR_WIDTH),
+       .OPTION_RF_WORDS(RF_WORDS)
        )
    rfspr
      (
       .clk(clk),
       .rst(rst),
-      .rdad_i(spr_bus_addr_i[OPTION_RF_ADDR_WIDTH-1:0]),
+      .rdad_i(spr_bus_addr_i[RF_ADDR_WIDTH-1:0]),
       .rden_i(1'b1),
       .rdda_o(spr_gpr_dat_o),
-      .wrad_i(wb_rfd_adr_i),
+      .wrad_i(rf_wradr),
       .wren_i(rf_wren),
-      .wrda_i(result_i)
+      .wrda_i(rf_wrdat)
       );
 end else begin
    assign spr_gpr_dat_o = 0;

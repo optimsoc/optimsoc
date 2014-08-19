@@ -135,6 +135,8 @@ module mor1kx_module (
     .multicore_coreid_i (ID),
     .multicore_numcores_i (NUMCORES),
     .traceport_\(.*\) (traceport_\1),
+    
+    .snoop_en_i (snoop_enable_i),
 
     ); */
 
@@ -214,7 +216,9 @@ module mor1kx_module (
 	   .du_we_i			(dbg_we_i),		 // Templated
 	   .du_stall_i			(dbg_stall_i),		 // Templated
 	   .multicore_coreid_i		(ID),			 // Templated
-	   .multicore_numcores_i	(NUMCORES));		 // Templated
+	   .multicore_numcores_i	(NUMCORES),		 // Templated
+	   .snoop_adr_i			(snoop_adr_i[31:0]),
+	   .snoop_en_i			(snoop_enable_i));	 // Templated
 
 endmodule // mor1kx_module
 

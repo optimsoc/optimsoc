@@ -33,7 +33,8 @@ module mor1kx_cpu(/*AUTOARG*/
    spr_bus_dat_immu_i, spr_bus_ack_immu_i, spr_bus_dat_mac_i,
    spr_bus_ack_mac_i, spr_bus_dat_pmu_i, spr_bus_ack_pmu_i,
    spr_bus_dat_pcu_i, spr_bus_ack_pcu_i, spr_bus_dat_fpu_i,
-   spr_bus_ack_fpu_i, multicore_coreid_i, multicore_numcores_i
+   spr_bus_ack_fpu_i, multicore_coreid_i, multicore_numcores_i,
+   snoop_adr_i, snoop_en_i
    );
 
 
@@ -61,7 +62,6 @@ module mor1kx_cpu(/*AUTOARG*/
    parameter FEATURE_IMMU_HW_TLB_RELOAD = "NONE";
    parameter OPTION_IMMU_SET_WIDTH	= 6;
    parameter OPTION_IMMU_WAYS		= 1;
-   parameter FEATURE_PIC		= "ENABLED";
    parameter FEATURE_TIMER		= "ENABLED";
    parameter FEATURE_DEBUGUNIT		= "NONE";
    parameter FEATURE_PERFCOUNTERS	= "NONE";
@@ -74,12 +74,16 @@ module mor1kx_cpu(/*AUTOARG*/
    parameter FEATURE_TRAP		= "ENABLED";
    parameter FEATURE_RANGE		= "ENABLED";
 
+   parameter FEATURE_PIC		= "ENABLED";
    parameter OPTION_PIC_TRIGGER		= "LEVEL";
+   parameter OPTION_PIC_NMI_WIDTH	= 0;
 
    parameter FEATURE_DSX		= "NONE";
-   parameter FEATURE_FASTCONTEXTS	= "NONE";
    parameter FEATURE_OVERFLOW		= "NONE";
+   parameter FEATURE_CARRY_FLAG		= "ENABLED";
 
+   parameter FEATURE_FASTCONTEXTS	= "NONE";
+   parameter OPTION_RF_NUM_SHADOW_GPR 	= 0;
    parameter OPTION_RF_ADDR_WIDTH	= 5;
    parameter OPTION_RF_WORDS		= 32;
 
@@ -97,6 +101,9 @@ module mor1kx_cpu(/*AUTOARG*/
    parameter FEATURE_EXT		= "NONE";
    parameter FEATURE_CMOV		= "NONE";
    parameter FEATURE_FFL1		= "NONE";
+   parameter FEATURE_MSYNC		= "NONE";
+   parameter FEATURE_PSYNC		= "NONE";
+   parameter FEATURE_CSYNC		= "NONE";
    parameter FEATURE_ATOMIC		= "ENABLED";
 
    parameter FEATURE_CUST1		= "NONE";
@@ -174,6 +181,9 @@ module mor1kx_cpu(/*AUTOARG*/
    input [OPTION_OPERAND_WIDTH-1:0]  multicore_coreid_i;
    // The number of cores
    input [OPTION_OPERAND_WIDTH-1:0]  multicore_numcores_i;
+
+   input [31:0] 		     snoop_adr_i;
+   input 			     snoop_en_i;
    
    wire [`OR1K_INSN_WIDTH-1:0] 	     monitor_execute_insn/* verilator public */;   
    wire 			     monitor_execute_advance/* verilator public */;
@@ -227,9 +237,12 @@ module mor1kx_cpu(/*AUTOARG*/
 	     .FEATURE_TRAP(FEATURE_TRAP),
 	     .FEATURE_RANGE(FEATURE_RANGE),
 	     .OPTION_PIC_TRIGGER(OPTION_PIC_TRIGGER),
+	     .OPTION_PIC_NMI_WIDTH(OPTION_PIC_NMI_WIDTH),
 	     .FEATURE_DSX(FEATURE_DSX),
 	     .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
+	     .OPTION_RF_NUM_SHADOW_GPR(OPTION_RF_NUM_SHADOW_GPR),
 	     .FEATURE_OVERFLOW(FEATURE_OVERFLOW),
+	     .FEATURE_CARRY_FLAG(FEATURE_CARRY_FLAG),
 	     .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
 	     .OPTION_RF_WORDS(OPTION_RF_WORDS),
 	     .OPTION_RESET_PC(OPTION_RESET_PC),
@@ -241,6 +254,9 @@ module mor1kx_cpu(/*AUTOARG*/
 	     .FEATURE_EXT(FEATURE_EXT),
 	     .FEATURE_CMOV(FEATURE_CMOV),
 	     .FEATURE_FFL1(FEATURE_FFL1),
+	     .FEATURE_MSYNC(FEATURE_MSYNC),
+	     .FEATURE_PSYNC(FEATURE_PSYNC),
+	     .FEATURE_CSYNC(FEATURE_CSYNC),
 	     .FEATURE_ATOMIC(FEATURE_ATOMIC),
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
@@ -303,7 +319,9 @@ module mor1kx_cpu(/*AUTOARG*/
 	    .spr_bus_dat_fpu_i		(spr_bus_dat_fpu_i[OPTION_OPERAND_WIDTH-1:0]),
 	    .spr_bus_ack_fpu_i		(spr_bus_ack_fpu_i),
 	    .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]),
-	    .multicore_numcores_i	(multicore_numcores_i[OPTION_OPERAND_WIDTH-1:0]));
+	    .multicore_numcores_i	(multicore_numcores_i[OPTION_OPERAND_WIDTH-1:0]),
+	    .snoop_adr_i		(snoop_adr_i[31:0]),
+	    .snoop_en_i			(snoop_en_i));
 
 	 // synthesis translate_off
 `ifndef SYNTHESIS
@@ -363,9 +381,11 @@ module mor1kx_cpu(/*AUTOARG*/
 	     .FEATURE_TRAP(FEATURE_TRAP),
 	     .FEATURE_RANGE(FEATURE_RANGE),
 	     .OPTION_PIC_TRIGGER(OPTION_PIC_TRIGGER),
+	     .OPTION_PIC_NMI_WIDTH(OPTION_PIC_NMI_WIDTH),
 	     .FEATURE_DSX(FEATURE_DSX),
 	     .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
 	     .FEATURE_OVERFLOW(FEATURE_OVERFLOW),
+	     .FEATURE_CARRY_FLAG(FEATURE_CARRY_FLAG),
 	     .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
 	     .OPTION_RF_WORDS(OPTION_RF_WORDS),
 	     .OPTION_RESET_PC(OPTION_RESET_PC),
@@ -377,6 +397,9 @@ module mor1kx_cpu(/*AUTOARG*/
 	     .FEATURE_EXT(FEATURE_EXT),
 	     .FEATURE_CMOV(FEATURE_CMOV),
 	     .FEATURE_FFL1(FEATURE_FFL1),
+	     .FEATURE_MSYNC(FEATURE_MSYNC),
+	     .FEATURE_PSYNC(FEATURE_PSYNC),
+	     .FEATURE_CSYNC(FEATURE_CSYNC),
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
 	     .FEATURE_CUST3(FEATURE_CUST3),
@@ -487,9 +510,11 @@ module mor1kx_cpu(/*AUTOARG*/
 	     .FEATURE_TRAP(FEATURE_TRAP),
 	     .FEATURE_RANGE(FEATURE_RANGE),
 	     .OPTION_PIC_TRIGGER(OPTION_PIC_TRIGGER),
+	     .OPTION_PIC_NMI_WIDTH(OPTION_PIC_NMI_WIDTH),
 	     .FEATURE_DSX(FEATURE_DSX),
 	     .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
 	     .FEATURE_OVERFLOW(FEATURE_OVERFLOW),
+	     .FEATURE_CARRY_FLAG(FEATURE_CARRY_FLAG),
 	     .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
 	     .OPTION_RF_WORDS(OPTION_RF_WORDS),
 	     .OPTION_RESET_PC(OPTION_RESET_PC),
@@ -502,6 +527,9 @@ module mor1kx_cpu(/*AUTOARG*/
 	     .FEATURE_EXT(FEATURE_EXT),
 	     .FEATURE_CMOV(FEATURE_CMOV),
 	     .FEATURE_FFL1(FEATURE_FFL1),
+	     .FEATURE_MSYNC(FEATURE_MSYNC),
+	     .FEATURE_PSYNC(FEATURE_PSYNC),
+	     .FEATURE_CSYNC(FEATURE_CSYNC),
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
 	     .FEATURE_CUST3(FEATURE_CUST3),

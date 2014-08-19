@@ -31,6 +31,8 @@ module mor1kx_decode_execute_cappuccino
     parameter FEATURE_TRAP = "ENABLED",
     parameter FEATURE_DELAY_SLOT = "ENABLED",
 
+    parameter FEATURE_MULTIPLIER = "THREESTAGE",
+
     parameter FEATURE_INBUILT_CHECKERS = "ENABLED"
     )
    (
@@ -89,6 +91,7 @@ module mor1kx_decode_execute_cappuccino
     input [OPTION_RF_ADDR_WIDTH-1:0] 	  ctrl_rfd_adr_i,
     input 				  ctrl_op_lsu_load_i,
     input 				  ctrl_op_mfspr_i,
+    input 				  ctrl_op_mul_i,
 
     // Control signal inputs from decode stage
     input 				  decode_rf_wb_i,
@@ -296,7 +299,7 @@ module mor1kx_decode_execute_cappuccino
 	   execute_op_jbr_o <= 1'b0;
 	   execute_op_jr_o <= 1'b0;
 	   execute_op_jal_o <= 1'b0;
-	   execute_op_brcond_o <= decode_op_brcond_i;
+	   execute_op_brcond_o <= 1'b0;
 	   execute_op_branch_o <= 1'b0;
 	end
      end
@@ -436,8 +439,11 @@ module mor1kx_decode_execute_cappuccino
        pc_execute_o <= pc_decode_i;
 
    // Branch detection
-   assign ctrl_to_decode_interlock = (ctrl_op_lsu_load_i | ctrl_op_mfspr_i) &
-				     (decode_rfb_adr_i == ctrl_rfd_adr_i);
+   assign ctrl_to_decode_interlock = (ctrl_op_lsu_load_i | ctrl_op_mfspr_i |
+				      ctrl_op_mul_i &
+				      FEATURE_MULTIPLIER=="PIPELINED") &
+				     ((decode_rfa_adr_i == ctrl_rfd_adr_i) ||
+				      (decode_rfb_adr_i == ctrl_rfd_adr_i));
 
    assign branch_to_imm = (decode_op_jbr_i &
 			   // l.j/l.jal
@@ -448,11 +454,13 @@ module mor1kx_decode_execute_cappuccino
    assign branch_to_imm_target = pc_decode_i + {{4{decode_immjbr_upper_i[9]}},
 						decode_immjbr_upper_i,
 						decode_imm16_i,2'b00};
-
-   assign branch_to_reg = decode_op_jr_i & !ctrl_to_decode_interlock;
+   assign branch_to_reg = decode_op_jr_i &
+			  !(ctrl_to_decode_interlock |
+			    execute_rf_wb_o &
+			    (decode_rfb_adr_i == execute_rfd_adr_o));
 
    assign decode_branch_o = (branch_to_imm | branch_to_reg) &
-			    !pipeline_flush_i & !decode_bubble_o;
+			    !pipeline_flush_i;
 
    assign decode_branch_target_o = branch_to_imm ?
 				   branch_to_imm_target :
@@ -503,13 +511,30 @@ module mor1kx_decode_execute_cappuccino
    // the main purpose of this is to stall fetch while the rfe is propagating
    // up to ctrl stage.
 
-   assign decode_bubble_o = ((execute_op_lsu_load_o | execute_op_mfspr_o) &
+   assign decode_bubble_o = (
+			     // load/mfspr/mul
+			     (execute_op_lsu_load_o | execute_op_mfspr_o |
+			      execute_op_mul_o &
+			      FEATURE_MULTIPLIER=="PIPELINED") &
 			     (decode_rfa_adr_i == execute_rfd_adr_o ||
 			      decode_rfb_adr_i == execute_rfd_adr_o) |
+			     // mul
+			     FEATURE_MULTIPLIER=="PIPELINED" &
+			     (decode_op_mul_i &
+			      (ctrl_to_decode_interlock |
+			       execute_rf_wb_o &
+			       (decode_rfa_adr_i == execute_rfd_adr_o ||
+				decode_rfb_adr_i == execute_rfd_adr_o))) |
+			     // jr
 			     decode_op_jr_i &
 			     (ctrl_to_decode_interlock |
+			      execute_rf_wb_o &
 			      (decode_rfb_adr_i == execute_rfd_adr_o)) |
-			     decode_op_rfe_i) & padv_i;
+			     // atomic store
+			     execute_op_lsu_store_o & execute_op_lsu_atomic_o |
+			     // rfe
+			     decode_op_rfe_i
+			     ) & padv_i;
 
    always @(posedge clk `OR_ASYNC_RST)
      if (rst)
