@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2014 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,7 @@
 #ifndef OPTIMSOC_BAREMETAL_H_
 #define OPTIMSOC_BAREMETAL_H_
 
-#include <stdint.h>
-#include <stdlib.h>
-
-#include <spr-defs.h>
-#include <or1k-support.h>
-
+// Internal defines
 #define OPTIMSOC_NA_BASE        0xe0000000
 #define OPTIMSOC_NA_CONF        OPTIMSOC_NA_BASE + 0x00000
 #define OPTIMSOC_NA_CONF_TILEID OPTIMSOC_NA_CONF + 0x0
@@ -56,6 +51,12 @@
 #define OPTIMSOC_CLASS_NUM 8
 #define OPTIMSOC_SRC_MSB 23
 #define OPTIMSOC_SRC_LSB 19
+
+#include <stdint.h>
+#include <stdlib.h>
+
+#include <spr-defs.h>
+#include <or1k-support.h>
 
 /**
  * \defgroup libbaremetal Baremetal library
@@ -151,6 +152,9 @@ static inline unsigned int optimsoc_get_abscoreid(void) {
     return REG32(OPTIMSOC_NA_CONF_COREBASE) + optimsoc_get_relcoreid();
 }
 
+uint32_t optimsoc_get_domain_coreid();
+uint32_t optimsoc_get_domain_numcores();
+
 /**
  * Get the number of compute tiles
  *
@@ -197,6 +201,28 @@ extern int optimsoc_tilerank(unsigned int tile);
  * \param rank The rank to lookup
  */
 extern int optimsoc_ranktile(unsigned int rank);
+
+/**
+ * \defgroup userio User I/O
+ * \ingroup libbaremetal
+ * @{
+ */
+
+extern int lcd_set(unsigned int row,unsigned int col,char c);
+extern void uart_printf(const char *fmt, ...);
+
+/**
+ * @}
+ */
+
+extern uint32_t optimsoc_noc_maxpacketsize();
+extern uint32_t optimsoc_has_hostlink();
+extern uint32_t optimsoc_hostlink();
+extern uint32_t optimsoc_has_uart();
+extern uint32_t optimsoc_uarttile();
+extern uint32_t optimsoc_uart_lcd_enable();
+extern uint32_t optimsoc_compute_tile_num();
+extern uint32_t optimsoc_compute_tile_id(uint32_t);
 
 /**
  * @}
@@ -253,13 +279,6 @@ static inline void set_bits(uint32_t *x, uint32_t v, uint32_t msb,
     }
 }
 
-
-
-uint32_t optimsoc_cas(void *address, uint32_t compare, uint32_t swap);
-
-uint32_t optimsoc_get_domain_coreid();
-uint32_t optimsoc_get_domain_numcores();
-
 /**
  * @}
  */
@@ -270,21 +289,6 @@ uint32_t optimsoc_get_domain_numcores();
  * \ingroup libbaremetal
  * @{
  */
-
-/**
- * Compare-and-swap
- *
- * Read the address and compare the value. If it matches, write the new value
- * and leave unchanged otherwise. Returns the read value, that helps determining
- * whether the CAS-operation was successfull.
- *
- * \param address Address to read
- * \param compare Value to compare
- * \param value Value to write if read value matches compare
- * \return The value read
- */
-
-extern uint32_t cas(void* address, uint32_t compare, uint32_t value);
 
 /**
  * This is a convenience function that disables interrupts
@@ -333,7 +337,7 @@ typedef uint64_t mutex_t;
  *
  * \param mutex Mutex to initialize
  */
-extern void mutex_init(mutex_t *mutex);
+extern void optimsoc_mutex_init(mutex_t *mutex);
 
 /**
  * Lock mutex
@@ -342,7 +346,7 @@ extern void mutex_init(mutex_t *mutex);
  *
  * \param mutex Mutex to lock
  */
-extern void mutex_lock(mutex_t *mutex);
+extern void optimsoc_mutex_lock(mutex_t *mutex);
 
 /**
  * Unlock mutex
@@ -351,7 +355,7 @@ extern void mutex_lock(mutex_t *mutex);
  *
  * \param mutex Mutex to unlock
  */
-extern void mutex_unlock(mutex_t *mutex);
+extern void optimsoc_mutex_unlock(mutex_t *mutex);
 
 /**
  * @}
@@ -486,27 +490,5 @@ extern void optimsoc_mp_simple_addhandler(unsigned int class,
 /**
  * @}
  */
-
-/**
- * \defgroup userio User I/O
- * \ingroup libbaremetal
- * @{
- */
-
-extern int lcd_set(unsigned int row,unsigned int col,char c);
-extern void uart_printf(const char *fmt, ...);
-
-/**
- * @}
- */
-
-extern uint32_t optimsoc_noc_maxpacketsize();
-extern uint32_t optimsoc_has_hostlink();
-extern uint32_t optimsoc_hostlink();
-extern uint32_t optimsoc_has_uart();
-extern uint32_t optimsoc_uarttile();
-extern uint32_t optimsoc_uart_lcd_enable();
-extern uint32_t optimsoc_compute_tile_num();
-extern uint32_t optimsoc_compute_tile_id(uint32_t);
 
 #endif
