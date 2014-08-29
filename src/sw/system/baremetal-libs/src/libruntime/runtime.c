@@ -46,7 +46,7 @@ void runtime_syscall(unsigned int id, void *args);
 // to 0 during the reset routine.
 volatile uint8_t _optimsoc_boot_barrier;
 
-int main() {
+void optimsoc_runtime_boot(void) {
     printf("Boot runtime system\n");
 
     // Activate proper handling of exceptions in section trace
@@ -84,6 +84,8 @@ int main() {
     }
 
     scheduler_start();
+
+    return 0;
 }
 
 void runtime_syscall(unsigned int id, void *args) {

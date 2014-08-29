@@ -26,9 +26,26 @@
 #ifndef OPTIMSOC_RUNTIME_H_
 #define OPTIMSOC_RUNTIME_H_
 
+#include <stdint.h>
+
 /**
  * \defgroup libruntime Runtime library
  */
+
+/**
+ * \defgroup initconfig Initialization and Configuration
+ * \ingroup libruntime
+ */
+
+/**
+ * Boot into the runtime system
+ *
+ * From your main program you can boot into the runtime system using this
+ * function. It initializes the system and then replaces the current program
+ * with the scheduler which takes over then. You need to define an init()
+ * function as this is the first (kernel) thread that is started then.
+ */
+void optimsoc_runtime_boot(void);
 
 /**
  * \defgroup thread Thread Management
