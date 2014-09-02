@@ -124,7 +124,7 @@ module tb_compute_tile();
    compute_tile_dm
       #(.ID(0),
         .CORES(NUMCORES),
-        .MEM_SIZE(1*1024*1024), // 1 MB
+        .MEM_SIZE(8*1024*1024), // 1 MB
         .MEM_FILE("ct.vmem"))
       u_compute_tile(// Outputs
                      .noc_in_ready      (noc_in_ready[VCHANNELS-1:0]),
