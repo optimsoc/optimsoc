@@ -185,11 +185,22 @@ PATH=\$PATH:\$OPTIMSOC_INSTALLATION/tools/utils
 
 \subsection{System Software}
 
-The system software consist of the libraries itself and build
-infrastructure for your applications.
+There are essential two different ways to develop software for
+OpTiMSoC, either as baremetal software or using the compute node
+operating system gzll. For both ways you need to compile a set of
+libraries that help you developing software for OpTiMSoC.
 
-The installation of the system software starts in the base folder
-(relative to the OpTiMSoC root) \verb|src/sw/system/|.
+\subsubsection{Baremetal System Software}
+
+There are a set of libraries you build in one run, most important the
+baremetal drivers, some support for runtime systems (scheduler,
+virtual memory) and message passing support. The installation consist
+of the libraries themselves and build infrastructure for your
+applications.
+
+The installation of the baremetal system software starts in the base
+folder (relative to the OpTiMSoC root)
+\verb|src/sw/system/baremetal-libs|.
 
 %Autotools are used to check your platform and generate the configure
 %and the Makefiles:
@@ -209,6 +220,10 @@ $> ../configure --prefix=$OPTIMSOC_INSTALLATION/systemsw/ --host=or1k-elf
 $> make
 $> make install
 \end{verbatim}
+
+\subsubsection{gzll Kernel and Libraries}
+
+(todo)
 
 \subsection{Configuration}
 
