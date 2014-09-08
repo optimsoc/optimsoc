@@ -187,6 +187,8 @@ module mor1kx_lsu_cappuccino
    wire 			     store_buffer_atomic;
    reg 				     store_buffer_write_pending;
 
+   reg 				     dbus_atomic;
+
    reg 				     last_write;
    reg 				     write_done;
 
@@ -198,8 +200,9 @@ module mor1kx_lsu_cappuccino
    wire 			     snoop_valid;
    wire 			     dc_snoop_hit;
 
-   // We have to mask out all our bus accesses
-   assign snoop_valid = snoop_en_i & ~dbus_ack_i;
+   // We have to mask out our snooped bus accesses
+   assign snoop_valid = snoop_en_i &
+			!((snoop_adr_i == dbus_adr_o) & dbus_ack_i);
 
    assign ctrl_op_lsu = ctrl_op_lsu_load_i | ctrl_op_lsu_store_i;
 
@@ -368,7 +371,7 @@ module mor1kx_lsu_cappuccino
    // store buffer, and the link has been broken while it was waiting there,
    // the bus access is still performed as a (discarded) read.
    //
-   assign dbus_we_o = dbus_we & (!store_buffer_atomic | atomic_reserve);
+   assign dbus_we_o = dbus_we & (!dbus_atomic | atomic_reserve);
 
    assign next_dbus_adr = (OPTION_DCACHE_BLOCK_WIDTH == 5) ?
 			  {dbus_adr[31:5], dbus_adr[4:0] + 5'd4} : // 32 byte
@@ -392,6 +395,7 @@ module mor1kx_lsu_cappuccino
 	   dbus_we <= 0;
 	   dbus_adr <= 0;
 	   dbus_bsel_o <= 4'hf;
+	   dbus_atomic <= 0;
 	   last_write <= 0;
 	   if (store_buffer_write | !store_buffer_empty) begin
 	      state <= WRITE;
@@ -436,7 +440,8 @@ module mor1kx_lsu_cappuccino
 	      end
 	   end
 
-	   if (dbus_err_i) begin
+	   // TODO: only abort on snoop-hits to refill address
+	   if (dbus_err_i | dc_snoop_hit) begin
 	      dbus_req_o <= 0;
 	      state <= IDLE;
 	   end
@@ -459,6 +464,7 @@ module mor1kx_lsu_cappuccino
 	      dbus_bsel_o <= store_buffer_bsel;
 	      dbus_adr <= store_buffer_radr;
 	      dbus_dat <= store_buffer_dat;
+	      dbus_atomic <= store_buffer_atomic;
 	      last_write <= store_buffer_empty;
 	   end
 
@@ -468,8 +474,10 @@ module mor1kx_lsu_cappuccino
 	   if (last_write & dbus_ack_i | dbus_err_i) begin
 	      dbus_req_o <= 0;
 	      dbus_we <= 0;
-	      write_done <= 1;
-	      state <= IDLE;
+	      if (!store_buffer_write) begin
+		 state <= IDLE;
+		 write_done <= 1;
+	      end
 	   end
 	end
 
@@ -515,7 +523,7 @@ if (FEATURE_ATOMIC!="NONE") begin : atomic_gen
 	      (snoop_valid & (snoop_adr_i == atomic_addr)))
        atomic_reserve <= 0;
      else if (ctrl_op_lsu_load_i & ctrl_op_lsu_atomic_i & padv_ctrl_i)
-       atomic_reserve <= 1;
+       atomic_reserve <= !(snoop_valid & (snoop_adr_i == dc_adr_match));
 
    always @(posedge clk)
      if (ctrl_op_lsu_load_i & ctrl_op_lsu_atomic_i & padv_ctrl_i)
@@ -573,7 +581,7 @@ endgenerate
 			      (!store_buffer_empty | store_buffer_write) &
 			      !last_write |
 			      (state == WRITE) & last_write &
-			      store_buffer_write & !dbus_ack_i;
+			      store_buffer_write;
 
    assign store_buffer_wadr = dc_adr_match;
 
@@ -622,8 +630,9 @@ endgenerate
 			 {ctrl_lsu_adr_i[OPTION_OPERAND_WIDTH-1:2],2'b0};
 
    assign dc_req = ctrl_op_lsu & dc_access & !access_done & !dbus_stall &
-		   !(store_buffer_atomic & dbus_we & !atomic_reserve);
-   assign dc_refill_allowed = !(ctrl_op_lsu_store_i | state == WRITE);
+		   !(dbus_atomic & dbus_we & !atomic_reserve);
+   assign dc_refill_allowed = !(ctrl_op_lsu_store_i | state == WRITE) &
+			      !dc_snoop_hit & !snoop_valid;
 
 generate
 if (FEATURE_DATACACHE!="NONE") begin : dcache_gen
@@ -646,7 +655,7 @@ if (FEATURE_DATACACHE!="NONE") begin : dcache_gen
 
    assign dc_bsel = dbus_bsel;
    assign dc_we = exec_op_lsu_store_i & !exec_op_lsu_atomic_i & padv_execute_i |
-		  store_buffer_atomic & dbus_we_o & !write_done |
+		  dbus_atomic & dbus_we_o & !write_done |
 		  ctrl_op_lsu_store_i & tlb_reload_busy & !tlb_reload_req;
 
    /* mor1kx_dcache AUTO_TEMPLATE (
@@ -727,7 +736,7 @@ end else begin
    assign dc_ack = 0;
    assign dc_bsel = 0;
    assign dc_we = 0;
-   assign dc_snoop_hit = 0;   
+   assign dc_snoop_hit = 0;
 end
 
 endgenerate

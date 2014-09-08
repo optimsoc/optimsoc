@@ -213,7 +213,7 @@ module mor1kx_dcache
    // Whether any way hits
    wire 			      snoop_hit;
 
-   assign snoop_hit_o = (OPTION_DCACHE_SNOOP != "ENABLED") ? 0 : snoop_hit;
+   assign snoop_hit_o = (OPTION_DCACHE_SNOOP != "NONE") ? snoop_hit : 0;
 
    genvar 			      i;
 
@@ -250,22 +250,23 @@ module mor1kx_dcache
          assign tag_din[(i+1)*TAGMEM_WAY_WIDTH-1:i*TAGMEM_WAY_WIDTH] = tag_way_in[i];
          assign tag_way_out[i] = tag_dout[(i+1)*TAGMEM_WAY_WIDTH-1:i*TAGMEM_WAY_WIDTH];
 
-	 if (OPTION_DCACHE_SNOOP == "ENABLED") begin
+	 if (OPTION_DCACHE_SNOOP != "NONE") begin
 	    // The same for the snoop tag memory
             assign snoop_way_out[i] = snoop_dout[(i+1)*TAGMEM_WAY_WIDTH-1:i*TAGMEM_WAY_WIDTH];
 
-	     assign snoop_check_way_tag[i] = snoop_way_out[i][TAGMEM_WAY_WIDTH-1:0];
-            assign snoop_check_way_match[i] = (snoop_check_way_tag[i] == snoop_tag);
-            assign snoop_check_way_valid[i] = snoop_way_out[i][TAGMEM_WAY_VALID];
+	    assign snoop_check_way_tag[i] = snoop_way_out[i][TAGMEM_WAY_WIDTH-1:0];
+	    assign snoop_check_way_match[i] = (snoop_check_way_tag[i] == snoop_tag);
+	    assign snoop_check_way_valid[i] = snoop_way_out[i][TAGMEM_WAY_VALID];
 
-            assign snoop_way_hit[i] = snoop_check_way_valid[i] & snoop_check_way_match[i];
+	    assign snoop_way_hit[i] = snoop_check_way_valid[i] & snoop_check_way_match[i];
 	 end
       end
    endgenerate
 
    assign hit = |way_hit;
 
-   assign snoop_hit = ((OPTION_DCACHE_SNOOP == "ENABLED") & dc_enable_i) ? |snoop_way_hit & snoop_check : 0;
+   assign snoop_hit = (OPTION_DCACHE_SNOOP != "NONE") &
+		      |snoop_way_hit & snoop_check;
 
    integer w0;
    always @(*) begin
@@ -413,6 +414,13 @@ module mor1kx_dcache
 
 		 if (refill_done)
 		   state <= IDLE;
+	      end
+	      // Abort refill on snoop-hit
+	      // TODO: only abort on snoop-hits to refill address
+	      if (snoop_hit) begin
+		 refill_valid <= 0;
+		 refill_valid_r <= 0;
+		 state <= IDLE;
 	      end
 	   end
 
@@ -652,7 +660,7 @@ module mor1kx_dcache
       .din				(tag_din));
 
 generate
-if (OPTION_DCACHE_SNOOP == "ENABLED") begin
+if (OPTION_DCACHE_SNOOP != "NONE") begin
    mor1kx_simple_dpram_sclk
      #(
        .ADDR_WIDTH(OPTION_DCACHE_SET_WIDTH),
