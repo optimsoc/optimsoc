@@ -2,7 +2,7 @@ prefix=@prefix@
 libdir=@libdir@
 includedir=@includedir@
 datadir=@datadir@
-buildscriptdir=${datadir}/build/runtime
+buildscriptdir=${datadir}/build/baremetal-runtime
 
 Name: Optimsoc Runtime
 Description: OpTiMSoC runtime system libraries

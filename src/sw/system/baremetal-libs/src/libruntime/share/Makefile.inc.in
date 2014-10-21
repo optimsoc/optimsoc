@@ -42,15 +42,12 @@ endif
 $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 	@PROGRAM=$(PROGRAM) sh $(BUILDSCRIPTS)/create_pgas_binary.sh 
 
-$(PROGRAM).elf: $(PROGRAM).o optimsoc-sysconfig.o runtimeconfig.o
-	$(CC_FOR_TARGET) -Wall -nostartfiles -nostdlib \
+$(PROGRAM).elf: $(PROGRAM).o optimsoc-sysconfig.o
+	$(CC_FOR_TARGET) $(CFLAGS) -Wall \
 	$(PROGRAM).o optimsoc-sysconfig.o -o $@ \
 	$(LIBS)
 
 optimsoc-sysconfig.o: ../optimsoc-sysconfig.c
-	$(CC_FOR_TARGET) -O0 -c -o $@ $^
-
-runtimeconfig.o: ../runtimeconfig.c
 	$(CC_FOR_TARGET) -O0 -c -o $@ $^
 
 %.dis: %.elf
