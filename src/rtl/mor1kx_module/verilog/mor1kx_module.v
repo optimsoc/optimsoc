@@ -154,7 +154,8 @@ module mor1kx_module (
        .DBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
        .FEATURE_MULTICORE               ("ENABLED"),
        .FEATURE_TRACEPORT_EXEC          ("ENABLED"),
-       .OPTION_OPERAND_WIDTH            (32))
+       .OPTION_OPERAND_WIDTH            (32),
+       .OPTION_RF_NUM_SHADOW_GPR        (1))
      u_cpu(/*AUTOINST*/
 	   // Outputs
 	   .iwbm_adr_o			(iwb_adr_o[31:0]),	 // Templated
