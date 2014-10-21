@@ -53,7 +53,7 @@ void optimsoc_runtime_boot(void) {
     OPTIMSOC_TRACE(0x23, 0);
     exception_ctx = (arch_thread_ctx_t*) 0x4;
 
-    if (optimsoc_get_domain_coreid() == 0) {
+    if (optimsoc_get_relcoreid() == 0) {
         printf("Initializing OpTiMSoC platform..\n");
         optimsoc_init(0);
 
@@ -80,12 +80,12 @@ void optimsoc_runtime_boot(void) {
     } else {
         printf("Wait to be woken up.\n");
         while (_optimsoc_boot_barrier == 0) { }
-        printf("Core %d woken up.\n", (int) optimsoc_get_domain_coreid());
+        printf("Core %d woken up.\n", optimsoc_get_relcoreid());
     }
 
     scheduler_start();
 
-    return 0;
+    return;
 }
 
 void runtime_syscall(unsigned int id, void *args) {

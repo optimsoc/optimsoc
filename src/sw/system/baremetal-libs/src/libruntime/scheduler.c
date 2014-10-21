@@ -70,7 +70,7 @@ void idle_thread_func() {
 
 void scheduler_tick() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     /* save context */
     memcpy(core_ctx->active_thread->ctx, exception_ctx,
@@ -88,7 +88,7 @@ void scheduler_tick() {
 
 void scheduler_yieldcurrent() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     uint32_t restore = optimsoc_critical_begin();
 
@@ -102,7 +102,7 @@ void scheduler_yieldcurrent() {
 
 void scheduler_suspendcurrent() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     uint32_t restore = optimsoc_critical_begin();
 
@@ -140,10 +140,10 @@ void scheduler_init() {
 
     thread_create(&init_thread, &init, attr_init);
 
-    optimsoc_scheduler_core = calloc(optimsoc_get_domain_numcores(),
+    optimsoc_scheduler_core = calloc(optimsoc_get_relcoreid(),
                                      sizeof(optimsoc_scheduler_core));
 
-    for (int c = 0; c < optimsoc_get_domain_numcores(); c++) {
+    for (int c = 0; c < optimsoc_get_relcoreid(); c++) {
         thread_attr_t *attr_idle = malloc(sizeof(thread_attr_t));
         thread_attr_init(attr_idle);
         attr_idle->identifier = "idle";
@@ -183,8 +183,8 @@ void scheduler_distribute_load() {
     system_load_update_counter++;
 
     if (system_load_update_counter == 1) {
-        for (int t = 0; t < optimsoc_compute_tile_num(); t++) {
-            unsigned int id = optimsoc_compute_tile_id(t);
+        for (int t = 0; t < optimsoc_get_numct(); t++) {
+            unsigned int id = optimsoc_get_ranktile(t);
             if (id != optimsoc_get_tileid()) {
                 uint32_t buffer = 0;
                 set_bits(&buffer, id, OPTIMSOC_DEST_MSB, OPTIMSOC_DEST_LSB);
@@ -264,16 +264,16 @@ void schedule() {
 
     /* In case we don't have a thread in the ready_q: schedule idle thread */
     if(!t) {
-        t = optimsoc_scheduler_core[optimsoc_get_domain_coreid()].idle_thread;
+        t = optimsoc_scheduler_core[optimsoc_get_relcoreid()].idle_thread;
     }
 
     /* set active */
-    optimsoc_scheduler_core[optimsoc_get_domain_coreid()].active_thread = t;
+    optimsoc_scheduler_core[optimsoc_get_relcoreid()].active_thread = t;
 
     runtime_trace_schedule(t->id);
 
     /* switch the context */
-    context_set(optimsoc_scheduler_core[optimsoc_get_domain_coreid()].active_thread->ctx);
+    context_set(optimsoc_scheduler_core[optimsoc_get_relcoreid()].active_thread->ctx);
 
     or1k_mmu_init();
 
@@ -288,7 +288,7 @@ void schedule() {
  */
 void scheduler_thread_exit() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     runtime_trace_thread_exit();
 

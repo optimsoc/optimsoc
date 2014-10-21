@@ -93,7 +93,7 @@ void vmm_init_thread(thread_t thread) {
 
 void dtlb_miss() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     void *vaddr = (void*) or1k_mfspr(SPR_EEAR_BASE);
 
@@ -131,7 +131,7 @@ void dtlb_miss() {
 
 void itlb_miss() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     void *vaddr = (void*) or1k_mfspr(SPR_EEAR_BASE);
 

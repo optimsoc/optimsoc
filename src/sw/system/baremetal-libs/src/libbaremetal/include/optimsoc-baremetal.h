@@ -26,15 +26,16 @@
 #define OPTIMSOC_BAREMETAL_H_
 
 // Internal defines
-#define OPTIMSOC_NA_BASE        0xe0000000
-#define OPTIMSOC_NA_CONF        OPTIMSOC_NA_BASE + 0x00000
-#define OPTIMSOC_NA_CONF_TILEID OPTIMSOC_NA_CONF + 0x0
-#define OPTIMSOC_NA_CONF_XDIM   OPTIMSOC_NA_CONF + 0x4
-#define OPTIMSOC_NA_CONF_YDIM   OPTIMSOC_NA_CONF + 0x8
-#define OPTIMSOC_NA_CONF_COREBASE OPTIMSOC_NA_CONF + 0x10
-#define OPTIMSOC_NA_CONF_NUMCORES OPTIMSOC_NA_CONF + 0x14
+#define OPTIMSOC_NA_BASE          0xe0000000
 
-#define OPTIMSOC_NA_CONF_MODS     OPTIMSOC_NA_CONF + 0xc
+// Configuration module
+#define OPTIMSOC_NA_REGS      OPTIMSOC_NA_BASE + 0x00000
+#define OPTIMSOC_NA_TILEID    OPTIMSOC_NA_REGS + 0x0
+#define OPTIMSOC_NA_NUMTILES  OPTIMSOC_NA_REGS + 0x4
+#define OPTIMSOC_NA_COREBASE  OPTIMSOC_NA_REGS + 0x10
+#define OPTIMSOC_NA_TOTALCORES OPTIMSOC_NA_REGS + 0x18
+
+#define OPTIMSOC_NA_CONF          OPTIMSOC_NA_REGS + 0xc
 #define OPTIMSOC_NA_CONF_MPSIMPLE 0x1
 #define OPTIMSOC_NA_CONF_DMA      0x2
 
@@ -117,7 +118,7 @@ extern void optimsoc_trace_kernelsection(void);
  * @{
  */
 
-// TODO: gets removed (to libbaremetal)
+// TODO: what do we put inside here?
 typedef struct optimsoc_conf {
 
 } optimsoc_conf;
@@ -127,33 +128,20 @@ extern void optimsoc_init(optimsoc_conf *config);
 /**
  * Get the tile identifier
  *
- * \ingroup system
- * \return Identifier of this tile
+ * \return Identifier of this tile, which is the rank inside all tiles
  */
-static inline unsigned int optimsoc_get_tileid(void) {
-    return REG32(OPTIMSOC_NA_BASE);
+static inline uint32_t optimsoc_get_tileid(void) {
+    return REG32(OPTIMSOC_NA_TILEID);
 }
 
 /**
- * Get the core id, relative in this tile
+ * Get the total number of tiles
  *
- * \ingroup system
- * \return relative core identifier
+ * \return Number of tiles in this system
  */
-static inline unsigned int optimsoc_get_relcoreid(void) {
-    return or1k_mfspr(SPR_COREID);
+static inline uint32_t optimsoc_get_numtiles(void) {
+    return REG32(OPTIMSOC_NA_NUMTILES);
 }
-
-static inline unsigned int optimsoc_get_tilenumcores(void) {
-    return or1k_mfspr(SPR_NUMCORES);
-}
-
-static inline unsigned int optimsoc_get_abscoreid(void) {
-    return REG32(OPTIMSOC_NA_CONF_COREBASE) + optimsoc_get_relcoreid();
-}
-
-uint32_t optimsoc_get_domain_coreid();
-uint32_t optimsoc_get_domain_numcores();
 
 /**
  * Get the number of compute tiles
@@ -161,7 +149,7 @@ uint32_t optimsoc_get_domain_numcores();
  * \ingroup system
  * \return Number of compute tiles
  */
-extern int optimsoc_ctnum(void);
+extern uint32_t optimsoc_get_numct(void);
 
 /**
  * Generate rank of this compute tile in all compute tiles
@@ -175,7 +163,7 @@ extern int optimsoc_ctnum(void);
  *
  * \return rank of this tile
  */
-extern int optimsoc_ctrank(void);
+extern int optimsoc_get_ctrank(void);
 
 /**
  * Generate rank of given compute tile in all compute tiles
@@ -190,7 +178,7 @@ extern int optimsoc_ctrank(void);
  * \param tile Tile to look up
  * \return rank of this tile
  */
-extern int optimsoc_tilerank(unsigned int tile);
+extern int optimsoc_get_tilerank(unsigned int tile);
 
 /**
  * Get the tile that has the given rank
@@ -200,7 +188,42 @@ extern int optimsoc_tilerank(unsigned int tile);
  *
  * \param rank The rank to lookup
  */
-extern int optimsoc_ranktile(unsigned int rank);
+extern int optimsoc_get_ranktile(unsigned int rank);
+
+
+/**
+ * Get the core id, relative in this tile
+ *
+ * \return relative core identifier
+ */
+static inline unsigned int optimsoc_get_relcoreid(void) {
+    return or1k_mfspr(SPR_COREID);
+}
+
+/**
+ * Get the number of cores in this tile
+ *
+ * \return Number of cores in this tile
+ */
+static inline unsigned int optimsoc_get_tilenumcores(void) {
+    return or1k_mfspr(SPR_NUMCORES);
+}
+
+/**
+ * Get the absolute core id of this core
+ *
+ * The absolute core id in the whole system is started from the first compute
+ * tile, core 0 and counted up. This may be useful in shared memory systems.
+ *
+ * \return Absolute core id
+ */
+static inline unsigned int optimsoc_get_abscoreid(void) {
+    return REG32(OPTIMSOC_NA_COREBASE) + optimsoc_get_relcoreid();
+}
+
+/**
+ * @}
+ */
 
 /**
  * \defgroup userio User I/O
@@ -221,8 +244,6 @@ extern uint32_t optimsoc_hostlink();
 extern uint32_t optimsoc_has_uart();
 extern uint32_t optimsoc_uarttile();
 extern uint32_t optimsoc_uart_lcd_enable();
-extern uint32_t optimsoc_compute_tile_num();
-extern uint32_t optimsoc_compute_tile_id(uint32_t);
 
 /**
  * @}

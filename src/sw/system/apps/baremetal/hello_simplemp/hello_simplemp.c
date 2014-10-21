@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2014 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,7 @@ void recv(unsigned int *buffer,int len) {
     source_tile = extract_bits(buffer[0],OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
 
     // Calculate rank from tile
-    source_rank = optimsoc_tilerank(source_tile);
+    source_rank = optimsoc_get_tilerank(source_tile);
 
     // Print hello for this
 //    printf("Hello World from %d!\n",source_rank);
@@ -63,7 +63,7 @@ void recv(unsigned int *buffer,int len) {
 
 // The main function
 void main() {
-  // Initialize optimsoc library
+    // Initialize optimsoc library
     optimsoc_init(0);
     optimsoc_mp_simple_init();
 
@@ -72,14 +72,15 @@ void main() {
     or1k_interrupts_enable();
 
     // Determine tiles rank
-    int rank = optimsoc_ctrank();
+    int rank = optimsoc_get_ctrank();
 
     if (rank==0) {
         // Rank 0 simply waits for all tiles to send their message
-        while (hello_received < (optimsoc_ctnum()-1) ) {}
+        printf("Wait for %d messages\n", optimsoc_get_numct()-1);
+        while (hello_received < (optimsoc_get_numct()-1) ) {}
 
         // Conclude and print hello
-        printf("Received all messages. Hello World!\n",rank,optimsoc_ctnum());
+        printf("Received all messages. Hello World!\n",rank,optimsoc_get_numct());
     } else {
         // The message is a one flit packet
         uint32_t buffer[1] = { 0 };
@@ -91,7 +92,7 @@ void main() {
         set_bits(&buffer[0],0,OPTIMSOC_CLASS_MSB,OPTIMSOC_CLASS_LSB);
 
         // Set sender as my rank
-        set_bits(&buffer[0],optimsoc_ranktile(rank),OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
+        set_bits(&buffer[0],optimsoc_get_ranktile(rank),OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
 
         // Send the message
         optimsoc_mp_simple_send(1,(uint32_t*) buffer);

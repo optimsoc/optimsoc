@@ -1,11 +1,15 @@
 #include "include/optimsoc-sysconfig.h"
 #include "include/optimsoc-baremetal.h"
 
-int optimsoc_ctrank(void) {
-  return optimsoc_tilerank(optimsoc_get_tileid());
+uint32_t optimsoc_get_numct(void) {
+  return _optimsoc_compute_tile_num;
 }
 
-int optimsoc_tilerank(unsigned int tile) {
+int optimsoc_get_ctrank(void) {
+  return optimsoc_get_tilerank(optimsoc_get_tileid());
+}
+
+int optimsoc_get_tilerank(unsigned int tile) {
   for (int i = 0; i < _optimsoc_compute_tile_num; i++) {
       if (_optimsoc_compute_tiles[i] == tile) {
 	  return i;
@@ -14,16 +18,12 @@ int optimsoc_tilerank(unsigned int tile) {
   return -1;
 }
 
-int optimsoc_ranktile(unsigned int rank) {
+int optimsoc_get_ranktile(unsigned int rank) {
   return _optimsoc_compute_tiles[rank];
 }
 
 void optimsoc_init(optimsoc_conf *config) {
 
-}
-
-int optimsoc_ctnum(void) {
-  return _optimsoc_compute_tile_num;
 }
 
 uint32_t optimsoc_mainmem_size() {

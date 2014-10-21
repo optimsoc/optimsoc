@@ -301,7 +301,7 @@ int thread_migrate(unsigned int remote_tileid, void* thread_foreign_addr, struct
     dma_transfer_handle_t dma_handle;
 
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     dma_alloc(&dma_handle);
 
@@ -407,14 +407,14 @@ void thread_resume(thread_t thread) {
 
 thread_t thread_self() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     return core_ctx->active_thread;
 }
 
 void thread_join(thread_t thread) {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     if (scheduler_thread_exists(thread)) {
         // Add to waiting queue
@@ -452,7 +452,7 @@ void thread_handle(void (*f)(void*),void *arg) {
 
 void thread_exit() {
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     //	runtime_report_thread_exit((unsigned int)active_thread);
 
@@ -522,7 +522,7 @@ void syscall_thread_create(void* args) {
     struct syscall_thread_create_args *targs;
 
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     targs = vmm_virt2phys(core_ctx->active_thread, args, 4);
 

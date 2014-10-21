@@ -133,7 +133,7 @@ thread_t task_get_main_thread(task_t task) {
 void syscall_task_create(void *args) {
     struct syscall_args_task_create *taskargs;
     struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_domain_coreid()];
+    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
     taskargs = vmm_virt2phys(core_ctx->active_thread, args, 4);
 
