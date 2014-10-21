@@ -16,7 +16,6 @@ optimsoc_add_file mor1kx_immu.v
 optimsoc_add_file mor1kx_lsu_cappuccino.v
 optimsoc_add_file mor1kx_pic.v
 optimsoc_add_file mor1kx_rf_cappuccino.v
-optimsoc_add_file mor1kx_rf_ram.v
 optimsoc_add_file mor1kx_simple_dpram_sclk.v
 optimsoc_add_file mor1kx_store_buffer.v
 optimsoc_add_file mor1kx_ticktimer.v
