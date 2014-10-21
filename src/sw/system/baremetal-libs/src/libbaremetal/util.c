@@ -57,3 +57,16 @@ void optimsoc_trace_section(int id) {
 void optimsoc_trace_kernelsection(void) {
   OPTIMSOC_TRACE(0x23,0);
 }
+
+/* Disable interrupts and timer only in SPR_SR.
+ * Stall timer interrupt, instead of prevent generation in SPR_TTMR */
+
+uint32_t optimsoc_critical_begin() {
+    uint32_t sr = or1k_mfspr(SPR_SR);
+    or1k_mtspr(SPR_SR, sr & ~(SPR_SR_IEE | SPR_SR_TEE));
+    return(sr & (SPR_SR_IEE | SPR_SR_TEE));
+}
+
+void optimsoc_critical_end(uint32_t restore) {
+    or1k_mtspr(SPR_SR, or1k_mfspr(SPR_SR) | (restore & (SPR_SR_IEE | SPR_SR_TEE)));
+}
