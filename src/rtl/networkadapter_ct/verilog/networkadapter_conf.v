@@ -35,9 +35,9 @@
  * +----------------------------+
  * | 0x0 R: tile id             |
  * +----------------------------+
- * | 0x4 R: NoC x-dimension     |
+ * | 0x4 R: number of tiles     |
  * +----------------------------+
- * | 0x8 R: NoC y-dimension     |
+ * | 0x8 R:                     |
  * +----------------------------+
  * | 0xc R: configuration       |
  * |        bit 0: mp_simple    |
@@ -45,7 +45,7 @@
  * +----------------------------+
  * | 0x10 R: core base id       |
  * +----------------------------+
- * | 0x14 R: tile core number   |
+ * | 0x14 R:                    |
  * +----------------------------+
  * | 0x18 R: domain core number |
  * +----------------------------+
@@ -55,7 +55,6 @@
  * +----------------------------+
  * | 0x24 R: local memory size  |
  * +----------------------------+
- * |
  * .
  * .
  * |
@@ -74,38 +73,33 @@ module networkadapter_conf(
    clk, rst, adr, we, data_i
    );
 
-   parameter tileid = 0;
-   parameter mp_simple_present = 0;
-   parameter dma_present = 0;
+   parameter TILEID = 0;
+   parameter NUMTILES = 0;
 
-   parameter noc_xdim = 4;
-   parameter noc_ydim = 4;
-   parameter num_dests = $clog2(noc_xdim*noc_ydim);
+   parameter CONF_MPSIMPLE_PRESENT = 0;
+   parameter CONF_DMA_PRESENT = 0;
 
    parameter COREBASE = 0;
-   parameter NUMCORES = 32'hx;
    parameter DOMAIN_NUMCORES = 32'hx;
    parameter GLOBAL_MEMORY_SIZE = 32'h0;
    parameter GLOBAL_MEMORY_TILE = 32'hx;
    parameter LOCAL_MEMORY_SIZE = 32'hx;
 
-   parameter REG_TILEID = 0;
-   parameter REG_XDIM   = 1;
-   parameter REG_YDIM   = 2;
-   parameter REG_CONF   = 3;
+   localparam REG_TILEID   = 0;
+   localparam REG_NUMTILES = 1;
+   localparam REG_CONF   = 3;
    localparam REG_COREBASE = 4;
-   localparam REG_NUMCORES = 5;
    localparam REG_DOMAIN_NUMCORES = 6;
    localparam REG_GMEM_SIZE = 7;
    localparam REG_GMEM_TILE = 8;  
    localparam REG_LMEM_SIZE = 9;
    
-   parameter REG_CDC      = 10'h80;
-   parameter REG_CDC_DYN  = 10'h81;
-   parameter REG_CDC_CONF = 10'h82;
+   localparam REG_CDC      = 10'h80;
+   localparam REG_CDC_DYN  = 10'h81;
+   localparam REG_CDC_CONF = 10'h82;
    
-   parameter CONF_MPSIMPLE = 0;
-   parameter CONF_DMA      = 1;
+   localparam REGBIT_CONF_MPSIMPLE = 0;
+   localparam REGBIT_CONF_DMA      = 1;
 
    input clk;
    input rst;
@@ -134,24 +128,18 @@ module networkadapter_conf(
    always @(*) begin
       case (adr[11:2])
         REG_TILEID: begin
-           data = tileid;
+           data = TILEID;
         end
-        REG_XDIM: begin
-           data = noc_xdim;
-        end
-        REG_YDIM: begin
-           data = noc_ydim;
+        REG_NUMTILES: begin
+           data = NUMTILES;
         end
         REG_CONF: begin
            data = 32'h0000_0000;
-           data[CONF_MPSIMPLE] = mp_simple_present;
-           data[CONF_DMA] = dma_present;
+           data[REGBIT_CONF_MPSIMPLE] = CONF_MPSIMPLE_PRESENT;
+           data[REGBIT_CONF_DMA] = CONF_DMA_PRESENT;
         end
         REG_COREBASE: begin
            data = COREBASE;
-        end
-        REG_NUMCORES: begin
-           data = NUMCORES;
         end
         REG_DOMAIN_NUMCORES: begin
            data = DOMAIN_NUMCORES;

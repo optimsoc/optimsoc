@@ -49,12 +49,11 @@ module networkadapter_ct(
    wbs_sel_i, wbs_stb_i, wbs_we_i, wbs_cab_i, wbs_cti_i, wbs_bte_i
    );
 
-   parameter noc_xdim = `OPTIMSOC_XDIM;
-   parameter noc_ydim = `OPTIMSOC_YDIM;
 
    parameter vchannels = `VCHANNELS;
 
-   parameter tileid = 0;
+   parameter TILEID = 0;
+   parameter NUMTILES = `OPTIMSOC_XDIM * `OPTIMSOC_YDIM;
    parameter COREBASE = 0;
    parameter NUMCORES = 32'hx;
    parameter DOMAIN_NUMCORES = NUMCORES;
@@ -63,15 +62,15 @@ module networkadapter_ct(
    parameter GLOBAL_MEMORY_TILE = 32'hx;
    parameter LOCAL_MEMORY_SIZE = 32'hx;
 
+   parameter ENABLE_MPSIMPLE = 1;
+   parameter ENABLE_DMA      = 1;
+
    parameter dma_generate_interrupt = 1;
    parameter dma_entries = 4;
 
    parameter noc_data_width = 32;
    parameter noc_type_width = 2;
    parameter noc_flit_width = noc_data_width + noc_type_width;
-
-   parameter conf_mp_simple = 1;
-   parameter conf_dma       = 1;
 
    parameter vc_mp_simple = `VCHANNEL_MPSIMPLE;
    parameter vc_dma_req   = `VCHANNEL_DMA_REQ;
@@ -203,15 +202,15 @@ module networkadapter_ct(
     ); */
 
    networkadapter_conf
-     #(.tileid(tileid),
-       .noc_xdim(noc_xdim),.noc_ydim(noc_ydim),
-       .mp_simple_present(conf_mp_simple),
-       .dma_present(conf_dma),
-       .COREBASE(COREBASE), .NUMCORES(NUMCORES),
-       .DOMAIN_NUMCORES(DOMAIN_NUMCORES),
-       .GLOBAL_MEMORY_SIZE(GLOBAL_MEMORY_SIZE),
-       .GLOBAL_MEMORY_TILE(GLOBAL_MEMORY_TILE),
-       .LOCAL_MEMORY_SIZE(LOCAL_MEMORY_SIZE))
+     #(.TILEID                (TILEID),
+       .NUMTILES              (NUMTILES),
+       .CONF_MPSIMPLE_PRESENT (ENABLE_MPSIMPLE),
+       .CONF_DMA_PRESENT      (ENABLE_DMA),
+       .COREBASE              (COREBASE),
+       .DOMAIN_NUMCORES       (DOMAIN_NUMCORES),
+       .GLOBAL_MEMORY_SIZE    (GLOBAL_MEMORY_SIZE),
+       .GLOBAL_MEMORY_TILE    (GLOBAL_MEMORY_TILE),
+       .LOCAL_MEMORY_SIZE     (LOCAL_MEMORY_SIZE))
    u_conf(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC
@@ -276,7 +275,7 @@ module networkadapter_ct(
                .wb_dat_i                (wbs_dat_i));            // Templated
 
    generate
-      if (conf_dma) begin
+      if (ENABLE_DMA) begin
          /* lisnoc_dma AUTO_TEMPLATE(
           .noc_in_req_ready (mod_in_ready[vc_dma_req]),
           .noc_in_req_valid (mod_in_valid[vc_dma_req]),
@@ -301,7 +300,7 @@ module networkadapter_ct(
           .irq            (irq[dma_entries:1]),
           ); */
          lisnoc_dma
-           #(.tileid(tileid),.table_entries(dma_entries))
+           #(.tileid(TILEID),.table_entries(dma_entries))
          u_dma(/*AUTOINST*/
                // Outputs
                .noc_in_req_ready        (mod_in_ready[vc_dma_req]), // Templated

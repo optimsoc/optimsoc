@@ -454,8 +454,9 @@ module compute_tile_dm(
     .irq    (na_irq),
     );*/
    networkadapter_ct
-      #(.tileid(ID),
-        .conf_dma(NA_ENABLE_DMA),
+      #(.TILEID(ID),
+        .ENABLE_MPSIMPLE(1),
+        .ENABLE_DMA(NA_ENABLE_DMA),
         .dma_entries(DMA_ENTRIES),
         .vchannels(VCHANNELS),
         .noc_flit_width(NOC_FLIT_WIDTH),
