@@ -29,11 +29,14 @@
 #define OPTIMSOC_NA_BASE          0xe0000000
 
 // Configuration module
-#define OPTIMSOC_NA_REGS      OPTIMSOC_NA_BASE + 0x00000
-#define OPTIMSOC_NA_TILEID    OPTIMSOC_NA_REGS + 0x0
-#define OPTIMSOC_NA_NUMTILES  OPTIMSOC_NA_REGS + 0x4
-#define OPTIMSOC_NA_COREBASE  OPTIMSOC_NA_REGS + 0x10
+#define OPTIMSOC_NA_REGS       OPTIMSOC_NA_BASE + 0x00000
+#define OPTIMSOC_NA_TILEID     OPTIMSOC_NA_REGS + 0x0
+#define OPTIMSOC_NA_NUMTILES   OPTIMSOC_NA_REGS + 0x4
+#define OPTIMSOC_NA_COREBASE   OPTIMSOC_NA_REGS + 0x10
 #define OPTIMSOC_NA_TOTALCORES OPTIMSOC_NA_REGS + 0x18
+#define OPTIMSOC_NA_GMEM_SIZE  OPTIMSOC_NA_REGS + 0x1c
+#define OPTIMSOC_NA_GMEM_TILE  OPTIMSOC_NA_REGS + 0x20
+#define OPTIMSOC_NA_LMEM_SIZE  OPTIMSOC_NA_REGS + 0x24
 
 #define OPTIMSOC_NA_CONF          OPTIMSOC_NA_REGS + 0xc
 #define OPTIMSOC_NA_CONF_MPSIMPLE 0x1
@@ -219,6 +222,42 @@ static inline unsigned int optimsoc_get_tilenumcores(void) {
  */
 static inline unsigned int optimsoc_get_abscoreid(void) {
     return REG32(OPTIMSOC_NA_COREBASE) + optimsoc_get_relcoreid();
+}
+
+/**
+ * Get the size of global memory (if any)
+ *
+ * Return the size of globally accessible memory. This memory is not directly
+ * accessed, but can only be accessed with DMA transfers. If the system has no
+ * global memory, return 0.
+ *
+ * \return Size of memory (or 0, if no memory)
+ */
+static inline uint32_t optimsoc_get_mainmem_size() {
+    return REG32(OPTIMSOC_NA_GMEM_SIZE);
+}
+
+/**
+ * Get the tile ID of the global memory
+ *
+ * If the system has global memory (optimsoc_get_mainmem_size() > 0), this
+ * function returns the tile identifier, where the memory is installed.
+ *
+ * \return Main memory tile identifier
+ */
+static inline uint32_t optimsoc_get_mainmem_tile() {
+    return REG32(OPTIMSOC_NA_GMEM_TILE);
+}
+
+/**
+ * Get size of local memory
+ *
+ * Get the size of memory available (and addressed) in this tile.
+ *
+ * \return Size of local memory
+ */
+static inline uint32_t optimsoc_get_localmem_size() {
+    return REG32(OPTIMSOC_NA_LMEM_SIZE);
 }
 
 /**
