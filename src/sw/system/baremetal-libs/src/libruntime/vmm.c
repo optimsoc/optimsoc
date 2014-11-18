@@ -25,7 +25,7 @@
 
 #include <vmm.h>
 #include <list.h>
-#include <spr-defs.h>
+#include <or1k-sprs.h>
 #include <optimsoc-baremetal.h>
 #include <assert.h>
 
@@ -39,21 +39,61 @@
 
 
 void arch_set_itlb(void* vaddr, void* paddr) {
-    unsigned int flags = ITLB_PR_NOLIMIT;
-    unsigned int mr = ((unsigned int)vaddr & SPR_ITLBMR_VPN) | SPR_ITLBMR_V;
-    unsigned int tr = ((unsigned int)paddr & SPR_ITLBTR_PPN) | (flags & ITLB_PR_MASK) | SPR_ITLBTR_A | SPR_ITLBTR_D;
-    unsigned int set = ((((unsigned int)vaddr) >> PAGE_BITS) & 63);
-    or1k_mtspr (SPR_ITLBMR_BASE(0)+set, mr);
-    or1k_mtspr (SPR_ITLBTR_BASE(0)+set, tr);
+    // Extract the index (shift by 13 and mask)
+    uint32_t index = OR1K_SPR_IMMU_ITLBW_MR_VPN_GET((uint32_t) vaddr) & 0x3f;
+
+    // Extract VPN (properly shift and mask)
+    uint32_t vpn = OR1K_SPR_IMMU_ITLBW_MR_VPN_GET((uint32_t) vaddr);
+
+    // Set page match register
+    //  - valid
+    //  - level 2 (8kB)
+    //  - VPN from vaddr
+    uint32_t mr = OR1K_SPR_IMMU_ITLBW_MR_V_SET(0, 1);
+    mr = OR1K_SPR_IMMU_ITLBW_MR_VPN_SET(mr, vpn);
+
+    or1k_mtspr (OR1K_SPR_IMMU_ITLBW_MR_ADDR(0, index), mr);
+
+    // Extract PPN (properly shift and mask)
+    uint32_t ppn = OR1K_SPR_IMMU_ITLBW_TR_PPN_GET((uint32_t) paddr);
+
+    // Set page translation register
+    //  - allow all accesses
+    uint32_t tr = OR1K_SPR_IMMU_ITLBW_TR_UXE_SET(0, 1);
+    tr = OR1K_SPR_IMMU_ITLBW_TR_SXE_SET(tr, 1);
+    tr = OR1K_SPR_IMMU_ITLBW_TR_PPN_SET(tr, ppn);
+
+    or1k_mtspr (OR1K_SPR_IMMU_ITLBW_TR_ADDR(0, index), tr);
 }
 
-void arch_set_dtlb(void *vaddr,void *paddr) {
-    unsigned int flags = DTLB_PR_NOLIMIT;
-    unsigned int mr = ((unsigned int)vaddr & SPR_DTLBMR_VPN) | SPR_ITLBMR_V;
-    unsigned int tr = ((unsigned int)paddr & SPR_DTLBTR_PPN) | (flags & DTLB_PR_MASK) | SPR_DTLBTR_A | SPR_DTLBTR_D;
-    unsigned int set = ((((unsigned int)vaddr) >> PAGE_BITS) & 63);
-    or1k_mtspr (SPR_DTLBMR_BASE(0)+set, mr);
-    or1k_mtspr (SPR_DTLBTR_BASE(0)+set, tr);
+void arch_set_dtlb(void *vaddr, void *paddr) {
+    // Extract the index (shift by 13 and mask)
+    uint32_t index = OR1K_SPR_DMMU_DTLBW_MR_VPN_GET((uint32_t) vaddr) & 0x3f;
+
+    // Extract VPN (properly shift and mask)
+    uint32_t vpn = OR1K_SPR_DMMU_DTLBW_MR_VPN_GET((uint32_t) vaddr);
+
+    // Set page match register
+    //  - valid
+    //  - level 2 (8kB)
+    //  - VPN from vaddr
+    uint32_t mr = OR1K_SPR_DMMU_DTLBW_MR_V_SET(0, 1);
+    mr = OR1K_SPR_DMMU_DTLBW_MR_VPN_SET(mr, vpn);
+
+    or1k_mtspr (OR1K_SPR_DMMU_DTLBW_MR_ADDR(0, index), mr);
+
+    // Extract PPN (properly shift and mask)
+    uint32_t ppn = OR1K_SPR_DMMU_DTLBW_TR_PPN_GET((uint32_t) paddr);
+
+    // Set page translation register
+    //  - allow all accesses
+    uint32_t tr = OR1K_SPR_DMMU_DTLBW_TR_URE_SET(0, 1);
+    tr = OR1K_SPR_DMMU_DTLBW_TR_UWE_SET(tr, 1);
+    tr = OR1K_SPR_DMMU_DTLBW_TR_SRE_SET(tr, 1);
+    tr = OR1K_SPR_DMMU_DTLBW_TR_SWE_SET(tr, 1);
+    tr = OR1K_SPR_DMMU_DTLBW_TR_PPN_SET(tr, ppn);
+
+    or1k_mtspr (OR1K_SPR_DMMU_DTLBW_TR_ADDR(0, index), tr);
 }
 
 void vmm_init() {
@@ -95,7 +135,7 @@ void dtlb_miss() {
     struct optimsoc_scheduler_core *core_ctx;
     core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
-    void *vaddr = (void*) or1k_mfspr(SPR_EEAR_BASE);
+    void *vaddr = (void*) or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
 
     runtime_trace_dtlb_miss(vaddr);
 
@@ -133,7 +173,7 @@ void itlb_miss() {
     struct optimsoc_scheduler_core *core_ctx;
     core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
 
-    void *vaddr = (void*) or1k_mfspr(SPR_EEAR_BASE);
+    void *vaddr = (void*) or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
 
     runtime_trace_itlb_miss(vaddr);
 

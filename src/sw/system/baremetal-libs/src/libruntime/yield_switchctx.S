@@ -20,14 +20,16 @@
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Rösch <stefan.roesch@tum.de>
  */
 
-#include <spr-defs.h>
+#include <or1k-sprs.h>
 #include <or1k-asm.h>
 
-#define PC     0x0
-#define GPR(x) (x<<2)
-#define SR     0x80
+#define CTX_REG(x) (x << 2)
+
+#define CTX_PC_BYTE_OFFSET  0x7c
+#define CTX_SR_BYTE_OFFSET  0x80
 
 .section .text
 
@@ -48,55 +50,39 @@ yield_switchctx:
     /* First we store all callee-saved registers in their position
      * in the context. */
 
-    l.sw GPR(1)(r3),r1
-    l.sw GPR(2)(r3),r2
-    l.sw GPR(9)(r3),r9
-    l.sw GPR(10)(r3),r10
-    l.sw GPR(14)(r3),r14
-    l.sw GPR(16)(r3),r16
-    l.sw GPR(18)(r3),r18
-    l.sw GPR(20)(r3),r20
-    l.sw GPR(22)(r3),r22
-    l.sw GPR(24)(r3),r24
-    l.sw GPR(26)(r3),r26
-    l.sw GPR(28)(r3),r28
-    l.sw GPR(30)(r3),r30
+    l.sw CTX_REG(1)(r3),r1
+    l.sw CTX_REG(2)(r3),r2
+    l.sw CTX_REG(9)(r3),r9
+    l.sw CTX_REG(10)(r3),r10
+    l.sw CTX_REG(14)(r3),r14
+    l.sw CTX_REG(16)(r3),r16
+    l.sw CTX_REG(18)(r3),r18
+    l.sw CTX_REG(20)(r3),r20
+    l.sw CTX_REG(22)(r3),r22
+    l.sw CTX_REG(24)(r3),r24
+    l.sw CTX_REG(26)(r3),r26
+    l.sw CTX_REG(28)(r3),r28
+    l.sw CTX_REG(30)(r3),r30
 
     /* From now on we can do everything with the registers.. */
 
     /* Save status register */
-    l.mfspr r4,r0,SPR_SR
-    l.sw    SR(r3),r4
+    l.mfspr r4,r0,OR1K_SPR_SYS_SR_ADDR
+    l.sw    CTX_SR_BYTE_OFFSET(r3),r4
     // disable interrupts from here on
     l.andi  r4,r4,0xFFFB
-    l.mtspr r0,r4,SPR_SR
+    l.mtspr r0,r4,OR1K_SPR_SYS_SR_ADDR
 
     /* Store a program counter that will bring us back down there
      * when scheduled again. The context switch mechanism will bring us
      * there then. */
     l.movhi r4,hi(yield_return)
     l.ori   r4,r4,lo(yield_return)
-    l.sw    PC(r3),r4
+    l.sw    CTX_PC_BYTE_OFFSET(r3),r4
 
-    /* Now we give the kernel his exception stack so that it works
-     * similar as after a tick. */
-    /* FIXME really necessary ? */
-    .global exception_stack
-
-    l.movhi r1, hi(exception_stack);
-    l.ori   r1, r1, lo(exception_stack);
-    l.lwz   r1, 0(r1)
-    /* Generate the domain core id. */
-    l.movhi r3, 0xe000
-    l.lwz   r3, 0x10(r3)
-    l.mfspr r4, r0, SPR_COREID;
-    l.add   r4, r4, r3
-    /* Multiply by pointer size (4) */
-    l.slli  r4, r4, 2
-    /* Add to base pointer */
-    l.add   r1, r1, r4
-    /* Load pointer to the stack from there. */
-    l.lwz   r1, 0(r1)
+    /* Use the stack of the current thread
+     * Next context switch will re-enable stack-pointer saved above
+     */
 
     .global schedule
     l.jal   schedule

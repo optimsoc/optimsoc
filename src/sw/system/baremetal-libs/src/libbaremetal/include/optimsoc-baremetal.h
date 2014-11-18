@@ -59,7 +59,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <spr-defs.h>
+#include <or1k-sprs.h>
 #include <or1k-support.h>
 
 /**
@@ -200,7 +200,7 @@ extern int optimsoc_get_ranktile(unsigned int rank);
  * \return relative core identifier
  */
 static inline unsigned int optimsoc_get_relcoreid(void) {
-    return or1k_mfspr(SPR_COREID);
+    return or1k_mfspr(OR1K_SPR_SYS_COREID_ADDR);
 }
 
 /**
@@ -209,7 +209,7 @@ static inline unsigned int optimsoc_get_relcoreid(void) {
  * \return Number of cores in this tile
  */
 static inline unsigned int optimsoc_get_tilenumcores(void) {
-    return or1k_mfspr(SPR_NUMCORES);
+    return or1k_mfspr(OR1K_SPR_SYS_NUMCORES_ADDR);
 }
 
 /**

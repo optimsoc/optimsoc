@@ -22,7 +22,7 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
- #include <spr-defs.h>
+#include <or1k-sprs.h>
 
 .section .text
 
@@ -32,9 +32,9 @@
 
 ctx_replace:
     l.lwz   r1,0x04(r0)
-    l.mtspr r0,r1,SPR_EPCR_BASE;
+    l.mtspr r0,r1,OR1K_SPR_SYS_EPCR_BASE;
     l.lwz   r1,0x84(r0)
-    l.mtspr r0,r1,SPR_ESR_BASE;
+    l.mtspr r0,r1,OR1K_SPR_SYS_ESR_BASE;
     l.lwz   r1,0x08(r0)
     l.lwz   r2,0x0c(r0)
     l.lwz   r3,0x10(r0)
