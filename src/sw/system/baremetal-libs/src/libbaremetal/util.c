@@ -27,11 +27,11 @@ void optimsoc_init(optimsoc_conf *config) {
 }
 
 uint32_t optimsoc_mainmem_size() {
-  return _optimsoc_mainmem_size;
+  return OPTIMSOC_NA_GMEM_SIZE;
 }
 
 uint32_t optimsoc_mainmem_tile() {
-  return _optimsoc_mainmem_tile;
+  return OPTIMSOC_NA_GMEM_TILE;
 }
 
 uint32_t optimsoc_noc_maxpacketsize(void) {
