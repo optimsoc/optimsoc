@@ -388,7 +388,7 @@ extern void optimsoc_critical_end(uint32_t restore);
  *
  * The mutex data type which is actually hidden on purpose.
  */
-typedef uint64_t mutex_t;
+typedef uint32_t optimsoc_mutex_t;
 
 /**
  * Initialize mutex
@@ -397,7 +397,7 @@ typedef uint64_t mutex_t;
  *
  * \param mutex Mutex to initialize
  */
-extern void optimsoc_mutex_init(mutex_t *mutex);
+extern void optimsoc_mutex_init(optimsoc_mutex_t **mutex);
 
 /**
  * Lock mutex
@@ -406,7 +406,7 @@ extern void optimsoc_mutex_init(mutex_t *mutex);
  *
  * \param mutex Mutex to lock
  */
-extern void optimsoc_mutex_lock(mutex_t *mutex);
+extern void optimsoc_mutex_lock(optimsoc_mutex_t *mutex);
 
 /**
  * Unlock mutex
@@ -415,7 +415,7 @@ extern void optimsoc_mutex_lock(mutex_t *mutex);
  *
  * \param mutex Mutex to unlock
  */
-extern void optimsoc_mutex_unlock(mutex_t *mutex);
+extern void optimsoc_mutex_unlock(optimsoc_mutex_t *mutex);
 
 /**
  * @}
