@@ -147,7 +147,7 @@ void control_msg_handler(unsigned int* buffer,int len) {
         endpoint_write(ep, ep->buffer->write_ptr, offset, (uint32_t*) &buffer[4], len-4);
 
         if (eom) {
-            ep->buffer->data_size[ep->buffer->write_ptr] = offset + len - 4;
+            ep->buffer->data_size[ep->buffer->write_ptr] = offset + eom;
             uint32_t ptr; // Move the pointer
             endpoint_push(ep, &ptr);
             trace_ep_bufferstate(ep, endpoint_channel_get_fillstate(ep));
@@ -337,7 +337,11 @@ void control_channel_send(struct endpoint_handle *ep, uint8_t *data, uint32_t si
                 (CTRL_REQUEST_CHAN_DATA << CTRL_REQUEST_LSB);
         ctrl_request.buffer[1] = (unsigned int) ep->ep;
         ctrl_request.buffer[2] = i;
-        ctrl_request.buffer[3] = ((i+wordsperpacket) >= words);
+        if (((i+wordsperpacket) >= words)) {
+            ctrl_request.buffer[3] = size - i * wordsperpacket;
+        } else {
+            ctrl_request.buffer[3] = 0;
+        }
 
         int sz = words - i;
         if (sz>wordsperpacket)
