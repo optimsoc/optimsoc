@@ -163,10 +163,10 @@ struct endpoint_handle *endpoint_create(uint32_t node, uint32_t port,
     ep->buffer = calloc(1, sizeof(struct endpoint_buffer));
     assert(ep->buffer != 0);
 
-    ep->buffer->data = malloc(buffer_size);
+    ep->buffer->data = malloc(buffer_size * sizeof(uint32_t*));
     assert(ep->buffer->data != 0);
 
-    ep->buffer->data_size = malloc(buffer_size);
+    ep->buffer->data_size = malloc(buffer_size * sizeof(uint32_t*));
     assert(ep->buffer->data_size != 0);
 
     uint32_t max_element_size_bytes;
@@ -185,7 +185,7 @@ struct endpoint_handle *endpoint_create(uint32_t node, uint32_t port,
     max_element_size_words = (max_element_size_bytes + 3) >> 2;
 
     uint32_t *datafield = malloc(max_element_size_bytes * buffer_size);
-    ep->buffer->data_size = malloc(4 * buffer_size);
+    assert(datafield);
 
     int i;
     for (i = 0; i < buffer_size; i++) {
