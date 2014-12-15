@@ -8,7 +8,7 @@ typedef uint32_t optimsoc_mp_endpoint_handle;
 #endif
 
 typedef enum { OPTIMSOC_MP_EP_CONNECTIONLESS = 0,
-               OPTIMSOC_MP_EP_CHANNEL = 1 } optimsoc_endpoint_type;
+    OPTIMSOC_MP_EP_CHANNEL = 1 } optimsoc_endpoint_type;
 
 #define OPTIMSOC_MP_CONF_DOMAINS 1
 
@@ -37,27 +37,23 @@ int optimsoc_mp_is_initialized();
  */
 
 int optimsoc_mp_endpoint_create(optimsoc_mp_endpoint_handle *endpoint,
-                                uint32_t node, uint32_t port,
-                                optimsoc_endpoint_type buffer_type,
-                                uint32_t buffer_size, int overwrite_max_size);
+        uint32_t node, uint32_t port,
+        optimsoc_endpoint_type buffer_type,
+        uint32_t buffer_size, int overwrite_max_size);
 
 int optimsoc_mp_endpoint_get(optimsoc_mp_endpoint_handle *endpoint,
-                             uint32_t tile, uint32_t node, uint32_t port);
+        uint32_t tile, uint32_t node, uint32_t port);
 
 int optimsoc_mp_channel_connect(optimsoc_mp_endpoint_handle from,
-                             optimsoc_mp_endpoint_handle to);
+        optimsoc_mp_endpoint_handle to);
 
 int optimsoc_mp_channel_send(optimsoc_mp_endpoint_handle from,
-                           optimsoc_mp_endpoint_handle to,
-                           uint8_t* buffer, uint32_t size);
-
-int optimsoc_mp_channel_send_i(optimsoc_mp_endpoint_handle from,
-                               optimsoc_mp_endpoint_handle to,
-                               uint8_t* buffer, uint32_t size);
+        optimsoc_mp_endpoint_handle to,
+        uint8_t* buffer, uint32_t size);
 
 int optimsoc_mp_channel_recv(optimsoc_mp_endpoint_handle ep,
-                           uint8_t* buffer, uint32_t buffer_size,
-                           uint32_t *received_size);
+        uint8_t* buffer, uint32_t buffer_size,
+        uint32_t *received_size);
 
 // Channel migration
 int optimsoc_mp_channel_pause(optimsoc_mp_endpoint_handle ep);
