@@ -63,10 +63,12 @@ int optimsoc_mp_endpoint_get(struct endpoint_handle **eph, uint32_t tile,
 
 int optimsoc_mp_channel_connect(struct endpoint_handle *from,
                               struct endpoint_handle *to) {
+    trace_chan_conn_begin(from, to);
     // currently needs to be called by the sender
 
     // Get credit from remote
     endpoint_channel_add_credit(from->ep, control_channel_connect(from, to));
+    trace_chan_conn_end(from, to);
     return 0;
 }
 

@@ -57,7 +57,7 @@ void control_channel_sendcredit(struct endpoint_handle *ep, int32_t credit);
 //
 // Tracing
 
-//#define TRACE_ENABLE_FUNCTIONS
+#define TRACE_ENABLE_FUNCTIONS
 //#define TRACE_ENABLE_LOWLEVEL
 
 #define TRACE_EP_GET_BEGIN    0x300
@@ -66,6 +66,11 @@ void control_channel_sendcredit(struct endpoint_handle *ep, int32_t credit);
 #define TRACE_MSG_ALLOC_END   0x303
 #define TRACE_MSG_DATA_BEGIN  0x304
 #define TRACE_MSG_DATA_END    0x305
+#define TRACE_CHAN_CONN_BEGIN 0x306
+#define TRACE_CHAN_CONN_END   0x307
+#define TRACE_CHAN_SEND_BEGIN 0x308
+#define TRACE_CHAN_SEND_XMIT  0x309
+#define TRACE_CHAN_SEND_END   0x30a
 
 static inline void trace_ep_get_req_begin(uint32_t domain, uint32_t node,
                                           uint32_t port) {
@@ -111,6 +116,42 @@ static inline void trace_msg_data_begin(struct endpoint_handle *eph,
 static inline void trace_msg_data_end(struct endpoint_handle *eph) {
 #ifdef TRACE_ENABLE_FUNCTIONS
     OPTIMSOC_TRACE(TRACE_MSG_DATA_END, eph);
+#endif
+}
+
+static inline void trace_chan_conn_begin(struct endpoint_handle *from,
+        struct endpoint_handle *to) {
+#ifdef TRACE_ENABLE_FUNCTIONS
+    OPTIMSOC_TRACE(TRACE_CHAN_CONN_BEGIN, from);
+    OPTIMSOC_TRACE(TRACE_CHAN_CONN_BEGIN, to);
+#endif
+}
+
+static inline void trace_chan_conn_end(struct endpoint_handle *from,
+        struct endpoint_handle *to) {
+#ifdef TRACE_ENABLE_FUNCTIONS
+    OPTIMSOC_TRACE(TRACE_CHAN_CONN_END, from);
+    OPTIMSOC_TRACE(TRACE_CHAN_CONN_END, to);
+#endif
+}
+
+static inline void trace_chan_send_begin(struct endpoint_handle *eph,
+                                        uint32_t size) {
+#ifdef TRACE_ENABLE_FUNCTIONS
+    OPTIMSOC_TRACE(TRACE_CHAN_SEND_BEGIN, eph);
+    OPTIMSOC_TRACE(TRACE_CHAN_SEND_BEGIN, size);
+#endif
+}
+
+static inline void trace_chan_send_xmit(struct endpoint_handle *eph) {
+#ifdef TRACE_ENABLE_FUNCTIONS
+    OPTIMSOC_TRACE(TRACE_CHAN_SEND_XMIT, eph);
+#endif
+}
+
+static inline void trace_chan_send_end(struct endpoint_handle *eph) {
+#ifdef TRACE_ENABLE_FUNCTIONS
+    OPTIMSOC_TRACE(TRACE_CHAN_SEND_END, eph);
 #endif
 }
 
