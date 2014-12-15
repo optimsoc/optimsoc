@@ -32,7 +32,7 @@
 
 #include <stdlib.h>
 
-#define TRACE_ENABLE
+//#define TRACE_ENABLE
 
 #define OPTIMSOC_TRACE_MPSIMPLE_SEND          0x100
 #define OPTIMSOC_TRACE_MPSIMPLE_SEND_FINISHED 0x101
