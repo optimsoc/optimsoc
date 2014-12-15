@@ -25,7 +25,7 @@
 CC_FOR_TARGET ?= @OR1K-CC@
 OBJDUMP_FOR_TARGET ?= @OR1K-OBJDUMP@
 OBJCOPY_FOR_TARGET ?= @OR1K-OBJCOPY@
-CFLAGS ?= -mnewlib -mmulticore -mboard=optimsoc
+CFLAGS ?= -mnewlib -mboard=optimsoc
 
 BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-baremetal)
 
