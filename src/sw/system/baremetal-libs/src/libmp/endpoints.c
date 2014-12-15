@@ -289,7 +289,7 @@ void endpoint_write(struct endpoint *ep, uint32_t ptr, uint32_t offset,
                     uint32_t *buffer, uint32_t size) {
     // Write data to buffer
     for (int i=0; i<size; i++){
-        //ep->buffer->data[ptr][i+offset] = buffer[i];
+        ep->buffer->data[ptr][i+offset] = buffer[i];
     }
 }
 
