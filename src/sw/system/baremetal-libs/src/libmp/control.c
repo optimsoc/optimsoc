@@ -23,7 +23,7 @@ void control_init() {
     // Add handler so that received message are treated correctly
     // Class 1: control messages
     optimsoc_mp_simple_init();
-    optimsoc_mp_simple_addhandler(MP_NOC_CLASS, &control_msg_handler);
+    optimsoc_mp_simple_addhandler(NOC_CLASS_FIFO, &control_msg_handler);
 }
 
 // The following handler is called by the message interrupt service routine
@@ -196,7 +196,7 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
         // Try to retrieve from remote
         // We do this as long as we do not get a valid handle back (-1)
         ctrl_request.buffer[0] = (domain << OPTIMSOC_DEST_LSB) |
-                (MP_NOC_CLASS << OPTIMSOC_CLASS_LSB) |
+                (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
                 (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                 (CTRL_REQUEST_GETEP_REQ << CTRL_REQUEST_LSB);
         ctrl_request.buffer[1] = node;
