@@ -74,7 +74,7 @@ unsigned int* optimsoc_mp_simple_buffer;
 void (*cls_handlers[OPTIMSOC_CLASS_NUM])(unsigned int*,int);
 
 void optimsoc_mp_simple_init(void);
-void optimsoc_mp_simple_inth(uint32_t arg);
+void optimsoc_mp_simple_inth(void* arg);
 
 void optimsoc_mp_simple_init(void) {
     // Register interrupt
@@ -95,7 +95,7 @@ void optimsoc_mp_simple_addhandler(unsigned int class,
     cls_handlers[class] = hnd;
 }
 
-void optimsoc_mp_simple_inth(uint32_t arg) {
+void optimsoc_mp_simple_inth(void* arg) {
 
     (void) arg;
 
