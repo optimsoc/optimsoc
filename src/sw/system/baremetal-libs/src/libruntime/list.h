@@ -41,7 +41,7 @@ typedef struct list_entry_t {
 typedef struct list_t {
     struct list_entry_t* head;
     struct list_entry_t* tail;
-    mutex_t mutex;
+    optimsoc_mutex_t mutex;
 } list_t;
 
 typedef list_entry_t* list_entry_i;
