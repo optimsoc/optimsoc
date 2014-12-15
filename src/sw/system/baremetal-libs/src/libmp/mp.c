@@ -19,11 +19,25 @@ typedef struct endpoint_handle* optimsoc_mp_endpoint_handle;
  * send via control_*.
  */
 
+enum {
+    OPTIMSOC_MP_CONTROL_FIFO = 0
+} _optimsoc_mp_control;
+
+enum {
+    OPTIMSOC_MP_DATA_FIFO = 0,
+    OPTIMSOC_MP_DATA_DMA = 1
+} _optimsoc_mp_data;
+
 int optimsoc_mp_initialize(struct optimsoc_mp_attributes *attr) {
 
+    // Initialize endpoints
     endpoints_init();
 
+    // Initialize control plane
     control_init();
+
+    _optimsoc_mp_control = OPTIMSOC_MP_CONTROL_FIFO;
+    _optimsoc_mp_data = OPTIMSOC_MP_DATA_FIFO;
 
     return 0;
 }
