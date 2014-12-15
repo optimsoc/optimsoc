@@ -62,6 +62,7 @@ int optimsoc_mp_channel_continue(optimsoc_mp_endpoint_handle ep);
 
 #define OPTIMSOC_MP_ERROR_NOT_INITIALIZED       -1
 #define OPTIMSOC_MP_ERROR_DOMAINS_NOT_SUPPORTED -2
+#define OPTIMSOC_MP_ERROR_BUFFEROVERFLOW        -3
 
 char* optimsoc_mp_error_string(int errno);
 

@@ -37,6 +37,9 @@ char* optimsoc_mp_error_string(int errno) {
     case OPTIMSOC_MP_ERROR_DOMAINS_NOT_SUPPORTED:
         str = "domains not supported";
         break;
+    case OPTIMSOC_MP_ERROR_BUFFEROVERFLOW:
+        str = "buffer overflow";
+        break;
     default:
         str = "unknown error";
         break;
