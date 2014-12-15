@@ -148,7 +148,8 @@ void control_msg_handler(unsigned int* buffer,int len) {
 
         if (eom) {
             ep->buffer->data_size[ep->buffer->write_ptr] = offset + len - 4;
-            ep->buffer->write_ptr = _endpoint_addptrwrap(ep, ep->buffer->write_ptr, 1);
+            uint32_t ptr; // Move the pointer
+            endpoint_push(ep, &ptr);
             trace_ep_bufferstate(ep, endpoint_channel_get_fillstate(ep));
         }
 

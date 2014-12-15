@@ -215,12 +215,34 @@ struct endpoint_handle *endpoint_create(uint32_t node, uint32_t port,
     return eph;
 }
 
-uint32_t _endpoint_addptrwrap(struct endpoint *ep, uint32_t ptr, uint32_t add) {
-    uint32_t newptr = ptr + add;
-    if (ep->buffer->size <= newptr) {
-        newptr -= ep->buffer->size;
-    }
-    return newptr;
+int endpoint_pop(struct endpoint *ep, uint32_t *ptr) {
+    uint32_t newptr;
+
+    // TODO: what about other concurrency
+    do {
+        *ptr = ep->buffer->read_ptr;
+        newptr = *ptr + 1;
+        if (ep->buffer->size <= newptr) {
+            newptr -= ep->buffer->size;
+        }
+    } while (or1k_sync_cas((void*) &ep->buffer->read_ptr, *ptr, newptr) != *ptr);
+
+    return 0;
+}
+
+int endpoint_push(struct endpoint *ep, uint32_t *ptr) {
+    uint32_t newptr;
+
+    // TODO: what about other concurrency
+    do {
+        *ptr = ep->buffer->write_ptr;
+        newptr = *ptr + 1;
+        if (ep->buffer->size <= newptr) {
+            newptr -= ep->buffer->size;
+        }
+    } while (or1k_sync_cas((void*) &ep->buffer->write_ptr, *ptr, newptr) != *ptr);
+
+    return 0;
 }
 
 int endpoint_empty(struct endpoint *ep) {
@@ -249,12 +271,10 @@ int endpoint_alloc(struct endpoint *ep, uint32_t size, uint32_t *ptr) {
 
     if (!endpoint_full(ep)) {
         // The sender can write to this address
-        *ptr = ep->buffer->write_ptr;
+        endpoint_push(ep, ptr);
 
         // Zero size (will also signal completeness)
-        ep->buffer->data_size[ep->buffer->write_ptr] = 0;
-
-        ep->buffer->write_ptr = _endpoint_addptrwrap(ep, ep->buffer->write_ptr, 1);
+        ep->buffer->data_size[*ptr] = 0;
 
         // Return acknowledge
         return 0;
@@ -313,13 +333,12 @@ void endpoint_msg_recv(struct endpoint *ep, uint32_t *buffer,
 
     uint32_t wordsize = (*received + 3) >> 2;
 
+    uint32_t ptr;
+    endpoint_pop(ep, &ptr);
+
     for(int i=0; i<wordsize; i++) {
-        buffer[i] = ep->buffer->data[ep->buffer->read_ptr][i];
+        buffer[i] = ep->buffer->data[ptr][i];
     }
-
-    ep->buffer->read_ptr = _endpoint_addptrwrap(ep, ep->buffer->read_ptr,
-                                                wordsize + 1);
-
 }
 
 uint32_t endpoint_channel_get_credit(struct endpoint *ep) {
