@@ -56,6 +56,8 @@ AC_CHECK_LIB([readline], [readline], [
 ])
 AC_SUBST(READLINE_LIBS)
 
+AC_CHECK_HEADER([readline/readline.h],,AC_MSG_ERROR([Unable to find readline.h. You may need to install the readline development package.]))
+
 AC_ARG_ENABLE([python-interface],
     AS_HELP_STRING([--enable-python-interface], [enable python interface (default n)]),
     [use_python=$enableval],
