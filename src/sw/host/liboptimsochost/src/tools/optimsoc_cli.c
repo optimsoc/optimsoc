@@ -71,6 +71,9 @@ char **stm_printf_buf;
 const unsigned int stm_print_width = 72;
 unsigned int max_core_id;
 
+volatile unsigned int stm_count_exit = 0;
+volatile unsigned int stm_exit_success = 1;
+
 int itm_callback_registered;
 
 struct itm_sink {
@@ -497,9 +500,17 @@ static void write_stm_trace_to_file(uint32_t core_id, uint32_t timestamp,
 
     switch (id) {
     case 1:
+        stm_count_exit++;
+        if (value != 0) {
+                stm_exit_success = 0;
+        }
         /* program terminated */
         fprintf(stm_trace_file, "[%d, %0d] [Program terminated.]\n",
                 timestamp, core_id);
+
+        if (stm_count_exit == max_core_id+1) {
+                printf("Software on all cores has terminated\n.");
+        }
         break;
     case 4:
         /* simprint */
@@ -701,6 +712,8 @@ static void display_help(void)
            "-o, --options      specify backend options (see below)\n"
            "                   Each option is a key-value pair in the form of\n"
            "                   key=value;key2=value2;...\n"
+           "--auto-mode        Automatically trace to file 'strace', start system\n"
+           "                   and wait for exit\n"
            "-h, --help         display this help and exit\n"
            "-v, --version      output version information and exit\n"
            "\n"
@@ -768,6 +781,7 @@ int main(int argc, char *argv[])
     int interactive_mode = 0;
     char *script = NULL;
     optimsoc_backend_id backend = OPTIMSOC_BACKEND_DBGNOC;
+    int auto_mode = 0;
 
     itm_callback_registered = 0;
 
@@ -785,11 +799,12 @@ int main(int argc, char *argv[])
             {"version",     no_argument,       0, 'v'},
             {"backend",     required_argument, 0, 'b'},
             {"options",     required_argument, 0, 'o'},
+			{"auto-mode",   no_argument,       0, 'a'},
             {0, 0, 0, 0}
         };
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "is:vhb:o:", long_options, &option_index);
+        c = getopt_long(argc, argv, "is:vhb:o:a", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -818,6 +833,9 @@ int main(int argc, char *argv[])
         case 's':
             script = optarg;
             break;
+        case 'a':
+            auto_mode = 1;
+            break;
         case 'v':
             printf("liboptimsochost version %s\n", optimsoc_get_version_string());
             return EXIT_SUCCESS;
@@ -837,8 +855,19 @@ int main(int argc, char *argv[])
     /* connect to target system */
     connect(backend, num_options, options);
 
-    /* run in interactive mode */
-    if (interactive_mode) {
+    if (auto_mode) {
+        /* Run auto-mode */
+        log_stm_trace("strace");
+        printf("Start system\n");
+        optimsoc_cpu_start(ctx);
+        while ((stm_count_exit != max_core_id+1)) {}
+        if (stm_exit_success) {
+            exit(0);
+        } else {
+            exit(1);
+        }
+    } else if (interactive_mode) {
+        /* run in interactive mode */
         char *line = 0;
         while (1) {
             if (line) {
