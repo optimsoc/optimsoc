@@ -398,8 +398,21 @@ int ob_simtcp_mem_write(struct optimsoc_backend_ctx *ctx,
 
 int ob_simtcp_reset(struct optimsoc_backend_ctx *ctx)
 {
-    err(ctx->log_ctx, "Not implemented!\n");
-    return -1;
+	int rv;
+    uint8_t buf[2];
+    // Lock access to the control message
+    pthread_mutex_lock(&ctx->ctrl_msg_mutex);
+
+    // Send reset request
+    buf[0] = 2;
+    buf[1] = MSGTYPE_SYSRESET;
+    rv = write(ctx->socketfd, buf, 2);
+    assert(rv == 2);
+
+    // Unlock access to the control message
+    pthread_mutex_unlock(&ctx->ctrl_msg_mutex);
+
+    return 0;
 }
 
 int ob_simtcp_cpu_stall(struct optimsoc_backend_ctx *ctx, int do_stall)
