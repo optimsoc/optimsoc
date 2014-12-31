@@ -507,14 +507,14 @@ static void write_stm_trace_to_file(uint32_t core_id, uint32_t timestamp,
         } else {
             for (int i = 0; i < 49; i++) {
                 if (stm_printf_buf[core_id][i] == '\0') {
-                    if (i == 48) {
+                    stm_printf_buf[core_id][i] = value;
+                    if (i == 45) {
                         stm_printf_buf[core_id][46] = '.';
                         stm_printf_buf[core_id][47] = '.';
                         stm_printf_buf[core_id][48] = '.';
                         stm_printf_buf[core_id][49] = '\0';
                         do_print = 1;
                     } else {
-                        stm_printf_buf[core_id][i] = value;
                         stm_printf_buf[core_id][i+1] = '\0';
                     }
                     break;
