@@ -68,6 +68,7 @@ struct optimsoc_ctx *ctx;
 FILE *nrm_stat_file;
 FILE *stm_trace_file;
 char **stm_printf_buf;
+const unsigned int stm_print_width = 72;
 unsigned int max_core_id;
 
 int itm_callback_registered;
@@ -503,18 +504,25 @@ static void write_stm_trace_to_file(uint32_t core_id, uint32_t timestamp,
     case 4:
         /* simprint */
         if (value == '\n') {
+            // Do the actual printf on newline
             do_print = 1;
         } else {
-            for (int i = 0; i < 49; i++) {
+            // Find the actual position of the character by iterating
+            for (unsigned int i = 0; i < stm_print_width; i++) {
+                // If this is the current end of string..
                 if (stm_printf_buf[core_id][i] == '\0') {
+                    // .. put the character on it
                     stm_printf_buf[core_id][i] = value;
-                    if (i == 45) {
-                        stm_printf_buf[core_id][46] = '.';
-                        stm_printf_buf[core_id][47] = '.';
-                        stm_printf_buf[core_id][48] = '.';
-                        stm_printf_buf[core_id][49] = '\0';
+                    // If we approach the end of the text width, we signal this
+                    // with three dots and force printing
+                    if (i == stm_print_width-4) {
+                        stm_printf_buf[core_id][stm_print_width-3] = '.';
+                        stm_printf_buf[core_id][stm_print_width-2] = '.';
+                        stm_printf_buf[core_id][stm_print_width-1] = '.';
+                        stm_printf_buf[core_id][stm_print_width] = '\0';
                         do_print = 1;
                     } else {
+                        // otherwise simply mark new end
                         stm_printf_buf[core_id][i+1] = '\0';
                     }
                     break;
@@ -625,7 +633,7 @@ int log_stm_trace(char* filename)
 
     stm_printf_buf = calloc(max_core_id + 1, sizeof(char*));
     for (unsigned int i = 0; i < max_core_id + 1; i++) {
-        stm_printf_buf[i] = calloc(50, sizeof(char));
+        stm_printf_buf[i] = calloc(stm_print_width+1, sizeof(char));
     }
 
     optimsoc_stm_register_callback(ctx, &write_stm_trace_to_file);
