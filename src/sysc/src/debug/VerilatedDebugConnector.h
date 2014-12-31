@@ -43,7 +43,7 @@ public:
 
     void start();
     void stop();
-
+    void resetSystem();
 };
 
 #endif /* VERILATEDDEBUGCONNECTOR_H_ */

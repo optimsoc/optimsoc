@@ -25,7 +25,7 @@
 #include "VerilatedDebugConnector.h"
 
 VerilatedDebugConnector::VerilatedDebugConnector(sc_module_name nm, uint16_t systemid) :
-        DebugConnector(nm, systemid)
+        DebugConnector(nm, systemid), rst_sys("rst_sys"), rst_cpu("rst_cpu")
 {
 }
 
@@ -39,4 +39,9 @@ void VerilatedDebugConnector::stop()
 {
     rst_sys = 1;
     rst_cpu = 1;
+}
+
+void VerilatedDebugConnector::resetSystem()
+{
+	stop();
 }

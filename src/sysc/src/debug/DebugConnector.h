@@ -114,6 +114,8 @@ protected:
      */
     virtual void start() = 0;
 
+    virtual void resetSystem() = 0;
+
 private:
     int m_port; /*!< Port of the TCP connection. */
     int m_connectionfd; /*!< The socket of the TCP connection. */

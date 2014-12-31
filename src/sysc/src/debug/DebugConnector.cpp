@@ -217,6 +217,10 @@ void DebugConnector::handleMessage(int type, uint8_t *payload,
                  << "Bytes written, 2 expected." << endl;
         }
         break;
+    case MSGTYPE_SYSRESET:
+        // do a reset
+        resetSystem();
+        break;
     case MSGTYPE_MODSEND:
         uint16_t smaddress;
         DebugModule *smod;
