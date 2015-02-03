@@ -31,7 +31,7 @@ productive choice.
 First of all, get Eclipse itself. Go to \url{http://www.eclipse.org/downloads/}
 and get the ``Eclipse IDE for C/C++ Developers'' package or install it from
 your distribution's package manager. All the following steps were tested with
-Eclipse Juno (4.2).
+Eclipse Kepler (4.3).
 
 Now start Eclipse and first go to \emph{Help $\rightarrow$ Check for Updates}.
 Install all available updates.
@@ -63,9 +63,7 @@ Just leave the other settings as they are, or change them to your liking.
 
 For the Verilog settings, go to \emph{Verilog/VHDL Editor $\rightarrow$ Code
 Style}. There, select \emph{Space as Indent Character} and set the \emph{Indent
-Size} to 3.\footnote{VEditor 1.0.0 has a bug that prevents saving the Indent
-Size setting when closing Eclipse. Until this bug is fixed, it is necessary to
-set this option every time Eclipse is restarted.}
+Size} to 3.
 
 For the C style used in liboptimsochost and other libraries we have prepared a
 settings file. Go to \emph{C/C++ $\rightarrow$ Code Style $\rightarrow$
@@ -190,7 +188,7 @@ First, you need to figure out where your \verb|verilog-mode.el| or
 \verb|verilog-mode.elc| file is located. If you want to use the
 Verilog-mode which is part of your Emacs installation, it is probably located
 somewhere in \verb|/usr/share/emacs|, e.g.
-\verb|/usr/share/emacs/23.3/lisp/progmodes/verilog-mode.elc| on Ubuntu 12.04.
+\verb|/usr/share/emacs/24.3/lisp/progmodes/verilog-mode.elc| on Ubuntu 14.04.
 You can run
 \begin{verbatim}
 $> find /usr/share/emacs -name 'verilog-mode.el*'
@@ -209,7 +207,7 @@ tab, write \verb|/usr/bin/emacs| into the field \emph{Location}. Leave the field
 \emph{Arguments}:
 \begin{verbatim}
 --batch --no-site-file -u ${env_var:USER}
--l /usr/share/emacs/23.3/lisp/progmodes/verilog-mode.elc
+-l /usr/share/emacs/24.3/lisp/progmodes/verilog-mode.elc
 "${selected_resource_loc}" -f verilog-auto -f save-buffer
 \end{verbatim}
 
