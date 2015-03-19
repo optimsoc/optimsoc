@@ -56,7 +56,27 @@ module tb_compute_tile(/*AUTOARG*/
    wire [4:0]                         trace_wbreg [0:NUMCORES-1];
    wire [31:0]                        trace_wbdata [0:NUMCORES-1];
    wire [31:0]                        trace_r3 [0:NUMCORES-1] /*verilator public_flat_rd*/;
-   
+
+   wire 		       trace_noc_egress_start /*verilator public_flat_rd*/;
+   wire 		       trace_noc_egress_end /*verilator public_flat_rd*/;
+   wire 		       trace_noc_ingress_start /*verilator public_flat_rd*/;
+   wire 		       trace_noc_ingress_end /*verilator public_flat_rd*/;
+   wire 		       trace_ct_egress_start /*verilator public_flat_rd*/;
+   wire 		       trace_ct_egress_end /*verilator public_flat_rd*/;
+   wire 		       trace_ct_ingress_irq /*verilator public_flat_rd*/;
+   wire 		       trace_ct_ingress_start /*verilator public_flat_rd*/;
+   wire 		       trace_ct_ingress_end /*verilator public_flat_rd*/;
+
+   assign trace_noc_egress_start = u_compute_tile.u_na.u_mp_simple.trace_noc_egress_start;
+   assign trace_noc_egress_end = u_compute_tile.u_na.u_mp_simple.trace_noc_egress_end;
+   assign trace_noc_ingress_start = u_compute_tile.u_na.u_mp_simple.trace_noc_ingress_start;
+   assign trace_noc_ingress_end = u_compute_tile.u_na.u_mp_simple.trace_noc_ingress_end;
+   assign trace_ct_egress_start = u_compute_tile.u_na.u_mp_simple.trace_ct_egress_start;
+   assign trace_ct_egress_end = u_compute_tile.u_na.u_mp_simple.trace_ct_egress_end;
+   assign trace_ct_ingress_irq = u_compute_tile.u_na.u_mp_simple.trace_ct_ingress_irq;
+   assign trace_ct_ingress_start = u_compute_tile.u_na.u_mp_simple.trace_ct_ingress_start;
+   assign trace_ct_ingress_end = u_compute_tile.u_na.u_mp_simple.trace_ct_ingress_end;
+
    reg [NOC_FLIT_WIDTH-1:0] noc_in_flit;
    reg [VCHANNELS-1:0] noc_in_valid;
    wire [VCHANNELS-1:0] noc_in_ready;
