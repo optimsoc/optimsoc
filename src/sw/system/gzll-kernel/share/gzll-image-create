@@ -50,7 +50,7 @@ import mmap
 import os
 
 def print_usage():
-    print "Usage: gzll-imaeg-create <configuration> <outimage>"
+    print "Usage: gzll-image-create <configuration> <outimage>"
 
 if len(sys.argv) < 3:
     print_usage()
@@ -86,14 +86,14 @@ for a in apps:
     else:
         extiles = conf.get(a, "tiles").split(',')
         for t in extiles:
-	    if t:
+            if t:
                 if len(tile) <= int(t):
                     for n in range(int(t) - len(tile) + 1):
                         tile.append([])
                 tile[int(t)].append(appno)
-	    else:
-	        print "(W) No tiles specified for application %s, proceed" % a
-		break
+            else:
+                print "(W) No tiles specified for application %s, proceed" % a
+                break
         appno = appno + 1
 
 # remove apps without image or execution tiles
@@ -179,7 +179,7 @@ apptable.close()
 #print "generating apptable.."
 subprocess.call("or1k-elf-gcc -Wall -o apptable.o -c apptable.c", shell=True)
 
-#		tiletable.o(.app_table_ptr)
+#                tiletable.o(.app_table_ptr)
 # generate linker script
 link_ld_pre = """OUTPUT_ARCH(or1k)
 SEARCH_DIR(.)
@@ -187,67 +187,67 @@ __DYNAMIC  =  0;
 
 MEMORY
 {
-	vectors : ORIGIN = 0x0, LENGTH = 0x2000
-	info	: ORIGIN = 0x2000, LENGTH = 0x2000
-	ram     : ORIGIN = 0x4000, LENGTH = (64M - 0x4000)
+    vectors : ORIGIN = 0x0, LENGTH = 0x2000
+    info    : ORIGIN = 0x2000, LENGTH = 0x2000
+    ram     : ORIGIN = 0x4000, LENGTH = (64M - 0x4000)
 }
 
 
 SECTIONS
 {
-	.vectors : {
-		*(.vectors)
-	} > vectors
+    .vectors : {
+        *(.vectors)
+    } > vectors
 
-	.kernelsize : {
-		tiletable.o(.kernelsize)
-	} > info
+    .kernelsize : {
+        tiletable.o(.kernelsize)
+    } > info
 
-	.tiletable : {
-		_tile_table_len = .;
-		tiletable.o(.tile_table_len)
-		_tile_table = .;
-		tiletable.o(.tile_table_ptrs)
-		tiletable.o(.data)
-		tiletable.o(.bss)
-		tiletable.o(.rodata)
-	} > info
+    .tiletable : {
+        _tile_table_len = .;
+        tiletable.o(.tile_table_len)
+        _tile_table = .;
+        tiletable.o(.tile_table_ptrs)
+        tiletable.o(.data)
+        tiletable.o(.bss)
+        tiletable.o(.rodata)
+    } > info
 
-	.apptable : {
-		_app_table = .;
-		apptable.o(.app_table)
-		apptable.o(.data)
-		apptable.o(.bss)
-		apptable.o(.rodata)
-	} > info
+    .apptable : {
+        _app_table = .;
+        apptable.o(.app_table)
+        apptable.o(.data)
+        apptable.o(.bss)
+        apptable.o(.rodata)
+    } > info
 
-	.kernel : {
-		skernel = .;
-		_skernel = .;
-		*(.text*)
-		*(.init)
-		*(.fini)
-		*(.data)
-		*(.rodata*)
-		*(.ctors)
-		*(.dtors)
-		*(.eh_frame)
-		*(.jcr)
-		ekernel = .;
-		_ekernel = .;
-	} > ram
+    .kernel : {
+        skernel = .;
+        _skernel = .;
+        *(.text*)
+        *(.init)
+        *(.fini)
+        *(.data)
+        *(.rodata*)
+        *(.ctors)
+        *(.dtors)
+        *(.eh_frame)
+        *(.jcr)
+        ekernel = .;
+        _ekernel = .;
+    } > ram
 
-	.bss : {
-		__bss_start = .;
-		*(.bss)
-		__bss_end = .;
-		*(COMMON)
-		_end = .;
-		end = .;
-	} > ram
+    .bss : {
+        __bss_start = .;
+        *(.bss)
+        __bss_end = .;
+        *(COMMON)
+        _end = .;
+        end = .;
+    } > ram
 
-	.apps ALIGN(0x2000): {
-                _apps_begin = .;
+    .apps ALIGN(0x2000): {
+        _apps_begin = .;
 """
 
 linkerscript = open("image-link.ld", "w")
