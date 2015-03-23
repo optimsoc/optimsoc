@@ -32,7 +32,7 @@ script_DATA = share/gzll-image-create
 install-data-hook:
 	chmod +x $(DESTDIR)$(scriptdir)/gzll-image-create
 	
-gzllincludedir = $(includedir)
+gzllincludedir = $(includedir)/gzll-kernel/
 gzllinclude_HEADERS = include/gzll-syscall.h
 
 # prepare pkg-config file
@@ -47,7 +47,7 @@ share/%.pc: share/%.pc.in Makefile
 	< $< > $@ || rm $@
 
 pkgconfigdir = $(datadir)/pkgconfig
-pkgconfig_DATA = share/gzll.pc
+pkgconfig_DATA = share/gzll-kernel.pc
 
-EXTRA_DIST = share/gzll.pc.in
-CLEANFILES = share/gzll.pc
+EXTRA_DIST = share/gzll-kernel.pc.in
+CLEANFILES = share/gzll-kernel.pc
