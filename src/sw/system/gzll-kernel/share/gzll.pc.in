@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+datadir=@datadir@
+
+Name: gzll kernel
+Description: gzll kernel
+Version: @VERSION@
+Cflags: -I${includedir}
+Libs:

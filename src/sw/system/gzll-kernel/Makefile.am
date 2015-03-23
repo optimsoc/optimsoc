@@ -21,8 +21,6 @@
 # Author(s):
 #   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
 
-EXTRA_DIST =
-CLEANFILES =
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
@@ -30,3 +28,26 @@ SUBDIRS = src
 
 scriptdir = $(bindir)
 script_DATA = share/gzll-image-create
+
+install-data-hook:
+	chmod +x $(DESTDIR)$(scriptdir)/gzll-image-create
+	
+gzllincludedir = $(includedir)
+gzllinclude_HEADERS = include/gzll-syscall.h
+
+# prepare pkg-config file
+share/%.pc: share/%.pc.in Makefile
+	$(AM_V_GEN)$(MKDIR_P) share; \
+	sed \
+	-e 's,@VERSION\@,$(VERSION),g' \
+	-e 's,@prefix\@,$(prefix),g' \
+	-e 's,@datadir\@,$(datadir),g' \
+	-e 's,@libdir\@,$(libdir),g' \
+	-e 's,@includedir\@,$(includedir),g' \
+	< $< > $@ || rm $@
+
+pkgconfigdir = $(datadir)/pkgconfig
+pkgconfig_DATA = share/gzll.pc
+
+EXTRA_DIST = share/gzll.pc.in
+CLEANFILES = share/gzll.pc
