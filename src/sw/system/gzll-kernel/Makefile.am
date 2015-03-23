@@ -27,3 +27,6 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
 SUBDIRS = src
+
+scriptdir = $(bindir)
+script_DATA = share/gzll-image-create
