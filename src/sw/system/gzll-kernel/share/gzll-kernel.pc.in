@@ -7,4 +7,4 @@ Name: gzll kernel
 Description: gzll kernel
 Version: @VERSION@
 Cflags: -I${includedir}
-Libs:
+Libs: -L${libdir} -lgzll-kernel
