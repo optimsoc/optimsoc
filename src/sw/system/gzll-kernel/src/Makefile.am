@@ -21,7 +21,9 @@
 # Author(s):
 #   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
 
-bin_PROGRAMS = gzll-kernel.elf
+gzll_kernel_PROGRAMS = gzll-kernel.elf
+gzll_kerneldir = $(prefix)/kernel/
+
 gzll_kernel_elf_CFLAGS = $(OPTIMSOC_BAREMETAL_RUNTIME_CFLAGS) -I $(top_srcdir)/include
 
 gzll_kernel_elf_SOURCES = hal/optimsoc/main.c \
