@@ -29,6 +29,8 @@ AC_INIT([gzll],
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax no-dist-gzip dist-xz subdir-objects])
 
+LT_INIT()
+
 AM_PROG_AS
 AC_PROG_CC_C99
 

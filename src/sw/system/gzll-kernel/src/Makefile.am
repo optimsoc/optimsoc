@@ -21,11 +21,11 @@
 # Author(s):
 #   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
 
-gzll_kernel_PROGRAMS = gzll-kernel.elf
-gzll_kerneldir = $(prefix)/kernel/
+gzll_kernel_LTLIBRARIES = libgzll-kernel.la
+gzll_kerneldir = $(libdir)/gzll-kernel
 
-gzll_kernel_elf_CFLAGS = $(OPTIMSOC_BAREMETAL_RUNTIME_CFLAGS) -I $(top_srcdir)/include
+libgzll_kernel_la_CFLAGS = $(OPTIMSOC_BAREMETAL_RUNTIME_CFLAGS) -I $(top_srcdir)/include
 
-gzll_kernel_elf_SOURCES = hal/optimsoc/main.c \
+libgzll_kernel_la_SOURCES = hal/optimsoc/main.c \
 	hal/optimsoc/syscall_entry.S \
 	syscall.c
