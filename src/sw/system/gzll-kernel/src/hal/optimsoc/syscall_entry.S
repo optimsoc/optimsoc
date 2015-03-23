@@ -1,4 +1,10 @@
+#include <or1k-asm.h>
+
 #define GPR_BUF_OFFSET(x) (x << 2)
+
+.section text
+.global syscall_entry
+.type syscall_entry, function
 
 syscall_entry:
 	// Load address of syscall data structures
@@ -27,13 +33,11 @@ syscall_entry:
 
 	// Jump to gzll syscall handler
 	// TODO: delay slot macro
-	l.jal	gzll_syscall_handler
-	l.nop
+	OR1K_DELAYED_NOP(l.jal gzll_syscall_handler)
 
 	// Store return to register
 	l.lwz	r11,24(r14)
 	l.sw	GPR_BUF_OFFSET(11)(r1),r11
 
 	// todo: delay slot macro
-	l.jalr	r16
-	l.nop
+	OR1K_DELAYED_NOP(l.jalr r16)
