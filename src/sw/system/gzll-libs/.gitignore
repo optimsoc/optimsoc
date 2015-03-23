@@ -1,0 +1,9 @@
+Makefile.in
+.project
+.cproject
+autom4te.cache
+aclocal.m4
+build
+build-aux
+
+*~
