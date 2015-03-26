@@ -146,6 +146,44 @@ int thread_join(thread_t thread);
  * @}
  */
 
+#define OR1K_PAGES_L1_BITS      8
+#define OR1K_PAGES_L1_MSB      31
+#define OR1K_PAGES_L1_LSB      24
+#define OR1K_PAGES_L2_BITS     11
+#define OR1K_PAGES_L2_MSB      23
+#define OR1K_PAGES_L2_LSB      13
+#define OR1K_PAGES_OFFSET_BITS 13
+#define OR1K_PAGES_OFFSET_MSB  12
+#define OR1K_PAGES_OFFSET_LSB   0
+
+#define OR1K_PTE_PPN_BITS      22
+#define OR1K_PTE_PPN_MSB       31
+#define OR1K_PTE_PPN_LSB       10
+#define OR1K_PTE_LAST_BITS      1
+#define OR1K_PTE_LAST_MSB       9
+#define OR1K_PTE_LAST_LSB       9
+#define OR1K_PTE_PPI_BITS       3
+#define OR1K_PTE_PPI_MSB        8
+#define OR1K_PTE_PPI_LSB        6
+#define OR1K_PTE_DIRTY_BITS     1
+#define OR1K_PTE_DIRTY_MSB      5
+#define OR1K_PTE_DIRTY_LSB      5
+#define OR1K_PTE_ACCESSED_BITS  1
+#define OR1K_PTE_ACCESSED_MSB   4
+#define OR1K_PTE_ACCESSED_LSB   4
+#define OR1K_PTE_WOM_BITS       1
+#define OR1K_PTE_WOM_MSB        3
+#define OR1K_PTE_WOM_LSB        3
+#define OR1K_PTE_WBC_BITS       1
+#define OR1K_PTE_WBC_MSB        2
+#define OR1K_PTE_WBC_LSB        2
+#define OR1K_PTE_CI_BITS        1
+#define OR1K_PTE_CI_MSB         1
+#define OR1K_PTE_CI_LSB         1
+#define OR1K_PTE_CC_BITS        1
+#define OR1K_PTE_CC_MSB         0
+#define OR1K_PTE_CC_LSB         0
+
 extern void runtime_config_set_numticks(unsigned int ticks);
 
 extern void runtime_config_set_use_globalids(unsigned int v);
