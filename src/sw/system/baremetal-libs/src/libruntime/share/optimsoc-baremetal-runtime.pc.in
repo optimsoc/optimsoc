@@ -8,5 +8,5 @@ Name: Optimsoc Runtime
 Description: OpTiMSoC runtime system libraries
 Version: 0.1
 Requires.private: optimsoc-baremetal
-Cflags: -I${prefix}/include/baremetal
-Libs: -L${libdir} -lbaremetal -lruntime
+Cflags: -I${includedir}/baremetal
+Libs: -L${libdir}/baremetal -lbaremetal -lruntime
