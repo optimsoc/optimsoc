@@ -22,8 +22,20 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
+#include <stdio.h>
+
+#include <optimsoc-runtime.h>
 #include "gzll-syscall.h"
 
-void gzll_syscall_handler(struct gzll_syscall *syscall) {
+void gzll_syscall_handler(struct optimsoc_runtime_syscall *optimsoc_syscall) {
+	struct gzll_syscall *syscall = (struct gzll_syscall*) optimsoc_syscall;
 
+	switch (syscall->id) {
+		case GZLL_SYSCALL_KERNEL_INFO:
+
+			break;
+		default:
+			printf("Invalid syscall\n");
+			break;
+	}
 }
