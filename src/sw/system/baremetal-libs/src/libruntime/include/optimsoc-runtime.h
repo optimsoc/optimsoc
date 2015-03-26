@@ -53,13 +53,6 @@ void optimsoc_runtime_boot(void);
  * @{
  */
 
-/*! Function pointer to interrupt handler functions */
-typedef void (*optimsoc_runtime_syscall_handler_fptr)(uint32_t id, void *args);
-
-void optimsoc_runtime_syscall_handler_add(uint32_t class,
-                                          optimsoc_runtime_syscall_handler_fptr handler);
-
-
 /* Todo Doxygen*/
 /* FLAGS for thread creation */
 #define THREAD_FLAG_NO_FLAGS    0x0
@@ -136,6 +129,28 @@ void optimsoc_runtime_thread_resume(optimsoc_runtime_thread_t thread);
  */
 int optimsoc_runtime_thread_join(optimsoc_runtime_thread_t thread,
 		optimsoc_runtime_thread_t waitforthread);
+
+/**
+ * @}
+ */
+
+/**
+ * \defgroup syscall Syscall Handling
+ * \ingroup libruntime
+ * @{
+ */
+
+struct optimsoc_runtime_syscall {
+    uint32_t id; /*!< Identifier of the system call */
+    uint32_t output; /*!< Output/return value */
+    uint32_t param[6]; /*!< Six parameters to the system call */
+};
+
+typedef void (*optimsoc_runtime_syscall_handler_fptr) (
+		struct optimsoc_runtime_syscall *syscall);
+
+void optimsoc_runtime_syscall_handler_set(
+		optimsoc_runtime_syscall_handler_fptr handler);
 
 /**
  * @}
