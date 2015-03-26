@@ -40,7 +40,7 @@ arch_thread_ctx_t *exception_ctx;
     thread_exit();
 }*/
 
-void runtime_syscall(unsigned int id, void *args);
+extern void syscall_entry(void*);
 
 // This is placed in the BSS section and core 0 will initialize it
 // to 0 during the reset routine.
@@ -88,17 +88,3 @@ void optimsoc_runtime_boot(void) {
     return;
 }
 
-void runtime_syscall(unsigned int id, void *args) {
-    switch (id) {
-        case 1:
-            syscall_task_create(args);
-            break;
-        case 2:
-            syscall_thread_create(args);
-            break;
-        default:
-            printf("Unhandled syscall: %d\n", id);
-            exit(1);
-            break;
-    }
-}

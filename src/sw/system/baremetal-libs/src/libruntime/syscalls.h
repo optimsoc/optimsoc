@@ -1,17 +1,7 @@
 #ifndef SYSCALLS_H_
 #define SYSCALLS_H_
 
-#include "task.h"
-
-void _optimsoc_runtime_syscalls_init(void);
-void _optimsoc_runtime_syscall_exception_handler(void);
-
-struct syscall_args_task_create {
-    task_t *task;
-    char *task_name;
-};
-
-void syscall_task_create(void *arg);
-
+extern void _optimsoc_runtime_syscalls_init(void);
+extern void _optimsoc_runtime_sycall_entry(void);
 
 #endif /* SYSCALLS_H_ */

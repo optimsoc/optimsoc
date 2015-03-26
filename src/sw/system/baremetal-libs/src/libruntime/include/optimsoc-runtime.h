@@ -68,14 +68,13 @@ void optimsoc_runtime_syscall_handler_add(uint32_t class,
 #define THREAD_FLAG_CORE_MASK   0x000000FF
 #define THREAD_FLAG_FORCEID     0x40000000
 
-struct thread_attr {
+struct optimsoc_runtime_thread_attr {
     void *args;
-    unsigned int flags;
-    unsigned int force_id;
+    uint32_t flags;
+    uint32_t force_id;
     char *identifier;
+    void *extra_data;
 };
-
-typedef struct thread_attr thread_attr_t;
 
 /**
  * Thread identifier.
@@ -83,7 +82,7 @@ typedef struct thread_attr thread_attr_t;
  * The internals are not exposed.
  */
 
-typedef unsigned int thread_t;
+typedef uint32_t optimsoc_runtime_thread_t;
 
 /**
  * Create a new thread.
@@ -93,45 +92,40 @@ typedef unsigned int thread_t;
  * specified by start is called and the argument arg given to it.
  * The function is automatically added to the ready queue.
  */
-int thread_create(thread_t *thread,void (*start)(void*), thread_attr_t *attr);
-
-typedef unsigned int task_t;
-
-int task_create(task_t *app, char *app_name, thread_attr_t *attr, char* param);
-thread_t task_get_main_thread(task_t app);
-
-
+int optimsoc_runtimethread_create(optimsoc_runtime_thread_t *thread,
+		void (*start)(void*), optimsoc_runtime_thread_attr *attr);
 
 /**
  * Identify the thread currently running.
  */
-thread_t thread_self();
+optimsoc_runtime_thread_t optimsoc_runtime_thread_current();
 
 /**
- * Yield current thread.
+ * Yield thread.
  *
- * The currently running thread yields its remaining quantum and is
- * scheduled to be executed later again (e.g., when waiting for I/O)
+ * The specified thread is put at the end of the schedule. If the thread is the
+ * current thread (what makes most sense), the thread yields its remaining
+ * quantum and is scheduled to be executed later again (e.g., when waiting for
+ * I/O).
  */
-void thread_yield();
+void optimsoc_runtime_thread_yield(optimsoc_runtime_thread_t thread);
 
 /**
- * Suspend current thread.
+ * Suspend thread.
  *
- * The currently running thread yields its remaining quantum and is not
- * executed again until woken up with thread_resume.
+ * The specified thread is suspended until it gets reactivated.
  */
-void thread_suspend();
+void optimsoc_runtime_thread_suspend(optimsoc_runtime_thread_t thread);
 
 /**
  * Exit current thread's execution.
  */
-void thread_exit();
+void optimsoc_runtime_thread_exit();
 
 /**
  * Resume a suspended thread.
  */
-void thread_resume(thread_t thread);
+void optimsoc_runtime_thread_resume(optimsoc_runtime_thread_t thread);
 
 /**
  * Wait for a thread until it exits.
@@ -140,7 +134,8 @@ void thread_resume(thread_t thread);
  * the finish of the thread. If it is already finished, the function
  * returns immediately.
  */
-int thread_join(thread_t thread);
+int optimsoc_runtime_thread_join(optimsoc_runtime_thread_t thread,
+		optimsoc_runtime_thread_t waitforthread);
 
 /**
  * @}

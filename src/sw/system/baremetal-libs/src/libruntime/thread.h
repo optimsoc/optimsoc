@@ -93,6 +93,8 @@ struct thread_t {
     unsigned int task_local_id;
 
     char *name;
+
+    void *extra_data;
 };
 
 typedef struct thread_t *thread_t;

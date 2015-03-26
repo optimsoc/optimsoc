@@ -31,8 +31,8 @@ libruntime_la_SOURCES =\
     config.c \
     runtime.c \
     syscalls.c \
+    syscall_entry.S \
     scheduler.c \
-    task.c \
     thread.c \
     vmm.c \
     yield_switchctx.S
