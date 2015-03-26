@@ -86,7 +86,7 @@ typedef uint32_t optimsoc_runtime_thread_t;
  * The function is automatically added to the ready queue.
  */
 int optimsoc_runtimethread_create(optimsoc_runtime_thread_t *thread,
-		void (*start)(void*), optimsoc_runtime_thread_attr *attr);
+		void (*start)(void*), struct optimsoc_runtime_thread_attr *attr);
 
 /**
  * Identify the thread currently running.
