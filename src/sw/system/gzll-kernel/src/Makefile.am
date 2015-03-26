@@ -26,6 +26,5 @@ gzll_kerneldir = $(libdir)/gzll-kernel
 
 libgzll_kernel_la_CFLAGS = $(OPTIMSOC_BAREMETAL_RUNTIME_CFLAGS) -I $(top_srcdir)/include
 
-libgzll_kernel_la_SOURCES = hal/optimsoc/main.c \
-	hal/optimsoc/syscall_entry.S \
+libgzll_kernel_la_SOURCES = \
 	syscall.c
