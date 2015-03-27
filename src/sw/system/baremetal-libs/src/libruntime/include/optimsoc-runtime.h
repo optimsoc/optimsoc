@@ -108,7 +108,7 @@ struct optimsoc_thread_attr {
  * The internals are not exposed.
  */
 
-typedef uint32_t optimsoc_thread_t;
+typedef struct optimsoc_thread* optimsoc_thread_t;
 
 /**
  * Create a new thread.
