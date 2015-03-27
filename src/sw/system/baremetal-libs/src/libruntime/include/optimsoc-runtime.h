@@ -48,6 +48,39 @@
 void optimsoc_runtime_boot(void);
 
 /**
+ * \defgroup paging Page Handling
+ * \ingroup libruntime
+ * @{
+ */
+
+// Page table entry
+typedef uint32_t optimsoc_pte_t;
+
+// Page table
+typedef optimsoc_pte_t* optimsoc_page_table_t;
+
+// Page directory
+typedef optimsoc_pte_t* optimsoc_page_dir_t;
+
+extern optimsoc_page_dir_t optimsoc_vmm_create_page_dir();
+
+extern optimsoc_page_table_t optimsoc_vmm_create_page_table();
+
+extern void optimsoc_vmm_add_page_table(optimsoc_page_dir_t directory,
+		uint32_t index, optimsoc_page_table_t);
+
+extern uint32_t optimsoc_vmm_virt2phys(optimsoc_page_dir_t directory,
+		uint32_t vaddr, uint32_t *paddr);
+
+extern uint32_t optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
+		uint32_t paddr, uint32_t *vaddr);
+
+/**
+* @}
+*/
+
+
+/**
  * \defgroup thread Thread Management
  * \ingroup libruntime
  * @{
@@ -140,59 +173,19 @@ int optimsoc_thread_join(optimsoc_thread_t thread,
  * @{
  */
 
-struct optimsoc_runtime_syscall {
+struct optimsoc_syscall {
     uint32_t id; /*!< Identifier of the system call */
     uint32_t output; /*!< Output/return value */
     uint32_t param[6]; /*!< Six parameters to the system call */
 };
 
-typedef void (*optimsoc_runtime_syscall_handler_fptr) (
-		struct optimsoc_runtime_syscall *syscall);
+typedef void (*optimsoc_syscall_handler_fptr) (struct optimsoc_syscall *syscall);
 
-void optimsoc_runtime_syscall_handler_set(
-		optimsoc_runtime_syscall_handler_fptr handler);
+void optimsoc_syscall_handler_set(optimsoc_syscall_handler_fptr handler);
 
 /**
  * @}
  */
-
-#define OR1K_PAGES_L1_BITS      8
-#define OR1K_PAGES_L1_MSB      31
-#define OR1K_PAGES_L1_LSB      24
-#define OR1K_PAGES_L2_BITS     11
-#define OR1K_PAGES_L2_MSB      23
-#define OR1K_PAGES_L2_LSB      13
-#define OR1K_PAGES_OFFSET_BITS 13
-#define OR1K_PAGES_OFFSET_MSB  12
-#define OR1K_PAGES_OFFSET_LSB   0
-
-#define OR1K_PTE_PPN_BITS      22
-#define OR1K_PTE_PPN_MSB       31
-#define OR1K_PTE_PPN_LSB       10
-#define OR1K_PTE_LAST_BITS      1
-#define OR1K_PTE_LAST_MSB       9
-#define OR1K_PTE_LAST_LSB       9
-#define OR1K_PTE_PPI_BITS       3
-#define OR1K_PTE_PPI_MSB        8
-#define OR1K_PTE_PPI_LSB        6
-#define OR1K_PTE_DIRTY_BITS     1
-#define OR1K_PTE_DIRTY_MSB      5
-#define OR1K_PTE_DIRTY_LSB      5
-#define OR1K_PTE_ACCESSED_BITS  1
-#define OR1K_PTE_ACCESSED_MSB   4
-#define OR1K_PTE_ACCESSED_LSB   4
-#define OR1K_PTE_WOM_BITS       1
-#define OR1K_PTE_WOM_MSB        3
-#define OR1K_PTE_WOM_LSB        3
-#define OR1K_PTE_WBC_BITS       1
-#define OR1K_PTE_WBC_MSB        2
-#define OR1K_PTE_WBC_LSB        2
-#define OR1K_PTE_CI_BITS        1
-#define OR1K_PTE_CI_MSB         1
-#define OR1K_PTE_CI_LSB         1
-#define OR1K_PTE_CC_BITS        1
-#define OR1K_PTE_CC_MSB         0
-#define OR1K_PTE_CC_LSB         0
 
 extern void runtime_config_set_numticks(unsigned int ticks);
 
