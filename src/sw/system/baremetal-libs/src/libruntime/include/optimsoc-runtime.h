@@ -187,6 +187,8 @@ struct optimsoc_thread_attr {
     void *extra_data;
 };
 
+void optimsoc_thread_attr_init(struct optimsoc_thread_attr *attr);
+
 /**
  * Thread identifier.
  *
@@ -203,7 +205,7 @@ typedef struct optimsoc_thread* optimsoc_thread_t;
  * specified by start is called and the argument arg given to it.
  * The function is automatically added to the ready queue.
  */
-int optimsocthread_create(optimsoc_thread_t *thread,
+int optimsoc_thread_create(optimsoc_thread_t *thread,
 		void (*start)(void*), struct optimsoc_thread_attr *attr);
 
 /**
@@ -247,6 +249,14 @@ void optimsoc_thread_resume(optimsoc_thread_t thread);
  */
 int optimsoc_thread_join(optimsoc_thread_t thread,
 		optimsoc_thread_t waitforthread);
+
+void optimsoc_thread_set_extra_data(optimsoc_thread_t thread, void* extra_data);
+
+void* optimsoc_thread_get_extra_data(optimsoc_thread_t thread);
+
+void optimsoc_thread_set_pagedir(optimsoc_thread_t thread, optimsoc_page_dir_t pagetable);
+
+optimsoc_page_dir_t optimsoc_thread_get_pagedir(optimsoc_thread_t thread);
 
 /**
  * @}
