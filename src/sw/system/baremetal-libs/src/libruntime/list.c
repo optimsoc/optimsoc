@@ -26,9 +26,11 @@
 #include <list.h>
 #include <assert.h>
 
-struct list_t* list_init(void* data)
+// TODO: create non-blocking data structure
+
+struct optimsoc_list_t* optimsoc_list_init(void* data)
 {
-    struct list_t* l = malloc(sizeof(struct list_t));
+    struct optimsoc_list_t* l = malloc(sizeof(struct optimsoc_list_t));
     assert(l != NULL);
 
 //    mutex_init(&l->mutex);
@@ -38,7 +40,7 @@ struct list_t* list_init(void* data)
         l->tail = NULL;
     } else {
         /* create first element */
-        l->head =l->tail = malloc(sizeof(struct list_entry_t));
+	 l->head =l->tail = malloc(sizeof(struct optimsoc_list_entry_t));
 	assert(l->tail != NULL);
 
         /* set data for first element */
@@ -50,11 +52,11 @@ struct list_t* list_init(void* data)
     return l;
 }
 
-void list_add_tail(struct list_t* l, void* data)
+void optimsoc_list_add_tail(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
     /* create new element */
-    struct list_entry_t* e = malloc(sizeof(struct list_entry_t));
+    struct optimsoc_list_entry_t* e = malloc(sizeof(struct optimsoc_list_entry_t));
     assert(e != NULL);
 
     //mutex_lock(&l->mutex);
@@ -77,11 +79,11 @@ void list_add_tail(struct list_t* l, void* data)
 }
 
 
-void list_add_head(struct list_t* l, void* data)
+void optimsoc_list_add_head(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
     /* create new element */
-    struct list_entry_t* e = malloc(sizeof(struct list_entry_t));
+    struct optimsoc_list_entry_t* e = malloc(sizeof(struct optimsoc_list_entry_t));
     assert(e != NULL);
 
     //mutex_lock(&l->mutex);
@@ -103,10 +105,10 @@ void list_add_head(struct list_t* l, void* data)
     //mutex_unlock(&l->mutex);
 }
 
-void* list_remove_tail(struct list_t* l)
+void* optimsoc_list_remove_tail(struct optimsoc_list_t* l)
 {
     assert(l != NULL);
-    struct list_entry_t* entry;
+    struct optimsoc_list_entry_t* entry;
 
     /* check if list is empty */
     if(l->tail == NULL) {
@@ -129,10 +131,10 @@ void* list_remove_tail(struct list_t* l)
     return data;
 }
 
-void* list_remove_head(struct list_t* l)
+void* optimsoc_list_remove_head(struct optimsoc_list_t* l)
 {
     assert(l != NULL);
-    struct list_entry_t* entry;
+    struct optimsoc_list_entry_t* entry;
 
     /* check if list is empty */
     if(l->head == NULL) {
@@ -161,11 +163,11 @@ void* list_remove_head(struct list_t* l)
  *
  * This does not free the data-pointer.
  */
-int list_remove(struct list_t* l, void* data)
+int optimsoc_list_remove(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
     //mutex_lock(&l->mutex);
-    struct list_entry_t* entry = l->head;
+    struct optimsoc_list_entry_t* entry = l->head;
 
     while(entry != NULL) {
         if(entry->data == data) {
@@ -194,9 +196,9 @@ int list_remove(struct list_t* l, void* data)
 
 }
 
-int list_contains(struct list_t *l, void* data) {
+int optimsoc_list_contains(struct optimsoc_list_t *l, void* data) {
     assert(l != NULL);
-    struct list_entry_t* entry = l->head;
+    struct optimsoc_list_entry_t* entry = l->head;
 
     while(entry != NULL) {
         if(entry->data == data) {
@@ -209,10 +211,10 @@ int list_contains(struct list_t *l, void* data) {
 
 }
 
-unsigned int list_length(struct list_t *l) {
+size_t optimsoc_list_length(struct optimsoc_list_t *l) {
     assert(l != NULL);
     unsigned int count = 0;
-    struct list_entry_t* entry = l->head;
+    struct optimsoc_list_entry_t* entry = l->head;
     while(entry != NULL) {
         count++;
         entry = entry->next;
@@ -220,7 +222,7 @@ unsigned int list_length(struct list_t *l) {
     return count;
 }
 
-void* list_first_element(struct list_t* l, list_entry_t **list_iter)
+void* optimsoc_list_first_element(struct optimsoc_list_t* l, optimsoc_list_iterator_t *list_iter)
 {
     assert(l != NULL);
     if(l->head == NULL) {
@@ -232,7 +234,7 @@ void* list_first_element(struct list_t* l, list_entry_t **list_iter)
     }
 }
 
-void* list_next_element(struct list_t* l, list_entry_t **list_iter)
+void* optimsoc_list_next_element(struct optimsoc_list_t* l, optimsoc_list_iterator_t *list_iter)
 {
     assert(l != NULL);
     if((*list_iter)->next == NULL) {
