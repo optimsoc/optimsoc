@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,119 +23,420 @@
  *   Stefan Rösch <roe.stefan@gmail.com>
  */
 
-#include "optimsoc-runtime-internal.h"
-#include <vmm.h>
-#include <list.h>
 #include <or1k-sprs.h>
 #include <optimsoc-baremetal.h>
+
 #include <assert.h>
-
-#include "trace.h"
-
 #include <stdio.h>
 #include <malloc.h>
 
-#define ITLB_PR_MASK    (SPR_ITLBTR_SXE | SPR_ITLBTR_UXE)
-#define DTLB_PR_MASK    (SPR_DTLBTR_URE | SPR_DTLBTR_UWE | SPR_DTLBTR_SRE | SPR_DTLBTR_SWE)
+#include "include/optimsoc-runtime.h"
+#include "vmm.h"
+#include "list.h"
+#include "thread.h"
 
-#define OR1K_PAGES_L1_BITS      8
-#define OR1K_PAGES_L1_MSB      31
-#define OR1K_PAGES_L1_LSB      24
-#define OR1K_PAGES_L2_BITS     11
-#define OR1K_PAGES_L2_MSB      23
-#define OR1K_PAGES_L2_LSB      13
-#define OR1K_PAGES_OFFSET_BITS 13
-#define OR1K_PAGES_OFFSET_MSB  12
-#define OR1K_PAGES_OFFSET_LSB   0
+#include "trace.h"
 
-#define OR1K_PTE_PPN_BITS      22
+// A virtual address generally consists of a virtual page number (VPN) and
+// an offset. The virtual memory subsystem translates this virtual address
+// to a physical address, that consists of a physical page number and the
+// same offset. The offset is the address inside the page, while the VPN
+// needs to have a matching PPN.
+//
+//  +---------+--------+    +---------+--------+
+//  |   VPN   | Offset | -> |   PPN   | Offset |
+//  +---------+--------+    +---------+--------+
+//
+// In OpenRISC 1000 the pages are 8kB, leading to a 13 bit offset. The page
+// number is therefore 19 bit wide, leading to a maximum of 524288 pages.
+
+/*! Number of bits of page number in address */
+#define OR1K_ADDR_PN_BITS          19
+/*! MSB of page number in address */
+#define OR1K_ADDR_PN_MSB           31
+/*! LSB of page number in address */
+#define OR1K_ADDR_PN_LSB           13
+
+/*! Get page number in address */
+#define OR1K_ADDR_PN_GET(addr) (addr >> OR1K_ADDR_PN_LSB)
+/*! Set page number in address */
+#define OR1K_ADDR_PN_SET(addr,pn) (addr | ((pn & 0x7ffff) << OR1K_ADDR_PN_LSB))
+
+/*! The number of bits for the offset */
+#define OR1K_ADDR_OFFSET_BITS       13
+/*! The MSB of the offset */
+#define OR1K_ADDR_OFFSET_MSB        12
+/*! The LSB of the offset */
+#define OR1K_ADDR_OFFSET_LSB        0
+
+/*! Get the offset in address */
+#define OR1K_ADDR_OFFSET_GET(addr) (addr & 0x1fff)
+/*! Set the offset in address */
+#define OR1K_ADDR_OFFSET_SET(addr,offset) (addr | (offset & 0x1fff))
+
+// The VPN-to-PPN translation is generally done using a table (as it is fast
+// and it allows to do it also in hardware). We would therefore need a table
+// with 524288 entries and lookup the PPN of VPN v at index v of this table.
+// Such a table would be 2 MB large and we will need such a table for each
+// task/process. Only if an application would use the entire memory space
+// this would be efficient. As the number of actual physical pages is typically
+// limited, it is a common approach to implement a two-level lookup, with a
+// so called page directory at first level, where we look up the base pointer
+// of the page table of a certain subrange of the address space.
+//
+// The VPN hence consists of two indices used for lookup at the L1 page
+// directory and the L2 page table:
+//
+//  +----------+----------+--------+
+//  | L1 index | L2 index | Offset |
+//  +----------+----------+--------+
+
+/*! The number of bits for the L1 index */
+#define OR1K_ADDR_L1_INDEX_BITS      8
+/*! The MSB of the L1 index */
+#define OR1K_ADDR_L1_INDEX_MSB      31
+/*! The LSB of the L1 index */
+#define OR1K_ADDR_L1_INDEX_LSB      24
+
+/*! Get the L1 index from a virtual address */
+#define OR1K_ADDR_L1_INDEX_GET(addr) (addr >> OR1K_ADDR_L1_INDEX_LSB)
+/*! Set the L1 index in address */
+#define OR1K_ADDR_L1_INDEX_SET(addr,idx) ((addr & 0x00ffffff) | \
+		(idx << OR1K_ADDR_L1_INDEX_LSB))
+
+/*! The number of bits for the L2 index */
+#define OR1K_ADDR_L2_INDEX_BITS     11
+/*! The MSB of the L2 index */
+#define OR1K_ADDR_L2_INDEX_MSB      23
+/*! The LSB of the L2 index */
+#define OR1K_ADDR_L2_INDEX_LSB      13
+
+/*! Get the L2 index from a virtual address */
+#define OR1K_ADDR_L2_INDEX_GET(addr) ((addr >> OR1K_ADDR_L2_INDEX_LSB) & 0x7ff)
+/*! Set the L2 index in a virtual address */
+#define OR1K_ADDR_L2_INDEX_SET(addr,idx) ((addr & 0xff001ff) | \
+		((idx & 0x7ff) << OR1K_ADDR_L2_INDEX_LSB))
+
+// Page table entries are found both in the page directory and the page tables.
+// OpenRISC 1000 also supports huge tables with 16MB pages where the page
+// number is identical to the bits of the L1 index. But we do not support such
+// large pages.
+//
+// A page table entry is defined as:
+//
+//  +-----+----+---------+------+-----+-------+----------+-----+-----+----+----+
+//  | PPN | .. | PRESENT | LAST | PPI | DIRTY | ACCESSED | WOM | WBM | CI | CC |
+//  +-----+----+---------+------+-----+-------+----------+-----+-----+----+----+
+//   22 13         10       9    8   6    5         4       3     2     1    0
+//
+// The majority of flags are currently not supported. Dirty and accessed are used
+// later to determine pages to write back to main memory in swapping. The page
+// protection index has a simple mapping defined in the current hardware
+// implementations that we adopt here.
+
+/*! Number of bits in physical page number */
+#define OR1K_PTE_PPN_BITS      19
+/*! MSB of physical page number */
 #define OR1K_PTE_PPN_MSB       31
-#define OR1K_PTE_PPN_LSB       10
-#define OR1K_PTE_LAST_BITS      1
-#define OR1K_PTE_LAST_MSB       9
+/*! LSB of physical page number */
+#define OR1K_PTE_PPN_LSB       13
+#define OR1K_PTE_PPN_GET(pte) ((uint32_t) pte >> OR1K_ADDR_L2_INDEX_LSB)
+#define OR1K_PTE_PPN_SET(pte,ppn) (pte | ( ppn << OR1K_ADDR_L2_INDEX_LSB))
+
+/*! Bit number of present bit */
+#define OR1K_PTE_PRESENT_BIT   10
+#define OR1K_PTE_PRESENT_GET(pte) ((pte >> OR1K_PTE_PRESENT_BIT) & 0x1)
+#define OR1K_PTE_PRESENT_SET(pte,present) ((pte & ~(1 << OR1K_PTE_PRESENT_BIT)) \
+	| ((present & 0x1) << OR1K_PTE_PRESENT_BIT))
+
+/*! Bit number of last bit (marks huge table in directory) */
 #define OR1K_PTE_LAST_LSB       9
+/* Extract the last bit from pte */
+#define OR1K_PTE_LAST_GET(pte) (pte >> OR1K_PTE_LAST_LSB)
+
+/*! Page protection index, number of bits */
 #define OR1K_PTE_PPI_BITS       3
+/*! MSB of PPI field */
 #define OR1K_PTE_PPI_MSB        8
+/*! LSB of PPI field */
 #define OR1K_PTE_PPI_LSB        6
-#define OR1K_PTE_DIRTY_BITS     1
-#define OR1K_PTE_DIRTY_MSB      5
-#define OR1K_PTE_DIRTY_LSB      5
-#define OR1K_PTE_ACCESSED_BITS  1
-#define OR1K_PTE_ACCESSED_MSB   4
-#define OR1K_PTE_ACCESSED_LSB   4
-#define OR1K_PTE_WOM_BITS       1
-#define OR1K_PTE_WOM_MSB        3
-#define OR1K_PTE_WOM_LSB        3
-#define OR1K_PTE_WBC_BITS       1
-#define OR1K_PTE_WBC_MSB        2
-#define OR1K_PTE_WBC_LSB        2
-#define OR1K_PTE_CI_BITS        1
-#define OR1K_PTE_CI_MSB         1
-#define OR1K_PTE_CI_LSB         1
-#define OR1K_PTE_CC_BITS        1
-#define OR1K_PTE_CC_MSB         0
-#define OR1K_PTE_CC_LSB         0
+/*! Get PPI field from pte */
+#define OR1K_PTE_PPI_GET(pte) ((pte >> OR1K_PTE_PPI_LSB) & 0x7)
+/*! Set PPI field in pte */
+#define OR1K_PTE_PPI_SET(pte,ppi) (pte | ((ppi & 0x7) << OR1K_PTE_PPI_LSB))
+/*! Allow user access to page */
+#define OR1K_PTE_PPI_USER_BIT   0
+/*! Allow write access to page */
+#define OR1K_PTE_PPI_WRITE_BIT  1
+/*! Allow execution from page */
+#define OR1K_PTE_PPI_EXEC_BIT   2
 
-#define OR1K_ADDR_L1_INDEX_GET(addr) (addr >> OR1K_PAGES_L1_LSB)
-#define OR1K_ADDR_L2_INDEX_GET(addr) ((addr >> OR1K_PAGES_L2_LSB) & 0x7ff)
-#define OR1K_ADDR_OFFSET(addr) (addr & 0x1fff)
+/*! Dirty bit */
+#define OR1K_PTE_DIRTY_BIT      5
+/*! Accessed bit */
+#define OR1K_PTE_ACCESSED_BIT   4
+/*! Weakly-ordered memory bit */
+#define OR1K_PTE_WOM_BIT        3
+/*! Write-back cache bit */
+#define OR1K_PTE_WBC_BIT        2
+/*! Cache inhibit bit */
+#define OR1K_PTE_CI_BIT         1
+/*! Cache coherency bit */
+#define OR1K_PTE_CC_BIT         0
 
-#define OR1K_PADDR_L1(pte,vaddr) (pte & 0xff000000) | (vaddr & 0x00ffffff)
-#define OR1K_PADDR_L2(pte,vaddr) (pte & 0xffffe000) | (vaddr & 0x00001fff)
+// A pte in the page directory contains the base pointer of the page table
+/*! Assemble page table pointer from pte */
 #define OR1K_PTABLE(pte) (pte & 0xffffe000)
 
-#define OR1K_PTE_PPN_GET(x) (x >> OR1K_PTE_PPN_LSB)
-#define OR1K_PTE_PPN_TRUNC_GET(x) (x >> OR1K_PAGES_L1_LSB)
-#define OR1K_PTE_PPI_GET(x) ((x >> OR1K_PTE_PPI_LSB) & 0x7)
-#define OR1K_PTE_LAST (1 << OR1K_PTE_LAST_LSB)
-#define OR1K_PTE_DIRTY (1 << OR1K_PTE_DIRTY_LSB)
-#define OR1K_PTE_ACCESSED (1 << OR1K_PTE_ACCESSED_LSB)
-
+/*! Helper macro to verify directory address from user input. */
+#define VERIFY_DIR_ADDR(dir) assert(dir && (((uint32_t) dir & 0x7ff) == 0));
 
 optimsoc_page_dir_t optimsoc_vmm_create_page_dir() {
-	return (optimsoc_page_dir_t) memalign(0x800, 0x800);
+	optimsoc_page_dir_t dir;
+
+	// Allocate memory that is aligned to borders of multiples of its size.
+	// This is necessary as the hardware-based TLB reload does an OR of the
+	// page dir base and the offset.
+	dir = (optimsoc_page_dir_t) memalign(0x800, 0x800);
+	assert(dir);
+
+	// Zero the directory
+	memset((void*) dir, 0, 0x800);
+
+	return dir;
 }
 
-optimsoc_page_table_t optimsoc_vmm_create_page_table() {
-	return memalign(0x2000, 0x2000);
+optimsoc_page_table_t _optimsoc_vmm_create_page_table() {
+	optimsoc_page_table_t table;
+
+	// Allocate memory that is aligned to borders of multiples of its size.
+	// This is necessary as the hardware-based TLB reload does an OR of the
+	// page table base and the offset.
+	table = memalign(0x2000, 0x2000);
+	assert(table);
+
+	// Zero the table
+	memset((void*) table, 0, 0x2000);
+
+	return table;
 }
 
-void optimsoc_vmm_add_page_table(optimsoc_page_dir_t directory,
-		uint32_t index, optimsoc_page_table_t table) {
-	optimsoc_pte_t pte = (uint32_t) table & 0xffffe000; // no futher bits needed
-	directory[index] = pte;
-}
+int optimsoc_vmm_map(optimsoc_page_dir_t directory, uint32_t vaddr,
+		uint32_t paddr) {
+	optimsoc_pte_t dirpte;
+	optimsoc_page_table_t table;
+	optimsoc_pte_t pte;
 
-uint32_t optimsoc_vmm_virt2phys(optimsoc_page_dir_t directory,
-		uint32_t vaddr, uint32_t *paddr) {
+	// Verify input
+	VERIFY_DIR_ADDR(directory);
 
-	optimsoc_pte_t pte = directory[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+	// Address of the table's pte from the directory base
+	void *taddr = (void*) &directory[OR1K_ADDR_L2_INDEX_GET(vaddr)];
 
-	if (OR1K_PTE_PPI_GET(pte) == 0) {
-		// invalid
+	// Load-linked the pointer, as we may change it
+	dirpte = or1k_sync_ll(taddr);
+
+	// Check if table is present
+	if (OR1K_PTE_PRESENT_GET(dirpte) == 0) {
+		// There is no page table, allocate and map one
+		table = _optimsoc_vmm_create_page_table();
+		assert(table);
+
+		// We now try to set this as te new table by updating the pte. As other
+		// cores may have set a table at the same index concurrently, we do
+		// a store-conditional.
+		while (1) {
+			// Set table present
+			dirpte = OR1K_PTE_PRESENT_SET(dirpte, 1);
+			// Set the physical page number, that is the table base address
+			dirpte = OR1K_PTE_PPN_SET(dirpte, OR1K_PTE_PPN_GET(table));
+
+			// Try to store this pte
+			if (or1k_sync_sc(taddr,dirpte) == 1) {
+				// The operation was successful
+				break;
+			} else {
+				// There has been a write access to this PTE
+
+				// Load the pte again. It may have been changed after we loaded
+				// it or there was another LL call in between.
+				dirpte = or1k_sync_ll(taddr);
+
+				// Check if someone else modified or the store failed for other
+				// reasons.
+				if (OR1K_PTE_PRESENT_GET(dirpte) == 1) {
+					// Another core added this table. Simply free our
+					// table and continue.
+					free(table);
+					break;
+				}
+				// Otherwise we simply retry, do the operation again
+			}
+		}
+	} else {
+		// There already is a page, load base
+		table = (optimsoc_page_table_t) OR1K_PTABLE(dirpte);
+	}
+
+	// This is a huge table what we do not support for now
+	assert(OR1K_PTE_LAST_GET(dirpte) == 0);
+
+	// Load the address of the pte in the page table
+	void *pteaddr = (void*) &table[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+
+	// Load this entry
+	pte = or1k_sync_ll(pteaddr);
+
+	if (OR1K_PTE_PRESENT_GET(pte) == 1) {
+		// There already is a page mapped
 		return 0;
 	}
 
-	if (pte & OR1K_PTE_LAST) {
-		// Huge page
-		*paddr = OR1K_PADDR_L1(pte, vaddr);
-		return 1;
+	// Try to set this entry
+	while (1) {
+		// Get PN from physical address
+		uint32_t ppn = OR1K_PTE_PPN_GET(paddr);
+
+		// Assemble pte
+		pte = OR1K_PTE_PPN_SET(0, ppn);
+		pte = OR1K_PTE_PRESENT_SET(pte, 1);
+
+		// TODO: Allow to set page policies
+		// Allow all page accesses
+		uint32_t ppi = (1 << OR1K_PTE_PPI_USER_BIT) | \
+			(1 << OR1K_PTE_PPI_WRITE_BIT) | (1 << OR1K_PTE_PPI_EXEC_BIT);
+
+		pte = OR1K_PTE_PPI_SET(pte, ppi);
+
+		// Try to write pte
+		if (or1k_sync_sc(pteaddr, pte) == 1) {
+			// Operation was successful
+			break;
+		} else {
+			// Another write occured
+			pte = or1k_sync_ll(pteaddr);
+
+			// Check why this failed
+			if (OR1K_PTE_PRESENT_GET(pte) == 1) {
+				// Another core added the same address
+				return 0;
+			}
+			// Otherwise just retry
+		}
 	}
 
-	optimsoc_page_table_t table = (optimsoc_page_table_t) OR1K_PTABLE(pte);
-	pte = table[OR1K_ADDR_L2_INDEX_GET(vaddr)];
-
-	if (OR1K_PTE_PPI_GET(pte) == 0) {
-		// invalid
-		return 0;
-	}
-
-	*paddr = OR1K_PADDR_L2(pte, vaddr);
 	return 1;
 }
 
-uint32_t optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
+int optimsoc_vmm_unmap(optimsoc_page_dir_t directory,
+		uint32_t vaddr) {
+	optimsoc_pte_t dirpte;
+	optimsoc_page_table_t table;
+	optimsoc_pte_t pte;
+
+	// Verify input
+	VERIFY_DIR_ADDR(directory);
+
+	// Unmap is not thread safe at the moment. If you need to call it
+	// concurrently it is necessary to guarantee that the operations
+	// do not collide.
+
+	// Load table pte in directory
+	dirpte = directory[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+
+	// Check if table was mapped
+	if (OR1K_PTE_PRESENT_GET(dirpte) == 0) {
+		// There is no page table, this address was not mapped
+		return 0;
+	}
+
+	// Extract table pointer
+	table = (optimsoc_page_table_t) OR1K_PTABLE(dirpte);
+
+	// We do not support huge tables for now
+	assert(OR1K_PTE_LAST_GET(dirpte) == 0);
+
+	// Load pte from table
+	pte = table[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+
+	// Check if page is mapped
+	if (OR1K_PTE_PRESENT_GET(pte) == 0) {
+		// The page was not mapped
+		return 0;
+	}
+
+	// Reset page table entry
+	table[OR1K_ADDR_L2_INDEX_GET(vaddr)] = 0;
+
+	return 1;
+}
+
+optimsoc_pte_t _optimsoc_vmm_lookup(optimsoc_page_dir_t directory,
+		uint32_t vaddr) {
+	optimsoc_pte_t pte;
+
+	// Verify input
+	VERIFY_DIR_ADDR(directory);
+
+	// Load table pte
+	pte = directory[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+
+	// Check if the table is present
+	if (OR1K_PTE_PRESENT_GET(pte) == 0) {
+		// invalid
+		return 0;
+	}
+
+	// We do not support huge tables for now
+	assert(OR1K_PTE_LAST_GET(pte) == 0);
+
+	// Set page table base pointer
+	optimsoc_page_table_t table = (optimsoc_page_table_t) OR1K_PTABLE(pte);
+
+	// Load pte from table
+	pte = table[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+
+	// Check if page is really mapped
+	if (OR1K_PTE_PRESENT_GET(pte) == 0) {
+		// invalid
+		return 0;
+	}
+
+	return pte;
+}
+
+int optimsoc_vmm_virt2phys(optimsoc_page_dir_t directory,
+		uint32_t vaddr, uint32_t *paddr) {
+	optimsoc_pte_t pte;
+
+	// Verify input
+	VERIFY_DIR_ADDR(directory);
+
+	// Lookup pte
+	pte = _optimsoc_vmm_lookup(directory, vaddr);
+
+	// Check if page is mapped
+	if (!pte) {
+		return 0;
+	}
+
+	// Huge tables are not supported
+	assert(OR1K_PTE_LAST_GET(pte) == 0);
+
+	// Assemble physical address
+	uint32_t addr = OR1K_ADDR_PN_SET(0, OR1K_PTE_PPN_GET(pte));
+	addr = OR1K_ADDR_OFFSET_SET(addr, OR1K_ADDR_OFFSET_GET(vaddr));
+
+	*paddr = addr;
+
+	return 1;
+}
+
+int optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
 		uint32_t paddr, uint32_t *vaddr) {
+
+	// Verify input
+	VERIFY_DIR_ADDR(directory);
 
 	// First we iterate the directory
 	for (int dirindex = 0; dirindex < 256; dirindex++) {
@@ -147,16 +448,8 @@ uint32_t optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
 			continue;
 		}
 
-		// If this is a huge page
-		if (pte & OR1K_PTE_LAST) {
-			// If the truncated PPN matches the MSBs of the physical address
-			// this is a match
-			if (OR1K_PTE_PPN_TRUNC_GET(paddr) == OR1K_PTE_PPN_TRUNC_GET(pte)) {
-				// The vaddr is (index, lower MSBs of paddr)
-				*vaddr = (dirindex << OR1K_PAGES_L1_LSB) | (paddr & 0x00ffffff);
-				return 1;
-			}
-		}
+		// Huge pages are not supported
+		assert(OR1K_PTE_LAST_GET(pte) == 0);
 
 		// No huge page, instead search (L2) page table
 		optimsoc_page_table_t table = (optimsoc_page_table_t) OR1K_PTABLE(pte);
@@ -174,8 +467,10 @@ uint32_t optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
 			// If the PPN matches the MSBs of the physical address this is a match
 			if (OR1K_PTE_PPN_GET(paddr) == OR1K_PTE_PPN_GET(pte)) {
 				// The vaddr is (L1 index, L2 index, offset)
-				*vaddr = (dirindex << OR1K_PAGES_L1_LSB) | \
-						(tableindex << OR1K_PAGES_L2_LSB) | OR1K_ADDR_OFFSET(paddr);
+				uint32_t addr = OR1K_ADDR_L1_INDEX_SET(0, dirindex);
+				addr = OR1K_ADDR_L2_INDEX_SET(addr, tableindex);
+				addr = OR1K_ADDR_OFFSET_SET(addr, OR1K_ADDR_OFFSET_GET(paddr));
+				*vaddr = addr;
 				return 1;
 			}
 		}
@@ -184,121 +479,168 @@ uint32_t optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
 	return 0;
 }
 
-//void arch_set_itlb(void* vaddr, void* paddr) {
-//    // Extract the index (shift by 13 and mask)
-//    uint32_t index = OR1K_SPR_IMMU_ITLBW_MR_VPN_GET((uint32_t) vaddr) & 0x3f;
-//
-//    // Extract VPN (properly shift and mask)
-//    uint32_t vpn = OR1K_SPR_IMMU_ITLBW_MR_VPN_GET((uint32_t) vaddr);
-//
-//    // Set page match register
-//    //  - valid
-//    //  - level 2 (8kB)
-//    //  - VPN from vaddr
-//    uint32_t mr = OR1K_SPR_IMMU_ITLBW_MR_V_SET(0, 1);
-//    mr = OR1K_SPR_IMMU_ITLBW_MR_VPN_SET(mr, vpn);
-//
-//    or1k_mtspr (OR1K_SPR_IMMU_ITLBW_MR_ADDR(0, index), mr);
-//
-//    // Extract PPN (properly shift and mask)
-//    uint32_t ppn = OR1K_SPR_IMMU_ITLBW_TR_PPN_GET((uint32_t) paddr);
-//
-//    // Set page translation register
-//    //  - allow all accesses
-//    uint32_t tr = OR1K_SPR_IMMU_ITLBW_TR_UXE_SET(0, 1);
-//    tr = OR1K_SPR_IMMU_ITLBW_TR_SXE_SET(tr, 1);
-//    tr = OR1K_SPR_IMMU_ITLBW_TR_PPN_SET(tr, ppn);
-//
-//    or1k_mtspr (OR1K_SPR_IMMU_ITLBW_TR_ADDR(0, index), tr);
-//}
-//
-//void arch_set_dtlb(void *vaddr, void *paddr) {
-//    // Extract the index (shift by 13 and mask)
-//    uint32_t index = OR1K_SPR_DMMU_DTLBW_MR_VPN_GET((uint32_t) vaddr) & 0x3f;
-//
-//    // Extract VPN (properly shift and mask)
-//    uint32_t vpn = OR1K_SPR_DMMU_DTLBW_MR_VPN_GET((uint32_t) vaddr);
-//
-//    // Set page match register
-//    //  - valid
-//    //  - level 2 (8kB)
-//    //  - VPN from vaddr
-//    uint32_t mr = OR1K_SPR_DMMU_DTLBW_MR_V_SET(0, 1);
-//    mr = OR1K_SPR_DMMU_DTLBW_MR_VPN_SET(mr, vpn);
-//
-//    or1k_mtspr (OR1K_SPR_DMMU_DTLBW_MR_ADDR(0, index), mr);
-//
-//    // Extract PPN (properly shift and mask)
-//    uint32_t ppn = OR1K_SPR_DMMU_DTLBW_TR_PPN_GET((uint32_t) paddr);
-//
-//    // Set page translation register
-//    //  - allow all accesses
-//    uint32_t tr = OR1K_SPR_DMMU_DTLBW_TR_URE_SET(0, 1);
-//    tr = OR1K_SPR_DMMU_DTLBW_TR_UWE_SET(tr, 1);
-//    tr = OR1K_SPR_DMMU_DTLBW_TR_SRE_SET(tr, 1);
-//    tr = OR1K_SPR_DMMU_DTLBW_TR_SWE_SET(tr, 1);
-//    tr = OR1K_SPR_DMMU_DTLBW_TR_PPN_SET(tr, ppn);
-//
-//    or1k_mtspr (OR1K_SPR_DMMU_DTLBW_TR_ADDR(0, index), tr);
-//}
-//
-//void vmm_init() {
-//    or1k_exception_handler_add(0x9, dtlb_miss);
-//    or1k_exception_handler_add(0xA, itlb_miss);
-//}
-//
-//void dtlb_miss() {
-//    struct optimsoc_scheduler_core *core_ctx;
-//    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
-//
-//    void *vaddr = (void*) or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
-//
-//    runtime_trace_dtlb_miss(vaddr);
-//
-//    /* Look up virtual address in the page table */
-//    struct page_table_entry_t* entry;
-//    entry = find_page_entry(core_ctx->active_thread->task->page_table, vaddr);
-//
-//    if(entry != NULL) {
-//
-//        /* Write address back to DTLB */
-//        arch_set_dtlb(entry->vaddr_base, entry->paddr_base);
-//
-//    } else {
-//
-//        void *page = vmm_alloc_page();
-//        assert(page != NULL);
-//
-//        entry = malloc(sizeof(struct page_table_entry_t));
-//
-//        entry->vaddr_base = PAGE_BASE(vaddr);
-//        entry->paddr_base = page;
-//
-//        printf("Allocated new data page %p and mapped to %p\n", entry->paddr_base, entry->vaddr_base);
-//
-//        optimsoc_list_add_tail(core_ctx->active_thread->task->page_table, (void*)entry);
-//        runtime_trace_dtlb_allocate_page(page);
-//
-//        arch_set_dtlb(entry->vaddr_base, entry->paddr_base);
-//
-//    }
-//
-//}
-//
-//void itlb_miss() {
-//    struct optimsoc_scheduler_core *core_ctx;
-//    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
-//
-//    void *vaddr = (void*) or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
-//
-//    runtime_trace_itlb_miss(vaddr);
-//
-//    /* Look up virtual address in the page table */
-//    struct page_table_entry_t* entry;
-//    entry = find_page_entry(core_ctx->active_thread->task->page_table, vaddr);
-//    assert(entry != NULL);
-//    /* Write address back to ITLB */
-//    arch_set_itlb(entry->vaddr_base, entry->paddr_base);
-//}
-//
-//
+void optimsoc_vmm_init(void) {
+	// Register exception handlers
+    or1k_exception_handler_add(0x9, _optimsoc_dtlb_miss);
+    or1k_exception_handler_add(0xA, _optimsoc_itlb_miss);
+    or1k_exception_handler_add(0x3, _optimsoc_dpage_fault);
+    or1k_exception_handler_add(0x4, _optimsoc_ipage_fault);
+}
+
+void _optimsoc_set_itlb(uint32_t vaddr, optimsoc_pte_t pte) {
+    // Extract the index
+    uint32_t index = OR1K_ADDR_L2_INDEX_GET(vaddr) & 0x3f;
+
+    // Extract PPN from pte
+    uint32_t ppn = OR1K_PTE_PPN_GET(pte);
+
+	// Assemble translation register
+    // Set PPN
+	uint32_t tr = OR1K_SPR_IMMU_ITLBW_TR_PPN_SET(0, ppn);
+
+	// Set access rights
+	if (OR1K_PTE_PPI_GET(pte) & (1 << OR1K_PTE_PPI_EXEC_BIT)) {
+		tr = OR1K_SPR_IMMU_ITLBW_TR_SXE_SET(tr, 1);
+		// Allow user access
+		if (OR1K_PTE_PPI_GET(pte) & (1 << OR1K_PTE_PPI_USER_BIT)) {
+			tr = OR1K_SPR_IMMU_ITLBW_TR_UXE_SET(tr, 1);
+		}
+	}
+
+	// Write translate register
+	or1k_mtspr (OR1K_SPR_IMMU_ITLBW_TR_ADDR(0, index), tr);
+
+	// Set page match register
+	//  - valid
+	//  - level 2 (8kB)
+	//  - VPN from vaddr
+	uint32_t mr = OR1K_SPR_IMMU_ITLBW_MR_V_SET(0, 1);
+	mr = OR1K_SPR_IMMU_ITLBW_MR_VPN_SET(mr, OR1K_ADDR_PN_GET(vaddr));
+
+	// Write match register
+	or1k_mtspr (OR1K_SPR_IMMU_ITLBW_MR_ADDR(0, index), mr);
+}
+
+void _optimsoc_set_dtlb(uint32_t vaddr, optimsoc_pte_t pte) {
+    // Extract the index
+    uint32_t index = OR1K_ADDR_L2_INDEX_GET(vaddr) & 0x3f;
+
+	// Extract PPN from pte
+    uint32_t ppn = OR1K_PTE_PPN_GET(pte);
+
+	// Assemble translation register
+	// Set ppn
+	uint32_t tr = OR1K_SPR_DMMU_DTLBW_TR_PPN_SET(0, ppn);
+
+	// Set read rights
+	if (OR1K_PTE_PPI_GET(pte) & (1 << OR1K_PTE_PPI_USER_BIT)) {
+		// Allow user access
+		tr = OR1K_SPR_DMMU_DTLBW_TR_URE_SET(tr, 1);
+	}
+	tr = OR1K_SPR_DMMU_DTLBW_TR_SRE_SET(tr, 1);
+
+	// Set write rights
+	if (OR1K_PTE_PPI_GET(pte) & (1 << OR1K_PTE_PPI_WRITE_BIT)) {
+		tr = OR1K_SPR_DMMU_DTLBW_TR_SWE_SET(tr, 1);
+		if (OR1K_PTE_PPI_GET(pte) & (1 << OR1K_PTE_PPI_USER_BIT)) {
+			// Allow user access
+			tr = OR1K_SPR_DMMU_DTLBW_TR_UWE_SET(tr, 1);
+		}
+	}
+
+	// Write translate register
+	or1k_mtspr (OR1K_SPR_DMMU_DTLBW_TR_ADDR(0, index), tr);
+
+	// Set page match register
+	//  - valid
+	//  - level 2 (8kB)
+	//  - VPN from vaddr
+	uint32_t mr = OR1K_SPR_DMMU_DTLBW_MR_V_SET(0, 1);
+	mr = OR1K_SPR_DMMU_DTLBW_MR_VPN_SET(mr, OR1K_ADDR_PN_GET(vaddr));
+
+	// Write match register
+	or1k_mtspr (OR1K_SPR_DMMU_DTLBW_MR_ADDR(0, index), mr);
+}
+
+// Allocate the callback function pointers for the page fault handlers
+optimsoc_pfault_handler_fptr _optimsoc_vmm_dfault_handler;
+optimsoc_pfault_handler_fptr _optimsoc_vmm_ifault_handler;
+
+void optimsoc_vmm_set_dfault_handler(optimsoc_pfault_handler_fptr handler) {
+	_optimsoc_vmm_dfault_handler = handler;
+}
+
+void optimsoc_vmm_set_ifault_handler(optimsoc_pfault_handler_fptr handler) {
+	_optimsoc_vmm_ifault_handler = handler;
+}
+
+void _optimsoc_dtlb_miss(void) {
+    optimsoc_page_dir_t dir;
+
+	// Get current thread's page directory
+    dir = _optimsoc_thread_get_pagedir_current();
+	VERIFY_DIR_ADDR(dir);
+
+	// Load vaddr from EEAR
+    uint32_t vaddr = or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
+
+    // Trace debug
+    runtime_trace_dtlb_miss(vaddr);
+
+	// Lookup page
+    optimsoc_pte_t pte = _optimsoc_vmm_lookup(dir, vaddr);
+
+    if (pte) {
+    	// Update TLB
+    	_optimsoc_set_dtlb(vaddr, pte);
+    } else {
+    	// Raise page fault
+    	assert(_optimsoc_vmm_dfault_handler);
+    	_optimsoc_vmm_dfault_handler(vaddr);
+    }
+}
+
+void _optimsoc_itlb_miss(void) {
+    optimsoc_page_dir_t dir;
+
+	// Get current thread's page directory
+    dir = _optimsoc_thread_get_pagedir_current();
+	VERIFY_DIR_ADDR(dir);
+
+	// Load vaddr from EEAR
+    uint32_t vaddr = or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
+
+    // Trace debug
+    runtime_trace_itlb_miss(vaddr);
+
+	// Lookup page
+    optimsoc_pte_t pte = _optimsoc_vmm_lookup(dir, vaddr);
+
+    if (pte) {
+    	// Update TLB
+    	_optimsoc_set_itlb(vaddr, pte);
+    } else {
+    	// Raise page fault
+	    assert(_optimsoc_vmm_ifault_handler);
+    	_optimsoc_vmm_ifault_handler(vaddr);
+    }
+}
+
+
+void _optimsoc_dpage_fault(void) {
+	// Load address from EEAR
+    uint32_t vaddr = or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
+
+    // Call handler
+    assert(_optimsoc_vmm_dfault_handler);
+	_optimsoc_vmm_dfault_handler(vaddr);
+}
+
+void _optimsoc_ipage_fault(void) {
+	// Load address from EEAR
+    uint32_t vaddr = or1k_mfspr(OR1K_SPR_SYS_EEAR_ADDR(0));
+
+    // Call handler
+    assert(_optimsoc_vmm_ifault_handler);
+	_optimsoc_vmm_ifault_handler(vaddr);
+}

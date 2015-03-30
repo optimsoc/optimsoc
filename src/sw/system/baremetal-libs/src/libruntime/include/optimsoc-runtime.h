@@ -53,27 +53,112 @@ void optimsoc_runtime_boot(void);
  * @{
  */
 
-// Page table entry
-typedef uint32_t optimsoc_pte_t;
+/**
+ * Page directory
+ *
+ * The page directory is the data structure for the memory lookup from virtual
+ * addresses to physical addresses. It can be shared by multiple threads and
+ * is assigned to a thread by calling optimsoc_thread_set_pagedir.
+ *
+ * It should not be manipulated directly, but only by the functions provided.
+ * Mapping pages is thread-safe, but generally caution is necessary when
+ * calling the functions on two different cores concurrently when accessing
+ * the same virtual pages.
+ */
+typedef uint32_t* optimsoc_page_dir_t;
 
-// Page table
-typedef optimsoc_pte_t* optimsoc_page_table_t;
+/**
+ * Create a new page directory
+ *
+ * This function allocates a new page directory. You can set it for a thread by
+ * calling optimsoc_thread_set_pagedir.
+ *
+ * @return Empty page dir
+ */
+optimsoc_page_dir_t optimsoc_vmm_create_page_dir(void);
 
-// Page directory
-typedef optimsoc_pte_t* optimsoc_page_dir_t;
+/**
+ * Map virtual page to physical page
+ *
+ * This functions adds the entry of the virtual page of vaddr to the physical
+ * page of paddr.
+ *
+ * @param directory Directory to add page mapping to
+ * @param vaddr Virtual address of the page to map
+ * @param paddr Physical address of the page to map
+ * @return Success of operation
+ */
+int optimsoc_vmm_map(optimsoc_page_dir_t directory, uint32_t vaddr,
+		uint32_t paddr);
 
-extern optimsoc_page_dir_t optimsoc_vmm_create_page_dir();
+/**
+ * Remove a page from directory
+ *
+ * Remove an entry from the page directory.
+ *
+ * @param directory Directory to remove page from
+ * @param vaddr Virtual address of page to map
+ * @return Success of operation
+ */
+int optimsoc_vmm_unmap(optimsoc_page_dir_t directory, uint32_t vaddr);
 
-extern optimsoc_page_table_t optimsoc_vmm_create_page_table();
+/**
+ * Virtual to physical mapping
+ *
+ * Map a virtual address to the physical address.
+ *
+ * @param directory Directory for lookup
+ * @param vaddr Virtual address
+ * @param[out] paddr Physical address
+ * @return Success of operation
+ */
+int optimsoc_vmm_virt2phys(optimsoc_page_dir_t directory, uint32_t vaddr,
+		uint32_t *paddr);
 
-extern void optimsoc_vmm_add_page_table(optimsoc_page_dir_t directory,
-		uint32_t index, optimsoc_page_table_t);
+/**
+ * Physical to virtual mapping
+ *
+ * Find virtual address for a physical address. This is a very time consuming
+ * operation, especially if the virtual address space is fully or sparsely
+ * populated. It also only finds the first mapping, but may be usefull to
+ * find and delete incorrect mappings.
+ *
+ * @param directory Directory for lookup
+ * @param paddr Physical address
+ * @param[out] vaddr Virtual address
+ * @return Success of operation
+ */
+int optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory, uint32_t paddr,
+		uint32_t *vaddr);
 
-extern uint32_t optimsoc_vmm_virt2phys(optimsoc_page_dir_t directory,
-		uint32_t vaddr, uint32_t *paddr);
+/**
+ * Page fault handler type
+ *
+ * The function pointer is used to define callback function for page faults
+ * when a page cannot be found in the page directory. The user code has to
+ * take appropriate actions then.
+ *
+ * @param vaddr The virtual address of the fault
+ */
+typedef void (*optimsoc_pfault_handler_fptr) (uint32_t vaddr);
 
-extern uint32_t optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
-		uint32_t paddr, uint32_t *vaddr);
+/**
+ * Set handler for data page faults
+ *
+ * Register the handler for fault exceptions from the data MMU.
+ *
+ * @param handler Handler to register
+ */
+void optimsoc_vmm_set_dfault_handler(optimsoc_pfault_handler_fptr handler);
+
+/**
+ * Set handler for instruction page faults
+ *
+ * Register the handler for fault exceptions from the instructions MMU.
+ *
+ * @param handler Handler to register
+ */
+void optimsoc_vmm_set_ifault_handler(optimsoc_pfault_handler_fptr handler);
 
 /**
 * @}

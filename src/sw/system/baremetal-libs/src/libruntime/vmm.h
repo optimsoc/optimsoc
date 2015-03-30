@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,5 +25,88 @@
 
 #ifndef VMM_H
 #define VMM_H
+
+#include "include/optimsoc-runtime.h"
+
+/**
+ * \ingroup paging
+ * @{
+ */
+
+/**
+ * Page table entry
+ *
+ * A page table entry is a 32 bit value as defined by the architecture
+ * specification.
+ */
+typedef uint32_t optimsoc_pte_t;
+
+/**
+ * Page table
+ *
+ * A page table is an array of page table entries.
+ */
+typedef optimsoc_pte_t* optimsoc_page_table_t;
+
+/**
+ * Initialize virtual memory subsystem
+ *
+ * Set the exception handlers for the memory management units.
+ */
+void _optimsoc_vmm_init(void);
+
+/**
+ * Allocate page table
+ *
+ * Allocate a page table in memory and initialize all entries to 0.
+ *
+ * @return New allocated table
+ */
+optimsoc_page_table_t _optimsoc_vmm_create_page_table();
+
+/**
+ * Lookup virtual address in page directory
+ *
+ * This is the lookup function that does the two level lookup for a virtual
+ * address and returns the page table entry. Call optimsoc_vmm_virt2phys if
+ * you need the physical address.
+ *
+ * @param directory Directory to search
+ * @param vaddr Virtual address to lookup
+ * @return Page table entry for virtual address
+ */
+optimsoc_pte_t _optimsoc_vmm_lookup(optimsoc_page_dir_t directory,
+		uint32_t vaddr);
+
+/**
+ * Set the DTLB entry
+ *
+ * @param vaddr Virtual address to set
+ * @param pte Corresponding page table entry
+ */
+void _optimsoc_set_dtlb(uint32_t vaddr, optimsoc_pte_t pte);
+
+/**
+ * Set the ITLB entry
+ *
+ * @param vaddr Virtual address to set
+ * @param pte Corresponding page table entry
+ */
+void _optimsoc_set_itlb(uint32_t vaddr, optimsoc_pte_t pte);
+
+
+/*! DTLB miss handler */
+void _optimsoc_dtlb_miss(void);
+/*! ITLB miss handler */
+void _optimsoc_itlb_miss(void);
+
+/*! DMMU fault handler */
+void _optimsoc_dpage_fault(void);
+/*! IMMU fault handler */
+void _optimsoc_ipage_fault(void);
+
+/**
+ * @}
+ */
 
 #endif
