@@ -26,27 +26,23 @@
 #ifndef __SCHEDULER_H__
 #define __SCHEDULER_H__
 
+#include "include/optimsoc-runtime.h"
+
 #include "list.h"
 #include "thread.h"
 
-extern struct list_t* all_threads;
-extern struct list_t* ready_q;
-extern struct list_t* wait_q;
+extern struct optimsoc_list_t* all_threads;
+extern struct optimsoc_list_t* ready_q;
+extern struct optimsoc_list_t* wait_q;
 
-struct optimsoc_scheduler_core {
-    thread_t idle_thread;
-    thread_t active_thread;
-};
+void _optimsoc_scheduler_init();
+void _optimsoc_scheduler_start();
+void _optimsoc_scheduler_add(optimsoc_thread_t t, struct optimsoc_list_t* q);
+void _optimsoc_schedule();
+void _optimsoc_scheduler_yieldcurrent();
+void _optimsoc_scheduler_suspendcurrent();
+void _optimsoc_scheduler_thread_exit();
 
-extern struct optimsoc_scheduler_core* optimsoc_scheduler_core;
-
-extern void scheduler_init();
-extern void scheduler_start();
-extern void scheduler_add(thread_t t, struct list_t* q);
-extern void schedule();
-extern void scheduler_yieldcurrent();
-extern void scheduler_suspendcurrent();
-extern void scheduler_thread_exit();
-extern int scheduler_thread_exists(thread_t thread);
+optimsoc_thread_t _optimsoc_scheduler_current(void);
 
 #endif

@@ -41,36 +41,38 @@
 extern arch_thread_ctx_t *exception_ctx;
 
 // Shared structures
-struct list_t* all_threads;
-struct list_t* ready_q;
-struct list_t* wait_q;
+struct optimsoc_list_t* all_threads;
+struct optimsoc_list_t* ready_q;
+struct optimsoc_list_t* wait_q;
 
 // This is the entry point
-thread_t init_thread;
+optimsoc_thread_t init_thread;
 
 // Core specifics
-struct optimsoc_scheduler_core* optimsoc_scheduler_core;
+struct _optimsoc_scheduler_core {
+	optimsoc_thread_t idle_thread;
+	optimsoc_thread_t active_thread;
+};
+
+struct _optimsoc_scheduler_core* _optimsoc_scheduler_core;
 
 extern void init();
 
-unsigned int runtime_config_terminate_on_empty_readyq = 0;
-
-unsigned int load_history[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-unsigned int load_current;
-
-unsigned int *system_load = 0;
-unsigned int system_load_update_counter;
-
-int (*runtime_hook_needs_rebalance)(void);
-void (*runtime_hook_rebalance)(void) = 0;
-
-void idle_thread_func() {
+void _optimsoc_idle_thread_func() {
     while (1) { }
 }
 
-void scheduler_tick() {
-    struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
+optimsoc_thread_t _optimsoc_scheduler_get_current(void) {
+	struct _optimsoc_scheduler_core *core_ctx;
+	core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
+	assert (core_ctx && core_ctx->active_thread);
+
+	return core_ctx->active_thread;
+}
+
+void _optimsoc_scheduler_tick() {
+    struct _optimsoc_scheduler_core *core_ctx;
+    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
 
     /* save context */
     memcpy(core_ctx->active_thread->ctx, exception_ctx,
@@ -79,34 +81,30 @@ void scheduler_tick() {
     /* put active thread into the queue */
     if (core_ctx->active_thread != core_ctx->idle_thread) {
         // only if this is not the idle thread of course..
-        scheduler_add(core_ctx->active_thread, ready_q);
+        _optimsoc_scheduler_add(core_ctx->active_thread, ready_q);
     }
 
     /* schedule next thread */
-    schedule();
+    _optimsoc_schedule();
 }
 
-void scheduler_yieldcurrent() {
-    struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
+void _optimsoc_scheduler_yieldcurrent() {
+    struct _optimsoc_scheduler_core *core_ctx;
+    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
 
-    uint32_t restore = optimsoc_critical_begin();
-
-    scheduler_add(core_ctx->active_thread, ready_q);
+    _optimsoc_scheduler_add(core_ctx->active_thread, ready_q);
 
     runtime_trace_yield(core_ctx->active_thread->id);
     yield_switchctx(core_ctx->active_thread->ctx);
-
-    optimsoc_critical_end(restore);
 }
 
-void scheduler_suspendcurrent() {
-    struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
+void _optimsoc_scheduler_suspendcurrent() {
+    struct _optimsoc_scheduler_core *core_ctx;
+    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
 
     uint32_t restore = optimsoc_critical_begin();
 
-    scheduler_add(core_ctx->active_thread, wait_q);
+    _optimsoc_scheduler_add(core_ctx->active_thread, wait_q);
 
     core_ctx->active_thread->state = THREAD_SUSPENDED;
 
@@ -115,202 +113,109 @@ void scheduler_suspendcurrent() {
     optimsoc_critical_end(restore);
 }
 
-void scheduler_handle_sysmsg(unsigned int* buffer, int size) {
-    assert(size == 1);
-
-    unsigned int source_tile = extract_bits(buffer[0],OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
-
-    system_load[source_tile] = extract_bits(buffer[0], 7, 0);
-}
-
 void scheduler_init() {
-    or1k_exception_handler_add(5,&scheduler_tick);
+    or1k_exception_handler_add(5, &_optimsoc_scheduler_tick);
 
     or1k_timer_init(runtime_config_get_numticks());
 
-    wait_q = list_init(0);
-    ready_q= list_init(0);
-    all_threads = list_init(0);
+    wait_q = optimsoc_list_init(0);
+    ready_q= optimsoc_list_init(0);
+    all_threads = optimsoc_list_init(0);
 
-    thread_attr_t *attr_init = malloc(sizeof(thread_attr_t));
+    struct optimsoc_thread_attr *attr_init;
+    attr_init = malloc(sizeof(struct optimsoc_thread_attr));
 
-    thread_attr_init(attr_init);
+    optimsoc_thread_attr_init(attr_init);
 
     attr_init->identifier = "init";
 
-    thread_create(&init_thread, &init, attr_init);
+    optimsoc_thread_create(&init_thread, &init, attr_init);
 
-    optimsoc_scheduler_core = calloc(optimsoc_get_relcoreid(),
-                                     sizeof(optimsoc_scheduler_core));
+    _optimsoc_scheduler_core = calloc(or1k_numcores(),
+    		sizeof(struct _optimsoc_scheduler_core));
 
     for (int c = 0; c < optimsoc_get_relcoreid(); c++) {
-        thread_attr_t *attr_idle = malloc(sizeof(thread_attr_t));
-        thread_attr_init(attr_idle);
+        struct optimsoc_thread_attr *attr_idle;
+        attr_idle = malloc(sizeof(struct optimsoc_thread_attr));
+        optimsoc_thread_attr_init(attr_idle);
         attr_idle->identifier = "idle";
-        thread_create(&(optimsoc_scheduler_core[c].idle_thread), &idle_thread_func, attr_idle);
-        list_remove(ready_q,(void*) optimsoc_scheduler_core[c].idle_thread);
-        list_remove(all_threads,(void*) optimsoc_scheduler_core[c].idle_thread);
+        optimsoc_thread_create(&(_optimsoc_scheduler_core[c].idle_thread),
+        		&_optimsoc_idle_thread_func, attr_idle);
+        optimsoc_list_remove(ready_q,
+        		(void*) _optimsoc_scheduler_core[c].idle_thread);
+        optimsoc_list_remove(all_threads,
+        		(void*) _optimsoc_scheduler_core[c].idle_thread);
     }
-
-    system_load = calloc(4, sizeof(unsigned int));
-    system_load_update_counter = 0;
-    load_current = 0;
-
-    optimsoc_mp_simple_addhandler(7, &scheduler_handle_sysmsg);
-
-    runtime_hook_needs_rebalance = 0;
 }
 
-void scheduler_add(thread_t t, struct list_t* q) {
+void _optimsoc_scheduler_add(optimsoc_thread_t t, struct optimsoc_list_t* q) {
     if(q == ready_q) {
-	 t->state = THREAD_RUNNABLE;
+    	t->state = THREAD_RUNNABLE;
     }
 
-    list_add_tail(q, (void*)t);
+    optimsoc_list_add_tail(q, (void*)t);
 }
 
-void scheduler_start() {
-    schedule();
+void _optimsoc_scheduler_start() {
+    _optimsoc_schedule();
     // We got to nirvana
     ctx_replace();
 }
 
-void context_set(arch_thread_ctx_t *ctx) {
+void _optimsoc_context_set(arch_thread_ctx_t *ctx) {
     memcpy(exception_ctx, ctx, sizeof(struct arch_thread_ctx_t));
 }
 
-void scheduler_distribute_load() {
-    system_load_update_counter++;
-
-    if (system_load_update_counter == 1) {
-        for (int t = 0; t < optimsoc_get_numct(); t++) {
-            unsigned int id = optimsoc_get_ranktile(t);
-            if (id != optimsoc_get_tileid()) {
-                uint32_t buffer = 0;
-                set_bits(&buffer, id, OPTIMSOC_DEST_MSB, OPTIMSOC_DEST_LSB);
-                set_bits(&buffer, 7, OPTIMSOC_CLASS_MSB, OPTIMSOC_CLASS_LSB);
-                set_bits(&buffer, optimsoc_get_tileid(), OPTIMSOC_SRC_MSB, OPTIMSOC_SRC_LSB);
-                set_bits(&buffer, load_current, 7, 0);
-                optimsoc_mp_simple_send(1, &buffer);
-            }
-        }
-        system_load_update_counter = 0;
-    }
-
-}
-
-int scheduler_needs_rebalance() {
-    return 0;
-    if (runtime_hook_needs_rebalance != 0) {
-        return runtime_hook_needs_rebalance();
-    }
-    return ((load_current > 24) && (load_history[0] > 1));
-}
-
-void scheduler_rebalance() {
-    return;
-    if (runtime_hook_rebalance != 0) {
-        runtime_hook_rebalance();
-        return;
-    }
-    printf("Need to rebalance, select candidate tile:\n");
-    int low_value = system_load[optimsoc_get_tileid()];
-    int low_tile = optimsoc_get_tileid();
-
-    for (int t = 0; t < 4; t++) {
-        printf("%d: %d\n", t, system_load[t]);
-        if (system_load[t] < low_value) {
-            low_value = system_load[t];
-            low_tile = t;
-        }
-    }
-    if (low_tile == optimsoc_get_tileid()) {
-        printf("No candidate found. Keep here.\n");
-    } else {
-        printf("Migrate to %d.\n", low_tile);
-        thread_send((struct thread_t*)list_remove_head(ready_q), low_tile);
-    }
-}
-
-void scheduler_update_load() {
-    load_current -= load_history[15];
-
-    // Determine load
-    for (int l = 15; l > 0; l--) {
-        load_history[l] = load_history[l-1];
-    }
-
-    load_history[0] = list_length(ready_q);
-
-    load_current += load_history[0];
-
-    runtime_trace_load(load_current);
-
-    scheduler_distribute_load();
-
-    system_load[optimsoc_get_tileid()] = load_current;
-
-    if (scheduler_needs_rebalance() != 0) {
-	scheduler_rebalance();
-    }
-}
-
-
-void schedule() {
-    scheduler_update_load();
+void _optimsoc_schedule() {
 
     /* get the next thread from the ready_q */
-    struct thread_t* t = (struct thread_t*)list_remove_head(ready_q);
+    optimsoc_thread_t t = (optimsoc_thread_t) optimsoc_list_remove_head(ready_q);
 
     /* In case we don't have a thread in the ready_q: schedule idle thread */
     if(!t) {
-        t = optimsoc_scheduler_core[optimsoc_get_relcoreid()].idle_thread;
+        t = _optimsoc_scheduler_core[or1k_coreid()].idle_thread;
     }
 
     /* set active */
-    optimsoc_scheduler_core[optimsoc_get_relcoreid()].active_thread = t;
+    _optimsoc_scheduler_core[or1k_coreid()].active_thread = t;
 
     runtime_trace_schedule(t->id);
 
     /* switch the context */
-    context_set(optimsoc_scheduler_core[optimsoc_get_relcoreid()].active_thread->ctx);
+    _optimsoc_context_set(_optimsoc_scheduler_core[or1k_coreid()].active_thread->ctx);
 
-    or1k_mmu_init();
+    // TODO: Clear TLB
 
     /* activate timer */
     or1k_timer_reset();
     or1k_timer_enable();
 }
 
-
 /*
  * Is called when a thread has ended to free memory and schedule next thread
  */
 void scheduler_thread_exit() {
-    struct optimsoc_scheduler_core *core_ctx;
-    core_ctx = &optimsoc_scheduler_core[optimsoc_get_relcoreid()];
+    struct _optimsoc_scheduler_core *core_ctx;
+    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
 
     runtime_trace_thread_exit();
 
     /* free thread memory */
-    thread_destroy(core_ctx->active_thread);
+// TODO:    thread_destroy(core_ctx->active_thread);
 
-    list_remove(all_threads,(void*) core_ctx->active_thread);
+    optimsoc_list_remove(all_threads,(void*) core_ctx->active_thread);
 
-    if (!all_threads->head) {
+/*    if (!all_threads->head) {
         if (runtime_config_terminate_on_empty_readyq) {
             exit(0);
         }
-    }
+    }*/
 
     /* reset active_thread */
     core_ctx->active_thread = NULL;
 
-    schedule();
+    _optimsoc_schedule();
 
     ctx_replace();
 }
 
-int scheduler_thread_exists(thread_t thread) {
-    return (list_contains(all_threads,(void*) thread));
-}
