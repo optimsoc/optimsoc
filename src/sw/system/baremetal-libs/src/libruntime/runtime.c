@@ -36,12 +36,6 @@
 
 arch_thread_ctx_t *exception_ctx;
 
-/*void exit_syscall(unsigned int subid, void *arg2){
-    thread_exit();
-}*/
-
-extern void syscall_entry(void*);
-
 // This is placed in the BSS section and core 0 will initialize it
 // to 0 during the reset routine.
 volatile uint8_t _optimsoc_boot_barrier;
@@ -57,21 +51,17 @@ void optimsoc_runtime_boot(void) {
         printf("Initializing OpTiMSoC platform..\n");
         optimsoc_init(0);
 
-        printf("Initialize message passing..\n");
-        optimsoc_mp_simple_init();
-        optimsoc_mp_simple_addhandler(0, thread_receive);
-
         printf("Initialize DMA..\n");
         dma_init();
 
         printf("Bringing virtual memory up..\n");
-        vmm_init();
+        _optimsoc_vmm_init();
 
         printf("Initialize system call interface..\n");
         _optimsoc_runtime_syscalls_init();
 
         printf("Initialize scheduler..\n");
-        scheduler_init();
+     	 _optimsoc_scheduler_init();
 
         printf("Core 0 boot finished.\n");
 
@@ -83,7 +73,7 @@ void optimsoc_runtime_boot(void) {
         printf("Core %d woken up.\n", optimsoc_get_relcoreid());
     }
 
-    scheduler_start();
+    _optimsoc_scheduler_start();
 
     return;
 }
