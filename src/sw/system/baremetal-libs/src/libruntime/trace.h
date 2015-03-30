@@ -113,16 +113,12 @@ static inline void runtime_trace_yield(unsigned int id) {
     OPTIMSOC_TRACE(TRACE_YIELD,id);
 }
 
-static inline void runtime_trace_itlb_miss(void* vaddr) {
+static inline void runtime_trace_itlb_miss(uint32_t vaddr) {
     OPTIMSOC_TRACE(TRACE_ITLBMISS,vaddr);
 }
 
-static inline void runtime_trace_dtlb_miss(void* vaddr) {
+static inline void runtime_trace_dtlb_miss(uint32_t vaddr) {
     OPTIMSOC_TRACE(TRACE_DTLBMISS,vaddr);
-}
-
-static inline void runtime_trace_dtlb_allocate_page(void* vaddr) {
-    OPTIMSOC_TRACE(TRACE_DTLBPAGEALLOC,vaddr);
 }
 
 static inline void runtime_trace_thread_exit() {
