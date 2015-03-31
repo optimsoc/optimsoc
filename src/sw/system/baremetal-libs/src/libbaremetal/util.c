@@ -2,24 +2,27 @@
 #include "include/optimsoc-baremetal.h"
 
 uint32_t optimsoc_get_numct(void) {
-  return _optimsoc_compute_tile_num;
+  return REG32(OPTIMSOC_NA_CT_NUM);
 }
 
 int optimsoc_get_ctrank(void) {
   return optimsoc_get_tilerank(optimsoc_get_tileid());
 }
 
+
 int optimsoc_get_tilerank(unsigned int tile) {
-  for (int i = 0; i < _optimsoc_compute_tile_num; i++) {
-      if (_optimsoc_compute_tiles[i] == tile) {
-	  return i;
-      }
-  }
-  return -1;
+	uint16_t *ctlist = (uint16_t*) OPTIMSOC_NA_CT_LIST;
+	for (int i = 0; i < optimsoc_get_numct(); i++) {
+		if (REG16(&ctlist[i]) == tile) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 int optimsoc_get_ranktile(unsigned int rank) {
-  return _optimsoc_compute_tiles[rank];
+    uint16_t *ctlist = (uint16_t*) OPTIMSOC_NA_CT_LIST;
+    return ctlist[rank];
 }
 
 void optimsoc_init(optimsoc_conf *config) {
