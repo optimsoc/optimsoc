@@ -62,6 +62,9 @@ module networkadapter_ct(
    parameter GLOBAL_MEMORY_TILE = 32'hx;
    parameter LOCAL_MEMORY_SIZE = 32'hx;
 
+   parameter NUMCTS = 32'h1;
+   parameter [NUMCTS*16-1:0] CTLIST = {NUMCTS{16'b0}};
+
    parameter ENABLE_MPSIMPLE = 1;
    parameter ENABLE_DMA      = 1;
 
@@ -210,7 +213,9 @@ module networkadapter_ct(
        .DOMAIN_NUMCORES       (DOMAIN_NUMCORES),
        .GLOBAL_MEMORY_SIZE    (GLOBAL_MEMORY_SIZE),
        .GLOBAL_MEMORY_TILE    (GLOBAL_MEMORY_TILE),
-       .LOCAL_MEMORY_SIZE     (LOCAL_MEMORY_SIZE))
+       .LOCAL_MEMORY_SIZE     (LOCAL_MEMORY_SIZE),
+       .NUMCTS                (NUMCTS),
+       .CTLIST                (CTLIST))
    u_conf(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC
