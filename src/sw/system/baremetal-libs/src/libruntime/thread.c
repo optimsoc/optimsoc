@@ -36,21 +36,32 @@
 #include <stdio.h>
 
 optimsoc_page_dir_t _optimsoc_thread_get_pagedir_current() {
+    // Get the currently executed thread
 	optimsoc_thread_t thread = _optimsoc_scheduler_current();
+	assert(thread);
 
     return thread->page_dir;
 }
 
 void optimsoc_thread_set_pagedir(optimsoc_thread_t thread, optimsoc_page_dir_t dir) {
-	thread->page_dir = dir;
+    // Verify input
+    assert(thread);
+
+    thread->page_dir = dir;
 }
 
 optimsoc_page_dir_t optimsoc_thread_get_pagedir(optimsoc_thread_t thread) {
-	return thread->page_dir;
+    // Verify input
+    assert(thread);
+
+    return thread->page_dir;
 }
 
 
 void thread_attr_init(struct optimsoc_thread_attr *attr) {
+    // Verify input
+    assert(attr);
+
     attr->args = NULL;
     attr->flags = THREAD_FLAG_NO_FLAGS | THREAD_FLAG_KERNEL;
     attr->force_id = 0;
@@ -64,6 +75,8 @@ volatile uint32_t thread_next_id;
  */
 int optimsoc_thread_create(optimsoc_thread_t *thread,
 		void (*start)(void*), struct optimsoc_thread_attr *attr) {
+    // Verify input
+    assert(thread);
 
 	optimsoc_thread_t t;
 
@@ -111,7 +124,9 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
 }
 
 optimsoc_thread_t optimsoc_thread_current() {
-	return _optimsoc_scheduler_current();
+    optimsoc_thread_t t =_optimsoc_scheduler_current();
+    assert(t);
+    return t;
 }
 
 void optimsoc_thread_exit() {
