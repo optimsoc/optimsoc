@@ -460,7 +460,7 @@ int optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
 			pte = table[tableindex];
 
 			// Try next one if invalid
-			if (OR1K_PTE_PPI_GET(pte) == 0) {
+			if (OR1K_PTE_PRESENT_GET(pte) == 0) {
 				continue;
 			}
 
