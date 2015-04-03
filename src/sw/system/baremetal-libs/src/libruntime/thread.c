@@ -63,7 +63,7 @@ void thread_attr_init(struct optimsoc_thread_attr *attr) {
     assert(attr);
 
     attr->args = NULL;
-    attr->flags = THREAD_FLAG_NO_FLAGS | THREAD_FLAG_KERNEL;
+    attr->flags = THREAD_FLAG_NO_FLAGS;
     attr->force_id = 0;
     attr->identifier = NULL;
 }
