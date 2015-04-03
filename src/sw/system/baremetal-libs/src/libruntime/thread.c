@@ -147,7 +147,7 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
     // Assign to users pointer
     *thread = t;
 
-    return t->id;
+    return 0;
 }
 
 optimsoc_thread_t optimsoc_thread_current() {
