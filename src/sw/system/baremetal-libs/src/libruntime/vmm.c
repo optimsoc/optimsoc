@@ -644,3 +644,30 @@ void _optimsoc_ipage_fault(void) {
     assert(_optimsoc_vmm_ifault_handler);
 	_optimsoc_vmm_ifault_handler(vaddr);
 }
+
+void optimsoc_vmm_destroy_page_dir(optimsoc_page_dir_t dir) {
+    // Verify input
+    VERIFY_DIR_ADDR(dir);
+
+    // First we iterate the directory
+    for (int dirindex = 0; dirindex < 256; dirindex++) {
+        // Extract each entry
+        optimsoc_pte_t pte = dir[dirindex];
+
+        // If the entry is invalid, try next one
+        if (OR1K_PTE_PRESENT_GET(pte) == 0) {
+            continue;
+        }
+
+        // Huge pages are not supported
+        assert(OR1K_PTE_LAST_GET(pte) == 0);
+
+        // page table exists, free
+        optimsoc_page_table_t table = (optimsoc_page_table_t) OR1K_PTABLE(pte);
+        assert(table);
+
+        free(table);
+    }
+
+    free(dir);
+}

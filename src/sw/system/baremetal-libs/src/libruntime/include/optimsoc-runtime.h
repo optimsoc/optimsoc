@@ -161,6 +161,15 @@ void optimsoc_vmm_set_dfault_handler(optimsoc_pfault_handler_fptr handler);
 void optimsoc_vmm_set_ifault_handler(optimsoc_pfault_handler_fptr handler);
 
 /**
+ * Destroy a page directory
+ *
+ * Destroy an entire page directory and free the memory.
+ *
+ * @param dir Directory to destroy
+ */
+void optimsoc_vmm_destroy_page_dir(optimsoc_page_dir_t dir);
+
+/**
 * @}
 */
 
