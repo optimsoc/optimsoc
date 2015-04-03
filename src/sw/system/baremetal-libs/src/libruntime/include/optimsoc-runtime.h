@@ -259,12 +259,47 @@ void optimsoc_thread_resume(optimsoc_thread_t thread);
 int optimsoc_thread_join(optimsoc_thread_t thread,
 		optimsoc_thread_t waitforthread);
 
-void optimsoc_thread_set_extra_data(optimsoc_thread_t thread, void* extra_data);
+/**
+ * Extra data associated with a thread
+ *
+ * The user or runtime system can set extra data with the thread.This can be
+ * a pointer to a process structure or similar.
+ *
+ * @param thread Thread to assign the data pointer to
+ * @param extra_data Pointer to the data
+ */
+void optimsoc_thread_set_extra_data(optimsoc_thread_t thread,
+        void* extra_data);
 
+/**
+ * Get extra data pointer
+ *
+ * Retrieve the pointer to the extra data assigned to a thread.
+ *
+ * @param thread Thread to get data pointer from
+ * @return Associated data pointer
+ */
 void* optimsoc_thread_get_extra_data(optimsoc_thread_t thread);
 
-void optimsoc_thread_set_pagedir(optimsoc_thread_t thread, optimsoc_page_dir_t pagetable);
+/**
+ * Set page directory for thread
+ *
+ * Assign a page directory to a thread.
+ *
+ * @param thread Thread to assign page directory to
+ * @param dir Page directory to assign
+ */
+void optimsoc_thread_set_pagedir(optimsoc_thread_t thread,
+        optimsoc_page_dir_t dir);
 
+/**
+ * Retrieve page directory of thread
+ *
+ * Get the page directory associated with a thread
+ *
+ * @param thread Thread to get page directory of
+ * @return Page directory
+ */
 optimsoc_page_dir_t optimsoc_thread_get_pagedir(optimsoc_thread_t thread);
 
 /**
