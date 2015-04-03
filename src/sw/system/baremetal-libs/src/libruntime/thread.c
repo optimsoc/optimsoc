@@ -70,9 +70,6 @@ void thread_attr_init(struct optimsoc_thread_attr *attr) {
 
 volatile uint32_t thread_next_id;
 
-/*
- * Create a new thread with a given starting function.
- */
 int optimsoc_thread_create(optimsoc_thread_t *thread,
 		void (*start)(void*), struct optimsoc_thread_attr *attr) {
     // Verify input
@@ -81,43 +78,66 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
 	optimsoc_thread_t t;
 
     if (attr == NULL) {
+        // If no attributes are given, create default attributes
         attr = malloc(sizeof(struct optimsoc_thread_attr));
-        assert(attr != NULL);
+        assert(attr);
         thread_attr_init(attr);
     }
 
+    // Allocate a new thread control block
     t = malloc(sizeof(struct optimsoc_thread));
-    assert(t != NULL);
+    assert(t);
+
+    // Set thread attributes
     t->attributes = attr;
 
+    // Generate a context for the thread
     _optimsoc_context_create(t, start, t->attributes->args);
 
+    // Check if the thread identifier is forced
     if (t->attributes->flags & THREAD_FLAG_FORCEID) {
+        // Set forced identifier
         t->id = t->attributes->force_id;
     } else {
         t->id = thread_next_id++;
     }
 
-    if (t->attributes->identifier == NULL) {
-        t->name = malloc(64);
-        assert(t->name != NULL);
+    // Check if a thread identifier name is given
+    if (t->attributes->identifier) {
+        // Allocate memory for the string
+        t->name = malloc(65);
+        assert(t->name);
+
+        // Set "thread <id>" as standard thread name
         snprintf(t->name, 64, "thread %lu", t->id);
-        runtime_trace_createthread(t->name, t->id, thread, start);
     } else {
+        // Otherwise copy string
         t->name = strndup(t->attributes->identifier, 64);
-        runtime_trace_createthread(t->attributes->identifier, t->id, thread, start);
     }
 
+    // Trace creation of thread
+    runtime_trace_createthread(t->name, t->id, thread, start);
+
+    // Initialize list of threads that wait for a join on exit of this thread
     t->joinlist = optimsoc_list_init(0);
 
+    // Set initial state of thread
     if(attr->flags & THREAD_FLAG_CREATE_SUSPENDED) {
+        // Add to wait queue for suspended threads
 		_optimsoc_scheduler_add(t, wait_q);
+		// Set suspended state
 		t->state = THREAD_SUSPENDED;
     } else {
+        // Add to ready queue for active threads
     	_optimsoc_scheduler_add(t,ready_q);
+        // Set runnable state
+        t->state = THREAD_RUNNABLE;
     }
+
+    // Add to list of all threads
     optimsoc_list_add_tail(all_threads,(void*)t);
 
+    // Assign to users pointer
     *thread = t;
 
     return t->id;
@@ -130,12 +150,20 @@ optimsoc_thread_t optimsoc_thread_current() {
 }
 
 void optimsoc_thread_exit() {
+    // Get current thread
     optimsoc_thread_t thread = optimsoc_thread_current();
+    assert(thread);
 
-    optimsoc_thread_t t;
+    // Iterate list and resume all threads that have been waiting for this
+    // to join
+    optimsoc_thread_t t; // list iterator
+
+    // Pop first waiting thread
     t = (optimsoc_thread_t) optimsoc_list_remove_head(thread->joinlist);
     while (t) {
+        // Resume thread
         optimsoc_thread_resume(t);
+        // Pop next thread
         t = (optimsoc_thread_t) optimsoc_list_remove_head(thread->joinlist);
     }
 
