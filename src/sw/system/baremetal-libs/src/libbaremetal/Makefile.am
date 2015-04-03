@@ -38,8 +38,7 @@ script_DATA = share/Makefile.inc \
               share/create_pgas_binary.sh
 
 baremetalincludedir = $(includedir)/baremetal
-baremetalinclude_HEADERS = include/optimsoc-baremetal.h \
-			   include/optimsoc-sysconfig.h
+baremetalinclude_HEADERS = include/optimsoc-baremetal.h
 
 # prepare pkg-config file
 share/%.pc: share/%.pc.in Makefile

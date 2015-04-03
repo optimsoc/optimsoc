@@ -1,4 +1,3 @@
-#include "include/optimsoc-sysconfig.h"
 #include "include/optimsoc-baremetal.h"
 
 uint32_t optimsoc_get_numct(void) {
