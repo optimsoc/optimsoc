@@ -197,7 +197,7 @@ struct endpoint_handle *endpoint_create(uint32_t node, uint32_t port,
     ep->buffer->read_ptr = 0;
 
 #ifdef RUNTIME
-    ep->waiting = 0;
+    ep->waiting_thread = 0;
 #endif
 
 

@@ -116,9 +116,9 @@ void control_msg_handler(unsigned int* buffer,int len) {
         endpoint_write_complete(ep, buffer[2], buffer[3]);
 
 #ifdef RUNTIME
-        if (ep->waiting) {
-                thread_resume(ep->waiting_thread);
-                ep->waiting = 0;
+        if (ep->waiting_thread) {
+                optimsoc_thread_resume(ep->waiting_thread);
+                ep->waiting_thread = 0;
             }
 #endif
         break;
@@ -214,8 +214,9 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
 
         if ((int)ep==-1) {
 #ifdef RUNTIME
-            thread_yield();
-
+            assert(0);
+            // TODO: Reactivate
+            //optimsoc_thread_yield();
 #endif
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
             timeout_insns = timeout_insns * 10; // somewhat arbitrary..
@@ -250,7 +251,9 @@ uint32_t control_msg_alloc(struct endpoint_handle *to_ep, uint32_t size) {
 
         if (ctrl_request.buffer[1]==CTRL_REQUEST_NACK) {
 #ifdef RUNTIME
-            thread_yield();
+                assert(0);
+                // TODO: Reactivate
+                //optimsoc_thread_yield();
 #endif
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
             timeout_insns = timeout_insns * 10; // somewhat arbitrary..

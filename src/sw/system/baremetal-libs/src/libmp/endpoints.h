@@ -42,8 +42,7 @@ struct endpoint {
     struct endpoint   *remote;
     volatile uint32_t remotecredit;
 #ifdef RUNTIME
-    volatile unsigned int waiting;
-    volatile thread_t waiting_thread;
+    volatile optimsoc_thread_t waiting_thread;
 #endif
 };
 
