@@ -27,7 +27,8 @@
 
 #define GPR_BUF_OFFSET(x) (x << 2)
 
-.extern _optimsoc_runtime_syscall_data
+.extern _optimsoc_syscall_data
+.extern _optimsoc_syscall_handler
 
 .section text
 .global _optimsoc_syscall_entry
@@ -63,12 +64,18 @@ _optimsoc_runtime_syscall_entry:
 	// Store r9 to callee-saved register
 	l.or	r16,r9,r0
 
-	// TODO: Jump to syscall handler
+	// Load syscall handler address
+	l.movhi r4,hi(_optimsoc_syscall_handler)
+	l.ori   r4,r4,lo(_optimsoc_syscall_handler)
 
-	OR1K_DELAYED_NOP(l.jal gzll_syscall_handler)
+	// TODO: verify the handler is set
+
+	// Jump to registered syscall handler
+	OR1K_DELAYED_NOP(l.jalr r4)
 
 	// Store return to register
 	l.lwz	r11,4(r14)
 	l.sw	GPR_BUF_OFFSET(11)(r1),r11
 
-	OR1K_DELAYED_NOP(l.jalr r16)
+	// Return to exception handler
+	OR1K_DELAYED_NOP(l.jr r16)
