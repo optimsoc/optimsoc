@@ -124,7 +124,9 @@ void optimsoc_thread_exit() {
         t = (optimsoc_thread_t) optimsoc_list_remove_head(thread->joinlist);
     }
 
-    _optimsoc_scheduler_thread_exit();
+    optimsoc_list_remove(all_threads,(void*) thread);
+
+    _optimsoc_schedule();
 }
 
 

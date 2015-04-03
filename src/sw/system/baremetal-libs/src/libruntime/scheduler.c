@@ -191,31 +191,4 @@ void _optimsoc_schedule() {
     or1k_timer_enable();
 }
 
-/*
- * Is called when a thread has ended to free memory and schedule next thread
- */
-void scheduler_thread_exit() {
-    struct _optimsoc_scheduler_core *core_ctx;
-    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
-
-    runtime_trace_thread_exit();
-
-    /* free thread memory */
-// TODO:    thread_destroy(core_ctx->active_thread);
-
-    optimsoc_list_remove(all_threads,(void*) core_ctx->active_thread);
-
-/*    if (!all_threads->head) {
-        if (runtime_config_terminate_on_empty_readyq) {
-            exit(0);
-        }
-    }*/
-
-    /* reset active_thread */
-    core_ctx->active_thread = NULL;
-
-    _optimsoc_schedule();
-
-    ctx_replace();
-}
 

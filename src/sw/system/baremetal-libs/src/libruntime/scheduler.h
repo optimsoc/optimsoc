@@ -41,7 +41,6 @@ void _optimsoc_scheduler_add(optimsoc_thread_t t, struct optimsoc_list_t* q);
 void _optimsoc_schedule();
 void _optimsoc_scheduler_yieldcurrent();
 void _optimsoc_scheduler_suspendcurrent();
-void _optimsoc_scheduler_thread_exit();
 
 optimsoc_thread_t _optimsoc_scheduler_current(void);
 
