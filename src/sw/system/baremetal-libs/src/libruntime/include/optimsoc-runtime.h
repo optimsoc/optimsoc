@@ -277,14 +277,32 @@ optimsoc_page_dir_t optimsoc_thread_get_pagedir(optimsoc_thread_t thread);
  * @{
  */
 
+/**
+ * Syscall data
+ *
+ * The syscall data is an identifier, up to six parameters and a return value.
+ */
 struct optimsoc_syscall {
     uint32_t id; /*!< Identifier of the system call */
     uint32_t output; /*!< Output/return value */
     uint32_t param[6]; /*!< Six parameters to the system call */
 };
 
+/**
+ * Syscall handler function
+ *
+ * The user or the runtime system registers the syscall handler function that is
+ * called with a pointer to the syscall data.
+ *
+ * @param[inout] syscall The syscall data
+ */
 typedef void (*optimsoc_syscall_handler_fptr) (struct optimsoc_syscall *syscall);
 
+/**
+ * Register a syscall handler
+ *
+ * @param handler The syscall handler function to call on syscall exceptions.
+ */
 void optimsoc_syscall_handler_set(optimsoc_syscall_handler_fptr handler);
 
 /**
