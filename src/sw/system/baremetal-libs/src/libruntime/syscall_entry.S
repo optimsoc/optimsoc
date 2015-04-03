@@ -30,8 +30,8 @@
 .extern _optimsoc_runtime_syscall_data
 
 .section text
-.global syscall_entry
-.type syscall_entry, function
+.global _optimsoc_syscall_entry
+.type _optimsoc_syscall_entry, function
 
 _optimsoc_runtime_syscall_entry:
 	// Load address of syscall data structures

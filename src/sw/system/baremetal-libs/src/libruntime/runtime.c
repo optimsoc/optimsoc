@@ -58,7 +58,7 @@ void optimsoc_runtime_boot(void) {
         _optimsoc_vmm_init();
 
         printf("Initialize system call interface..\n");
-        _optimsoc_runtime_syscalls_init();
+        _optimsoc_syscalls_init();
 
         printf("Initialize scheduler..\n");
      	 _optimsoc_scheduler_init();
