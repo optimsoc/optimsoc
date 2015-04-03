@@ -99,7 +99,14 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
         // Set forced identifier
         t->id = t->attributes->force_id;
     } else {
-        t->id = thread_next_id++;
+        uint32_t id;
+        // Assign next thread id and increment next thread id (thread-safe)
+        do {
+            id = thread_next_id;
+            t->id = id;
+            // Try to write new value of thread_next_id. If it was changed
+            // meanwhile, we retry the whole operation.
+        } while (or1k_sync_cas((void*) &thread_next_id, id, id+1) != id);
     }
 
     // Check if a thread identifier name is given
