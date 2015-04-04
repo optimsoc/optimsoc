@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2014 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -314,7 +314,7 @@ extern void uart_printf(const char *fmt, ...);
  *
  */
 static inline unsigned int extract_bits(uint32_t x, uint32_t msb,
-                                           uint32_t lsb) {
+                                        uint32_t lsb) {
     return ((x>>lsb) & ~(~0 << (msb-lsb+1)));
 }
 
@@ -332,12 +332,12 @@ static inline unsigned int extract_bits(uint32_t x, uint32_t msb,
  */
 // FIXME move to optimsoc.c
 static inline void set_bits(uint32_t *x, uint32_t v, uint32_t msb,
-                              uint32_t lsb) {
+                            uint32_t lsb) {
     if(msb != 31) {
-    *x = (((~0 << (msb+1) | ~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
+        *x = (((~0 << (msb+1) | ~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
     } else {
-    /* only the last 5 bits from the shift left operand are used -> can not shift 32 bits */
-    *x = (((~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
+        /* only the last 5 bits from the shift left operand are used -> can not shift 32 bits */
+        *x = (((~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
     }
 }
 
@@ -494,11 +494,11 @@ extern dma_success_t dma_alloc(dma_transfer_handle_t *id);
  * \return Success code
  */
 extern dma_success_t dma_transfer(void* local,
-                                    uint32_t remote_tile,
-                                    void* remote,
-                                    size_t size,
-                                    dma_direction_t dir,
-                                    dma_transfer_handle_t id);
+                                  uint32_t remote_tile,
+                                  void* remote,
+                                  size_t size,
+                                  dma_direction_t dir,
+                                  dma_transfer_handle_t id);
 
 /**
  * Blocking wait for DMA transfer
@@ -547,7 +547,7 @@ extern void optimsoc_mp_simple_send(unsigned int size, uint32_t* buf);
  * \param hnd Function pointer to handler for this class
  */
 extern void optimsoc_mp_simple_addhandler(unsigned int class,
-                                               void (*hnd)(unsigned int*,int));
+                                          void (*hnd)(unsigned int*,int));
 
 /**
  * @}

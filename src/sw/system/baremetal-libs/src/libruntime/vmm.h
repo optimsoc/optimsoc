@@ -76,7 +76,7 @@ optimsoc_page_table_t _optimsoc_vmm_create_page_table();
  * @return Page table entry for virtual address
  */
 optimsoc_pte_t _optimsoc_vmm_lookup(optimsoc_page_dir_t directory,
-		uint32_t vaddr);
+                                    uint32_t vaddr);
 
 /**
  * Set the DTLB entry

@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,15 +33,15 @@ struct optimsoc_list_t* optimsoc_list_init(void* data)
     struct optimsoc_list_t* l = malloc(sizeof(struct optimsoc_list_t));
     assert(l != NULL);
 
-//    mutex_init(&l->mutex);
+    //    mutex_init(&l->mutex);
 
     if(data == NULL) { /* create empty list */
         l->head = NULL;
         l->tail = NULL;
     } else {
         /* create first element */
-	 l->head =l->tail = malloc(sizeof(struct optimsoc_list_entry_t));
-	assert(l->tail != NULL);
+        l->head =l->tail = malloc(sizeof(struct optimsoc_list_entry_t));
+        assert(l->tail != NULL);
 
         /* set data for first element */
         l->head->data = data;
@@ -56,7 +56,8 @@ void optimsoc_list_add_tail(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
     /* create new element */
-    struct optimsoc_list_entry_t* e = malloc(sizeof(struct optimsoc_list_entry_t));
+    struct optimsoc_list_entry_t* e;
+    e = malloc(sizeof(struct optimsoc_list_entry_t));
     assert(e != NULL);
 
     //mutex_lock(&l->mutex);
@@ -75,7 +76,7 @@ void optimsoc_list_add_tail(struct optimsoc_list_t* l, void* data)
         l->tail->next = e;
         l->tail = e;
     }
-   // mutex_unlock(&l->mutex);
+    // mutex_unlock(&l->mutex);
 }
 
 
@@ -83,7 +84,8 @@ void optimsoc_list_add_head(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
     /* create new element */
-    struct optimsoc_list_entry_t* e = malloc(sizeof(struct optimsoc_list_entry_t));
+    struct optimsoc_list_entry_t* e;
+    e = malloc(sizeof(struct optimsoc_list_entry_t));
     assert(e != NULL);
 
     //mutex_lock(&l->mutex);
@@ -171,7 +173,8 @@ int optimsoc_list_remove(struct optimsoc_list_t* l, void* data)
 
     while(entry != NULL) {
         if(entry->data == data) {
-            if(entry == l->head && entry == l->tail) { /* check if only one element in list */
+            if(entry == l->head && entry == l->tail) {
+                /* check if only one element in list */
                 l->head = l->tail = NULL;
             } else if(entry->prev == NULL) { /* check if entry is head */
                 l->head = entry->next;
@@ -185,7 +188,7 @@ int optimsoc_list_remove(struct optimsoc_list_t* l, void* data)
             }
 
             //mutex_unlock(&l->mutex);
-	    free(entry);
+            free(entry);
             return 1;
         }
         entry = entry->next;
@@ -222,25 +225,27 @@ size_t optimsoc_list_length(struct optimsoc_list_t *l) {
     return count;
 }
 
-void* optimsoc_list_first_element(struct optimsoc_list_t* l, optimsoc_list_iterator_t *list_iter)
+void* optimsoc_list_first_element(struct optimsoc_list_t* l,
+                                  optimsoc_list_iterator_t *list_iter)
 {
     assert(l != NULL);
     if(l->head == NULL) {
-	*list_iter = NULL;
-	return NULL;
+        *list_iter = NULL;
+        return NULL;
     } else {
-	*list_iter = l->head;
-	return l->head->data;
+        *list_iter = l->head;
+        return l->head->data;
     }
 }
 
-void* optimsoc_list_next_element(struct optimsoc_list_t* l, optimsoc_list_iterator_t *list_iter)
+void* optimsoc_list_next_element(struct optimsoc_list_t* l,
+                                 optimsoc_list_iterator_t *list_iter)
 {
     assert(l != NULL);
     if((*list_iter)->next == NULL) {
-	return NULL;
+        return NULL;
     } else {
-	*list_iter = (*list_iter)->next;
-	return (*list_iter)->data;
+        *list_iter = (*list_iter)->next;
+        return (*list_iter)->data;
     }
 }

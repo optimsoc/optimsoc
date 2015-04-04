@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,9 @@ int optimsoc_list_remove(struct optimsoc_list_t* l, void* data);
 int optimsoc_list_contains(struct optimsoc_list_t *l, void* data);
 size_t optimsoc_list_length(struct optimsoc_list_t* l);
 
-void* optimsoc_list_first_element(struct optimsoc_list_t* l, optimsoc_list_iterator_t *list_iter);
-void* optimsoc_list_next_element(struct optimsoc_list_t* l, optimsoc_list_iterator_t *list_iter);
+void* optimsoc_list_first_element(struct optimsoc_list_t* l,
+                                  optimsoc_list_iterator_t *list_iter);
+void* optimsoc_list_next_element(struct optimsoc_list_t* l,
+                                 optimsoc_list_iterator_t *list_iter);
 
 #endif

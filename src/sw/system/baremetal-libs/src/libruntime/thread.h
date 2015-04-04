@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,8 @@
  *   Stefan Rösch <roe.stefan@gmail.com>
  */
 
-#ifndef THREAD_H
-#define THREAD_H
+#ifndef __THREAD_H__
+#define __THREAD_H__
 
 #include "include/optimsoc-runtime.h"
 
@@ -77,7 +77,7 @@ struct optimsoc_thread {
 
 optimsoc_page_dir_t _optimsoc_thread_get_pagedir_current();
 int _optimsoc_context_create(optimsoc_thread_t thread,
-		void (*start_routine)(void*), void *arg);
+                             void (*start_routine)(void*), void *arg);
 
 void _optimsoc_kthread_handle(void (*f)(void*),void *arg);
 

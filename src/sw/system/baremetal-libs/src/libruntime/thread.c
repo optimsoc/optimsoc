@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,13 +37,14 @@
 
 optimsoc_page_dir_t _optimsoc_thread_get_pagedir_current() {
     // Get the currently executed thread
-	optimsoc_thread_t thread = _optimsoc_scheduler_current();
-	assert(thread);
+    optimsoc_thread_t thread = _optimsoc_scheduler_current();
+    assert(thread);
 
     return thread->page_dir;
 }
 
-void optimsoc_thread_set_pagedir(optimsoc_thread_t thread, optimsoc_page_dir_t dir) {
+void optimsoc_thread_set_pagedir(optimsoc_thread_t thread,
+                                 optimsoc_page_dir_t dir) {
     // Verify input
     assert(thread);
 
@@ -71,11 +72,12 @@ void thread_attr_init(struct optimsoc_thread_attr *attr) {
 volatile uint32_t thread_next_id;
 
 int optimsoc_thread_create(optimsoc_thread_t *thread,
-		void (*start)(void*), struct optimsoc_thread_attr *attr) {
+                           void (*start)(void*),
+                           struct optimsoc_thread_attr *attr) {
     // Verify input
     assert(thread);
 
-	optimsoc_thread_t t;
+    optimsoc_thread_t t;
 
     if (attr == NULL) {
         // If no attributes are given, create default attributes
@@ -131,12 +133,12 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
     // Set initial state of thread
     if(attr->flags & THREAD_FLAG_CREATE_SUSPENDED) {
         // Add to wait queue for suspended threads
-		_optimsoc_scheduler_add(t, wait_q);
-		// Set suspended state
-		t->state = THREAD_SUSPENDED;
+        _optimsoc_scheduler_add(t, wait_q);
+        // Set suspended state
+        t->state = THREAD_SUSPENDED;
     } else {
         // Add to ready queue for active threads
-    	_optimsoc_scheduler_add(t,ready_q);
+        _optimsoc_scheduler_add(t,ready_q);
         // Set runnable state
         t->state = THREAD_RUNNABLE;
     }
@@ -190,7 +192,7 @@ void _optimsoc_kthread_handle(void (*f)(void*),void *arg) {
  * Create a context for a new thread.
  */
 int _optimsoc_context_create(optimsoc_thread_t thread,
-		void (*start_routine)(void*), void *arg)
+                             void (*start_routine)(void*), void *arg)
 {
     /* Create context and initialize to 0 */
     thread->ctx = calloc(sizeof(struct arch_thread_ctx_t), 1);
@@ -201,7 +203,7 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
     if (thread->attributes->flags & THREAD_FLAG_KERNEL) {
         thread->stack = malloc(4096);
         assert(thread->stack != NULL);
-        thread->ctx->regs[0] = (unsigned int) thread->stack + 4092; /* Stack pointer */
+        thread->ctx->regs[0] = (unsigned int) thread->stack + 4092;
         thread->ctx->regs[2] = (unsigned int) start_routine;
         thread->ctx->regs[3] = (unsigned int) arg;
         thread->ctx->pc      = (unsigned int) &_optimsoc_kthread_handle;
@@ -220,7 +222,7 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
         thread->ctx->regs[2] = (unsigned int) arg;
         thread->ctx->pc = 0x0;  /* entry point of external app*/
         thread->ctx->sr = 0x8077;
-	/* - supervisor mode
+        /* - supervisor mode
          * - tick timer enabled
          * - irq enabled
          * - ic enabled

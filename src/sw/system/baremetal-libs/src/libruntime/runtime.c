@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,7 @@ void optimsoc_runtime_boot(void) {
         _optimsoc_syscalls_init();
 
         printf("Initialize scheduler..\n");
-     	 _optimsoc_scheduler_init();
+        _optimsoc_scheduler_init();
 
         printf("Core 0 boot finished.\n");
 

@@ -91,7 +91,7 @@ void optimsoc_mp_simple_init(void) {
 }
 
 void optimsoc_mp_simple_addhandler(unsigned int class,
-        void (*hnd)(unsigned int*,int)) {
+                                   void (*hnd)(unsigned int*,int)) {
     cls_handlers[class] = hnd;
 }
 
@@ -109,7 +109,7 @@ void optimsoc_mp_simple_inth(void* arg) {
             break;
         } else if (optimsoc_noc_maxpacketsize()<size) {
             // Abort and drop if message cannot be stored
-//            printf("FATAL: not sufficent buffer space. Drop packet\n");
+            //            printf("FATAL: not sufficent buffer space. Drop packet\n");
             for (int i=0;i<size;i++) {
                 REG32(OPTIMSOC_MPSIMPLE_RECV);
             }
@@ -121,7 +121,7 @@ void optimsoc_mp_simple_inth(void* arg) {
 
         // Extract class
         int class = (optimsoc_mp_simple_buffer[0] >> OPTIMSOC_CLASS_LSB) // Shift to position
-    		                & ((1<<(OPTIMSOC_CLASS_MSB-OPTIMSOC_CLASS_LSB+1))-1); // and mask other remain
+    		                        & ((1<<(OPTIMSOC_CLASS_MSB-OPTIMSOC_CLASS_LSB+1))-1); // and mask other remain
 
         // Call respective class handler
         if (cls_handlers[class] == 0) {

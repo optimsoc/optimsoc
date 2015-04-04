@@ -103,8 +103,8 @@ dma_success_t dma_alloc(dma_transfer_handle_t *id) {
 }
 
 dma_success_t dma_transfer(void* local, uint32_t remote_tile, void* remote,
-                            size_t size, dma_direction_t dir,
-                            dma_transfer_handle_t id) {
+                           size_t size, dma_direction_t dir,
+                           dma_transfer_handle_t id) {
     if (_optimsoc_dma_initialized==0) {
         return DMA_ERR_NOTINITIALIZED;
     }

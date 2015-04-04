@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -89,7 +89,7 @@ optimsoc_page_dir_t optimsoc_vmm_create_page_dir(void);
  * @return Success of operation
  */
 int optimsoc_vmm_map(optimsoc_page_dir_t directory, uint32_t vaddr,
-		uint32_t paddr);
+                     uint32_t paddr);
 
 /**
  * Remove a page from directory
@@ -113,7 +113,7 @@ int optimsoc_vmm_unmap(optimsoc_page_dir_t directory, uint32_t vaddr);
  * @return Success of operation
  */
 int optimsoc_vmm_virt2phys(optimsoc_page_dir_t directory, uint32_t vaddr,
-		uint32_t *paddr);
+                           uint32_t *paddr);
 
 /**
  * Physical to virtual mapping
@@ -129,7 +129,7 @@ int optimsoc_vmm_virt2phys(optimsoc_page_dir_t directory, uint32_t vaddr,
  * @return Success of operation
  */
 int optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory, uint32_t paddr,
-		uint32_t *vaddr);
+                           uint32_t *vaddr);
 
 /**
  * Page fault handler type
@@ -170,8 +170,8 @@ void optimsoc_vmm_set_ifault_handler(optimsoc_pfault_handler_fptr handler);
 void optimsoc_vmm_destroy_page_dir(optimsoc_page_dir_t dir);
 
 /**
-* @}
-*/
+ * @}
+ */
 
 
 /**
@@ -215,7 +215,8 @@ typedef struct optimsoc_thread* optimsoc_thread_t;
  * The function is automatically added to the ready queue.
  */
 int optimsoc_thread_create(optimsoc_thread_t *thread,
-		void (*start)(void*), struct optimsoc_thread_attr *attr);
+                           void (*start)(void*),
+                           struct optimsoc_thread_attr *attr);
 
 /**
  * Identify the thread currently running.
@@ -257,7 +258,7 @@ void optimsoc_thread_resume(optimsoc_thread_t thread);
  * returns immediately.
  */
 int optimsoc_thread_join(optimsoc_thread_t thread,
-		optimsoc_thread_t waitforthread);
+                         optimsoc_thread_t waitforthread);
 
 /**
  * Extra data associated with a thread
@@ -269,7 +270,7 @@ int optimsoc_thread_join(optimsoc_thread_t thread,
  * @param extra_data Pointer to the data
  */
 void optimsoc_thread_set_extra_data(optimsoc_thread_t thread,
-        void* extra_data);
+                                    void* extra_data);
 
 /**
  * Get extra data pointer
@@ -290,7 +291,7 @@ void* optimsoc_thread_get_extra_data(optimsoc_thread_t thread);
  * @param dir Page directory to assign
  */
 void optimsoc_thread_set_pagedir(optimsoc_thread_t thread,
-        optimsoc_page_dir_t dir);
+                                 optimsoc_page_dir_t dir);
 
 /**
  * Retrieve page directory of thread
@@ -329,9 +330,9 @@ struct optimsoc_syscall {
  * The user or the runtime system registers the syscall handler function that is
  * called with a pointer to the syscall data.
  *
- * @param[inout] syscall The syscall data
+ * @param[inout] sysc The syscall data
  */
-typedef void (*optimsoc_syscall_handler_fptr) (struct optimsoc_syscall *syscall);
+typedef void (*optimsoc_syscall_handler_fptr) (struct optimsoc_syscall *sysc);
 
 /**
  * Register a syscall handler

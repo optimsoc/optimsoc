@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,8 +50,8 @@ optimsoc_thread_t init_thread;
 
 // Core specifics
 struct _optimsoc_scheduler_core {
-	optimsoc_thread_t idle_thread;
-	optimsoc_thread_t active_thread;
+    optimsoc_thread_t idle_thread;
+    optimsoc_thread_t active_thread;
 };
 
 struct _optimsoc_scheduler_core* _optimsoc_scheduler_core;
@@ -63,11 +63,11 @@ void _optimsoc_idle_thread_func() {
 }
 
 optimsoc_thread_t _optimsoc_scheduler_get_current(void) {
-	struct _optimsoc_scheduler_core *core_ctx;
-	core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
-	assert (core_ctx && core_ctx->active_thread);
+    struct _optimsoc_scheduler_core *core_ctx;
+    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
+    assert (core_ctx && core_ctx->active_thread);
 
-	return core_ctx->active_thread;
+    return core_ctx->active_thread;
 }
 
 void _optimsoc_scheduler_tick() {
@@ -132,7 +132,7 @@ void scheduler_init() {
     optimsoc_thread_create(&init_thread, &init, attr_init);
 
     _optimsoc_scheduler_core = calloc(or1k_numcores(),
-    		sizeof(struct _optimsoc_scheduler_core));
+                                      sizeof(struct _optimsoc_scheduler_core));
 
     for (int c = 0; c < optimsoc_get_relcoreid(); c++) {
         struct optimsoc_thread_attr *attr_idle;
@@ -140,17 +140,17 @@ void scheduler_init() {
         optimsoc_thread_attr_init(attr_idle);
         attr_idle->identifier = "idle";
         optimsoc_thread_create(&(_optimsoc_scheduler_core[c].idle_thread),
-        		&_optimsoc_idle_thread_func, attr_idle);
+                               &_optimsoc_idle_thread_func, attr_idle);
         optimsoc_list_remove(ready_q,
-        		(void*) _optimsoc_scheduler_core[c].idle_thread);
+                             (void*) _optimsoc_scheduler_core[c].idle_thread);
         optimsoc_list_remove(all_threads,
-        		(void*) _optimsoc_scheduler_core[c].idle_thread);
+                             (void*) _optimsoc_scheduler_core[c].idle_thread);
     }
 }
 
 void _optimsoc_scheduler_add(optimsoc_thread_t t, struct optimsoc_list_t* q) {
     if(q == ready_q) {
-    	t->state = THREAD_RUNNABLE;
+        t->state = THREAD_RUNNABLE;
     }
 
     optimsoc_list_add_tail(q, (void*)t);
@@ -169,7 +169,8 @@ void _optimsoc_context_set(arch_thread_ctx_t *ctx) {
 void _optimsoc_schedule() {
 
     /* get the next thread from the ready_q */
-    optimsoc_thread_t t = (optimsoc_thread_t) optimsoc_list_remove_head(ready_q);
+    optimsoc_thread_t t;
+    t = (optimsoc_thread_t) optimsoc_list_remove_head(ready_q);
 
     /* In case we don't have a thread in the ready_q: schedule idle thread */
     if(!t) {
@@ -182,7 +183,9 @@ void _optimsoc_schedule() {
     runtime_trace_schedule(t->id);
 
     /* switch the context */
-    _optimsoc_context_set(_optimsoc_scheduler_core[or1k_coreid()].active_thread->ctx);
+    arch_thread_ctx_t *ctx;
+    ctx = _optimsoc_scheduler_core[or1k_coreid()].active_thread->ctx;
+    _optimsoc_context_set(ctx);
 
     // TODO: Clear TLB
 
