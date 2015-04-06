@@ -171,7 +171,7 @@ void optimsoc_thread_exit() {
     t = (optimsoc_thread_t) optimsoc_list_remove_head(thread->joinlist);
     while (t) {
         // Resume thread
-        optimsoc_thread_resume(t);
+        // TODO: optimsoc_thread_resume(t);
         // Pop next thread
         t = (optimsoc_thread_t) optimsoc_list_remove_head(thread->joinlist);
     }

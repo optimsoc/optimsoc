@@ -102,15 +102,12 @@ void _optimsoc_scheduler_suspendcurrent() {
     struct _optimsoc_scheduler_core *core_ctx;
     core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
 
-    uint32_t restore = optimsoc_critical_begin();
-
     _optimsoc_scheduler_add(core_ctx->active_thread, wait_q);
 
     core_ctx->active_thread->state = THREAD_SUSPENDED;
 
     runtime_trace_suspend(core_ctx->active_thread->id);
     yield_switchctx(core_ctx->active_thread->ctx);
-    optimsoc_critical_end(restore);
 }
 
 void scheduler_init() {
