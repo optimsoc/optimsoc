@@ -110,7 +110,7 @@ void _optimsoc_scheduler_suspendcurrent() {
     yield_switchctx(core_ctx->active_thread->ctx);
 }
 
-void scheduler_init() {
+void _optimsoc_scheduler_init() {
     or1k_exception_handler_add(5, &_optimsoc_scheduler_tick);
 
     or1k_timer_init(runtime_config_get_numticks());

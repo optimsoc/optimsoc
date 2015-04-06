@@ -37,7 +37,7 @@
 
 optimsoc_page_dir_t _optimsoc_thread_get_pagedir_current() {
     // Get the currently executed thread
-    optimsoc_thread_t thread = _optimsoc_scheduler_current();
+    optimsoc_thread_t thread = _optimsoc_scheduler_get_current();
     assert(thread);
 
     return thread->page_dir;
@@ -69,7 +69,7 @@ void optimsoc_thread_attr_init(struct optimsoc_thread_attr *attr) {
     attr->identifier = NULL;
 }
 
-volatile uint32_t thread_next_id;
+volatile uint32_t _optimsoc_thread_next_id;
 
 int optimsoc_thread_create(optimsoc_thread_t *thread,
                            void (*start)(void*),
@@ -104,11 +104,11 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
         uint32_t id;
         // Assign next thread id and increment next thread id (thread-safe)
         do {
-            id = thread_next_id;
+            id = _optimsoc_thread_next_id;
             t->id = id;
             // Try to write new value of thread_next_id. If it was changed
             // meanwhile, we retry the whole operation.
-        } while (or1k_sync_cas((void*) &thread_next_id, id, id+1) != id);
+        } while (or1k_sync_cas((void*) &_optimsoc_thread_next_id, id, id+1) != id);
     }
 
     // Check if a thread identifier name is given
@@ -153,7 +153,7 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
 }
 
 optimsoc_thread_t optimsoc_thread_current() {
-    optimsoc_thread_t t =_optimsoc_scheduler_current();
+    optimsoc_thread_t t = _optimsoc_scheduler_get_current();
     assert(t);
     return t;
 }

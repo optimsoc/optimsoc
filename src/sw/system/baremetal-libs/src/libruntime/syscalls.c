@@ -39,7 +39,7 @@ optimsoc_syscall_handler_fptr _optimsoc_syscall_handler;
 
 void _optimsoc_syscalls_init() {
     // Set the exception handler for syscall exceptions
-    or1k_exception_handler_add(0xc, &_optimsoc_sycall_entry);
+    or1k_exception_handler_add(0xc, &_optimsoc_syscall_entry);
 
     void* c = calloc(or1k_numcores(), sizeof(struct optimsoc_syscall));
     assert(c);

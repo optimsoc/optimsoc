@@ -42,6 +42,6 @@ void _optimsoc_schedule();
 void _optimsoc_scheduler_yieldcurrent();
 void _optimsoc_scheduler_suspendcurrent();
 
-optimsoc_thread_t _optimsoc_scheduler_current(void);
+optimsoc_thread_t _optimsoc_scheduler_get_current(void);
 
 #endif

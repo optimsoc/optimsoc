@@ -480,7 +480,7 @@ int optimsoc_vmm_phys2virt(optimsoc_page_dir_t directory,
     return 0;
 }
 
-void optimsoc_vmm_init(void) {
+void _optimsoc_vmm_init(void) {
     // Register exception handlers
     or1k_exception_handler_add(0x9, _optimsoc_dtlb_miss);
     or1k_exception_handler_add(0xA, _optimsoc_itlb_miss);

@@ -84,8 +84,8 @@ yield_switchctx:
      * Next context switch will re-enable stack-pointer saved above
      */
 
-    .global schedule
-    l.jal   schedule
+    .global _optimsoc_schedule
+    l.jal   _optimsoc_schedule
     l.nop
     l.j     ctx_replace
     l.nop
