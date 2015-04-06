@@ -59,12 +59,12 @@ optimsoc_page_dir_t optimsoc_thread_get_pagedir(optimsoc_thread_t thread) {
 }
 
 
-void thread_attr_init(struct optimsoc_thread_attr *attr) {
+void optimsoc_thread_attr_init(struct optimsoc_thread_attr *attr) {
     // Verify input
     assert(attr);
 
     attr->args = NULL;
-    attr->flags = THREAD_FLAG_NO_FLAGS;
+    attr->flags = 0;
     attr->force_id = 0;
     attr->identifier = NULL;
 }
@@ -83,7 +83,7 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
         // If no attributes are given, create default attributes
         attr = malloc(sizeof(struct optimsoc_thread_attr));
         assert(attr);
-        thread_attr_init(attr);
+        optimsoc_thread_attr_init(attr);
     }
 
     // Allocate a new thread control block
@@ -97,7 +97,7 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
     _optimsoc_context_create(t, start, t->attributes->args);
 
     // Check if the thread identifier is forced
-    if (t->attributes->flags & THREAD_FLAG_FORCEID) {
+    if (t->attributes->flags & OPTIMSOC_THREAD_FLAG_FORCEID) {
         // Set forced identifier
         t->id = t->attributes->force_id;
     } else {
@@ -131,7 +131,7 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
     t->joinlist = optimsoc_list_init(0);
 
     // Set initial state of thread
-    if(attr->flags & THREAD_FLAG_CREATE_SUSPENDED) {
+    if(attr->flags & OPTIMSOC_THREAD_FLAG_CREATE_SUSPENDED) {
         // Add to wait queue for suspended threads
         _optimsoc_scheduler_add(t, wait_q);
         // Set suspended state
@@ -200,7 +200,7 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
     assert(thread->ctx != NULL);
 
     /* Set stack, arguments, starting routine and thread_handler */
-    if (thread->attributes->flags & THREAD_FLAG_KERNEL) {
+    if (thread->attributes->flags & OPTIMSOC_THREAD_FLAG_KERNEL) {
         thread->stack = malloc(4096);
         assert(thread->stack != NULL);
         thread->ctx->regs[0] = (unsigned int) thread->stack + 4092;

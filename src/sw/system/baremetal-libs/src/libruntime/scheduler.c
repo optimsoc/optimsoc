@@ -126,7 +126,7 @@ void scheduler_init() {
     attr_init = malloc(sizeof(struct optimsoc_thread_attr));
 
     optimsoc_thread_attr_init(attr_init);
-
+    attr_init->flags |= OPTIMSOC_THREAD_FLAG_KERNEL;
     attr_init->identifier = "init";
 
     optimsoc_thread_create(&init_thread, &init, attr_init);
@@ -138,6 +138,7 @@ void scheduler_init() {
         struct optimsoc_thread_attr *attr_idle;
         attr_idle = malloc(sizeof(struct optimsoc_thread_attr));
         optimsoc_thread_attr_init(attr_idle);
+        attr_idle->flags |= OPTIMSOC_THREAD_FLAG_KERNEL;
         attr_idle->identifier = "idle";
         optimsoc_thread_create(&(_optimsoc_scheduler_core[c].idle_thread),
                                &_optimsoc_idle_thread_func, attr_idle);

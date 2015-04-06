@@ -181,12 +181,14 @@ void optimsoc_vmm_destroy_page_dir(optimsoc_page_dir_t dir);
  */
 
 /* Todo Doxygen*/
+
 /* FLAGS for thread creation */
-#define THREAD_FLAG_NO_FLAGS    0x0
-#define THREAD_FLAG_IDLE_THREAD 0x80000000
-#define THREAD_FLAG_PIN         0x00000100
-#define THREAD_FLAG_CORE_MASK   0x000000FF
-#define THREAD_FLAG_FORCEID     0x40000000
+#define OPTIMSOC_THREAD_FLAG_IDLE_THREAD      0x80000000
+#define OPTIMSOC_THREAD_FLAG_PIN              0x00000100
+#define OPTIMSOC_THREAD_FLAG_CORE_MASK        0x000000FF
+#define OPTIMSOC_THREAD_FLAG_FORCEID          0x40000000
+#define OPTIMSOC_THREAD_FLAG_KERNEL           0x20000000
+#define OPTIMSOC_THREAD_FLAG_CREATE_SUSPENDED 0x10000000
 
 struct optimsoc_thread_attr {
     void *args;
