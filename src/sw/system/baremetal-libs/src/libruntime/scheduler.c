@@ -37,9 +37,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-// This is in the private data area (0x4-0x90)
-extern arch_thread_ctx_t *exception_ctx;
-
 // Shared structures
 struct optimsoc_list_t* all_threads;
 struct optimsoc_list_t* ready_q;
@@ -75,8 +72,7 @@ void _optimsoc_scheduler_tick() {
     core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
 
     /* save context */
-    memcpy(core_ctx->active_thread->ctx, exception_ctx,
-           sizeof(struct arch_thread_ctx_t));
+    _optimsoc_context_save(core_ctx->active_thread->ctx);
 
     /* put active thread into the queue */
     if (core_ctx->active_thread != core_ctx->idle_thread) {
@@ -86,28 +82,6 @@ void _optimsoc_scheduler_tick() {
 
     /* schedule next thread */
     _optimsoc_schedule();
-}
-
-void _optimsoc_scheduler_yieldcurrent() {
-    struct _optimsoc_scheduler_core *core_ctx;
-    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
-
-    _optimsoc_scheduler_add(core_ctx->active_thread, ready_q);
-
-    runtime_trace_yield(core_ctx->active_thread->id);
-    yield_switchctx(core_ctx->active_thread->ctx);
-}
-
-void _optimsoc_scheduler_suspendcurrent() {
-    struct _optimsoc_scheduler_core *core_ctx;
-    core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
-
-    _optimsoc_scheduler_add(core_ctx->active_thread, wait_q);
-
-    core_ctx->active_thread->state = THREAD_SUSPENDED;
-
-    runtime_trace_suspend(core_ctx->active_thread->id);
-    yield_switchctx(core_ctx->active_thread->ctx);
 }
 
 void _optimsoc_scheduler_init() {
@@ -157,11 +131,9 @@ void _optimsoc_scheduler_add(optimsoc_thread_t t, struct optimsoc_list_t* q) {
 void _optimsoc_scheduler_start() {
     _optimsoc_schedule();
     // We got to nirvana
-    ctx_replace();
-}
-
-void _optimsoc_context_set(arch_thread_ctx_t *ctx) {
-    memcpy(exception_ctx, ctx, sizeof(struct arch_thread_ctx_t));
+    _optimsoc_thread_ctx_t *ctx;
+    ctx = _optimsoc_scheduler_core[or1k_coreid()].active_thread->ctx;
+    _optimsoc_context_replace(ctx);
 }
 
 void _optimsoc_schedule() {
@@ -175,15 +147,17 @@ void _optimsoc_schedule() {
         t = _optimsoc_scheduler_core[or1k_coreid()].idle_thread;
     }
 
+    assert(t);
+
     /* set active */
     _optimsoc_scheduler_core[or1k_coreid()].active_thread = t;
 
     runtime_trace_schedule(t->id);
 
     /* switch the context */
-    arch_thread_ctx_t *ctx;
+    _optimsoc_thread_ctx_t *ctx;
     ctx = _optimsoc_scheduler_core[or1k_coreid()].active_thread->ctx;
-    _optimsoc_context_set(ctx);
+    _optimsoc_context_restore(ctx);
 
     // TODO: Clear TLB
 

@@ -29,10 +29,29 @@
 #ifndef __CONTEXT_H__
 #define __CONTEXT_H__
 
-typedef struct arch_thread_ctx_t {
-    unsigned int    pc;
-    unsigned int    regs[31];
-    unsigned int    sr;
-} arch_thread_ctx_t;
+#include <stdint.h>
+
+typedef struct _optimsoc_thread_ctx_t {
+    uint32_t regs[32];
+    uint32_t pc;
+    uint32_t sr;
+} _optimsoc_thread_ctx_t;
+
+void _optimsoc_context_init(void);
+void _optimsoc_context_replace(_optimsoc_thread_ctx_t *ctx);
+
+void _optimsoc_context_copy(_optimsoc_thread_ctx_t *to,
+                            _optimsoc_thread_ctx_t *from);
+
+void _optimsoc_context_save(_optimsoc_thread_ctx_t *ctx);
+void _optimsoc_context_restore(_optimsoc_thread_ctx_t *ctx);
+
+/**
+ * Transfer to exception
+ *
+ * This is used to transfer from a kernel thread to exception stack. It is
+ * useful to end a kernel thread.
+ */
+void _optimsoc_context_enter_exception(void);
 
 #endif

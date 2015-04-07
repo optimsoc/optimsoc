@@ -46,7 +46,7 @@ enum optimsoc_thread_state {
 
 struct optimsoc_thread {
     uint32_t id;
-    struct arch_thread_ctx_t *ctx;
+    struct _optimsoc_thread_ctx_t *ctx;
     void *stack;
 
     optimsoc_page_dir_t page_dir;

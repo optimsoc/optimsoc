@@ -26,15 +26,13 @@
 #include "scheduler.h"
 #include "vmm.h"
 #include "thread.h"
-#include <context.h>
+#include "context.h"
 #include <assert.h>
 #include <or1k-support.h>
 #include <optimsoc-baremetal.h>
 
 #include <stdio.h>
 #include "syscalls.h"
-
-arch_thread_ctx_t *exception_ctx;
 
 // This is placed in the BSS section and core 0 will initialize it
 // to 0 during the reset routine.
@@ -45,7 +43,6 @@ void optimsoc_runtime_boot(void) {
 
     // Activate proper handling of exceptions in section trace
     OPTIMSOC_TRACE(0x23, 0);
-    exception_ctx = (arch_thread_ctx_t*) 0x4;
 
     if (optimsoc_get_relcoreid() == 0) {
         printf("Initializing OpTiMSoC platform..\n");

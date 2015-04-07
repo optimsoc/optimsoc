@@ -25,12 +25,4 @@
 #ifndef __RUNTIME_H__
 #define __RUNTIME_H__
 
-#include <context.h>
-
-extern arch_thread_ctx_t *exception_ctx;
-
-void ctx_replace();
-void yield_switchctx(struct arch_thread_ctx_t *ctx);
-
-
 #endif /* RUNTIME_H_ */

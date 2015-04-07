@@ -184,8 +184,11 @@ void optimsoc_thread_exit() {
 
 void _optimsoc_kthread_handle(void (*f)(void*),void *arg) {
     f(arg);
-    // TODO: Exit
-    while(1) {}
+    _optimsoc_context_enter_exception();
+    or1k_critical_begin();
+    optimsoc_thread_exit();
+
+    _optimsoc_context_replace(_optimsoc_scheduler_get_current()->ctx);
 }
 
 /*
@@ -195,17 +198,17 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
                              void (*start_routine)(void*), void *arg)
 {
     /* Create context and initialize to 0 */
-    thread->ctx = calloc(sizeof(struct arch_thread_ctx_t), 1);
+    thread->ctx = calloc(sizeof(struct _optimsoc_thread_ctx_t), 1);
 
     assert(thread->ctx != NULL);
 
     /* Set stack, arguments, starting routine and thread_handler */
     if (thread->attributes->flags & OPTIMSOC_THREAD_FLAG_KERNEL) {
-        thread->stack = malloc(4096);
-        assert(thread->stack != NULL);
-        thread->ctx->regs[0] = (unsigned int) thread->stack + 4092;
-        thread->ctx->regs[2] = (unsigned int) start_routine;
-        thread->ctx->regs[3] = (unsigned int) arg;
+        thread->stack = malloc(8*1024);
+        assert(thread->stack);
+        thread->ctx->regs[1] = (unsigned int) thread->stack + 4092;
+        thread->ctx->regs[3] = (unsigned int) start_routine;
+        thread->ctx->regs[4] = (unsigned int) arg;
         thread->ctx->pc      = (unsigned int) &_optimsoc_kthread_handle;
         thread->ctx->sr      = 0x8017;
         /* - supervisor mode
@@ -217,9 +220,9 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
     } else {
         /* Set stack, arguments, starting routine and thread_handler */
         thread->stack = NULL;
-        thread->ctx->regs[0] = 0xfffffffc;
+        thread->ctx->regs[1] = 0xfffffffc;
         /* For the moment only one parameter is supported. */
-        thread->ctx->regs[2] = (unsigned int) arg;
+        thread->ctx->regs[3] = (unsigned int) arg;
         thread->ctx->pc = 0x0;  /* entry point of external app*/
         thread->ctx->sr = 0x8077;
         /* - supervisor mode

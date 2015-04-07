@@ -26,7 +26,8 @@ libruntime_LTLIBRARIES = libruntime.la
 libruntimedir = $(libdir)/baremetal
 
 libruntime_la_SOURCES =\
-    ctx_replace.S \
+    context.c \
+    context-asm.S \
     list.c \
     config.c \
     runtime.c \
@@ -34,8 +35,7 @@ libruntime_la_SOURCES =\
     syscall_entry.S \
     scheduler.c \
     thread.c \
-    vmm.c \
-    yield_switchctx.S
+    vmm.c
 
 libruntime_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 libruntime_la_CPPFLAGS = $(AM_CPPFLAGS) \
