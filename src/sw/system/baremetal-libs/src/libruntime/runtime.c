@@ -44,12 +44,14 @@ void optimsoc_runtime_boot(void) {
     // Activate proper handling of exceptions in section trace
     OPTIMSOC_TRACE(0x23, 0);
 
-    if (optimsoc_get_relcoreid() == 0) {
+    if (or1k_coreid() == 0) {
         printf("Initializing OpTiMSoC platform..\n");
         optimsoc_init(0);
 
         printf("Initialize DMA..\n");
         dma_init();
+
+
 
         printf("Bringing virtual memory up..\n");
         _optimsoc_vmm_init();

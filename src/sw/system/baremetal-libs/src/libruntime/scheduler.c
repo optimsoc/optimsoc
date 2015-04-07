@@ -105,7 +105,7 @@ void _optimsoc_scheduler_init() {
     _optimsoc_scheduler_core = calloc(or1k_numcores(),
                                       sizeof(struct _optimsoc_scheduler_core));
 
-    for (int c = 0; c < optimsoc_get_relcoreid(); c++) {
+    for (int c = 0; c < or1k_numcores(); c++) {
         struct optimsoc_thread_attr *attr_idle;
         attr_idle = malloc(sizeof(struct optimsoc_thread_attr));
         optimsoc_thread_attr_init(attr_idle);
