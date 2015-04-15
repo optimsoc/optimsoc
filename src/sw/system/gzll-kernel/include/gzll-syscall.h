@@ -60,6 +60,6 @@ struct gzll_kernel_info {
 #define GZLL_SYSCALL_KERNEL_INFO 0
 
 /** Allocate new page for user application */
-#define GZLL_SYSCALL_VMM_ALLOC_PAGE 1;
+#define GZLL_SYSCALL_VMM_ALLOC_PAGE 1
 
 #endif
