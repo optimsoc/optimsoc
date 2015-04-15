@@ -26,6 +26,8 @@
 #ifndef __OPTIMSOC_RUNTIME_H__
 #define __OPTIMSOC_RUNTIME_H__
 
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
 /**
@@ -350,5 +352,32 @@ void optimsoc_syscall_handler_set(optimsoc_syscall_handler_fptr handler);
 extern void runtime_config_set_numticks(unsigned int ticks);
 
 extern void runtime_config_set_use_globalids(unsigned int v);
+
+struct optimsoc_list_entry_t {
+    void* data;
+    struct optimsoc_list_entry_t* prev;
+    struct optimsoc_list_entry_t* next;
+};
+
+struct optimsoc_list_t {
+    struct optimsoc_list_entry_t* head;
+    struct optimsoc_list_entry_t* tail;
+};
+
+typedef struct optimsoc_list_entry_t* optimsoc_list_iterator_t;
+
+struct optimsoc_list_t* optimsoc_list_init(void* data);
+void optimsoc_list_add_tail(struct optimsoc_list_t* l, void* data);
+void optimsoc_list_add_head(struct optimsoc_list_t* l, void* data);
+void* optimsoc_list_remove_tail(struct optimsoc_list_t* l);
+void* optimsoc_list_remove_head(struct optimsoc_list_t* l);
+int optimsoc_list_remove(struct optimsoc_list_t* l, void* data);
+int optimsoc_list_contains(struct optimsoc_list_t *l, void* data);
+size_t optimsoc_list_length(struct optimsoc_list_t* l);
+
+void* optimsoc_list_first_element(struct optimsoc_list_t* l,
+                                  optimsoc_list_iterator_t *list_iter);
+void* optimsoc_list_next_element(struct optimsoc_list_t* l,
+                                 optimsoc_list_iterator_t *list_iter);
 
 #endif /* OPTIMSOC_RUNTIME_H_ */

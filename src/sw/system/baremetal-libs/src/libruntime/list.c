@@ -23,7 +23,7 @@
  *   Stefan Rösch <roe.stefan@gmail.com>
  */
 
-#include <list.h>
+#include "include/optimsoc-runtime.h"
 #include <assert.h>
 
 // TODO: create non-blocking data structure
