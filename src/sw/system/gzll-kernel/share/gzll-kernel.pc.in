@@ -2,9 +2,10 @@ prefix=@prefix@
 libdir=@libdir@
 includedir=@includedir@
 datadir=@datadir@
+buildscriptdir=${datadir}/build/gzll
 
 Name: gzll kernel
 Description: gzll kernel
 Version: @VERSION@
-Cflags: -I${includedir}
-Libs: -L${libdir} -lgzll-kernel
+Cflags: -I${includedir}/gzll-kernel
+Libs: -L${libdir}/gzll-kernel -lgzll-kernel
