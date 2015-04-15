@@ -43,7 +43,7 @@
 #
 # kernelsize determines the stack of the kernel
 #
-# Run: gzll-image-create image.ini image.bin
+# Run: gzll-image-create image.ini
 
 import ConfigParser
 import sys
@@ -52,28 +52,29 @@ import mmap
 import os
 
 def print_usage():
-    print "Usage: gzll-image-create <configuration> <outimage>"
+    print "Usage: gzll-image-create <configuration>"
 
-if len(sys.argv) < 3:
+if len(sys.argv) < 2:
     print_usage()
     exit(1)
 
 inifile = sys.argv[1]
-outimage = sys.argv[2]
-debug = False
-if len(sys.argv) > 3:
-    if sys.argv[3] == "-d":
-        debug = True
 
 print "(I) optimsoc-build-image started with configuration %s" % inifile
 
 conf = ConfigParser.RawConfigParser()
 conf.read(inifile)
 
-outimage_base = os.path.splitext(outimage)[0]
+print "(I) Generate Makefile"
 
+# Open and start Makefile
+makefile = open("Makefile", "w")
+makefile.write("# Automatically generated with gzll-image-create, do not edit\n\n")
+makefile.write("SCRIPTDIR=$(shell pkg-config --variable=buildscriptdir optimsoc-gzll)\n\n")
+makefile.write("all: image.elf image.bin image.vmem\n\n")
+
+# Generate list of apps
 apps = []
-
 for section in conf.sections():
     path = section
     if conf.has_option(section, "path"):
@@ -89,24 +90,26 @@ for section in conf.sections():
 
     apps.append({ "name": section, "path": path, "tasks": tasks, "boot": boot})
 
+# Generate Makefile entries for apps
+objects = []
 for a in apps:
-    print "(I) Generate binary files for %s" % a["name"]
     for t in a["tasks"]:
         print "(I)   -> %s" % t
         path = "../../apps/%s/%s.elf" % (a["path"], t)
         objname = "%s_%s" % (a["name"], t)
-        subprocess.call("or1k-elf-objcopy -O binary %s %s.bin" % (path, objname), shell=True)
+        objects.append({"path": path, "objname": objname})
 
-    print "(I) Generate object files for %s" % a["name"]
-    for t in a["tasks"]:
-        print "(I)   -> %s" % t
-        objname = "%s_%s" % (a["name"], t)
-        subprocess.call("or1k-elf-objcopy --rename-section .data=.app_data -I binary -O elf32-or1k %s.bin %s_binary.o" % (objname, objname), shell=True)
-        # Patch incorrect machine type
-        f = open("%s_binary.o" % objname, "r+b")
-        map = mmap.mmap(f.fileno(),20)
-        map[19] = '\x5c'
-        map.close()
+makefile.write("APP_BINARY_OBJECTS = ")
+for o in objects:
+     makefile.write("%s_binary.o " % o["objname"])
+makefile.write("\n")
+
+for o in objects:
+    makefile.write("%s.bin: %s\n" % (o["objname"], o["path"]))
+    makefile.write("\tor1k-elf-objcopy -O binary $^ $@\n")
+
+makefile.write("include $(SCRIPTDIR)/Makefile-images.inc\n")
+makefile.close()
 
 print "(I) Generate application information table"
 f = open("apps.c", "w")
@@ -133,76 +136,4 @@ f.write("    { 0, 0 }\n")
 f.write("};\n");
 f.close()
 
-print "(I) Compile application information table"
-subprocess.check_call("pkg-config --exists gzll-kernel", shell=True)
-cflags = subprocess.check_output("pkg-config gzll-kernel --cflags", shell=True).strip()
-subprocess.check_output("or1k-elf-gcc %s -c -o apps.o apps.c" % cflags, shell=True)
-
-link_ld = """
-OUTPUT_ARCH(or1k)
-
-SECTIONS
-{
-    .vectors : {
-        *(.vectors)
-    }
-
-    .kernel ALIGN(0x2000) : {
-        skernel = .;
-        _skernel = .;
-        *(.text*)
-        *(.init)
-        *(.fini)
-        *(.data)
-        *(.rodata*)
-        *(.ctors)
-        *(.dtors)
-        *(.eh_frame)
-        *(.jcr)
-        ekernel = .;
-        _ekernel = .;
-    }
-
-    .apps ALIGN(0x2000): {
-                _apps_begin = .;
-                . = ALIGN(0x2000);
-                _apps_end = .;
-        }
-
-    .bss ALIGN(0x2000): {
-        __bss_start = .;
-        *(.bss)
-        __bss_end = .;
-        *(COMMON)
-        _end = .;
-        end = .;
-    }
-}
-"""
-
-f = open("image.ld", "w")
-f.write(link_ld)
-f.close()
-
-objects = []
-for a in apps:
-    for t in a["tasks"]:
-        objects.append("%s_%s_binary.o" % (a["name"], t))
-
-
-subprocess.check_call("pkg-config --exists gzll-kernel", shell=True)
-kernel = subprocess.check_output("pkg-config gzll-kernel --libs", shell=True).strip()
-
-subprocess.check_call("pkg-config --exists optimsoc-baremetal-runtime", shell=True)
-runtime_libs = subprocess.check_output("pkg-config optimsoc-baremetal-runtime --libs", shell=True).strip()
-
-subprocess.check_call("pkg-config --exists optimsoc-baremetal-mp-runtime", shell=True)
-mp_libs = subprocess.check_output("pkg-config optimsoc-baremetal-mp-runtime --libs", shell=True).strip()
-
-libs = "%s %s %s" % (kernel, mp_libs, runtime_libs)
-
-subprocess.check_output("or1k-elf-gcc -mboard=optimsoc -Wall -T image.ld %s apps.o %s -o %s.elf" % (" ".join(objects),libs,outimage), shell=True)
-
-subprocess.check_output("or1k-elf-objcopy -O binary %s.elf %s.bin" % (outimage, outimage), shell=True)
-
-subprocess.check_output("bin2vmem %s.bin > %s.vmem" % (outimage, outimage), shell=True)
+print "(I) Done. Run 'make' to build the image."

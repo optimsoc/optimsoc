@@ -26,12 +26,16 @@ AM_MAKEFLAGS = --no-print-directory
 
 SUBDIRS = src
 
-scriptdir = $(bindir)
-script_DATA = share/gzll-image-create
+scriptbindir = $(bindir)
+scriptbin_DATA = share/gzll-image-create
 
 install-data-hook:
-	chmod +x $(DESTDIR)$(scriptdir)/gzll-image-create
-	
+	chmod +x $(DESTDIR)$(scriptbindir)/gzll-image-create
+
+scriptdir = $(datadir)/build/gzll/
+script_DATA = share/Makefile-images.inc \
+	share/gzll-image.ld
+
 gzllincludedir = $(includedir)/gzll-kernel/
 gzllinclude_HEADERS = include/gzll-syscall.h \
 	include/gzll-apps.h
