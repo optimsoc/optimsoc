@@ -30,52 +30,43 @@ libgzll_la_SOURCES = \
 libgzll_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 libgzll_la_CPPFLAGS = $(AM_CPPFLAGS) -Wall $(GZLL_CFLAGS)
 
-#scriptdir = $(datadir)/build/baremetal/
-#script_DATA = share/Makefile.inc \
-#              share/create_pgas_binary.sh
+scriptdir = $(datadir)/build/gzll/
+script_DATA = share/Makefile-app.inc
 
-#baremetalincludedir = $(includedir)/baremetal
-#baremetalinclude_HEADERS = include/optimsoc-baremetal.h \
-#			   include/optimsoc-sysconfig.h
+gzllincludedir = $(includedir)/gzll
+gzllinclude_HEADERS = include/gzll.h 
 
 # prepare pkg-config file
-#share/%.pc: share/%.pc.in Makefile
-#	$(AM_V_GEN)$(MKDIR_P) share; \
-#	$(SED) \
-#	-e 's,@VERSION\@,$(VERSION),g' \
-#	-e 's,@prefix\@,$(prefix),g' \
-#	-e 's,@datadir\@,$(datadir),g' \
-#	-e 's,@libdir\@,$(libdir),g' \
-#	-e 's,@includedir\@,$(includedir),g' \
-#	< $< > $@ || rm $@
+share/%.pc: share/%.pc.in Makefile
+	$(AM_V_GEN)$(MKDIR_P) share; \
+	$(SED) \
+	-e 's,@VERSION\@,$(VERSION),g' \
+	-e 's,@prefix\@,$(prefix),g' \
+	-e 's,@datadir\@,$(datadir),g' \
+	-e 's,@libdir\@,$(libdir),g' \
+	-e 's,@includedir\@,$(includedir),g' \
+	< $< > $@ || rm $@
+
+pkgconfigdir = $(datadir)/pkgconfig
+pkgconfig_DATA = share/optimsoc-gzll.pc
+EXTRA_DIST = share/optimsoc-gzll.pc.in
+CLEANFILES = share/optimsoc-gzll.pc
 #
-#pkgconfigdir = $(datadir)/pkgconfig
-#pkgconfig_DATA = share/optimsoc-baremetal.pc
-#EXTRA_DIST = share/optimsoc-baremetal.pc.in
-#CLEANFILES = share/optimsoc-baremetal.pc
-#
-#if OR1KOBJDUMPSET
-#MYOR1KOBJDUMP = $(OR1KOBJDUMP)
-#else
-#MYOR1KOBJDUMP = $(subst gcc,objdump,$(wordlist 1,1,$(CC)))
-#endif
-#
-#if OR1KOBJCOPYSET
-#MYOR1KOBJCOPY = $(OR1KOBJCOPY)
-#else
-#MYOR1KOBJCOPY = $(subst gcc,objcopy,$(wordlist 1,1,$(CC)))
-#endif
-#
-#share/Makefile.inc: share/Makefile.inc.in Makefile
-#	$(AM_V_GEN)$(MKDIR_P) share; \
-#	$(SED) -e 's,@OR1K-CC@,$(CC),g' -e 's,@OR1K-OBJDUMP@,$(MYOR1KOBJDUMP),g' \
-#	-e 's,@OR1K-OBJCOPY@,$(MYOR1KOBJCOPY),g' < $< > $@ || rm $@
-#
-#CLEANFILES += share/Makefile.inc
-#
-#share/create_pgas_binary.sh: share/create_pgas_binary.sh.in Makefile 
-#	$(AM_V_GEN)$(MKDIR_P) share; \
-#	$(SED) -e 's,@OR1K-CC@,$(CC),g' -e 's,@OR1K-OBJDUMP@,$(MYOR1KOBJDUMP),g' \
-#	-e 's,@OR1K-OBJCOPY@,$(MYOR1KOBJCOPY),g' < $< > $@ || rm $@
-#
-#CLEANFILES += share/create_pgas_binary.sh
+if OR1KOBJDUMPSET
+MYOR1KOBJDUMP = $(OR1KOBJDUMP)
+else
+MYOR1KOBJDUMP = $(subst gcc,objdump,$(wordlist 1,1,$(CC)))
+endif
+
+if OR1KOBJCOPYSET
+MYOR1KOBJCOPY = $(OR1KOBJCOPY)
+else
+MYOR1KOBJCOPY = $(subst gcc,objcopy,$(wordlist 1,1,$(CC)))
+endif
+
+share/Makefile-app.inc: share/Makefile-app.inc.in Makefile
+	$(AM_V_GEN)$(MKDIR_P) share; \
+	$(SED) -e 's,@OR1K-CC@,$(CC),g' -e 's,@OR1K-OBJDUMP@,$(MYOR1KOBJDUMP),g' \
+	-e 's,@OR1K-OBJCOPY@,$(MYOR1KOBJCOPY),g' < $< > $@ || rm $@
+
+CLEANFILES += share/Makefile-app.inc

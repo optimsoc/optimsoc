@@ -1,0 +1,11 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+datadir=@datadir@
+buildscriptdir=${datadir}/build/gzll
+
+Name: OpTiMSoC gzll application library
+Description: OpTiMSoC gzll application libraries
+Version: 0.1
+Cflags: -I${includedir}/gzll
+Libs: -L${libdir}/gzll -lgzll
