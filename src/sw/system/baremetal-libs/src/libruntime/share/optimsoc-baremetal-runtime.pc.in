@@ -9,4 +9,4 @@ Description: OpTiMSoC runtime system libraries
 Version: 0.1
 Requires.private: optimsoc-baremetal
 Cflags: -I${includedir}/baremetal
-Libs: -L${libdir}/baremetal -lbaremetal -lruntime
+Libs: -L${libdir}/baremetal -lruntime -lbaremetal
