@@ -44,9 +44,10 @@
 #define OPTIMSOC_NA_CONF_MPSIMPLE 0x1
 #define OPTIMSOC_NA_CONF_DMA      0x2
 
-#define OPTIMSOC_MPSIMPLE       OPTIMSOC_NA_BASE + 0x100000
-#define OPTIMSOC_MPSIMPLE_SEND  OPTIMSOC_MPSIMPLE + 0x0
-#define OPTIMSOC_MPSIMPLE_RECV  OPTIMSOC_MPSIMPLE + 0x0
+#define OPTIMSOC_MPSIMPLE        OPTIMSOC_NA_BASE + 0x100000
+#define OPTIMSOC_MPSIMPLE_SEND   OPTIMSOC_MPSIMPLE + 0x0
+#define OPTIMSOC_MPSIMPLE_RECV   OPTIMSOC_MPSIMPLE + 0x0
+#define OPTIMSOC_MPSIMPLE_ENABLE OPTIMSOC_MPSIMPLE + 0x4
 
 #define OPTIMSOC_MPSIMPLE_STATUS_WAITING OPTIMSOC_MPSIMPLE + 0x18
 
@@ -524,6 +525,13 @@ extern dma_success_t dma_wait(dma_transfer_handle_t id);
  * Initialize simple message passing environment
  */
 extern void optimsoc_mp_simple_init(void);
+
+/**
+ * Enable hardware to receive packets
+ */
+void optimsoc_mp_simple_enable(void);
+
+int optimsoc_mp_simple_ctready(uint32_t rank);
 
 /**
  * Send a message

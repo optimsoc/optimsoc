@@ -66,6 +66,9 @@ static inline void trace_mp_simple_recv_finished(uint32_t src) {
 #endif
 }
 
+#define EXTRACT(x,msb,lsb) ((x>>lsb) & ~(~0 << (msb-lsb+1)))
+#define SET(x,v,msb,lsb) (((~0 << ((msb)+1) | ~(~0 << (lsb)))&x) | \
+        (((v) & ~(~0<<((msb)-(lsb)+1))) << (lsb)))
 
 // Local buffer for the simple message passing
 unsigned int* optimsoc_mp_simple_buffer;
@@ -75,6 +78,8 @@ void (*cls_handlers[OPTIMSOC_CLASS_NUM])(unsigned int*,int);
 
 void optimsoc_mp_simple_init(void);
 void optimsoc_mp_simple_inth(void* arg);
+
+volatile uint8_t *_optimsoc_mp_simple_domains_ready;
 
 void optimsoc_mp_simple_init(void) {
     // Register interrupt
@@ -86,8 +91,31 @@ void optimsoc_mp_simple_init(void) {
         cls_handlers[i] = 0;
     }
 
+    _optimsoc_mp_simple_domains_ready = calloc(optimsoc_get_numct(), 1);
+
     // Allocate buffer
     optimsoc_mp_simple_buffer = malloc(optimsoc_noc_maxpacketsize()*4);
+}
+
+void optimsoc_mp_simple_enable(void) {
+    REG32(OPTIMSOC_MPSIMPLE_ENABLE) = 1;
+}
+
+int optimsoc_mp_simple_ctready(uint32_t rank) {
+    if (_optimsoc_mp_simple_domains_ready[rank]) {
+        return 1;
+    }
+
+    uint32_t tile = optimsoc_get_ranktile(rank);
+    uint32_t req = tile << OPTIMSOC_DEST_LSB;
+    req = SET(req, OPTIMSOC_CLASS_NUM-1, OPTIMSOC_CLASS_MSB,
+              OPTIMSOC_CLASS_LSB);
+    req = SET(req, optimsoc_get_tileid(), OPTIMSOC_SRC_MSB, OPTIMSOC_SRC_LSB);
+
+    REG32(OPTIMSOC_MPSIMPLE_SEND) = 1;
+    REG32(OPTIMSOC_MPSIMPLE_SEND) = req;
+
+    return 0;
 }
 
 void optimsoc_mp_simple_addhandler(unsigned int class,
@@ -119,9 +147,19 @@ void optimsoc_mp_simple_inth(void* arg) {
             }
         }
 
+        uint32_t header = optimsoc_mp_simple_buffer[0];
         // Extract class
-        int class = (optimsoc_mp_simple_buffer[0] >> OPTIMSOC_CLASS_LSB) // Shift to position
-    		                        & ((1<<(OPTIMSOC_CLASS_MSB-OPTIMSOC_CLASS_LSB+1))-1); // and mask other remain
+        uint32_t class = EXTRACT(header, OPTIMSOC_CLASS_MSB, OPTIMSOC_CLASS_LSB);
+
+        if (class == OPTIMSOC_CLASS_NUM-1) {
+            uint32_t ready = (header & 0x2) >> 1;
+            if (ready) {
+                uint32_t tile, domain;
+                tile = EXTRACT(header, OPTIMSOC_SRC_MSB, OPTIMSOC_SRC_LSB);
+                domain = optimsoc_get_tilerank(tile);
+                _optimsoc_mp_simple_domains_ready[domain] = 1;
+            }
+        }
 
         // Call respective class handler
         if (cls_handlers[class] == 0) {
@@ -143,15 +181,14 @@ void optimsoc_mp_simple_inth(void* arg) {
 void optimsoc_mp_simple_send(unsigned int size, uint32_t *buf) {
     trace_mp_simple_send(buf[0]>>OPTIMSOC_DEST_LSB, size, buf);
 
-    uint32_t restore_timer = or1k_timer_disable();
-    uint32_t restore_irq = or1k_interrupts_disable();
+    uint32_t restore = or1k_critical_begin();
     REG32(OPTIMSOC_MPSIMPLE_SEND) = size;
     for (int i=0;i<size;i++) {
         REG32(OPTIMSOC_MPSIMPLE_SEND) = buf[i];
     }
-    or1k_interrupts_restore(restore_irq);
-    or1k_timer_restore(restore_timer);
 
-    trace_mp_simple_send_finished(buf[0]>>OPTIMSOC_DEST_LSB);
+    or1k_critical_end(restore);
+
+    trace_mp_simple_send_finished(buf[0] >> OPTIMSOC_DEST_LSB);
 }
 

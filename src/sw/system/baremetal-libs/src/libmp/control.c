@@ -24,6 +24,9 @@ void control_init() {
     // Class 1: control messages
     optimsoc_mp_simple_init();
     optimsoc_mp_simple_addhandler(NOC_CLASS_FIFO, &control_msg_handler);
+
+    optimsoc_mp_simple_enable();
+    or1k_interrupts_enable();
 }
 
 // The following handler is called by the message interrupt service routine
@@ -186,10 +189,11 @@ void control_msg_handler(unsigned int* buffer,int len) {
     }
 }
 
-
 struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
                                       uint32_t port) {
     struct endpoint *ep;
+
+    while (!optimsoc_mp_simple_ctready(domain));
 
     trace_ep_get_req_begin(domain, node, port);
 
