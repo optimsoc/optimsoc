@@ -33,7 +33,8 @@ install-data-hook:
 	chmod +x $(DESTDIR)$(scriptdir)/gzll-image-create
 	
 gzllincludedir = $(includedir)/gzll-kernel/
-gzllinclude_HEADERS = include/gzll-syscall.h
+gzllinclude_HEADERS = include/gzll-syscall.h \
+	include/gzll-apps.h
 
 # prepare pkg-config file
 share/%.pc: share/%.pc.in Makefile
