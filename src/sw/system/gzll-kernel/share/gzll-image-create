@@ -29,9 +29,11 @@
 # Create a configuration file (e.g., image.ini) with the following
 # format:
 #
-# [app0]
-# image: <app0.elf>
-# tiles: <tileID>,<tileID>,...
+# [app0-name]
+# path: app0
+# tasks: <task0> <task1>
+# task0.boot: 0
+# task1.boot: 1
 #
 # <...>
 #
@@ -70,158 +72,82 @@ conf.read(inifile)
 
 outimage_base = os.path.splitext(outimage)[0]
 
-apps = conf.sections()
+apps = []
 
-# generate list according to number of cores used
-tile = [[]]
-removeapps = []
-appno = 0
-for a in apps:
-    if not conf.has_option(a, "image"):
-        print "(W) no image defined for application %s, remove" % a
-        removeapps.append(a)
-    elif not conf.has_option(a, "tiles"):
-        print "(W) no execution tiles defined for application %s, remove" % a
-        removeapps.append(a)
-    else:
-        extiles = conf.get(a, "tiles").split(',')
-        for t in extiles:
-            if t:
-                if len(tile) <= int(t):
-                    for n in range(int(t) - len(tile) + 1):
-                        tile.append([])
-                tile[int(t)].append(appno)
-            else:
-                print "(W) No tiles specified for application %s, proceed" % a
-                break
-        appno = appno + 1
+for section in conf.sections():
+    path = section
+    if conf.has_option(section, "path"):
+        path = conf.get(section, "path")
+    if not conf.has_option(section, "tasks"):
+        continue
+    tasks = conf.get(section, "tasks").split(" ")
+    boot = []
+    for t in tasks:
+        tboot = "%s.boot" % t
+        if conf.has_option(section, tboot):
+            boot.append({ t: [int(x) for x in conf.get(section, tboot).split(" ")]})
 
-# remove apps without image or execution tiles
-for a in removeapps:
-    apps.remove(a)
-
-# Generate binary files
-for a in apps:
-    subprocess.call("or1k-elf-objcopy -O binary %s %s.bin" % (conf.get(a, "image"), a), shell=True)
-
-# Generate object files
-for a in apps:
-    subprocess.call("or1k-elf-objcopy --rename-section .data=.app_data -I binary -O elf32-or1k %s.bin %s-binary.o" % (a, a), shell=True)
-
-# Patch incorrect machine type
-for a in apps:
-    f = open("%s-binary.o" % a, "r+b")
-    map = mmap.mmap(f.fileno(),20)
-    map[19] = '\x5c'
-    map.close()
-
-# generate sysconfig file
-#print "generating sysconfig.."
-#subprocess.call("or1k-elf-gcc -Wall -o optimsoc-sysconfig.o -c optimsoc-sysconfig.c", shell=True)
-
-# generate header file
-header_var = """struct app_object {
-  char *name;
-  void *start;
-  void *end;
-};"""
-
-header = open("app_object.h", "w")
-header.write(header_var)
-header.close()
-
-# generate tiletable
-tiletable_var = "#include \"app_object.h\"\n\n"
-tiletable_var += "extern unsigned int *_ekernel;\n"
-#tiletable_var += "extern struct app_object _apps[];\n\n"
-for t in range(len(tile)):
-    tiletable_var += "int tile%d_app_table[] = {%d" % (t, len(tile[t]))
-    for a in tile[t]:
-        tiletable_var += ",%d" % a
-    tiletable_var += "};\n"
-
-tiletable_var += "\nint kernelsize __attribute__((section(\".kernelsize\"))) = (int)&_ekernel;\n"
-#tiletable_var += "int app_table __attribute__((section(\".app_table_ptr\"))) = (int)_apps;\n"
-tiletable_var += "int tile_table_len __attribute__((section(\".tile_table_len\"))) = %d;\n\n" % len(tile)
-tiletable_var += "void *tile_app_table_ptrs[] __attribute__((section(\".tile_table_ptrs\"))) = {\n"
-tiletable_var += "        &tile%d_app_table\n" % 0
-
-for t in range(len(tile) - 1):
-    tiletable_var += "        ,&tile%d_app_table\n" % (t + 1)
-
-tiletable_var += "        };"
-
-tiletable = open("tiletable.c", "w")
-tiletable.write(tiletable_var)
-tiletable.close()
-
-#print "generating tiletable.."
-subprocess.call("or1k-elf-gcc -Wall -o tiletable.o -c tiletable.c", shell=True)
-
-# generate apptable
-apptable_var = "#include \"app_object.h\"\n\n"
+    apps.append({ "name": section, "path": path, "tasks": tasks, "boot": boot})
 
 for a in apps:
-    apptable_var += "extern void *_binary_%s_bin_start;\n" % a
-    apptable_var += "extern void *_binary_%s_bin_end;\n" % a
+    print "(I) Generate binary files for %s" % a["name"]
+    for t in a["tasks"]:
+        print "(I)   -> %s" % t
+        path = "../../apps/%s/%s.elf" % (a["path"], t)
+        objname = "%s_%s" % (a["name"], t)
+        subprocess.call("or1k-elf-objcopy -O binary %s %s.bin" % (path, objname), shell=True)
 
-apptable_var += "\nstruct app_object _apps[] __attribute__((section(\".app_table\"))) = {\n"
+    print "(I) Generate object files for %s" % a["name"]
+    for t in a["tasks"]:
+        print "(I)   -> %s" % t
+        objname = "%s_%s" % (a["name"], t)
+        subprocess.call("or1k-elf-objcopy --rename-section .data=.app_data -I binary -O elf32-or1k %s.bin %s_binary.o" % (objname, objname), shell=True)
+        # Patch incorrect machine type
+        f = open("%s_binary.o" % objname, "r+b")
+        map = mmap.mmap(f.fileno(),20)
+        map[19] = '\x5c'
+        map.close()
 
+print "(I) Generate application information table"
+f = open("apps.c", "w")
+f.write("#include <gzll-apps.h>\n\n")
 for a in apps:
-    apptable_var += "  { \"%s\", &_binary_%s_bin_start, &_binary_%s_bin_end },\n" % (a, a, a)
+    for t in a["tasks"]:
+        tname = "%s_%s" % (a["name"], t)
+        f.write("extern void *_binary_%s_bin_start;\n" % tname);
+        f.write("extern void *_binary_%s_bin_end;\n" % tname);
+    f.write("\n")
 
-apptable_var += "  { 0, 0, 0 }};\n"
+    f.write("struct gzll_task gzll_%s_tasks [] = {\n" % (a["name"]))
+    for t in a["tasks"]:
+        tname = "%s_%s" % (a["name"], t)
+        f.write("    {\"%s\", (void*) &_binary_%s_bin_start, (void*) &_binary_%s_bin_start },\n" % (t, tname, tname))
+    f.write("    { 0, 0, 0 }\n")
+    f.write("};\n")
 
-apptable = open("apptable.c", "w")
-apptable.write(apptable_var)
-apptable.close()
+f.write("\n")
+f.write("struct gzll_application gzll_application_table [] = {\n")
+for a in apps:
+    f.write("    { \"%s\", gzll_%s_tasks },\n" % (a["name"], a["name"]))
+f.write("    { 0, 0 }\n")
+f.write("};\n");
+f.close()
 
-#print "generating apptable.."
-subprocess.call("or1k-elf-gcc -Wall -o apptable.o -c apptable.c", shell=True)
+print "(I) Compile application information table"
+subprocess.check_call("pkg-config --exists gzll-kernel", shell=True)
+cflags = subprocess.check_output("pkg-config gzll-kernel --cflags", shell=True).strip()
+subprocess.check_output("or1k-elf-gcc %s -c -o apps.o apps.c" % cflags, shell=True)
 
-#                tiletable.o(.app_table_ptr)
-# generate linker script
-link_ld_pre = """OUTPUT_ARCH(or1k)
-SEARCH_DIR(.)
-__DYNAMIC  =  0;
-
-MEMORY
-{
-    vectors : ORIGIN = 0x0, LENGTH = 0x2000
-    info    : ORIGIN = 0x2000, LENGTH = 0x2000
-    ram     : ORIGIN = 0x4000, LENGTH = (64M - 0x4000)
-}
-
+link_ld = """
+OUTPUT_ARCH(or1k)
 
 SECTIONS
 {
     .vectors : {
         *(.vectors)
-    } > vectors
+    }
 
-    .kernelsize : {
-        tiletable.o(.kernelsize)
-    } > info
-
-    .tiletable : {
-        _tile_table_len = .;
-        tiletable.o(.tile_table_len)
-        _tile_table = .;
-        tiletable.o(.tile_table_ptrs)
-        tiletable.o(.data)
-        tiletable.o(.bss)
-        tiletable.o(.rodata)
-    } > info
-
-    .apptable : {
-        _app_table = .;
-        apptable.o(.app_table)
-        apptable.o(.data)
-        apptable.o(.bss)
-        apptable.o(.rodata)
-    } > info
-
-    .kernel : {
+    .kernel ALIGN(0x2000) : {
         skernel = .;
         _skernel = .;
         *(.text*)
@@ -235,36 +161,34 @@ SECTIONS
         *(.jcr)
         ekernel = .;
         _ekernel = .;
-    } > ram
+    }
 
-    .bss : {
+    .apps ALIGN(0x2000): {
+                _apps_begin = .;
+                . = ALIGN(0x2000);
+                _apps_end = .;
+        }
+
+    .bss ALIGN(0x2000): {
         __bss_start = .;
         *(.bss)
         __bss_end = .;
         *(COMMON)
         _end = .;
         end = .;
-    } > ram
-
-    .apps ALIGN(0x2000): {
-        _apps_begin = .;
+    }
+}
 """
 
-linkerscript = open("image-link.ld", "w")
-linkerscript.write(link_ld_pre)
+f = open("image.ld", "w")
+f.write(link_ld)
+f.close()
 
+objects = []
 for a in apps:
-    linkerscript.write("                %s-binary.o(.app_data)\n" % a)
-#    linkerscript.write("                %s-binary.o(.bss)\n" % a)
-#    linkerscript.write("                %s-binary.o(.rodata)\n" % a)
-    linkerscript.write("                . = ALIGN(0x2000);\n")
+    for t in a["tasks"]:
+        objects.append("%s_%s_binary.o" % (a["name"], t))
 
-linkerscript.write("                _apps_end = .;\n        } > ram\n\n}\n")
-
-linkerscript.close()
-
-# build
-print "building.."
 
 subprocess.check_call("pkg-config --exists gzll-kernel", shell=True)
 kernel = subprocess.check_output("pkg-config gzll-kernel --libs", shell=True).strip()
@@ -272,26 +196,13 @@ kernel = subprocess.check_output("pkg-config gzll-kernel --libs", shell=True).st
 subprocess.check_call("pkg-config --exists optimsoc-baremetal-runtime", shell=True)
 runtime_libs = subprocess.check_output("pkg-config optimsoc-baremetal-runtime --libs", shell=True).strip()
 
-link_string = "or1k-elf-gcc -Wall -T image-link.ld %s %s tiletable.o apptable.o -o %s.elf" % (kernel, runtime_libs, outimage_base)
+subprocess.check_call("pkg-config --exists optimsoc-baremetal-mp-runtime", shell=True)
+mp_libs = subprocess.check_output("pkg-config optimsoc-baremetal-mp-runtime --libs", shell=True).strip()
 
-#print link_string
-print link_string
-subprocess.call(link_string, shell=True)
-#subprocess.call("or1k-elf-objcopy -O binary %s.elf %s" % (outimage_base, outimage), shell=True)
-#subprocess.call("bin2vmem %s > %s.vmem" % (outimage, outimage_base), shell=True)
+libs = "%s %s %s" % (kernel, mp_libs, runtime_libs)
 
-# clean up if no debug
-#if debug == False:
-#    print "clean up files.."
-#    for a in apps:
-#        os.remove("%s.bin" % a)
-#        os.remove("%s-binary.o" % a)
-#    os.remove("optimsoc-sysconfig.o")
-#    os.remove("app_object.h")
-#    os.remove("tiletable.c")
-#    os.remove("tiletable.o")
-#    os.remove("apptable.c")
-#    os.remove("apptable.o")
-#    os.remove("image-link.ld")
-#    os.remove("%s.elf" % outimage_base)
-#    os.remove("%s.bin" % outimage_base)
+subprocess.check_output("or1k-elf-gcc -mboard=optimsoc -Wall -T image.ld %s apps.o %s -o %s.elf" % (" ".join(objects),libs,outimage), shell=True)
+
+subprocess.check_output("or1k-elf-objcopy -O binary %s.elf %s.bin" % (outimage, outimage), shell=True)
+
+subprocess.check_output("bin2vmem %s.bin > %s.vmem" % (outimage, outimage), shell=True)
