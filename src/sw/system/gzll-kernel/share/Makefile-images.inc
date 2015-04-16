@@ -25,8 +25,7 @@ image.vmem: image.bin
 	$(CC_FOR_TARGET) -O0 -std=gnu99 -c $(INCS) -o $@ $^
 
 %_binary.o: %.bin
-	$(OBJCOPY_FOR_TARGET) --rename-section .data=.app_data -I binary -O elf32-or1k $^ $@
-	bash -c "printf '\x5c' | dd conv=notrunc of=$@ bs=1 seek=$$((0x13)) 2> /dev/null"
+	$(OBJCOPY_FOR_TARGET) --rename-section .data=.app_data -I binary -B or1k -O elf32-or1k $^ $@
 
 clean:
 	rm -f *.o *.elf *.bin *.vmem
