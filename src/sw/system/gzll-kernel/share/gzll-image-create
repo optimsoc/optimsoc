@@ -124,7 +124,7 @@ for a in apps:
     f.write("struct gzll_task gzll_%s_tasks [] = {\n" % (a["name"]))
     for t in a["tasks"]:
         tname = "%s_%s" % (a["name"], t)
-        f.write("    {\"%s\", (void*) &_binary_%s_bin_start, (void*) &_binary_%s_bin_start },\n" % (t, tname, tname))
+        f.write("    {\"%s\", (void*) &_binary_%s_bin_start, (void*) &_binary_%s_bin_end },\n" % (t, tname, tname))
     f.write("    { 0, 0, 0 }\n")
     f.write("};\n")
 
