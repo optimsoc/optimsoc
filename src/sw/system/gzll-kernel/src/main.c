@@ -11,6 +11,18 @@
 uint32_t _gzll_rank;
 optimsoc_thread_t _gzll_comm_thread;
 
+extern void* _image_gzll_kernel_end;
+extern void* _image_gzll_apps_start;
+extern void* _image_gzll_apps_end;
+
+struct _gzll_image_layout {
+    void *kernel_end;
+    void *apps_start;
+    void *apps_end;
+} _gzll_image_layout __attribute__((section(".gzll_image_layout"))) = {
+        &_image_gzll_kernel_end, &_image_gzll_apps_start,
+        &_image_gzll_apps_end };
+
 void main() {
     if (gzll_swapping()) {
         // TODO: Load pages from memory

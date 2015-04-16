@@ -7,8 +7,7 @@ SECTIONS
     }
 
     .kernel ALIGN(0x2000) : {
-        skernel = .;
-        _skernel = .;
+        *(.gzll_image_layout);
         *(.text*)
         *(.init)
         *(.fini)
@@ -18,15 +17,14 @@ SECTIONS
         *(.dtors)
         *(.eh_frame)
         *(.jcr)
-        ekernel = .;
-        _ekernel = .;
+        _image_gzll_kernel_end = .;
     }
 
     .apps ALIGN(0x2000): {
-                _apps_begin = .;
-                . = ALIGN(0x2000);
-                _apps_end = .;
-        }
+        _image_gzll_apps_start = .;
+        *(.app_data)
+        _image_gzll_apps_end = .;
+     }
 
     .bss ALIGN(0x2000): {
         __bss_start = .;
