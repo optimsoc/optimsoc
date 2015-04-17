@@ -40,7 +40,7 @@ optimsoc_page_dir_t _optimsoc_thread_get_pagedir_current() {
     optimsoc_thread_t thread = _optimsoc_scheduler_get_current();
     assert(thread);
 
-    return thread->page_dir;
+    return optimsoc_thread_get_pagedir(thread);
 }
 
 void optimsoc_thread_set_pagedir(optimsoc_thread_t thread,
