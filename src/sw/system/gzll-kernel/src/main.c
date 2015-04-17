@@ -28,6 +28,8 @@ void main() {
         // TODO: Load pages from memory
     }
 
+    printf("Boot gzll in node %d (%d total)\n", gzll_rank, optimsoc_get_numct());
+
     // Initialize paging
     gzll_paging_init();
 
@@ -35,7 +37,6 @@ void main() {
 
     gzll_rank = optimsoc_get_ctrank();
 
-    printf("Boot gzll in node %d (%d total)\n", gzll_rank, optimsoc_get_numct());
 
     optimsoc_runtime_boot();
 }

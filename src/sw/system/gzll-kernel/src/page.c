@@ -47,11 +47,16 @@ void gzll_paging_init() {
     uint32_t start = (uint32_t) &_end;
     uint32_t end = (uint32_t) _or1k_stack_bottom;
 
-    // We reserve four pages for the heap
-    start += 4*8192;
+    start += 4 * 8192;
 
-    uint32_t start_page = start+8191 >> 13;
+    uint32_t start_page = (start+8191) >> 13;
     uint32_t end_page = (end >> 13) - 1;
+
+    void *s = start_page << 13;
+    void *e = (end_page + 1) << 13;
+    unsigned int n = end_page - start_page + 1;
+    printf("Initialize local page pool\n");
+    printf(" - add %p to %p (%d pages)\n", s, e, n);
 
     gzll_pagepool_local = optimsoc_list_init(0);
 
@@ -66,4 +71,9 @@ void gzll_paging_dpage_fault(uint32_t vaddr) {
 
 void gzll_paging_ipage_fault(uint32_t vaddr) {
 
+}
+
+// TODO: Add page_t handling
+int gzll_page_alloc() {
+    return (int) optimsoc_list_remove_head(gzll_pagepool_local);
 }

@@ -6,7 +6,11 @@
 void _gzll_app_bootstrap(char *name, struct gzll_boot_mappings *map) {
     for (uint32_t idx = 0; idx < map->len; idx++) {
         if (map->mappings[idx].rank == gzll_rank) {
-            printf("Start task %s of %s here\n", map->mappings[idx].task->identifier, name);
+            struct gzll_task *task = map->mappings[idx].task;
+            char *tname = task->identifier;
+            char fullname[256];
+            snprintf(fullname, 256, "%s.%s", name, tname);
+            gzll_task_start(fullname, task);
         }
     }
 }

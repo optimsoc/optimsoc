@@ -35,6 +35,6 @@ void communication_init() {
 
 void communication_thread() {
     printf("Communication thread started\n");
-    while (1) { asm("l.nop"); }
+//    while (1) { asm("l.nop"); }
 
 }
