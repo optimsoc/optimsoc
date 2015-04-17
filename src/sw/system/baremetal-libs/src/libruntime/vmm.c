@@ -153,7 +153,7 @@
 /*! Bit number of last bit (marks huge table in directory) */
 #define OR1K_PTE_LAST_LSB       9
 /* Extract the last bit from pte */
-#define OR1K_PTE_LAST_GET(pte) (pte >> OR1K_PTE_LAST_LSB)
+#define OR1K_PTE_LAST_GET(pte) ((pte >> OR1K_PTE_LAST_LSB) & 0x1)
 
 /*! Page protection index, number of bits */
 #define OR1K_PTE_PPI_BITS       3
