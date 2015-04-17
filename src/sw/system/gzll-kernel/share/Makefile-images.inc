@@ -4,6 +4,7 @@ OBJDUMP_FOR_TARGET ?= or1k-elf-objdump
 OBJCOPY_FOR_TARGET ?= or1k-elf-objcopy
 
 LDSCRIPT = $(shell pkg-config --variable=buildscriptdir optimsoc-gzll)/gzll-image.ld
+KERNEL = $(shell pkg-config --variable=libdir optimsoc-gzll)/gzll-kernel/libgzll-kernel.a
 
 LIBS = $(shell pkg-config --libs --static gzll-kernel)
 INCS = $(shell pkg-config --cflags gzll-kernel)
@@ -14,6 +15,8 @@ INCS += $(shell pkg-config --cflags optimsoc-baremetal-runtime)
 
 image.elf: ${APP_BINARY_OBJECTS} apps.o
 	or1k-elf-gcc -mboard=optimsoc -Wall -T $(LDSCRIPT) $^ $(LIBS) -o image.elf
+
+image.elf: $(KERNEL)
 
 image.bin: image.elf
 	or1k-elf-objcopy -O binary $^ $@
