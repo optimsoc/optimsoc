@@ -26,4 +26,22 @@ struct gzll_application_table {
 
 extern struct gzll_application_table gzll_application_table;
 
+struct gzll_boot_mappings {
+    uint32_t len;
+    struct {
+        int32_t rank;
+        struct gzll_task *task;
+    } mappings[];
+};
+
+struct gzll_boot_apps {
+    uint32_t len;
+    struct {
+        char *name;
+        struct gzll_boot_mappings *mappings;
+    } instances[];
+};
+
+extern struct gzll_boot_apps gzll_boot_apps;
+
 #endif

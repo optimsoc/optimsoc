@@ -29,19 +29,14 @@
 # Create a configuration file (e.g., image.ini) with the following
 # format:
 #
-# [app0-name]
+# [app0]
 # path: app0
-# tasks: <task0> <task1>
-# task0.boot: 0
-# task1.boot: 1
+# tasks: task0 task1
+
+# [app0.inst0] 
+# task0: 0
+# task1: 1
 #
-# <...>
-#
-# [appi]
-# image: <appi.elf>
-# tiles: <tileID>,<tileID>,...
-#
-# kernelsize determines the stack of the kernel
 #
 # Run: gzll-image-create image.ini
 
@@ -74,29 +69,50 @@ makefile.write("SCRIPTDIR=$(shell pkg-config --variable=buildscriptdir optimsoc-
 makefile.write("all: image.elf image.bin image.vmem\n\n")
 
 # Generate list of apps
-apps = []
+appid = 0
+apps = {}
 for section in conf.sections():
+    if "." in section:
+        continue
     path = section
     if conf.has_option(section, "path"):
         path = conf.get(section, "path")
     if not conf.has_option(section, "tasks"):
         continue
     tasks = conf.get(section, "tasks").split(" ")
-    boot = []
-    for t in tasks:
-        tboot = "%s.boot" % t
-        if conf.has_option(section, tboot):
-            boot.append({ t: [int(x) for x in conf.get(section, tboot).split(" ")]})
 
-    apps.append({ "name": section, "path": path, "tasks": tasks, "boot": boot})
+    app = { "path": path, "tasks": tasks, "id": appid }
+    apps[section] = app
+    appid = appid + 1
+
+appinsts = []
+for section in conf.sections():
+    if not "." in section:
+        continue
+
+    s = section.split(".")
+    app = s[0]
+    inst = s[1]
+    name = "%s-%s" % (app, inst)
+
+    tinst = {}
+    numinst = 0
+    for o in conf.options(section):
+        if o == "name":
+            name = conf.get(section, "name")
+        else:
+            tinst[o] = [int(x) for x in conf.get(section, o).split(" ")]
+            numinst = numinst + len(tinst[o])
+
+    appinsts.append({"app": app, "inst": inst, "name": name, "taskinst": tinst, "numinst": numinst})
 
 # Generate Makefile entries for apps
 objects = []
 for a in apps:
-    for t in a["tasks"]:
+    for t in apps[a]["tasks"]:
         print "(I)   -> %s" % t
-        path = "../../apps/%s/%s.elf" % (a["path"], t)
-        objname = "%s_%s" % (a["name"], t)
+        path = "../../apps/%s/%s.elf" % (apps[a]["path"], t)
+        objname = "%s_%s" % (a, t)
         objects.append({"path": path, "objname": objname})
 
 makefile.write("APP_BINARY_OBJECTS = ")
@@ -115,17 +131,17 @@ print "(I) Generate application information table"
 f = open("apps.c", "w")
 f.write("#include <gzll-apps.h>\n\n")
 for a in apps:
-    for t in a["tasks"]:
-        tname = "%s_%s" % (a["name"], t)
+    for t in apps[a]["tasks"]:
+        tname = "%s_%s" % (a, t)
         f.write("extern void *_binary_%s_bin_start;\n" % tname);
         f.write("extern void *_binary_%s_bin_end;\n" % tname);
     f.write("\n")
 
-    f.write("struct gzll_task_list gzll_%s_tasks = {\n" % (a["name"]))
-    f.write("    %d,\n" % len(a["tasks"]))
+    f.write("struct gzll_task_list gzll_%s_tasks = {\n" % a)
+    f.write("    %d,\n" % len(apps[a]["tasks"]))
     f.write("    {\n");
-    for t in a["tasks"]:
-        tname = "%s_%s" % (a["name"], t)
+    for t in apps[a]["tasks"]:
+        tname = "%s_%s" % (a, t)
         f.write("        {\"%s\", (void*) &_binary_%s_bin_start, (void*) &_binary_%s_bin_end },\n" % (t, tname, tname))
     f.write("    }\n");
     f.write("};\n")
@@ -134,8 +150,30 @@ f.write("\n")
 f.write("struct gzll_application_table gzll_application_table = {\n")
 f.write("    %d,\n" % len(apps))
 for a in apps:
-    f.write("    { \"%s\", &gzll_%s_tasks },\n" % (a["name"], a["name"]))
-f.write("};\n");
+    f.write("    { \"%s\", &gzll_%s_tasks },\n" % (a, a))
+f.write("};\n\n");
+
+for a in appinsts:
+    f.write("struct gzll_boot_mappings gzll_boot_mappings_%s_%s = {\n" % (a["app"], a["inst"]))
+    f.write("    %d, {\n" % a["numinst"])
+    app = a["app"]
+    for i in a["taskinst"]:
+        ranks = a["taskinst"][i]
+        tindex = apps[app]["tasks"].index(i)
+        for r in ranks:
+            f.write("    { %d, &gzll_%s_tasks.tasks[%d] },\n" % (r, app, tindex))
+    f.write("    }\n")
+    f.write("};\n")
+
+f.write("\n")
+
+f.write("struct gzll_boot_apps gzll_boot_apps = {\n");
+f.write("    %d, {\n" % len(appinsts))
+for a in appinsts:
+    f.write("        { \"%s\", &gzll_boot_mappings_%s_%s },\n" % (a["name"], a["app"], a["inst"]))
+f.write("    }\n")
+f.write("};\n")
+
 f.close()
 
 print "(I) Done. Run 'make' to build the image."
