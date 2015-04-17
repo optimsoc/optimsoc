@@ -9,11 +9,21 @@ struct gzll_task {
     void *obj_end;
 };
 
-struct gzll_application {
-    const char *identifier;
-    struct gzll_task *tasks;
+struct gzll_task_list {
+    uint32_t len;
+    struct gzll_task tasks[];
 };
 
-extern struct gzll_application gzll_application_table[];
+struct gzll_application {
+    const char *identifier;
+    struct gzll_task_list *tasks;
+};
+
+struct gzll_application_table {
+    uint32_t len;
+    struct gzll_application applications[];
+};
+
+extern struct gzll_application_table gzll_application_table;
 
 #endif

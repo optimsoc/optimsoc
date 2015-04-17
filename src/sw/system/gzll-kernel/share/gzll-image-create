@@ -121,18 +121,20 @@ for a in apps:
         f.write("extern void *_binary_%s_bin_end;\n" % tname);
     f.write("\n")
 
-    f.write("struct gzll_task gzll_%s_tasks [] = {\n" % (a["name"]))
+    f.write("struct gzll_task_list gzll_%s_tasks = {\n" % (a["name"]))
+    f.write("    %d,\n" % len(a["tasks"]))
+    f.write("    {\n");
     for t in a["tasks"]:
         tname = "%s_%s" % (a["name"], t)
-        f.write("    {\"%s\", (void*) &_binary_%s_bin_start, (void*) &_binary_%s_bin_end },\n" % (t, tname, tname))
-    f.write("    { 0, 0, 0 }\n")
+        f.write("        {\"%s\", (void*) &_binary_%s_bin_start, (void*) &_binary_%s_bin_end },\n" % (t, tname, tname))
+    f.write("    }\n");
     f.write("};\n")
 
 f.write("\n")
-f.write("struct gzll_application gzll_application_table [] = {\n")
+f.write("struct gzll_application_table gzll_application_table = {\n")
+f.write("    %d,\n" % len(apps))
 for a in apps:
-    f.write("    { \"%s\", gzll_%s_tasks },\n" % (a["name"], a["name"]))
-f.write("    { 0, 0 }\n")
+    f.write("    { \"%s\", &gzll_%s_tasks },\n" % (a["name"], a["name"]))
 f.write("};\n");
 f.close()
 
