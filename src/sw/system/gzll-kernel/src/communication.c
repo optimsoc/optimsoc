@@ -20,7 +20,7 @@ void communication_init() {
                                        sizeof(optimsoc_mp_endpoint_handle));
 
     for (int rank = 0; rank < optimsoc_get_numct(); rank++) {
-        if (rank != _gzll_rank) {
+        if (rank != gzll_rank) {
             optimsoc_mp_endpoint_handle *ep;
             uint32_t tile;
 

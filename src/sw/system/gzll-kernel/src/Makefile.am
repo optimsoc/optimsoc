@@ -31,4 +31,6 @@ libgzll_kernel_la_SOURCES = \
 	kernel_info.c \
 	page.c \
 	main.c \
-	communication.c
+	communication.c \
+	task.c \
+	app.c
