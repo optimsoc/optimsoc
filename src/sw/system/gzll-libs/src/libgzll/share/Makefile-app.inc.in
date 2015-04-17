@@ -30,7 +30,7 @@ LIBS = $(shell pkg-config --libs --static optimsoc-gzll)
 INCS = $(shell pkg-config --cflags optimsoc-gzll)
 
 %.elf: 
-	$(CC_FOR_TARGET) $(CFLAGS) -Wall $^ -o $@ $(LIBS)
+	$(CC_FOR_TARGET) $(CFLAGS) -Wall $^ -o $@ $(LIBS) -Wl,-Ttext=0x2000
 
 %.o: %.c
 	$(CC_FOR_TARGET) -O0 -std=gnu99 -c $(INCS) -o $@ $^
