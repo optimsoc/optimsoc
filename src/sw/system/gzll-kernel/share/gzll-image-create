@@ -164,7 +164,12 @@ makefile.write("# Automatically generated with gzll-image-create, do not edit\n\
 makefile.write("SCRIPTDIR=$(shell pkg-config --variable=buildscriptdir optimsoc-gzll)\n\n")
 
 # Make first dependency as default
-makefile.write("all: image.elf image.bin image.vmem\n\n")
+makefile.write("all: image.elf image.bin image.vmem Makefile\n\n")
+
+# Regenerate Makefile when inifile changes or the script gets updated
+makefile.write("SCRIPT=$(shell which gzll-image-create)\n")
+makefile.write("Makefile: %s $(SCRIPT)\n" % inifile)
+makefile.write("\tgzll-image-create %s\n\n" % inifile)
 
 # This is a list of all objects of all tasks for all apps
 makefile.write("APP_BINARY_OBJECTS = ")
