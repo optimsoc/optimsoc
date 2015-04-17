@@ -48,17 +48,21 @@ import os
 
 def print_usage():
     print "Usage: gzll-image-create <configuration>"
+    print "       The default configuration is 'image.ini'"
 
-if len(sys.argv) < 2:
-    print_usage()
-    exit(1)
+inifile = "image.ini"
 
-inifile = sys.argv[1]
+# Check if configuration is set
+if len(sys.argv) == 2:
+    inifile = sys.argv[1]
 
 print "(I) optimsoc-build-image started with configuration %s" % inifile
 
 conf = ConfigParser.RawConfigParser()
-conf.read(inifile)
+# read returns a list of files that were read successfully
+if not inifile in conf.read(inifile):
+    print "(E) Configuration cannot be read from %s" % inifile
+    exit(1)
 
 print "(I) Generate Makefile"
 
