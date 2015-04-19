@@ -29,6 +29,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include <or1k-support.h>
+#include <or1k-sprs.h>
+
 extern void* _end;
 extern void* _or1k_stack_bottom;
 
@@ -66,11 +69,14 @@ void gzll_paging_init() {
 }
 
 void gzll_paging_dpage_fault(uint32_t vaddr) {
-
+    printf("Data page fault for %p @PC=%p\n", (void*) vaddr,
+           or1k_mfspr(OR1K_SPR_SYS_EPCR_ADDR(0)));
+    exit(1);
 }
 
 void gzll_paging_ipage_fault(uint32_t vaddr) {
-
+    printf("Instruction page fault for %p\n", (void*) vaddr);
+    exit(1);
 }
 
 // TODO: Add page_t handling
