@@ -30,7 +30,7 @@
 .extern _optimsoc_syscall_data
 .extern _optimsoc_syscall_handler
 
-.section text
+.section .text
 .global _optimsoc_syscall_entry
 .type _optimsoc_syscall_entry, function
 
@@ -68,7 +68,12 @@ _optimsoc_syscall_entry:
     l.movhi r4,hi(_optimsoc_syscall_handler)
     l.ori   r4,r4,lo(_optimsoc_syscall_handler)
 
-    // TODO: verify the handler is set
+    // Load syscall handler
+    l.lwz   r4,0(r4)
+
+    // Check that syscall handler is set
+    l.sfeqi r4,0
+    OR1K_DELAYED_NOP(l.bf .no_entry_set)
 
     // Jump to registered syscall handler
     OR1K_DELAYED_NOP(l.jalr r4)
@@ -79,3 +84,6 @@ _optimsoc_syscall_entry:
 
     // Return to exception handler
     OR1K_DELAYED_NOP(l.jr r16)
+
+.no_entry_set:
+    OR1K_DELAYED_NOP(l.j exit)
