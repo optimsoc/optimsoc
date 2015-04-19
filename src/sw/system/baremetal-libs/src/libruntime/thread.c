@@ -223,7 +223,7 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
         thread->ctx->regs[1] = 0xfffffffc;
         /* For the moment only one parameter is supported. */
         thread->ctx->regs[3] = (unsigned int) arg;
-        thread->ctx->pc = 0x0;  /* entry point of external app*/
+        thread->ctx->pc = (unsigned int) start_routine;
         thread->ctx->sr = 0x8077;
         /* - supervisor mode
          * - tick timer enabled
