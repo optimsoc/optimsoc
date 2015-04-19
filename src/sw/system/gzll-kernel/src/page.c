@@ -44,7 +44,7 @@ void gzll_paging_init() {
     optimsoc_vmm_set_ifault_handler(gzll_paging_ipage_fault);
 
     // Local page table
-    uint32_t start = (uint32_t) &_end;
+    uint32_t start = (uint32_t) _gzll_image_layout.apps_end;
     uint32_t end = (uint32_t) _or1k_stack_bottom;
 
     start += 4 * 8192;

@@ -19,6 +19,15 @@ void communication_init();
 
 extern uint32_t gzll_rank;
 
+struct _gzll_image_layout {
+    char gzll[4];
+    void *kernel_end;
+    void *apps_start;
+    void *apps_end;
+};
+extern struct _gzll_image_layout _gzll_image_layout;
+
+
 uint32_t gzll_swapping();
 
 struct gzll_page_t {
