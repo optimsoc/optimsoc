@@ -50,7 +50,7 @@ void gzll_paging_init() {
     uint32_t start = (uint32_t) _gzll_image_layout.apps_end;
     uint32_t end = (uint32_t) _or1k_stack_bottom;
 
-    start += 4 * 8192;
+    start += 20 * 8192;
 
     uint32_t start_page = (start+8191) >> 13;
     uint32_t end_page = (end >> 13) - 1;
