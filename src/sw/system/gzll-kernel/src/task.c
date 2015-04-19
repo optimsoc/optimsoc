@@ -32,7 +32,6 @@ void gzll_task_start(char* identifier, struct gzll_task *task) {
 
         printf(" - load %d bytes from %p to %p\n", len, from, to);
         memcpy(to, from, len);
-        printf("done\n");
         optimsoc_vmm_map(pdir, (uint32_t) p + 0x2000, (uint32_t) to);
     }
 
