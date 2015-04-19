@@ -51,15 +51,18 @@ struct gzll_kernel_info {
     char *version_string;
 };
 
+
+#define GZLL_SYSCALL_THREAD_EXIT 0
+
 /**
  *  Get kernel information
  *
  *  - Parameter 0: Pointer to gzll_kernel_info structure
  *  - Output: 0
  */
-#define GZLL_SYSCALL_KERNEL_INFO 0
+#define GZLL_SYSCALL_KERNEL_INFO 1
 
 /** Allocate new page for user application */
-#define GZLL_SYSCALL_VMM_ALLOC_PAGE 1
+#define GZLL_SYSCALL_VMM_ALLOC_PAGE 2
 
 #endif

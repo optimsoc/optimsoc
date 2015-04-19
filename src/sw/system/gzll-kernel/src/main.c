@@ -34,6 +34,7 @@ void main() {
 
     gzll_rank = optimsoc_get_ctrank();
 
+    optimsoc_syscall_handler_set(gzll_syscall_handler);
 
     optimsoc_runtime_boot();
 }

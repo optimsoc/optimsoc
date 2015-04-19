@@ -1,16 +1,12 @@
-/*
- * gzll.h
- *
- *  Created on: Mar 30, 2015
- *      Author: gu45zin
- */
-
 #ifndef __GZLL_H__
 #define __GZLL_H__
 
+#include <optimsoc-runtime.h>
 #include <stdint.h>
 
 #include "gzll-apps.h"
+
+void gzll_syscall_handler(struct optimsoc_syscall *sysc);
 
 void gzll_init();
 void init();
