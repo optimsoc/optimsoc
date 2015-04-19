@@ -38,7 +38,7 @@ void gzll_paging_init();
 void gzll_paging_dpage_fault(uint32_t vaddr);
 void gzll_paging_ipage_fault(uint32_t vaddr);
 
-int gzll_page_alloc();
+unsigned int gzll_page_alloc();
 
 void gzll_apps_bootstrap();
 

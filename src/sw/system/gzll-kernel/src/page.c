@@ -74,6 +74,6 @@ void gzll_paging_ipage_fault(uint32_t vaddr) {
 }
 
 // TODO: Add page_t handling
-int gzll_page_alloc() {
+unsigned int gzll_page_alloc() {
     return (int) optimsoc_list_remove_head(gzll_pagepool_local);
 }
