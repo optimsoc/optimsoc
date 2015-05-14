@@ -196,13 +196,13 @@ install the libraries. The repository is part of the repo tree.
 
 To perform the installation run:
 
-\begin{verbatim}
+\begin{alltt}
 mkdir build
 cd build
-../configure --prefix=$OPTIMSOC_INSTALLATION/sw/ --host=or1k-elf
+../configure --prefix=\$OPTIMSOC_INSTALLATION/sw/ --host=or1k-elf
 make
 make install
-\end{verbatim}
+\end{alltt}
 
 \subsection{gzll Kernel and Libraries}
 
@@ -230,26 +230,25 @@ library called ``GLIP''.
 Before you start, set the \verb|PKG_CONFIG_PATH| for the host software, which
 will contain the glip and liboptimsochost pkgconfig files.
 
-\begin{verbatim}
-export PKG_CONFIG_PATH=$OPTIMSOC_INSTALLATION/host/lib/pkgconfig:$PKG_CONFIG_PATH
-\end{verbatim}
+\begin{alltt}
+export PKG_CONFIG_PATH=\$OPTIMSOC_INSTALLATION/host/lib/pkgconfig:\$PKG_CONFIG_PATH
+\end{alltt}
 
 \subsection{GLIP}
 
 GLIP is an independent project and the sources need to be obtained separately
 from OpTiMSoC.
 
-\begin{verbatim}
+\begin{alltt}
 git clone https://github.com/tum-lis/glip.git
 cd glip
 ./autogen.sh
 mkdir build
 cd build
-../configure --enable-cypressfx2 --enable-tcp --prefix=$OPTIMSOC_INSTALLATION/host
+../configure --enable-cypressfx2 --enable-tcp --prefix=\$OPTIMSOC_INSTALLATION/host
 make
 make install
-\end{verbatim}
-
+\end{alltt}
 
 \subsection{liboptimsochost}
 
@@ -264,20 +263,20 @@ when enabled via \verb|--enable-python-interface|.
 
 Build, make and install:
 
-\begin{verbatim}
+\begin{alltt}
 mkdir build
 cd build
-../configure --prefix=$OPTIMSOC_INSTALLATION/host --enable-python-interface
+../configure --prefix=\$OPTIMSOC_INSTALLATION/host --enable-python-interface
 make
 make install
-\end{verbatim}
+\end{alltt}
 
 Before proceeding you will need to set the correct paths:
 
-\begin{verbatim}
-export LD_LIBRARY_PATH=$OPTIMSOC_INSTALLATION/host/lib:${LD_LIBRARY_PATH}
-export PATH=$OPTIMSOC_INSTALLATION/host/bin:${PATH}
-\end{verbatim}
+\begin{alltt}
+export LD_LIBRARY_PATH=\$OPTIMSOC_INSTALLATION/host/lib:\$\{LD_LIBRARY_PATH\}
+export PATH=\$OPTIMSOC_INSTALLATION/host/bin:\$\{PATH\}
+\end{alltt}
 
 \subsection{Graphical User Interface}
 
@@ -286,13 +285,13 @@ export PATH=$OPTIMSOC_INSTALLATION/host/bin:${PATH}
 For building you will need Qt:
 
 \begin{alltt}
-\$> sudo apt-get install libqt4-dev
+sudo apt-get install libqt4-dev
 \end{alltt}
 
 In case you want to develop the GUI, install qtcreator:
 
 \begin{alltt}
-\$> sudo apt-get install qtcreator
+sudo apt-get install qtcreator
 \end{alltt}
 
 \subsubsection{Building}
@@ -444,7 +443,7 @@ export LISNOC_RTL=\$\{LISNOC\}/rtl
 export OPTIMSOC_INSTALLATION=/opt/optimsoc
 
 # Baremetal toolchain
-export PATH=/opt/or1k-elf/bin:\${PATH\}
+export PATH=/opt/or1k-elf/bin:\$\{PATH\}
 
 # TCL scripting
 export OPTIMSOC_TCL=\$\{OPTIMSOC_INSTALLATION\}/tools/tcl
