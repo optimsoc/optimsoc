@@ -9,7 +9,7 @@ complete gcc is built.
 
 \subsection{Build Sourceware -- Stage 1}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-sourceware-stage1
 $> cd bld-sourceware-stage1
 $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
@@ -20,14 +20,14 @@ $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 
 You may run \verb|make -j8| to run 8 parallel build jobs or similar to
 speed up the build here and in the following.
 
 \subsection{Build GCC -- Stage 1}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-gcc-stage1
 $> cd bld-gcc-stage1
 $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
@@ -35,11 +35,11 @@ $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Build Sourceware -- Stage 2}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-sourceware-stage2
 $> cd bld-sourceware-stage2
 $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
@@ -50,11 +50,11 @@ $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Build GCC -- Stage 2}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-gcc-stage2
 $> cd bld-gcc-stage2
 $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
@@ -63,5 +63,5 @@ $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 

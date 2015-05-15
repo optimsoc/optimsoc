@@ -8,16 +8,16 @@ all libraries are build together and managed by one build system. When
 checking out an empty directory, the clean directory structure at base
 level (that is \verb|src/sw/system/dm|) looks like:
 
-\begin{alltt}
+\begin{lstlisting}
 apps/
-{\color{graydir}autogen.sh}
+autogen.sh
 bootrom/
-{\color{graydir}configure.ac}
+configure.ac
 doc/
-{\color{graydir}m4/}
-{\color{graydir}Makefile.am}
+m4/
+Makefile.am
 src/
-\end{alltt}
+\end{lstlisting}
 
 The grey folders and files are part of the (autotools) build
 structure. The libraries can be found in \verb|src| and will be
@@ -50,27 +50,26 @@ Although the autotools are complex, generating the \verb|configure|
 script is easily done running the \verb|autogen.sh| script. Just run
 the command in place:
 
-\lstset{language=sh}
-\begin{verbatim}
+\begin{lstlisting}
 ./autogen.sh
-\end{verbatim}
+\end{lstlisting}
 
 Afterwards, the \verb|configure| script will be present. As mentioned
 above, you should not run it in place but create a separate building
 directory:
 
-\begin{verbatim}
+\begin{lstlisting}
 mkdir build
 cd build
-\end{verbatim}
+\end{lstlisting}
 
 The \verb|autogen.sh| script already gave you the commonly used
 configure command line:
 
-\begin{verbatim}
+\begin{lstlisting}
 ../configure CFLAGS='-g -O0' --prefix=`pwd`/.. --host=or32 \
   CC=or32-elf-gcc
-\end{verbatim}
+\end{lstlisting}
 
 This assumes you have an environment variable \verb|OPTIMSOC_NEWLIB|
 set. Alternatively you can set the path using
@@ -86,15 +85,15 @@ variables in the configure run accordingly.
 
 Afterwards you are ready to build your software
 
-\begin{verbatim}
+\begin{lstlisting}
 make
-\end{verbatim}
+\end{lstlisting}
 
 and then install it
 
-\begin{verbatim}
+\begin{lstlisting}
 make install
-\end{verbatim}
+\end{lstlisting}
 
 Afterwards you will find the libraries in \verb|$(prefix)/lib| (in
 most cases directly in the system software base folder). Furthermore

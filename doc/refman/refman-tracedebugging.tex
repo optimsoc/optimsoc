@@ -16,25 +16,25 @@ testbenches and simulator, we use this minimally intrusive way to
 instrument the source code. A trace event can be defined in assembly
 as
 
-\begin{alltt}
-l.nop \emph{<index>}
-\end{alltt}
+\begin{lstlisting}
+l.nop <index>
+\end{lstlisting}
 
 The \verb|value| parameter is handled with general purpose register 3.
 The current value at the \verb|nop| execution is emitted. So, three
 instructions are required:
 
-\begin{alltt}
-l.movhi r3, hi(\emph{<value>})
-l.ori r3, r3, lo(\emph{<value>})
-l.nop \emph{<index>}
-\end{alltt}
+\begin{lstlisting}
+l.movhi r3, hi(<value>)
+l.ori r3, r3, lo(<value>)
+l.nop <index>
+\end{lstlisting}
 
 For convenience a macro is defined for use in C code:
 
-\begin{alltt}
-OPTIMSOC_TRACE(\emph{<index>}, \emph{<value})
-\end{alltt}
+\begin{lstlisting}
+OPTIMSOC_TRACE(<index>, <value)
+\end{lstlisting}
 
 The C library and the OpTiMSoC libraries use trace events to ease
 debugging, the debugging infrastructure allows to trace the events or
