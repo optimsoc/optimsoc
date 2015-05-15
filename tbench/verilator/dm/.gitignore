@@ -1,8 +1,0 @@
-# intermediate files during build
-*.o
-*/obj_dir/
-
-*/ct.vmem
-*/verilator.vc
-*/sim.vcd
-*/sw/*/
