@@ -26,13 +26,13 @@ used to simulate local software.
 You can find this example in \verb|tbench/rtl/dm/compute_tile|. You
 need to have Modelsim installed before you run:
 
-\begin{verbatim}
-> make build
-\end{verbatim}
+\begin{lstlisting}
+$> make build
+\end{lstlisting}
 
 The output should be as follows:
 
-\begin{verbatim}
+\begin{lstlisting}
 Model Technology ModelSim SE-64 vlog 10.1b Compiler 2012.04 Apr 26 2012
 -- Compiling module tb_compute_tile
 -- Compiling module trace_monitor
@@ -42,7 +42,7 @@ Model Technology ModelSim SE-64 vlog 10.1b Compiler 2012.04 Apr 26 2012
 
 Top level modules:
 	tb_compute_tile
-\end{verbatim}
+\end{lstlisting}
 
 In case you see errors check that the environment variables are set
 correctly.
@@ -52,9 +52,9 @@ The testbench can now be started in the Modelsim user interface or can
 be executed in command line mode using \verb|make sim|, but there is
 no software loaded to the memory, what results in a warning:
 
-\begin{verbatim}
+\begin{lstlisting}
 # ** Warning: (vsim-7) Failed to open readmem file "ct.vmem" in read mode.
-\end{verbatim}
+\end{lstlisting}
 
 The simulations always expect vmem files that initialize the memories.
 This needs to be generated from the compiled source code. Before you
@@ -91,9 +91,9 @@ To build a simple ``Hello World'' example, simply switch to \verb|sw|.
 The example application can be found in the software path. You should
 copy the whole path
 
-\begin{verbatim}
+\begin{lstlisting}
 $> optimsoc-app-link dm baremetal/hello_simple
-\end{verbatim}
+\end{lstlisting}
 
 Inside the \verb|hello_simple.lnk| folder you can find the
 \verb|hello_simple.c| and the \verb|Makefile|. Now \verb|make| the
@@ -115,26 +115,26 @@ testbench main folder. Before the simulation warned that
 \verb|ct.vmem| cannot be found. Therefore we simply link the software
 to this filename
 
-\begin{verbatim}
-> ln -s sw/hello_simple.lnk/hello_simple.vmem ct.vmem
-\end{verbatim}
+\begin{lstlisting}
+$> ln -s sw/hello_simple.lnk/hello_simple.vmem ct.vmem
+\end{lstlisting}
 
 If you now run the software (\verb|make sim|), the simulation should
 terminate with:
 
-\begin{verbatim}
+\begin{lstlisting}
 # [               52500, 0] Software reset
 # [            57480000, 0] Terminated at address 0x00008080
-\end{verbatim}
+\end{lstlisting}
 
 \verb|0x00008080| is the program counter (can vary depending on your cross
 compiler version) the simulation terminated. This is correct behavior
 and will be explained below. Furthermore you will find a file called
 \verb|stdout| which shows the actual output:
 
-\begin{verbatim}
+\begin{lstlisting}
 [            51185000, 0] Hello World!
-\end{verbatim}
+\end{lstlisting}
 
 The \verb|[..]| part is the time stamp and core id. But how does the
 actual printf-output get there when there is no UART or similar?
@@ -157,12 +157,12 @@ further registers (often \verb|r3|). This still is minimally intrusive
 and allows you to trace values. The printf is also done that way (see
 newlib):
 
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 void sim_putc(unsigned char c) {
   asm("l.addi\tr3,%0,0": :"r" (c));
   asm("l.nop %0": :"K" (NOP_PUTC));
 }
-\end{verbatim}
+\end{lstlisting}
 
 This function is called from printf as write function. The trace
 monitor captures theses characters and puts them to the stdout file.
@@ -170,11 +170,11 @@ monitor captures theses characters and puts them to the stdout file.
 You can easily add your own ``traces'' using a macro defined in
 \verb|optimsoc.h|:
 
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 #define OPTIMSOC_TRACE(id,v)                \
    asm("l.addi\tr3,%0,0": :"r" (v) : "r3"); \
    asm("l.nop %0": :"K" (id));
-\end{verbatim}
+\end{lstlisting}
 
 This feature is used extensively by current and future OpTiMSoC software.
 
@@ -202,7 +202,7 @@ acknowledges this by printing its own ``Hello World'' message.
 
 The simulation should output:
 
-\begin{verbatim}
+\begin{lstlisting}
 # [               52500, 0] Software reset
 # [               52500, 1] Software reset
 # [               52500, 2] Software reset
@@ -233,7 +233,7 @@ The simulation should output:
 # [            76442500, 0] Event 0x0102: 0x00000001
 # [            85920000, 0] Event 0x0103: 0x00000000
 # [           100387500, 0] Terminated at address 0x0000dd5c
-\end{verbatim}
+\end{lstlisting}
 
 After each core is reset they start their execution and after a
 certain time emit events. We will have a more detailed view on the
@@ -300,9 +300,9 @@ systems identical to the RTL simulation. We will directly start with
 the \verb|system_2x2_cccc|. In the base folder you should simply make
 it:
 
-\begin{alltt}
-\$> make
-\end{alltt}
+\begin{lstlisting}
+$> make
+\end{lstlisting}
 
 The command will first generate the verilated version of the 2x2
 system. Finally it builds the toplevel files and links to
@@ -314,26 +314,26 @@ Similar to the steps described above you will need to build the
 software, e.g., the heat example. Again you need to link the
 \verb|vmem| file. Now start the simulation:
 
-\begin{alltt}
-\$> ./tb_system_2x2_cccc
-\end{alltt}
+\begin{lstlisting}
+$> ./tb_system_2x2_cccc
+\end{lstlisting}
 
 It will start a debug server and wait for connections:
 
-\begin{alltt}
+\begin{lstlisting}
 
              SystemC 2.3.0-ASI --- Feb 11 2013 12:54:17
         Copyright (c) 1996-2012 by all Contributors,
         ALL RIGHTS RESERVED
 
 Listening on port 22000
-\end{alltt}
+\end{lstlisting}
 
 In another console now start the OpTiMSoC GUI:
 
-\begin{alltt}
-\$> optimsocgui
-\end{alltt}
+\begin{lstlisting}
+$> optimsocgui
+\end{lstlisting}
 
 In the first dialog window you need to set the debug backend to
 \emph{Simulation TCP Interface} and proceed then. After the GUI
@@ -352,7 +352,7 @@ the event.
 
 The recommended platform for software development or any other system
 which needs no I/O is the ZTEX boards\footnote{See
-  http://www.ztex.de}. Various variants exist, the supported boards
+  \url{http://www.ztex.de}}. Various variants exist, the supported boards
 are the 1.15 series version b and d, where the latter is twice as
 large as the former and can therefore contain more processor cores.
 The 2x2 example works with both boards.
@@ -374,22 +374,22 @@ you will now need to provide a \verb|modelsim.ini| either globally or
 in the system's folder that contains the Xilinx libraries. Once you
 have it, you can start the system using
 
-\begin{alltt}
-\$> make sim-noninteractive
-\end{alltt}
+\begin{lstlisting}
+$> make sim-noninteractive
+\end{lstlisting}
 
 The simulation will start and you can now connect
 to the system in a different shell by using the command line
 interface:
 
-\begin{alltt}
-\$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
-\end{alltt}
+\begin{lstlisting}
+$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
+\end{lstlisting}
 
 The command line interface will connect to the system and enumerate
 all debug modules:
 
-\begin{alltt}
+\begin{lstlisting}
 Connected to system.
 System ID: 0x0000ce75
 Module summary:
@@ -406,7 +406,7 @@ addr.	type	version	name
 0x0b	0x07	0x00	MAM
 0x0c	0x07	0x00	MAM
 0x0d	0x07	0x00	MAM
-\end{alltt}
+\end{lstlisting}
 
 The modules are the \emph{Instruction Trace Module (ITM)},
 \emph{Software Trace Module (STM)} and \emph{Memory Access Module
@@ -418,34 +418,34 @@ before in the \verb|sw| subfolder. Once you have build
 
 First you enter interactive mode:
 
-\begin{alltt}
-\$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
-\end{alltt}
+\begin{lstlisting}
+$> optimsoc_cli -bdbgnoc -oconn=tcp,host=localhost,port=23000
+\end{lstlisting}
 
 After enumeration you will get an \verb|OpTiMSoC>| shell. First you
 can initialize the memories:
 
-\begin{alltt}
+\begin{lstlisting}
 OpTiMSoC> mem_init hello_simplemp.bin 0-3
-\end{alltt}
+\end{lstlisting}
 
 Next you need to enable logging of the software trace events to a
 file:
 
-\begin{alltt}
+\begin{lstlisting}
 OpTiMSoC> log_stm_trace strace
-\end{alltt}
+\end{lstlisting}
 
 Then start the system:
-\begin{alltt}
+\begin{lstlisting}
 OpTiMSoC> start
-\end{alltt}
+\end{lstlisting}
 
 Let it run for a while (1 minute) and then leave the command line
 interface:
-\begin{alltt}
+\begin{lstlisting}
 OpTiMSoC> quit
-\end{alltt}
+\end{lstlisting}
 
 After that you will find the expected output of the trace events in
 \verb|strace|.
@@ -462,9 +462,9 @@ systems.
 
 To generate the system first create the project file:
 
-\begin{alltt}
-\$> make synplify.prj
-\end{alltt}
+\begin{lstlisting}
+$> make synplify.prj
+\end{lstlisting}
 
 Now the Synplify project file has been generated and you're ready to start the
 synthesis.
@@ -472,22 +472,22 @@ synthesis.
 If you want to have the output of the synthesis in a folder different from your
 source folder (the one where you just ran \verb|make| in), you can set the
 environment variable \verb|OPTIMSOC_SYN_OUTDIR| to any path you like, e.g. put
-\begin{alltt}
-export OPTIMSOC_SYN_OUTDIR=\$HOME/syn
-\end{alltt}
+\begin{lstlisting}
+export OPTIMSOC_SYN_OUTDIR=$HOME/syn
+\end{lstlisting}
 in your profile script (e.g. your \verb|.bashrc| file) and reload it.
 
 Run the synthesis afterwards (for the ZTEX 1.15b or d board):
 
-\begin{alltt}
-\$> make synplify_115b_ddr
-\end{alltt}
+\begin{lstlisting}
+$> make synplify_115b_ddr
+\end{lstlisting}
 
 Once the synthesis is finished you can generate the bitstream:
 
-\begin{alltt}
-\$> make bitgen_115d_ddr
-\end{alltt}
+\begin{lstlisting}
+$> make bitgen_115d_ddr
+\end{lstlisting}
 
 \subsection{Testing on the FPGA}
 Now that you have generated a bitstream we're ready to upload it to the FPGA.
@@ -495,9 +495,9 @@ Connect the ZTEX 1.15 board to your PC via USB.
 
 If you run \verb|lsusb| the board identifies itself as:
 
-\begin{alltt}
+\begin{lstlisting}
 Bus 001 Device 004: ID 221a:0100
-\end{alltt}
+\end{lstlisting}
 
 There is no manufacturer or further information displayed. The reason
 is, that OpTiMSoC otherwise may require to buy a set of USB
@@ -505,16 +505,16 @@ identifiers. Instead, all ZTEX boards share the same identifier and
 the following command is used to find out details on the Firmware,
 Board and Capabilities:
 
-\begin{alltt}
-\$> FWLoader -c -ii
-\end{alltt}
+\begin{lstlisting}
+$> FWLoader -c -ii
+\end{lstlisting}
 
 To use the ZTEX boards as a user, it is recommended to add the following
 udev rule
 
-\begin{alltt}
+\begin{lstlisting}
 SUBSYSTEM=="usb", ATTR{idVendor}=="221a", ATTR{idProduct}=="0100", MODE="0666"
-\end{alltt}
+\end{lstlisting}
 
 for example in \verb|/etc/udev/rules.d/60-usb.rules|.
 
@@ -527,7 +527,7 @@ once for each board (until the firmware changes).
 
 Now the board will identify itself using \verb|FWLoader -c -ii|:
 
-\begin{alltt}
+\begin{lstlisting}
 bus=001  device=4 (`004')  ID=221a:100
    Manufacturer="TUM LIS"  Product="OpTiMSoC - ZTEX USB 1.15"    SerialNumber="04A32DBCFA"
    productID=10.13.0.0  fwVer=0  ifVer=1
@@ -538,21 +538,21 @@ bus=001  device=4 (`004')  ID=221a:100
       Flash memory support
       High speed FPGA configuration
       MAC EEPROM read/write
-\end{alltt}
+\end{lstlisting}
 
 Everything ready to go? Then upload the bitstream to the FPGA by running
 
-\begin{alltt}
-\$> make flash_115d_ddr
-\end{alltt}
+\begin{lstlisting}
+$> make flash_115d_ddr
+\end{lstlisting}
 
 in the same folder where you have been running \verb|make bitstream_...| etc.
 in the previous section. The output should be something like
 
-\begin{alltt}
+\begin{lstlisting}
 FWLoader -v 0x221a 0x100 -f -uf /[somepath]/system_2x2_cccc_ztex.bit
 FPGA configuration time: 194 ms
-\end{alltt}
+\end{lstlisting}
 
 As the FPGA is now ready you can use the same method to connect to the
 FPGA and load software on it as you've done in the Section
@@ -560,9 +560,9 @@ FPGA and load software on it as you've done in the Section
 connection paramters used in \verb|optimsoc_cli| are a bit different.
 
 Run
-\begin{alltt}
-\$> optimsoc_cli -i -bdbgnoc -oconn=usb
-\end{alltt}
+\begin{lstlisting}
+$> optimsoc_cli -i -bdbgnoc -oconn=usb
+\end{lstlisting}
 
 to connect to the FPGA board over USB. You should again be presented with a
 listing of all available debug modules. Now you can continue just as you did
@@ -573,17 +573,17 @@ time! You can now develop software and explore OpTiMSoC. A handy
 utility is the python interface to the command line interface. Instead
 of running the interactive mode you can run the script interface like:
 
-\begin{alltt}
-\$> optimsoc_cli -s <script.py> -bdbgnoc -oconn=usb
-\end{alltt}
+\begin{lstlisting}
+$> optimsoc_cli -s <script.py> -bdbgnoc -oconn=usb
+\end{lstlisting}
 
 An example python script:
 
-\begin{alltt}
+\begin{lstlisting}[language=python]
 mem_init(2,"hello_simple.bin")
 log_stm_trace("strace")
 start()
-\end{alltt}
+\end{lstlisting}
 
 You can also connect to the USB now using the GUI. Now you're ready to
 explore and customize OpTiMSoC for yourself. Have fun!
