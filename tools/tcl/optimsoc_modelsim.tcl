@@ -108,15 +108,10 @@ proc optimsoc_build {} {
     quit
 }
 
-if {[info exists argv0] && [
-    file dirname [file normalize [info script]/...]] eq [
-    file dirname [file normalize $argv0/...]]} {
-
-    if {$::argc > 0} {
-	foreach arg $::argv {
-	    source $arg
-	}
-    } else {
-	puts "When called directly you need to set scripts to include"
+if {[info level] == 0} {
+    for {set i 1} {$i < 10} {incr i} {
+        if {[info exists $i]} {
+            source [subst $$i]
+        }
     }
 }
