@@ -81,9 +81,8 @@ You need to set the following basic environment variables (e.g., in your
 \begin{lstlisting}
 export OPTIMSOC=/path/to/optimsoc/
 export OPTIMSOC_RTL=$OPTIMSOC/src/rtl
-export OPTIMSOC_SYSC=$OPTIMSOC/src/sysc
 
-export LISNOC=$OPTIMSOC/ext/lisnoc
+export LISNOC=$OPTIMSOC/external/lisnoc
 export LISNOC_RTL=$LISNOC/rtl
 \end{lstlisting}
 
@@ -161,8 +160,8 @@ $OPTIMSOC/tools/install.sh $OPTIMSOC_INSTALLATION
 and then set the environment:
 
 \begin{lstlisting}
-OPTIMSOC_TCL=$OPTIMSOC_INSTALLATION/tools/tcl
-PATH=$PATH:$OPTIMSOC_INSTALLATION/tools/utils
+export OPTIMSOC_TCL=$OPTIMSOC_INSTALLATION/tools/tcl
+export PATH=$PATH:$OPTIMSOC_INSTALLATION/tools/utils
 \end{lstlisting}
 
 \section{System Software}
@@ -399,7 +398,7 @@ find the binary and pkgconfig file.
 
 \subsection{OpTiMSoC SystemC library}
 
-The OpTiMSoC SystemC library contains SystemC modules for Debugging of
+The OpTiMSoC SystemC library contains SystemC modules for debugging of
 Verilator simulations and other. It can be found in the repository at
 \url{https://github.com/optimsoc/systemc} or in \texttt{src/systemc}
 in the repo. The build is identical to the other libraries
@@ -423,7 +422,8 @@ You will need the following environment variables (e.g., in bash):
 \begin{lstlisting}[language=bash]
 # SystemC environment
 export SYSTEMC=/opt/systemc
-export PKG_CONFIG_PATH=$SYSTEMC/lib-linux64/pkgconfig
+export PKG_CONFIG_PATH=$SYSTEMC/lib-linux64/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=${OPTIMSOC_INSTALLATION}/share/pkgconfig:$PKG_CONFIG_PATH
 \end{lstlisting}
 
 \section{Configuration Summary}
@@ -432,9 +432,8 @@ Check that you have the following environment variables set at this
 point (or a subset depending on your requirements):
 
 \begin{lstlisting}[language=bash]
-export OPTIMSOC=/path/to/optimsoc/clone
-export OPTIMSOC_RTL=$OPTIMSOC/src/rtl
-export OPTIMSOC_SYSC=$OPTIMSOC/src/sysc
+export OPTIMSOC=/path/to/optimsoc/repo/tree
+export OPTIMSOC_RTL=${OPTIMSOC}/src/rtl
 
 export LISNOC=$OPTIMSOC/external/lisnoc
 export LISNOC_RTL=$LISNOC/rtl
@@ -450,6 +449,7 @@ export OPTIMSOC_TCL=$OPTIMSOC_INSTALLATION/tools/tcl
 
 # SystemC environment
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SYSTEMC/lib-linux64/pkgconfig
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${OPTIMSOC_INSTALLATION}/systemc/share/pkgconfig
 
 # System software
 export PKG_CONFIG_PATH=$OPTIMSOC_INSTALLATION/sw/share/pkgconfig:$PKG_CONFIG_PATH
