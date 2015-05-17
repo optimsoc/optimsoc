@@ -3,6 +3,8 @@ puts {
   OpTiMSoC Verilator compile script
 }
 
+set OPTIMSOC_VERILATOR "yes"
+
 set file_list { }
 set inc_dirs { }
 set defines { }
