@@ -20,15 +20,7 @@
  *
  * =============================================================================
  *
- * A simple test system with only a single compute tile
- *
- * During the program run a full instruction trace is generated and saved
- * in the file "trace". All data coming from printf() calls ("simulated stdout")
- * are written to the file "stdout".
- *
- * To run this simulation, build a software application (e.g. hello_simple) and
- * link the resulting .vmem file as ct.vmem into the folder containing this
- * file.
+ * A verilated testbench for a simple systems with only one compute tile.
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
@@ -36,7 +28,18 @@
 
 `include "dbg_config.vh"
 
-module tb_compute_tile();
+`ifndef TBENCH_NUMCORES
+`define TBENCH_NUMCORES 1
+`endif
+
+module tb_compute_tile(
+`ifdef verilator
+   input clk,
+   input rst_sys,
+   input rst_cpu,
+   input cpu_stall
+`endif
+   );
 
    // NoC parameters
    parameter NOC_FLIT_DATA_WIDTH = 32;
@@ -44,10 +47,12 @@ module tb_compute_tile();
    localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH + NOC_FLIT_TYPE_WIDTH;
    parameter VCHANNELS = 3;
 
+`ifndef verilator
    reg clk;
    reg rst_sys;
    reg rst_cpu;
    reg cpu_stall;
+`endif
 
    reg [NOC_FLIT_WIDTH-1:0] noc_in_flit;
    reg [VCHANNELS-1:0] noc_in_valid;
@@ -56,18 +61,18 @@ module tb_compute_tile();
    wire [VCHANNELS-1:0] noc_out_valid;
    reg [VCHANNELS-1:0] noc_out_ready;
 
-   parameter NUMCORES = 1;
+   parameter NUMCORES = `TBENCH_NUMCORES;
 
    wire [`DEBUG_TRACE_EXEC_WIDTH*NUMCORES-1:0] trace;
 
    wire [`DEBUG_TRACE_EXEC_WIDTH*NUMCORES-1:0] trace_array [0:NUMCORES-1];
-   wire                                        trace_enable   [0:NUMCORES-1];
-   wire [31:0]                                 trace_insn     [0:NUMCORES-1];
-   wire [31:0]                                 trace_pc       [0:NUMCORES-1];
+   wire                                        trace_enable   [0:NUMCORES-1] /*verilator public_flat_rd*/;
+   wire [31:0]                                 trace_insn     [0:NUMCORES-1] /*verilator public_flat_rd*/;
+   wire [31:0]                                 trace_pc       [0:NUMCORES-1] /*verilator public_flat_rd*/;
    wire                                        trace_wben     [0:NUMCORES-1];
    wire [4:0]                                  trace_wbreg    [0:NUMCORES-1];
    wire [31:0]                                 trace_wbdata   [0:NUMCORES-1];
-   wire [31:0]                                 trace_r3       [0:NUMCORES-1];
+   wire [31:0]                                 trace_r3       [0:NUMCORES-1] /*verilator public_flat_rd*/;
    
 
    wire [NUMCORES-1:0]                         termination;
@@ -92,6 +97,7 @@ module tb_compute_tile();
                         .data (trace_wbdata[i]),
                         .r3 (trace_r3[i]));
 
+`ifndef verilator
             /* trace_monitor AUTO_TEMPLATE(
              .enable  (trace_enable[i]),
              .wb_pc   (trace_pc[i]),
@@ -117,7 +123,7 @@ module tb_compute_tile();
                 .wb_insn                (trace_insn[i]),         // Templated
                 .r3                     (trace_r3[i]),           // Templated
                 .termination_all        (termination));          // Templated
-
+`endif
       end
    endgenerate
 
@@ -140,6 +146,7 @@ module tb_compute_tile();
                      .noc_out_ready     (noc_out_ready[VCHANNELS-1:0]),
                      .cpu_stall         (cpu_stall));
 
+`ifndef verilator
    initial begin
       clk = 1'b1;
       rst_sys = 1'b1;
@@ -153,6 +160,7 @@ module tb_compute_tile();
    end
 
    always clk = #1.25 ~clk;
+`endif
 
    `include "optimsoc_functions.vh"
 endmodule

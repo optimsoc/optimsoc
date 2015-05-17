@@ -1,13 +1,9 @@
-all: build
+all:
+	@echo "Run make with the following targets:"
+	@echo "  build-verilator    Build verilator simulation"
 
-build: 
-	vsim -c -do modelsim_compile.tcl
+build-verilator: tb_compute_tile tb_compute_tile-vcd
 
-sim:
-	vsim -voptargs=+acc -c -do run.do work.tb_compute_tile
+TBENCH=tb_compute_tile
 
-sim-dualcore:
-	vsim -voptargs=+acc -c -do run.do work.tb_compute_tile -G NUMCORES=2
-
-clean:
-	rm -rf work
+include ../../Makefile.verilator.inc
