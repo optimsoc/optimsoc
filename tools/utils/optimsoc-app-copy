@@ -8,4 +8,4 @@ if [ $# -lt 2 ]; then
    exit
 fi
 
-cp -r ${OPTIMSOC}/src/sw/system/$1/apps/$2 .
+cp -r ${OPTIMSOC_APPS}/$1/$2 .

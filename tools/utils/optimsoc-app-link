@@ -12,7 +12,7 @@ if [ $# -lt 2 ]; then
 fi
 
 targetdir=$PWD/${2/\//_}.lnk
-srcdir=${OPTIMSOC}/src/sw/system/apps/$1/$2
+srcdir=${OPTIMSOC_APPS}/$1/$2
 
 if [ ! -d $srcdir ]; then
     echo "Cannot find sources directory $srcdir."
