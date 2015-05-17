@@ -423,7 +423,9 @@ You will need the following environment variables (e.g., in bash):
 # SystemC environment
 export SYSTEMC=/opt/systemc
 export PKG_CONFIG_PATH=$SYSTEMC/lib-linux64/pkgconfig:$PKG_CONFIG_PATH
-export PKG_CONFIG_PATH=${OPTIMSOC_INSTALLATION}/share/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=$SYSTEMC/lib-linux64
+export PKG_CONFIG_PATH=${OPTIMSOC_INSTALLATION}/systemc/share/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=${OPTIMSOC_INSTALLATION}/systemc/lib/:$LD_LIBRARY_PATH
 \end{lstlisting}
 
 \section{Configuration Summary}
@@ -449,7 +451,9 @@ export OPTIMSOC_TCL=$OPTIMSOC_INSTALLATION/tools/tcl
 
 # SystemC environment
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SYSTEMC/lib-linux64/pkgconfig
-export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${OPTIMSOC_INSTALLATION}/systemc/share/pkgconfig
+export LD_LIBRARY_PATH=$SYSTEMC/lib-linux64
+export PKG_CONFIG_PATH=${OPTIMSOC_INSTALLATION}/systemc/share/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=${OPTIMSOC_INSTALLATION}/systemc/lib/:$LD_LIBRARY_PATH
 
 # System software
 export PKG_CONFIG_PATH=$OPTIMSOC_INSTALLATION/sw/share/pkgconfig:$PKG_CONFIG_PATH
