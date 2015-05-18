@@ -26,6 +26,13 @@ SC_MODULE(tracemon) {
 
 int sc_main(int argc, char *argv[])
 {
+    bool standalone;
+
+    standalone = ((argc > 1) &&
+		  (strncmp(argv[1], "standalone", 10) == 0));
+
+    Verilated::commandArgs(argc, argv);
+
     Vtb_compute_tile ct("CT");
 
     sc_signal<bool> rst_sys;
@@ -52,7 +59,8 @@ int sc_main(int argc, char *argv[])
     trace.vcd = &vcd;
 #endif
 
-    VerilatedDebugConnector debugconn("DebugConnector", 0xc200);
+    VerilatedDebugConnector debugconn("DebugConnector", 0xc200, standalone);
+    debugconn.clk(clk);
     debugconn.rst_sys(rst_sys);
     debugconn.rst_cpu(rst_cpu);
 
