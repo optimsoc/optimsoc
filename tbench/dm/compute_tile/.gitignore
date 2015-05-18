@@ -2,6 +2,7 @@ stdout*
 stdout
 trace*
 trace
+events*
 transcript
 *.wlf
 work
