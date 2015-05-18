@@ -1,11 +1,9 @@
-# Build files
+.project
+.cproject
+build-aux/
 build/
-Makefile.in
-aclocal
 aclocal.m4
-build-aux/compile
 autom4te.cache
+Makefile.in
 configure
-
-# Temporary files
-*~
+.settings
