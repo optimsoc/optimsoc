@@ -16,20 +16,23 @@ $(TBENCH): obj_dir/V$(TBENCH)__ALL.a $(TBENCH).o verilated.o verilated_vcd_c.o
 		obj_dir/V$(TBENCH)__ALL.a verilated.o verilated_vcd_c.o \
 		$(LIB) 
 
-$(TBENCH)-vcd: obj_dir/V$(TBENCH)__ALL.a verilated.o verilated_vcd_c.o
+$(TBENCH)-vcd: obj_dir/V$(TBENCH)__ALL.a $(TBENCH)-vcd.o verilated.o verilated_vcd_c.o
+	$(CXX) $(CFLAGS) -o $(TBENCH)-vcd -pthread $(TBENCH)-vcd.o \
+		obj_dir/V$(TBENCH)__ALL.a verilated.o verilated_vcd_c.o \
+		$(LIB)
 
 $(TBENCH).o: $(TBENCH).cpp
 	$(CXX) $(CFLAGS) $(INC) -o $(TBENCH).o -c $(TBENCH).cpp
 
 $(TBENCH)-vcd.o: $(TBENCH).cpp
-	$(CXX) $(CFLAGS) $(INC) -DVCD_TRACE -o $(TBENCH).o -c $(TBENCH).cpp
+	$(CXX) $(CFLAGS) $(INC) -DVCD_TRACE -o $(TBENCH)-vcd.o -c $(TBENCH).cpp
 
-obj_dir/V$(TBENCH)__ALL.a: $(TBENCH).sv
+obj_dir/V$(TBENCH)__ALL.a: $(TBENCH).sv verilator.vc
 	$(VERILATOR) -sc -Wno-width -Wno-unoptflat -f verilator.vc -trace -Wno-fatal
 	make -C obj_dir -f Vtb_compute_tile.mk
 
 verilator.vc:
-	tclsh $OPTIMSOC_TCL/optimsoc_verilator.tcl build.tcl
+	tclsh $(OPTIMSOC_TCL)/optimsoc_verilator.tcl build.tcl
 
 verilated.o:
 	$(CXX) $(CFLAGS) -o verilated.o -c $(VERILATOR_INCDIR)/verilated.cpp
