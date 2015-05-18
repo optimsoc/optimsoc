@@ -1,8 +1,0 @@
-trace.*
-stdout.*
-transcript
-vsim.wlf
-/work
-
-# This file is linked to here
-modelsim.ini

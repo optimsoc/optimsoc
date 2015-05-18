@@ -1,7 +1,0 @@
-trace.*
-stdout.*
-transcript
-vsim.wlf
-/work
-/ct.vmem
-/wave.do
