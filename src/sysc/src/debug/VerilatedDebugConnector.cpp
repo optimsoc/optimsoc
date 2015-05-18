@@ -23,25 +23,106 @@
  */
 
 #include "VerilatedDebugConnector.h"
+#include "VerilatedSTM.h"
 
-VerilatedDebugConnector::VerilatedDebugConnector(sc_module_name nm, uint16_t systemid) :
-        DebugConnector(nm, systemid), rst_sys("rst_sys"), rst_cpu("rst_cpu")
+#include <cassert>
+
+VerilatedDebugConnector::VerilatedDebugConnector(sc_module_name nm, uint16_t systemid, bool standalone) :
+        DebugConnector(nm, systemid), rst_sys("rst_sys"), rst_cpu("rst_cpu"), m_standalone(standalone)
 {
 }
 
 void VerilatedDebugConnector::start()
 {
+	// De-assert reset signals
     rst_sys = 0;
     rst_cpu = 0;
 }
 
 void VerilatedDebugConnector::stop()
 {
+	// Assert reset signals
     rst_sys = 1;
     rst_cpu = 1;
 }
 
 void VerilatedDebugConnector::resetSystem()
 {
+	// Simply call stop
 	stop();
+}
+
+void VerilatedDebugConnector::connection() {
+	if (!m_standalone) {
+		// In TCP mode simply run standard thread
+		DebugConnector::connection();
+	} else {
+		// In standalone, tell so
+		std::cout << "Run in standalone mode" << std::endl;
+
+		// Build stdout vector size by finding largest coreid
+		std::vector<DebugModule*>::iterator it;
+		for (it = m_debugModules.begin(); it != m_debugModules.end(); ++it) {
+			if ((*it)->getType() == DBGTYPE_STM) {
+				VerilatedSTM *stm = (VerilatedSTM*) *it;
+				if (stm->getCoreId() >= m_standalone_stdout.size()) {
+					m_standalone_stdout.resize(stm->getCoreId() + 1);
+				}
+			}
+		}
+
+		// Set events vector size to stdout vector size (number of cores)
+		m_standalone_events.resize(m_standalone_stdout.size());
+
+		// Alloc streams and open files for each core
+		for (int i = 0; i < m_standalone_stdout.size(); i++) {
+			std::ofstream *ofStdout = new std::ofstream;
+			std::ofstream *ofEvents = new std::ofstream;
+			std::ostringstream fnameStdout;
+			std::ostringstream fnameEvents;
+
+			// Generate stdout filename and open
+			fnameStdout << "stdout." << i;
+			ofStdout->open(fnameStdout.str().c_str());
+			m_standalone_stdout[i] = ofStdout;
+
+			// Generate events filename and open
+			fnameEvents << "events." << i;
+			ofEvents->open(fnameEvents.str().c_str());
+			m_standalone_events[i] = ofEvents;
+		}
+
+		// Reset sequence
+		rst_sys = 1;
+		rst_cpu = 1;
+		wait(clk.posedge_event()); // Wait to be sure it is really captured
+		wait(clk.posedge_event()); // This is the reset edge
+		wait(clk.negedge_event()); // De-assert on negative edge
+		rst_sys = 0;
+		rst_cpu = 0;
+	}
+}
+
+bool VerilatedDebugConnector::sendTrace(DebugModule *mod, TracePacket &packet) {
+	if (!m_standalone) {
+		// If TCP server: call standard method
+		DebugConnector::sendTrace(mod, packet);
+	} else {
+		// Extract STM packet (only known at the moment
+		STMTracePacket *stmpacket = (STMTracePacket*) &packet;
+
+		// Check the coreid matches
+		assert(stmpacket->coreid < m_standalone_stdout.size());
+
+		if (stmpacket->id == 4) {
+			// putc packet, print to file
+			*m_standalone_stdout[stmpacket->coreid] << (char) stmpacket->value;
+		}
+
+		// Write all packets to events file
+		*m_standalone_events[stmpacket->coreid] << "[" << stmpacket->timestamp << "] ";
+		*m_standalone_events[stmpacket->coreid] << "Event 0x" << std::hex << stmpacket->id;
+		*m_standalone_events[stmpacket->coreid] << ": 0x" << stmpacket->value << std::dec << std::endl;
+	}
+	return true;
 }

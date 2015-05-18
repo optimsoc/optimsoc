@@ -51,7 +51,7 @@
 DebugConnector::DebugConnector(sc_module_name nm, uint16_t systemid) :
         sc_module(nm), m_systemid(systemid), m_connectionfd(-1), m_port(22000)
 {
-    SC_THREAD(connection);
+	SC_THREAD(connection);
 }
 
 void DebugConnector::registerDebugModule(DebugModule *mod)
