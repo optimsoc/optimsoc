@@ -1,0 +1,15 @@
+stdout*
+stdout
+trace*
+trace
+events*
+transcript
+*.wlf
+work
+ct.vmem
+
+obj_dir
+verilator.vc
+tb_compute_tile
+tb_compute_tile-vcd
+*.o
