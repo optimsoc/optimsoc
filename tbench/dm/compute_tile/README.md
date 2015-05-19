@@ -9,18 +9,14 @@ First build the simulation
 
     make build-verilator
 
-Then you should link an application to this simulation setup (here:
-`hello`)
+Then you should build an application from optimsoc/baremetal-apps,
+e.g., hello
 
-    cd sw
-    optimsoc-app-link baremetal hello
-    cd ..
+    make -C ${OPTIMSOC_APPS}/baremetal/hello
 
-Finally you need to build the software and link it to the memory
-initialization file (`ct.vmem`)
+Then you need to link to the memory initialization file (`ct.vmem`)
 
-    make -C sw/hello.lnk
-    ln -s sw/hello.lnk/hello.vmem ct.vmem
+    ln -s ${OPTIMSOC_APPS}/baremetal/hello/hello.vmem ct.vmem
 
 Now you can run the simulation
 
