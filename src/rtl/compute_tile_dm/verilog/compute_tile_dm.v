@@ -238,7 +238,8 @@ module compute_tile_dm(
           .trace          (trace[`DEBUG_TRACE_EXEC_WIDTH*(c+1)-1:`DEBUG_TRACE_EXEC_WIDTH*c]),
           ); */
          mor1kx_module
-               #(.ID(c))
+               #(.ID(c),
+                 .NUMCORES(CORES))
          u_core (
                  /*AUTOINST*/
                  // Outputs
