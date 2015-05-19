@@ -11,6 +11,8 @@ LIB+=$(shell pkg-config --libs verilator)
 
 VERILATOR_INCDIR=$(shell pkg-config --variable=includedir verilator)
 
+build-verilator: $(TBENCH) $(TBENCH)-vcd
+
 $(TBENCH): obj_dir/V$(TBENCH)__ALL.a $(TBENCH).o verilated.o verilated_vcd_c.o
 	$(CXX) $(CFLAGS) -o $(TBENCH) -pthread $(TBENCH).o \
 		obj_dir/V$(TBENCH)__ALL.a verilated.o verilated_vcd_c.o \
