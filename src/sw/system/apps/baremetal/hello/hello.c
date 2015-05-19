@@ -33,5 +33,12 @@ int main() {
   printf("Hello World! Core %d of %d in tile %d, my absolute core id is: %d\n",
          optimsoc_get_relcoreid(), optimsoc_get_tilenumcores(),
          optimsoc_get_tileid(), optimsoc_get_abscoreid());
+
+  printf("There are %d compute tiles:\n", optimsoc_get_numct());
+
+  for (int r = 0; r < optimsoc_get_numct(); ++r) {
+	  printf(" rank %d is tile %d\n", r, optimsoc_get_ranktile(r));
+  }
+
   return 0;
 }
