@@ -1,3 +1,15 @@
 *~
 \#*\#
 *.vcd
+stdout*
+stdout
+trace*
+trace
+events*
+transcript
+*.wlf
+work
+ct.vmem
+obj_dir
+*.o
+verilator.vc
