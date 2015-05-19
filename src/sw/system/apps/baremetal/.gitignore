@@ -3,3 +3,8 @@
 *.elf
 *.o
 *.vmem
+.project
+.cproject
+.settings
+.metadata
+RemoteSystemsTempFiles
