@@ -31,7 +31,7 @@ $(TBENCH)-vcd.o: $(TBENCH).cpp
 
 obj_dir/V$(TBENCH)__ALL.a: $(TBENCH).sv verilator.vc
 	$(VERILATOR) -sc -Wno-width -Wno-unoptflat -f verilator.vc -trace -Wno-fatal
-	make -C obj_dir -f Vtb_compute_tile.mk
+	make -C obj_dir -f V$(TBENCH).mk
 
 verilator.vc:
 	tclsh $(OPTIMSOC_TCL)/optimsoc_verilator.tcl build.tcl
