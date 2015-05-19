@@ -26,6 +26,7 @@
 #include "VerilatedSTM.h"
 
 #include <cassert>
+#include <iomanip>
 
 VerilatedDebugConnector::VerilatedDebugConnector(sc_module_name nm, uint16_t systemid, bool standalone) :
         DebugConnector(nm, systemid), rst_sys("rst_sys"), rst_cpu("rst_cpu"), m_standalone(standalone)
@@ -82,12 +83,12 @@ void VerilatedDebugConnector::connection() {
 			std::ostringstream fnameEvents;
 
 			// Generate stdout filename and open
-			fnameStdout << "stdout." << i;
+			fnameStdout << "stdout." << std::setfill('0') << std::setw(3) << i;
 			ofStdout->open(fnameStdout.str().c_str());
 			m_standalone_stdout[i] = ofStdout;
 
 			// Generate events filename and open
-			fnameEvents << "events." << i;
+			fnameEvents << "events." << std::setfill('0') << std::setw(3) << i;
 			ofEvents->open(fnameEvents.str().c_str());
 			m_standalone_events[i] = ofEvents;
 		}
