@@ -71,6 +71,8 @@ private:
     bool m_standalone; /*!< This is a standalone simulation */
     std::vector<std::ofstream*> m_standalone_stdout; /*!< stdout files */
     std::vector<std::ofstream*> m_standalone_events; /*!< event files */
+    std::vector<bool> m_standalone_finished;
+    unsigned int m_standalone_finished_count;
 };
 
 #endif /* VERILATEDDEBUGCONNECTOR_H_ */

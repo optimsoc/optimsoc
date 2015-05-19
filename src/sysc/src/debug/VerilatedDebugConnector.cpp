@@ -75,6 +75,12 @@ void VerilatedDebugConnector::connection() {
 		// Set events vector size to stdout vector size (number of cores)
 		m_standalone_events.resize(m_standalone_stdout.size());
 
+		// Set finished vector size to stdout vector size (number of cores)
+		m_standalone_finished.resize(m_standalone_stdout.size(), false);
+
+		// Set the finished counter
+		m_standalone_finished_count = 0;
+
 		// Alloc streams and open files for each core
 		for (int i = 0; i < m_standalone_stdout.size(); i++) {
 			std::ofstream *ofStdout = new std::ofstream;
@@ -125,6 +131,20 @@ bool VerilatedDebugConnector::sendTrace(DebugModule *mod, TracePacket &packet) {
 		*m_standalone_events[stmpacket->coreid] << "[" << stmpacket->timestamp << "] ";
 		*m_standalone_events[stmpacket->coreid] << "Event 0x" << std::hex << stmpacket->id;
 		*m_standalone_events[stmpacket->coreid] << ": 0x" << stmpacket->value << std::dec << std::endl;
+
+		if ((stmpacket->id == 1) || (stmpacket->id == 10)) {
+			m_standalone_finished[stmpacket->coreid] = true;
+			m_standalone_finished_count++;
+
+			std::cout << "[" << stmpacket->timestamp << "] ";
+			std::cout << "Core " << stmpacket->coreid << " has terminated" << std::endl;
+
+			if (m_standalone_finished_count == m_standalone_finished.size()) {
+				std::cout << "[" << stmpacket->timestamp << "] ";
+				std::cout << "All cores terminated. Exiting.." << std::endl;
+				exit(1);
+			}
+		}
 	}
 	return true;
 }
