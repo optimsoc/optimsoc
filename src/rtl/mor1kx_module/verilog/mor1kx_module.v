@@ -102,12 +102,12 @@ module mor1kx_module (
 
    output [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace;
 
-   wire [31:0] 				traceport_exec_insn_o;// From u_cpu of mor1kx.v
-   wire [31:0] 				traceport_exec_pc_o;	// From u_cpu of mor1kx.v
-   wire 				traceport_exec_valid_o;	// From u_cpu of mor1kx.v
-   wire [31:0] 				traceport_exec_wbdata_o;// From u_cpu of mor1kx.v
-   wire 				traceport_exec_wben_o;	// From u_cpu of mor1kx.v
-   wire [4:0] 				traceport_exec_wbreg_o;// From u_cpu of mor1kx.v
+   wire [31:0]                          traceport_exec_insn_o;// From u_cpu of mor1kx.v
+   wire [31:0]                          traceport_exec_pc_o;    // From u_cpu of mor1kx.v
+   wire                                 traceport_exec_valid_o; // From u_cpu of mor1kx.v
+   wire [31:0]                          traceport_exec_wbdata_o;// From u_cpu of mor1kx.v
+   wire                                 traceport_exec_wben_o;  // From u_cpu of mor1kx.v
+   wire [4:0]                           traceport_exec_wbreg_o;// From u_cpu of mor1kx.v
 
    assign trace[`DEBUG_TRACE_EXEC_ENABLE_MSB]                              = traceport_exec_valid_o;
    assign trace[`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB]         = traceport_exec_pc_o;
@@ -144,10 +144,12 @@ module mor1kx_module (
 
    mor1kx
      #(.FEATURE_DATACACHE               ("NONE"),
-       .OPTION_DCACHE_LIMIT_WIDTH	(31),
+       .OPTION_DCACHE_LIMIT_WIDTH       (31),
        .FEATURE_INSTRUCTIONCACHE        ("ENABLED"),
-       .OPTION_DCACHE_WAYS              (1),
-       .OPTION_ICACHE_WAYS              (1),
+       .OPTION_DCACHE_WAYS              (2),
+       .OPTION_DCACHE_SET_WIDTH         (8),
+       .OPTION_ICACHE_WAYS              (2),
+       .OPTION_ICACHE_SET_WIDTH         (8),
        .FEATURE_DMMU                    ("ENABLED"),
        .FEATURE_IMMU                    ("ENABLED"),
        .IBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
@@ -157,69 +159,69 @@ module mor1kx_module (
        .OPTION_OPERAND_WIDTH            (32),
        .OPTION_RF_NUM_SHADOW_GPR        (1))
      u_cpu(/*AUTOINST*/
-	   // Outputs
-	   .iwbm_adr_o			(iwb_adr_o[31:0]),	 // Templated
-	   .iwbm_stb_o			(iwb_stb_o),		 // Templated
-	   .iwbm_cyc_o			(iwb_cyc_o),		 // Templated
-	   .iwbm_sel_o			(iwb_sel_o[3:0]),	 // Templated
-	   .iwbm_we_o			(iwb_we_o),		 // Templated
-	   .iwbm_cti_o			(iwb_cti_o[2:0]),	 // Templated
-	   .iwbm_bte_o			(iwb_bte_o[1:0]),	 // Templated
-	   .iwbm_dat_o			(iwb_dat_o[31:0]),	 // Templated
-	   .dwbm_adr_o			(dwb_adr_o[31:0]),	 // Templated
-	   .dwbm_stb_o			(dwb_stb_o),		 // Templated
-	   .dwbm_cyc_o			(dwb_cyc_o),		 // Templated
-	   .dwbm_sel_o			(dwb_sel_o[3:0]),	 // Templated
-	   .dwbm_we_o			(dwb_we_o),		 // Templated
-	   .dwbm_cti_o			(dwb_cti_o[2:0]),	 // Templated
-	   .dwbm_bte_o			(dwb_bte_o[1:0]),	 // Templated
-	   .dwbm_dat_o			(dwb_dat_o[31:0]),	 // Templated
-	   .avm_d_address_o		(),			 // Templated
-	   .avm_d_byteenable_o		(),			 // Templated
-	   .avm_d_read_o		(),			 // Templated
-	   .avm_d_burstcount_o		(),			 // Templated
-	   .avm_d_write_o		(),			 // Templated
-	   .avm_d_writedata_o		(),			 // Templated
-	   .avm_i_address_o		(),			 // Templated
-	   .avm_i_byteenable_o		(),			 // Templated
-	   .avm_i_read_o		(),			 // Templated
-	   .avm_i_burstcount_o		(),			 // Templated
-	   .du_dat_o			(dbg_dat_o[31:0]),	 // Templated
-	   .du_ack_o			(dbg_ack_o),		 // Templated
-	   .du_stall_o			(dbg_stall_o),		 // Templated
-	   .traceport_exec_valid_o	(traceport_exec_valid_o), // Templated
-	   .traceport_exec_pc_o		(traceport_exec_pc_o),	 // Templated
-	   .traceport_exec_insn_o	(traceport_exec_insn_o), // Templated
-	   .traceport_exec_wbdata_o	(traceport_exec_wbdata_o), // Templated
-	   .traceport_exec_wbreg_o	(traceport_exec_wbreg_o), // Templated
-	   .traceport_exec_wben_o	(traceport_exec_wben_o), // Templated
-	   // Inputs
-	   .clk				(clk_i),		 // Templated
-	   .rst				(rst_i),		 // Templated
-	   .iwbm_err_i			(iwb_err_i),		 // Templated
-	   .iwbm_ack_i			(iwb_ack_i),		 // Templated
-	   .iwbm_dat_i			(iwb_dat_i[31:0]),	 // Templated
-	   .iwbm_rty_i			(iwb_rty_i),		 // Templated
-	   .dwbm_err_i			(dwb_err_i),		 // Templated
-	   .dwbm_ack_i			(dwb_ack_i),		 // Templated
-	   .dwbm_dat_i			(dwb_dat_i[31:0]),	 // Templated
-	   .dwbm_rty_i			(dwb_rty_i),		 // Templated
-	   .avm_d_readdata_i		(32'h0),		 // Templated
-	   .avm_d_waitrequest_i		(1'h0),			 // Templated
-	   .avm_d_readdatavalid_i	(1'h0),			 // Templated
-	   .avm_i_readdata_i		(32'h0),		 // Templated
-	   .avm_i_waitrequest_i		(1'h0),			 // Templated
-	   .avm_i_readdatavalid_i	(1'h0),			 // Templated
-	   .irq_i			(pic_ints_i),		 // Templated
-	   .du_addr_i			(dbg_adr_i[15:0]),	 // Templated
-	   .du_stb_i			(dbg_stb_i),		 // Templated
-	   .du_dat_i			(dbg_dat_i[31:0]),	 // Templated
-	   .du_we_i			(dbg_we_i),		 // Templated
-	   .du_stall_i			(dbg_stall_i),		 // Templated
-	   .multicore_coreid_i		(ID),			 // Templated
-	   .multicore_numcores_i	(NUMCORES),		 // Templated
-	   .snoop_adr_i			(snoop_adr_i[31:0]),
-	   .snoop_en_i			(snoop_enable_i));	 // Templated
+           // Outputs
+           .iwbm_adr_o                  (iwb_adr_o[31:0]),       // Templated
+           .iwbm_stb_o                  (iwb_stb_o),             // Templated
+           .iwbm_cyc_o                  (iwb_cyc_o),             // Templated
+           .iwbm_sel_o                  (iwb_sel_o[3:0]),        // Templated
+           .iwbm_we_o                   (iwb_we_o),              // Templated
+           .iwbm_cti_o                  (iwb_cti_o[2:0]),        // Templated
+           .iwbm_bte_o                  (iwb_bte_o[1:0]),        // Templated
+           .iwbm_dat_o                  (iwb_dat_o[31:0]),       // Templated
+           .dwbm_adr_o                  (dwb_adr_o[31:0]),       // Templated
+           .dwbm_stb_o                  (dwb_stb_o),             // Templated
+           .dwbm_cyc_o                  (dwb_cyc_o),             // Templated
+           .dwbm_sel_o                  (dwb_sel_o[3:0]),        // Templated
+           .dwbm_we_o                   (dwb_we_o),              // Templated
+           .dwbm_cti_o                  (dwb_cti_o[2:0]),        // Templated
+           .dwbm_bte_o                  (dwb_bte_o[1:0]),        // Templated
+           .dwbm_dat_o                  (dwb_dat_o[31:0]),       // Templated
+           .avm_d_address_o             (),                      // Templated
+           .avm_d_byteenable_o          (),                      // Templated
+           .avm_d_read_o                (),                      // Templated
+           .avm_d_burstcount_o          (),                      // Templated
+           .avm_d_write_o               (),                      // Templated
+           .avm_d_writedata_o           (),                      // Templated
+           .avm_i_address_o             (),                      // Templated
+           .avm_i_byteenable_o          (),                      // Templated
+           .avm_i_read_o                (),                      // Templated
+           .avm_i_burstcount_o          (),                      // Templated
+           .du_dat_o                    (dbg_dat_o[31:0]),       // Templated
+           .du_ack_o                    (dbg_ack_o),             // Templated
+           .du_stall_o                  (dbg_stall_o),           // Templated
+           .traceport_exec_valid_o      (traceport_exec_valid_o), // Templated
+           .traceport_exec_pc_o         (traceport_exec_pc_o),   // Templated
+           .traceport_exec_insn_o       (traceport_exec_insn_o), // Templated
+           .traceport_exec_wbdata_o     (traceport_exec_wbdata_o), // Templated
+           .traceport_exec_wbreg_o      (traceport_exec_wbreg_o), // Templated
+           .traceport_exec_wben_o       (traceport_exec_wben_o), // Templated
+           // Inputs
+           .clk                         (clk_i),                 // Templated
+           .rst                         (rst_i),                 // Templated
+           .iwbm_err_i                  (iwb_err_i),             // Templated
+           .iwbm_ack_i                  (iwb_ack_i),             // Templated
+           .iwbm_dat_i                  (iwb_dat_i[31:0]),       // Templated
+           .iwbm_rty_i                  (iwb_rty_i),             // Templated
+           .dwbm_err_i                  (dwb_err_i),             // Templated
+           .dwbm_ack_i                  (dwb_ack_i),             // Templated
+           .dwbm_dat_i                  (dwb_dat_i[31:0]),       // Templated
+           .dwbm_rty_i                  (dwb_rty_i),             // Templated
+           .avm_d_readdata_i            (32'h0),                 // Templated
+           .avm_d_waitrequest_i         (1'h0),                  // Templated
+           .avm_d_readdatavalid_i       (1'h0),                  // Templated
+           .avm_i_readdata_i            (32'h0),                 // Templated
+           .avm_i_waitrequest_i         (1'h0),                  // Templated
+           .avm_i_readdatavalid_i       (1'h0),                  // Templated
+           .irq_i                       (pic_ints_i),            // Templated
+           .du_addr_i                   (dbg_adr_i[15:0]),       // Templated
+           .du_stb_i                    (dbg_stb_i),             // Templated
+           .du_dat_i                    (dbg_dat_i[31:0]),       // Templated
+           .du_we_i                     (dbg_we_i),              // Templated
+           .du_stall_i                  (dbg_stall_i),           // Templated
+           .multicore_coreid_i          (ID),                    // Templated
+           .multicore_numcores_i        (NUMCORES),              // Templated
+           .snoop_adr_i                 (snoop_adr_i[31:0]),
+           .snoop_en_i                  (snoop_enable_i));       // Templated
 
 endmodule // mor1kx_module
 
