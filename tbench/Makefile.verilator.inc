@@ -22,10 +22,10 @@ $(TBENCH)-vcd: obj_dir/V$(TBENCH)__ALL.a $(TBENCH)-vcd.o verilated.o verilated_v
 		$(LIB)
 
 $(TBENCH).o: $(TBENCH).cpp
-	$(CXX) $(CFLAGS) $(INC) -o $(TBENCH).o -c $(TBENCH).cpp
+	$(CXX) $(CFLAGS) $(TBENCH_CFLAGS) $(INC) -o $(TBENCH).o -c $(TBENCH).cpp
 
 $(TBENCH)-vcd.o: $(TBENCH).cpp
-	$(CXX) $(CFLAGS) $(INC) -DVCD_TRACE -o $(TBENCH)-vcd.o -c $(TBENCH).cpp
+	$(CXX) $(CFLAGS) $(TBENCH_CFLAGS) $(INC) -DVCD_TRACE -o $(TBENCH)-vcd.o -c $(TBENCH).cpp
 
 obj_dir/V$(TBENCH)__ALL.a: $(TBENCH).sv verilator.vc
 	$(VERILATOR) -sc -Wno-width -Wno-unoptflat -f verilator.vc -trace -Wno-fatal
