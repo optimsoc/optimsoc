@@ -5,6 +5,10 @@
 
 #include <verilated_vcd_c.h>
 
+#ifndef NUMCORES
+#define NUMCORES 1
+#endif
+
 SC_MODULE(tracemon) {
     sc_in<bool> clk;
 
@@ -64,15 +68,18 @@ int sc_main(int argc, char *argv[])
     debugconn.rst_sys(rst_sys);
     debugconn.rst_cpu(rst_cpu);
 
-    VerilatedSTM stm("STM", &debugconn);
-    debugconn.registerDebugModule(&stm);
-    stm.setEnable(&ct.v->trace_enable[0]);
-    stm.setInsn(&ct.v->trace_insn[0]);
-    stm.setPC(&ct.v->trace_pc[0]);
-    stm.setR3(&ct.v->trace_r3[0]);
-    stm.setCoreId(0);
-
-    stm.clk(clk);
+    for (int i = 0;  i < NUMCORES; i++) {
+      char name[64];
+      snprintf(name, 64, "STM%d", i);
+      VerilatedSTM *stm = new VerilatedSTM(name, &debugconn);
+      debugconn.registerDebugModule(stm);
+      stm->setEnable(&ct.v->trace_enable[i]);
+      stm->setInsn(&ct.v->trace_insn[i]);
+      stm->setPC(&ct.v->trace_pc[i]);
+      stm->setR3(&ct.v->trace_r3[i]);
+      stm->setCoreId(i);
+      stm->clk(clk);
+    }
 
     sc_start();
 
