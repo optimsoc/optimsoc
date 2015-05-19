@@ -117,6 +117,7 @@ bool VerilatedDebugConnector::sendTrace(DebugModule *mod, TracePacket &packet) {
 		if (stmpacket->id == 4) {
 			// putc packet, print to file
 			*m_standalone_stdout[stmpacket->coreid] << (char) stmpacket->value;
+			m_standalone_stdout[stmpacket->coreid]->flush();
 		}
 
 		// Write all packets to events file
