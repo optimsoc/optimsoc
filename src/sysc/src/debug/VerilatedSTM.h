@@ -52,7 +52,7 @@ public:
         m_coreid = coreid;
     }
     uint32_t getCoreId() {
-i        return m_coreid;
+        return m_coreid;
     }
     void setInsn(uint32_t *wb_insn)
     {
