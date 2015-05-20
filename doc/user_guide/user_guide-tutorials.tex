@@ -23,87 +23,61 @@ plus memory and the network adapter, where all I/O of the network
 adapter is not functional in this test case. It can therefore only be
 used to simulate local software.
 
-You can find this example in \verb|tbench/rtl/dm/compute_tile|. You
-need to have Modelsim installed before you run:
+You can find this example in \verb|tbench/dm/compute_tile|. You
+need to have Verilator installed before you run:
 
 \begin{lstlisting}
-$> make build
-\end{lstlisting}
-
-The output should be as follows:
-
-\begin{lstlisting}
-Model Technology ModelSim SE-64 vlog 10.1b Compiler 2012.04 Apr 26 2012
--- Compiling module tb_compute_tile
--- Compiling module trace_monitor
-[..]
--- Compiling module lisnoc_mp_simple
--- Compiling module lisnoc_mp_simple_wb
-
-Top level modules:
-	tb_compute_tile
+make build-verilator
 \end{lstlisting}
 
 In case you see errors check that the environment variables are set
-correctly.
+correctly. The build creates two files: \verb|tb_compute_tile| and
+\verb|t_compute_tile-vcd|. Both run the RTL simulation in a testbench,
+but the latter also writes the waveform to \verb|sim.vcd|.
 
-\medskip
-The testbench can now be started in the Modelsim user interface or can
-be executed in command line mode using \verb|make sim|, but there is
-no software loaded to the memory, what results in a warning:
+In default mode they start a server to connect the host software to,
+but you can use the parameter \verb|standalone| to run them in
+standalone. If you start the simulation now
 
 \begin{lstlisting}
-# ** Warning: (vsim-7) Failed to open readmem file "ct.vmem" in read mode.
+./tb_compute_tile standalone
+\end{lstlisting}
+
+you will get this output
+
+\begin{lstlisting}
+%Error: ct.vmem:0: $readmem file not found
+Aborting...
+Aborted (core dumped)
 \end{lstlisting}
 
 The simulations always expect vmem files that initialize the memories.
 This needs to be generated from the compiled source code. Before you
-build your own software you will need the support libraries. You can
-find all system software and example codes in
-\verb|src/sw/system/dm/|.
+build your own software you will need the support libraries as
+described in the installation procedures.
 
-In the system software folder you will find the \verb|libbaremetal|
-library. Go to the \verb|build| directory of the library and
-\verb|make| it. The code should compile without errors and warnings.
-
-The library contains many necessary functions, the boot code and
-helper macros. Two versions are build: \verb|libbaremetal.a| is the
-normal distributed memory baremetal software and
-\verb|libbaremetal-paging.a| is required when the local tile memory
-needs to be initialized from global memory, e.g., on an FPGA. This
-will later be extended to support smaller tile memories and do page
-swapping etc. This partially works, but an alternative approach to
-initialization and paging is described below with the PGAS system.
-
-When you link the library to your own code, you need to link some
-external symbols as described in \verb|sysconfig.h|. Those are
-definitions specific to a certain system instance, such as the
-dimensions, the presence of I/O, the distribution of compute
-ressources, etc.
-
-Therefore you will always need to link your system-specific
-\verb|optimsoc-sysconfig.o| to the library and your application
-objects, what we will describe in the following. The
-\verb|optimsoc-sysconfig.c| can be found as part of the compute tile
-testbench (\verb|tbench/rtl/dm/compute_tile|) under \verb|sw|.
-
-To build a simple ``Hello World'' example, simply switch to \verb|sw|.
-The example application can be found in the software path. You should
-copy the whole path
+The demonstration software is bundled in the \verb|optimsoc/apps|
+repository. First, you should create an environment variable to point
+to the base:
 
 \begin{lstlisting}
-$> optimsoc-app-link dm baremetal/hello_simple
+export OPTIMSOC_APPS=${OPTIMSOC}/apps
 \end{lstlisting}
 
-Inside the \verb|hello_simple.lnk| folder you can find the
-\verb|hello_simple.c| and the \verb|Makefile|. Now \verb|make| the
-example. This will automatically also build the sysconfig.o and link
-all together to the elf file. Furthermore some other files are build:
+Build a simple ``Hello World'' example:
+
+\begin{lstlisting}
+make -C ${OPTIMSOC_APPS}/baremetal/hello
+\end{lstlisting}
+
+You will then find the executable elf file as
+\verb|${OPTIMSOC_APPS}/baremetal/hello/hello.elf|.
+Furthermore some other files are build:
 
 \begin{itemize}
-\item \verb|hello_world.dis| is the disassembly of the file
-\item \verb|hello_world.bin| is the elf file als loaded binary file
-\item \verb|hello_world.vmem| is a textual copy of the binary file
+\item \verb|hello.dis| is the disassembly of the file
+\item \verb|hello.bin| is the elf file als loaded binary file
+\item \verb|hello.vmem| is a textual copy of the binary file
 \end{itemize}
 
 (Note: If the latter is not build, ensure you have \verb|bin2vmem| in
@@ -116,31 +90,31 @@ testbench main folder. Before the simulation warned that
 to this filename
 
 \begin{lstlisting}
-$> ln -s sw/hello_simple.lnk/hello_simple.vmem ct.vmem
+ln -s ${OPTIMSOC_APPS}/baremetal/hello/hello.vmem ct.vmem
 \end{lstlisting}
 
-If you now run the software (\verb|make sim|), the simulation should
+If you now run the software again, the simulation should
 terminate with:
 
 \begin{lstlisting}
-# [               52500, 0] Software reset
-# [            57480000, 0] Terminated at address 0x00008080
+[178512] Core 0 has terminated
+[178512] All cores terminated. Exiting..
 \end{lstlisting}
 
-\verb|0x00008080| is the program counter (can vary depending on your cross
-compiler version) the simulation terminated. This is correct behavior
-and will be explained below. Furthermore you will find a file called
-\verb|stdout| which shows the actual output:
+Further you will find a file called \verb|stdout.000| which shows the
+actual output:
 
 \begin{lstlisting}
-[            51185000, 0] Hello World!
+Hello World! Core 0 of 1 in tile 0, my absolute core id is: 0
+There are 1 compute tiles:
+ rank 0 is tile 0
 \end{lstlisting}
 
-The \verb|[..]| part is the time stamp and core id. But how does the
-actual printf-output get there when there is no UART or similar?
+But how does the actual printf-output get there when there is no UART
+or similar?
 
 OpTiMSoC software (especially in future releases) makes excessive use
-of a tricky part of the OpenRISC ISA. The ``no operation'' instruction
+of a useful part of the OpenRISC ISA. The ``no operation'' instruction
 \verb|l.nop| has a paramter \verb|K| in assembly. This can be used for
 simulation purposes. It can be used for instrumentation, tracing or
 special purposes as writing characters with minimal intrusion or
