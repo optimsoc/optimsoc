@@ -38,6 +38,8 @@ _optimsoc_syscall_entry:
     // Load address of syscall data structures
     l.movhi r3,hi(_optimsoc_syscall_data)
     l.ori   r3,r3,lo(_optimsoc_syscall_data)
+    // De-reference pointer
+    l.lwz   r3,0(r3)
     // Add core offset
     l.mfspr r4,r0,OR1K_SPR_SYS_COREID_ADDR
     l.slli  r4,r4,5
