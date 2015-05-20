@@ -35,6 +35,9 @@ void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
         printf("Thread exit\n");
 
         break;
+    case GZLL_SYSCALL_KERNEL_INFO:
+         gzll_syscall_get_kernelinfo(syscall);
+         break;
     default:
         printf("Invalid syscall\n");
         break;
