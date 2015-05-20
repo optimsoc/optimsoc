@@ -33,4 +33,5 @@ libgzll_kernel_la_SOURCES = \
 	main.c \
 	communication.c \
 	task.c \
-	app.c
+	app.c \
+	memcpy_userspace.c
