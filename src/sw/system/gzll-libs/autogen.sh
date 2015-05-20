@@ -6,7 +6,7 @@ libdir() {
         echo $(cd $1/$(gcc -print-multi-os-directory); pwd)
 }
 
-args="--prefix=/opt/optimsoc/sw --host=or1k-gzll"
+args="--prefix=\${OPTIMSOC_INSTALLATION}/sw --host=or1k-gzll"
 
 echo
 echo "Configuration done. Before proceeding you need:"
