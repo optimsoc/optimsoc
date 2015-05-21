@@ -51,7 +51,7 @@ void optimsoc_runtime_boot(void) {
         printf("Initialize DMA..\n");
         dma_init();
 
-
+        _optimsoc_context_init();
 
         printf("Bringing virtual memory up..\n");
         _optimsoc_vmm_init();

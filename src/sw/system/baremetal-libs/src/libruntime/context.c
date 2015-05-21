@@ -8,15 +8,14 @@
 _optimsoc_thread_ctx_t **_optimsoc_exception_ctx;
 
 extern void **_or1k_exception_stack_core;
-#define OR1K_EXCEPTION_FRAME_WORDS 64
+#define OR1K_EXCEPTION_FRAME 136
 
 void _optimsoc_context_init(void) {
     _optimsoc_exception_ctx = calloc(or1k_numcores(), 4);
 
     for (int c = 0; c < or1k_numcores(); c++) {
         void *stack = _or1k_exception_stack_core[c];
-        _optimsoc_exception_ctx[c] = stack - OR1K_EXCEPTION_FRAME_WORDS;
-        printf("context[%d]: %p\n", c, _optimsoc_exception_ctx[c]);
+        _optimsoc_exception_ctx[c] = stack - OR1K_EXCEPTION_FRAME;
     }
 }
 
