@@ -158,6 +158,31 @@ optimsoc_thread_t optimsoc_thread_current() {
     return t;
 }
 
+void optimsoc_thread_yield(optimsoc_thread_t thread) {
+    optimsoc_thread_t current = optimsoc_thread_current();
+
+    optimsoc_list_remove(ready_q, thread);
+    optimsoc_list_add_tail(ready_q, thread);
+
+    if (thread == current) {
+        if (thread->attributes->flags & OPTIMSOC_THREAD_FLAG_KERNEL) {
+            uint32_t restore = or1k_critical_begin();
+            // Store the current context
+            struct _optimsoc_thread_ctx_t *ctx;
+
+            ctx = _optimsoc_scheduler_get_current()->ctx;
+            if (_optimsoc_context_enter_exception(ctx) == 1) {
+                _optimsoc_schedule();
+                _optimsoc_context_replace(_optimsoc_scheduler_get_current()->ctx);
+            } else {
+                or1k_critical_end(restore);
+            }
+        } else {
+            assert(0);
+        }
+    }
+}
+
 void optimsoc_thread_exit() {
     // Get current thread
     optimsoc_thread_t thread = optimsoc_thread_current();
