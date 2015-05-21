@@ -42,7 +42,7 @@ unsigned int gzll_page_alloc();
 
 void gzll_apps_bootstrap();
 
-void gzll_task_start(char* identifier, struct gzll_task *task);
+void gzll_task_start(char* identifier, struct gzll_task_descriptor *task);
 
 
 #endif /* SRC_GZLL_H_ */

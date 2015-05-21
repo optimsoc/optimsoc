@@ -136,7 +136,14 @@ for section in conf.sections():
             name = conf.get(section, "name")
         else:
             # Generate list of task instances and add to total number
-            tinst[o] = [int(x) for x in conf.get(section, o).split(" ")]
+            tinst[o] = []
+            for x in conf.get(section, o).split(" "):
+                if x == '*':
+                    tinst[o].append(-2)
+                elif x == '?':
+                    tinst[o].append(-1)
+                else:
+                    tinst[o].append(int(x))
             numinst = numinst + len(tinst[o])
 
     # Add instance
@@ -205,7 +212,7 @@ for a in apps:
 
 # Describe the tasks in each app
 for a in apps:
-    f.write("struct gzll_task_list gzll_%s_tasks = {\n" % a)
+    f.write("struct gzll_task_descriptor_list gzll_%s_tasks = {\n" % a)
     # Number of tasks
     f.write("    %d,\n" % len(apps[a]["tasks"]))
     f.write("    {\n");
@@ -218,7 +225,7 @@ for a in apps:
 f.write("\n")
 
 # Describe the list of all apps
-f.write("struct gzll_application_table gzll_application_table = {\n")
+f.write("struct gzll_application_descriptor_table gzll_application_descriptor_table = {\n")
 
 # Number of apps
 f.write("    %d,\n" % len(apps))
@@ -238,8 +245,16 @@ for a in appinsts:
         # Entry is rank, task descriptor from above
         ranks = a["taskinst"][i]
         tindex = apps[app]["tasks"].index(i)
+        instidx = 0
         for r in ranks:
-            f.write("    { %d, &gzll_%s_tasks.tasks[%d] },\n" % (r, app, tindex))
+            if r == -2:
+                r = "GZLL_BOOT_EVERYWHERE"
+            elif r == -1:
+                r = "GZLL_BOOT_ANYWHERE"
+            else:
+                r = "%d" % r
+            f.write("    { %s, &gzll_%s_tasks.tasks[%d], %d },\n" % (r, app, tindex, instidx))
+            instidx = instidx + 1
     f.write("    }\n")
     f.write("};\n")
 f.write("\n")

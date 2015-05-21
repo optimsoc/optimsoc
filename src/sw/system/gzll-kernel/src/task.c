@@ -6,8 +6,7 @@
 #include <assert.h>
 
 // TODO: load from global memory
-
-void gzll_task_start(char* identifier, struct gzll_task *task) {
+void gzll_task_start(char* identifier, struct gzll_task_descriptor *task) {
     int rv;
 
     printf("Boot task %s\n", identifier);
