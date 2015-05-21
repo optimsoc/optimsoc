@@ -255,11 +255,6 @@ uint32_t control_msg_alloc(struct endpoint_handle *to_ep, uint32_t size) {
         while (ctrl_request.done == 0) {}
 
         if (ctrl_request.buffer[1]==CTRL_REQUEST_NACK) {
-#ifdef RUNTIME
-                assert(0);
-                // TODO: Reactivate
-                //optimsoc_thread_yield();
-#endif
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
             timeout_insns = timeout_insns * 10; // somewhat arbitrary..
         }
