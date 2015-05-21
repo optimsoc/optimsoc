@@ -100,7 +100,12 @@ int optimsoc_mp_channel_recv(struct endpoint_handle *eph,
     int ret = 0;
     uint32_t read_ptr;
 
-    while(endpoint_empty(eph->ep)) { }
+    while(endpoint_empty(eph->ep)) {
+#ifdef RUNTIME
+        printf("yield\n");
+        optimsoc_thread_yield(optimsoc_thread_current());
+#endif
+    }
 
     endpoint_pop(eph->ep, &read_ptr);
     trace_ep_bufferstate(eph->ep, endpoint_channel_get_fillstate(eph->ep));
