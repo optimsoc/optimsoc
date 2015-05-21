@@ -184,10 +184,10 @@ void optimsoc_thread_exit() {
 
 void _optimsoc_kthread_handle(void (*f)(void*),void *arg) {
     f(arg);
-    _optimsoc_context_enter_exception();
     or1k_critical_begin();
+    // We don't actually care for the original context
+    _optimsoc_context_enter_exception(_optimsoc_scheduler_get_current()->ctx);
     optimsoc_thread_exit();
-
     _optimsoc_context_replace(_optimsoc_scheduler_get_current()->ctx);
 }
 

@@ -85,8 +85,46 @@ _optimsoc_context_replace:
 
 .extern _or1k_exception_stack_core;
 
-// r3 is the context to set
+// r3 is the context where to save to
 _optimsoc_context_enter_exception:
+    l.sw    CTX_REG(1)(r3),r1
+    l.sw    CTX_REG(2)(r3),r2
+    l.sw    CTX_REG(3)(r3),r3
+    l.sw    CTX_REG(4)(r3),r4
+    l.sw    CTX_REG(5)(r3),r5
+    l.sw    CTX_REG(6)(r3),r6
+    l.sw    CTX_REG(7)(r3),r7
+    l.sw    CTX_REG(8)(r3),r8
+    l.sw    CTX_REG(9)(r3),r9
+    l.sw    CTX_REG(10)(r3),r10
+    // This is important: store 0 as return value
+    l.sw    CTX_REG(11)(r3),r0
+    l.sw    CTX_REG(12)(r3),r12
+    l.sw    CTX_REG(13)(r3),r13
+    l.sw    CTX_REG(14)(r3),r14
+    l.sw    CTX_REG(15)(r3),r15
+    l.sw    CTX_REG(16)(r3),r16
+    l.sw    CTX_REG(17)(r3),r17
+    l.sw    CTX_REG(18)(r3),r18
+    l.sw    CTX_REG(19)(r3),r19
+    l.sw    CTX_REG(20)(r3),r20
+    l.sw    CTX_REG(21)(r3),r21
+    l.sw    CTX_REG(22)(r3),r22
+    l.sw    CTX_REG(23)(r3),r23
+    l.sw    CTX_REG(24)(r3),r24
+    l.sw    CTX_REG(25)(r3),r25
+    l.sw    CTX_REG(26)(r3),r26
+    l.sw    CTX_REG(27)(r3),r27
+    l.sw    CTX_REG(28)(r3),r28
+    l.sw    CTX_REG(29)(r3),r29
+    l.sw    CTX_REG(20)(r3),r30
+    l.sw    CTX_REG(31)(r3),r31
+    l.mfspr r4,r0,OR1K_SPR_SYS_SR_ADDR
+    l.sw    CTX_SR(r3),r4
+    l.movhi r4,hi(._optimsoc_context_enter_exception_wakeup)
+    l.ori   r4,r4,lo(._optimsoc_context_enter_exception_wakeup)
+    l.sw    CTX_PC(r3),r4
+
     l.movhi r1,hi(_or1k_exception_stack_core)
     l.ori   r1,r1,lo(_or1k_exception_stack_core)
     l.lwz   r1,0(r1)
@@ -95,5 +133,9 @@ _optimsoc_context_enter_exception:
     l.add   r1,r1,r3
     l.lwz   r1,0(r1)
     l.addi  r1,r1,-CTX_SIZE
+    l.ori   r11,r0,1
+    l.jr    r9
+    l.nop
+._optimsoc_context_enter_exception_wakeup:
     l.jr    r9
     l.nop

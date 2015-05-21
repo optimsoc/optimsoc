@@ -50,8 +50,12 @@ void _optimsoc_context_restore(_optimsoc_thread_ctx_t *ctx);
  * Transfer to exception
  *
  * This is used to transfer from a kernel thread to exception stack. It is
- * useful to end a kernel thread.
+ * useful to call scheduler function from a kernel thread. The state of the
+ * thread at the point of entering is saved. From the program you need to check
+ * the return value. It returns 1 right after it is called. When the context is
+ * replaced later then, the function returns with 0. Thereby you can then call
+ * the scheduler functions in the kernel or continue operation.
  */
-void _optimsoc_context_enter_exception(void);
+int _optimsoc_context_enter_exception(_optimsoc_thread_ctx_t *ctx);
 
 #endif
