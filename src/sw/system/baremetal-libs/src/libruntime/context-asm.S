@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@
 
 #define CTX_PC     0x80
 #define CTX_SR     0x84
+#define CTX_SIZE   136
 
 .section .text
 
@@ -93,5 +94,6 @@ _optimsoc_context_enter_exception:
     l.slli  r3,r3,2
     l.add   r1,r1,r3
     l.lwz   r1,0(r1)
+    l.addi  r1,r1,-CTX_SIZE
     l.jr    r9
     l.nop
