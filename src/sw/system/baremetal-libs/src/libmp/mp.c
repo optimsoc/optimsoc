@@ -183,3 +183,19 @@ int optimsoc_mp_channel_send_i(struct endpoint_handle *from,
 
     return 0;
 }
+
+int optimsoc_mp_msg_send(optimsoc_mp_endpoint_handle from,
+                         optimsoc_mp_endpoint_handle to, uint8_t *data,
+                         uint32_t size) {
+
+    uint32_t addr = control_msg_alloc(to, size);
+
+    control_msg_data(to, addr, data, size);
+
+    return 0;
+}
+
+int optimsoc_mp_msg_recv(optimsoc_mp_endpoint_handle ep, uint8_t *buffer,
+                         uint32_t buffer_size, uint32_t *received_size) {
+    return optimsoc_mp_channel_recv(ep, buffer, buffer_size, received_size);
+}
