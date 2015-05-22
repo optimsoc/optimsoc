@@ -2,8 +2,27 @@
 #include "gzll-apps.h"
 
 #include <optimsoc-runtime.h>
+#include <or1k-support.h>
 
+#include <stdio.h>
 #include <assert.h>
+
+/** Stores the next node id */
+gzll_node_id gzll_node_nxtid;
+
+gzll_node_id gzll_get_nodeid() {
+    // This is the one we get assigned
+    gzll_node_id nodeid;
+
+    do {
+        // Read the current next one
+        nodeid = gzll_node_nxtid;
+        // Try to increment. If someone else already incremented, this will fail
+        // and we retry
+    } while (or1k_sync_cas(&gzll_node_nxtid, nodeid, nodeid + 1) != nodeid);
+
+    return nodeid;
+}
 
 // TODO: load from global memory
 void gzll_task_start(char* identifier, struct gzll_task_descriptor *task) {
@@ -47,6 +66,11 @@ void gzll_task_start(char* identifier, struct gzll_task_descriptor *task) {
     optimsoc_thread_t thread = malloc(sizeof(optimsoc_thread_t));
     optimsoc_thread_create(&thread, (void*) 0x2000, 0);
     optimsoc_thread_set_pagedir(thread, pdir);
+
+    // Generate nodeid
+    gzll_node_id nodeid = gzll_get_nodeid();
+
+    // TODO: store locally
 
 }
 

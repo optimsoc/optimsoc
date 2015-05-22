@@ -46,6 +46,8 @@ void main() {
     printf("Boot gzll in rank %d (%d total)\n", gzll_rank, optimsoc_get_numct());
 
 //    _gzll_print_memory_information();
+    // Initialize variables
+    gzll_node_nxtid = 1; // Skip 0 which is the kernel
 
     // Initialize paging
     gzll_paging_init();

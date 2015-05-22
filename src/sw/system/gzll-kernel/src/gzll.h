@@ -13,6 +13,9 @@ void init();
 void communication_thread();
 void communication_init();
 
+typedef uint32_t gzll_node_id;
+extern gzll_node_id gzll_node_nxtid;
+
 extern uint32_t gzll_rank;
 
 struct _gzll_image_layout {
