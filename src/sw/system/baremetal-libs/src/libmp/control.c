@@ -290,11 +290,11 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
             sz = wordsperpacket;
 
         for (int d=0;d<sz;d++) {
-            ctrl_request.buffer[2+d] = ((unsigned int *)buffer)[i+d];
+            ctrl_request.buffer[4+d] = ((unsigned int *)buffer)[i+d];
         }
 
         trace_msg_data_send(ep, ctrl_request.buffer[2], sz);
-        optimsoc_mp_simple_send(2+sz,ctrl_request.buffer);
+        optimsoc_mp_simple_send(4+sz,ctrl_request.buffer);
     }
 
     ctrl_request.buffer[0] = (ep->domain << OPTIMSOC_DEST_LSB) |
