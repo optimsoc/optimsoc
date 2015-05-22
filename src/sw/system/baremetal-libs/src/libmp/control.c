@@ -119,8 +119,8 @@ void control_msg_handler(unsigned int* buffer,int len) {
         endpoint_write_complete(ep, buffer[2], buffer[3]);
 
 #ifdef RUNTIME
-        assert(1);
-/*        if (ep->waiting_thread) {
+        // TODO
+        /*        if (ep->waiting_thread) {
                 optimsoc_thread_resume(ep->waiting_thread);
                 ep->waiting_thread = 0;
             }*/
