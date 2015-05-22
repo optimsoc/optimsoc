@@ -1,6 +1,8 @@
 #ifndef __TASKDIR_H__
 #define __TASKDIR_H__
 
+#include "optimsoc-baremetal.h"
+
 //TODO define error codes & return values
 
 struct gzll_app_node {
@@ -9,10 +11,13 @@ struct gzll_app_node {
 };
 
 struct gzll_app_taskdir {
+    optimsoc_mutex_t lock;
     unsigned int size;
     struct gzll_app_node *tasks;
 };
 
+#define TASKDIR_INVALID_NODEID 0
+#define TASKDIR_INVALID_RANK   0xffff
 /**
  * Initialize
  */
@@ -31,14 +36,14 @@ int taskdir_task_delete(struct gzll_app_taskdir *dir, uint32_t taskid);
  * @return error code
  */
 int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
-                          uint32_t tile, uint32_t node);
+                          uint32_t rank, uint32_t nodeid);
 
 /**
  * Remap a task to a new tile
  *
  */
 int taskdir_task_remap(struct gzll_app_taskdir *dir, uint32_t taskid,
-                       uint32_t old_tileid, uint32_t new_tileid,
+                       uint32_t old_rank, uint32_t new_rank,
                        uint32_t old_nodeid, uint32_t new_nodeid);
 
 /**
@@ -47,7 +52,7 @@ int taskdir_task_remap(struct gzll_app_taskdir *dir, uint32_t taskid,
  * @param *tileid a pointer to return the tile ID
  * @return error code
  */
-int taskdir_tileid_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
-                          uint32_t *tileid, uint32_t nodeid);
+int taskdir_rank_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
+                          uint32_t *tileid);
 
 #endif //__TASKDIR_H__
