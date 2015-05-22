@@ -102,7 +102,6 @@ int optimsoc_mp_channel_recv(struct endpoint_handle *eph,
 
     while(endpoint_empty(eph->ep)) {
 #ifdef RUNTIME
-        printf("yield\n");
         optimsoc_thread_yield(optimsoc_thread_current());
 #endif
     }
