@@ -1,5 +1,6 @@
 #include "gzll.h"
 #include "gzll-apps.h"
+#include "messages.h"
 
 #include <optimsoc-runtime.h>
 #include <or1k-support.h>
@@ -73,5 +74,7 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
 
     // TODO: store locally
 
+    // Tell the other ranks
+    message_send_node_new(app_id, app_nodeid, nodeid);
 }
 
