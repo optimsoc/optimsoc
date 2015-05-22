@@ -375,6 +375,9 @@ int optimsoc_list_remove(struct optimsoc_list_t* l, void* data);
 int optimsoc_list_contains(struct optimsoc_list_t *l, void* data);
 size_t optimsoc_list_length(struct optimsoc_list_t* l);
 
+void *optimsoc_list_find_content_header(struct optimsoc_list_t *l,
+                                        uint32_t content);
+
 void* optimsoc_list_first_element(struct optimsoc_list_t* l,
                                   optimsoc_list_iterator_t *list_iter);
 void* optimsoc_list_next_element(struct optimsoc_list_t* l,

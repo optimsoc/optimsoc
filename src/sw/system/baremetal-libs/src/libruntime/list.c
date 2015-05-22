@@ -214,6 +214,22 @@ int optimsoc_list_contains(struct optimsoc_list_t *l, void* data) {
 
 }
 
+void *optimsoc_list_find_content_header(struct optimsoc_list_t *l,
+                                        uint32_t content) {
+    assert(l != NULL);
+    struct optimsoc_list_entry_t* entry = l->head;
+
+    while (entry != NULL) {
+        uint32_t *ptr = (uint32_t*) entry->data;
+        if (*ptr == content) {
+            return entry->data;
+        }
+        entry = entry->next;
+    }
+
+    return 0;
+}
+
 size_t optimsoc_list_length(struct optimsoc_list_t *l) {
     assert(l != NULL);
     unsigned int count = 0;
