@@ -21,7 +21,7 @@ void gzll_app_new(uint32_t id, const char* name) {
     if (!gzll_app_list) {
         gzll_app_list = optimsoc_list_init(app);
     } else {
-	optimsoc_list_add_tail(app);
+	optimsoc_list_add_tail(gzll_app_list, app);
     }
 
 }
