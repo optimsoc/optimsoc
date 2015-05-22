@@ -27,15 +27,15 @@ gzll_node_id gzll_get_nodeid() {
 
 // TODO: load from global memory
 void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
-                     struct gzll_task_descriptor *task) {
+                     char* taskname, struct gzll_task_descriptor *taskdesc) {
     int rv;
 
-    printf("Boot task %s.%s\n", app_name, task->identifier);
+    printf("Boot task %s.%s\n", app_name, taskname);
 
-    unsigned int size = task->obj_end - task->obj_start;
+    unsigned int size = taskdesc->obj_end - taskdesc->obj_start;
 
-    printf(" load from %p-%p (%d bytes)\n", task->obj_start, task->obj_end,
-           size);
+    printf(" load from %p-%p (%d bytes)\n", taskdesc->obj_start,
+           taskdesc->obj_end, size);
 
     optimsoc_page_dir_t pdir = optimsoc_vmm_create_page_dir();
 
@@ -44,12 +44,12 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
         unsigned int alloced = gzll_page_alloc();
         assert(alloced);
 
-        void *from = task->obj_start + p * 8192;
+        void *from = taskdesc->obj_start + p * 8192;
         void *to = (void*) (alloced * 8192);
 
         unsigned int len = 8192;
-        if ((unsigned int) from + len > (unsigned int) task->obj_end) {
-            len = (unsigned int) task->obj_end - (unsigned int) from;
+        if ((unsigned int) from + len > (unsigned int) taskdesc->obj_end) {
+            len = (unsigned int) taskdesc->obj_end - (unsigned int) from;
         }
 
         printf(" - load %d bytes from %p to %p\n", len, from, to);
@@ -65,6 +65,9 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     assert(alloced);
     optimsoc_vmm_map(pdir, 0xfffffffc, alloced << 13);
 
+    // Generate nodeid
+    gzll_node_id nodeid = gzll_get_nodeid();
+
     optimsoc_thread_t thread = malloc(sizeof(optimsoc_thread_t));
     optimsoc_thread_create(&thread, (void*) 0x2000, 0);
     optimsoc_thread_set_pagedir(thread, pdir);
@@ -75,6 +78,6 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     // TODO: store locally
 
     // Tell the other ranks
-    message_send_node_new(app_id, app_nodeid, nodeid, task->identifier);
+    message_send_node_new(app_id, app_nodeid, nodeid, taskname);
 }
 
