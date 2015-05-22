@@ -310,20 +310,8 @@ int endpoint_msg_available(struct endpoint *ep) {
 void endpoint_msg_recv(struct endpoint *ep, uint32_t *buffer,
                        uint32_t buffer_size, uint32_t *received) {
 
-#ifdef RUNTIME
-    assert(1==0);
-/*    if (ep->bread_ind == ep->bwrite_ind) {
-    uint32_t restore = optimsoc_critical_begin();
-        // There is no message waiting, wait for event
-        ep->waiting = 1;
-        ep->waiting_thread = thread_self();
-
-        thread_suspend();
-    optimsoc_critical_end(restore);
-    }*/
-#else
     while (!endpoint_msg_available(ep)) {}
-#endif
+
     *received = ep->buffer->data_size[ep->buffer->read_ptr];
 
     if(*received > buffer_size) {
