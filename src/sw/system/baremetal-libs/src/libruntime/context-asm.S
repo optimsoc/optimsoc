@@ -117,7 +117,7 @@ _optimsoc_context_enter_exception:
     l.sw    CTX_REG(27)(r3),r27
     l.sw    CTX_REG(28)(r3),r28
     l.sw    CTX_REG(29)(r3),r29
-    l.sw    CTX_REG(20)(r3),r30
+    l.sw    CTX_REG(30)(r3),r30
     l.sw    CTX_REG(31)(r3),r31
     l.mfspr r4,r0,OR1K_SPR_SYS_SR_ADDR
     l.sw    CTX_SR(r3),r4
