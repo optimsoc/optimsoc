@@ -33,7 +33,7 @@ void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
     switch (syscall->id) {
     case GZLL_SYSCALL_THREAD_EXIT:
         printf("Thread exit\n");
-
+        optimsoc_thread_exit();
         break;
     case GZLL_SYSCALL_KERNEL_INFO:
          gzll_syscall_get_kernelinfo(syscall);
