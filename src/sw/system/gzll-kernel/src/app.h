@@ -7,6 +7,7 @@ struct gzll_app;
 #include "taskdir.h"
 
 struct gzll_app {
+    uint32_t id;
     char *name;
     struct gzll_app_taskdir *task_dir;
 };
