@@ -3,6 +3,8 @@
 #include "gzll-apps.h"
 #include "gzll.h"
 
+#include "app.h"
+
 void _gzll_app_bootstrap(uint32_t appid, char *appname,
                          struct gzll_boot_mappings *map) {
     // We will enumerate all tasks started at boot, globally unique.
@@ -11,6 +13,9 @@ void _gzll_app_bootstrap(uint32_t appid, char *appname,
     // many nodes. This is ensured with accumulating the extra node ids with
     // this offset.
     uint32_t nodeid_offset = 0;
+
+    // Create new app entry
+    gzll_app_new(appid, appname);
 
     // Iterate all boot mappings
     for (uint32_t idx = 0; idx < map->len; idx++) {
