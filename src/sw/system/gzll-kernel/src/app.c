@@ -3,7 +3,8 @@
 #include "gzll-apps.h"
 #include "gzll.h"
 
-void _gzll_app_bootstrap(char *name, struct gzll_boot_mappings *map) {
+void _gzll_app_bootstrap(uint32_t appid, char *appname,
+                         struct gzll_boot_mappings *map) {
     // We will enumerate all tasks started at boot, globally unique.
     // Essentially this is the index in the mapping, but when there is a
     // mapping for everywhere, we need to be sure to account for those numct()
@@ -36,10 +37,9 @@ void _gzll_app_bootstrap(char *name, struct gzll_boot_mappings *map) {
 
             // The fullname includes the application
             char fullname[65];
-            snprintf(fullname, 256, "%s.%s", name, tname);
+            snprintf(fullname, 256, "%s.%s", appname, tname);
 
-            gzll_task_start(fullname, task);
-            printf("This is nodeid %d\n", nodeid);
+            gzll_task_start(appid, appname, nodeid, task);
 
         } else if ((map->mappings[idx].rank == 0) ||
                 (map->mappings[idx].rank == GZLL_BOOT_ANYWHERE)) {
@@ -56,6 +56,6 @@ void gzll_apps_bootstrap() {
 
         name = gzll_boot_apps.instances[appidx].name;
         map = gzll_boot_apps.instances[appidx].mappings;
-        _gzll_app_bootstrap(name, map);
+        _gzll_app_bootstrap(appidx, name, map);
     }
 }

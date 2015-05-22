@@ -25,10 +25,11 @@ gzll_node_id gzll_get_nodeid() {
 }
 
 // TODO: load from global memory
-void gzll_task_start(char* identifier, struct gzll_task_descriptor *task) {
+void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
+                     struct gzll_task_descriptor *task) {
     int rv;
 
-    printf("Boot task %s\n", identifier);
+    printf("Boot task %s.%s\n", app_name, task->identifier);
 
     unsigned int size = task->obj_end - task->obj_start;
 
