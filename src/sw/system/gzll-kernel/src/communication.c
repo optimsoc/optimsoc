@@ -59,10 +59,16 @@ void communication_thread() {
 }
 
 void message_send_node_new(uint32_t app_id, uint32_t app_nodeid,
-                           uint32_t nodeid) {
-    uint32_t msg_size;
+                           uint32_t nodeid, const char *nodename) {
+    uint32_t msg_size, namelen, namelen_align;
 
-    msg_size = sizeof(struct gzll_message) +
+    // Determine the length of the name appended to the message
+    namelen = strlen(nodename);
+    // Align this to the next multiple of 4
+    namelen_align = ((namelen + 3) >> 2) << 2;
+
+    // The overall message size
+    msg_size = namelen_align + sizeof(struct gzll_message) +
             sizeof(struct gzll_message_node_new);
 
     struct gzll_message *msg;
@@ -76,6 +82,7 @@ void message_send_node_new(uint32_t app_id, uint32_t app_nodeid,
     msg_node_new = (struct gzll_message_node_new*) &msg->data[0];
     msg_node_new->app_id = app_id;
     msg_node_new->app_nodeid = app_nodeid;
+    memcpy(msg_node_new->app_nodename, nodename, namelen);
 
     for (int r = 0; r < optimsoc_get_numct(); ++r) {
         if (r == gzll_rank) {
@@ -89,11 +96,16 @@ void message_send_node_new(uint32_t app_id, uint32_t app_nodeid,
 
 void gzll_message_node_new_handler(struct gzll_message *msg) {
     struct gzll_message_node_new *msg_node;
+    char name[256]; int strlen;
+
     msg_node = (struct gzll_message_node_new*) msg->data;
+    strlen = msg->len - sizeof(struct gzll_message) - sizeof (struct gzll_message_node_new);
+    memcpy(name, msg_node->app_nodename, strlen);
+    name[strlen] = 0;
 
     printf("Received new node information\n");
     printf("  on rank: %d\n", msg->source_rank);
     printf("  appid: %d, nodeid: %d, ranknode: %d\n", msg_node->app_id,
            msg_node->app_nodeid, msg_node->rank_nodeid);
-
+    printf("  nodename: '%s'\n", name);
 }

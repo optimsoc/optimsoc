@@ -75,6 +75,6 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     // TODO: store locally
 
     // Tell the other ranks
-    message_send_node_new(app_id, app_nodeid, nodeid);
+    message_send_node_new(app_id, app_nodeid, nodeid, task->identifier);
 }
 
