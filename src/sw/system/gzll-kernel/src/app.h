@@ -1,3 +1,8 @@
+#ifndef __APP_H__
+#define __APP_H__
+
+struct gzll_app;
+
 #include "task.h"
 #include "taskdir.h"
 
@@ -7,3 +12,5 @@ struct gzll_app {
 
 void gzll_app_new(uint32_t id, const char* name);
 struct gzll_task_dir *gzll_app_get_taskdir(struct gzll_app *app);
+
+#endif
