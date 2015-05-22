@@ -7,7 +7,7 @@ void taskdir_initialize(struct gzll_app_taskdir *dir) {
 
     optimsoc_mutex_init(&dir->lock);
 
-    dir->size = 1;
+    dir->size = 0;
     dir->tasks = NULL;
 }
 
