@@ -58,6 +58,14 @@ optimsoc_page_dir_t optimsoc_thread_get_pagedir(optimsoc_thread_t thread) {
     return thread->page_dir;
 }
 
+void optimsoc_thread_set_extra_data(optimsoc_thread_t thread,
+                                    void* extra_data) {
+    thread->extra_data = extra_data;
+}
+
+void* optimsoc_thread_get_extra_data(optimsoc_thread_t thread) {
+    return thread->extra_data;
+}
 
 void optimsoc_thread_attr_init(struct optimsoc_thread_attr *attr) {
     // Verify input
