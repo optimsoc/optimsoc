@@ -6,6 +6,7 @@
 //TODO define error codes & return values
 
 struct gzll_app_node {
+    char *identifier;
     uint32_t rank;
     uint32_t nodeid;
 };
@@ -36,7 +37,8 @@ int taskdir_task_delete(struct gzll_app_taskdir *dir, uint32_t taskid);
  * @return error code
  */
 int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
-                          uint32_t rank, uint32_t nodeid);
+                          const char* identifier, uint32_t rank,
+                          uint32_t nodeid);
 
 /**
  * Remap a task to a new tile
@@ -55,4 +57,9 @@ int taskdir_task_remap(struct gzll_app_taskdir *dir, uint32_t taskid,
 int taskdir_rank_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
                           uint32_t *tileid);
 
+/**
+ * Do a lookup of the node id for the task identifier
+ */
+int taskdir_nodeid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
+                          uint32_t *nodeid);
 #endif //__TASKDIR_H__

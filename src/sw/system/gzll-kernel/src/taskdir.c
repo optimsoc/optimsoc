@@ -1,6 +1,7 @@
 #include "taskdir.h"
 
 #include <assert.h>
+#include <string.h>
 
 void taskdir_initialize(struct gzll_app_taskdir *dir) {
 
@@ -37,7 +38,8 @@ int taskdir_task_delete(struct gzll_app_taskdir *dir, uint32_t taskid) {
 }
 
 int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
-                          uint32_t rank, uint32_t nodeid) {
+                          const char* identifier, uint32_t rank,
+                          uint32_t nodeid) {
 
     optimsoc_mutex_lock(&dir->lock);
     struct gzll_app_node *entry;
@@ -64,6 +66,7 @@ int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
 
 	entry->rank = rank;
 	entry->nodeid = nodeid;
+	entry->identifier = strdup(identifier);
 
 	optimsoc_mutex_unlock(&dir->lock);
 
@@ -133,4 +136,21 @@ int taskdir_rank_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
     optimsoc_mutex_unlock(&dir->lock);
     return -1; /*failed*/
 
+}
+
+int taskdir_nodeid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
+                          uint32_t *nodeid) {
+    assert(nodeid != NULL);
+
+    optimsoc_mutex_lock(&dir->lock);
+
+    for (int i = 0; i < dir->size; i++) {
+        if (strcmp(dir->tasks[i].identifier, identifier) == 0) {
+            *nodeid = dir->tasks[i].nodeid;
+            optimsoc_mutex_unlock(&dir->lock);
+        }
+    }
+
+    optimsoc_mutex_unlock(&dir->lock);
+    return -1; /*failed*/
 }
