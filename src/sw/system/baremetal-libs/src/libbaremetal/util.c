@@ -65,7 +65,7 @@ uint32_t optimsoc_mainmem_tile() {
 }
 
 uint32_t optimsoc_noc_maxpacketsize(void) {
-    return 8;
+    return 32;
 }
 
 void optimsoc_trace_definesection(int id, char* name) {
