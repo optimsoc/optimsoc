@@ -88,8 +88,8 @@ void optimsoc_trace_kernelsection(void) {
     OPTIMSOC_TRACE(0x23,0);
 }
 
-void optimsoc_mutex_init(optimsoc_mutex_t **mutex) {
-    **mutex = 0;
+void optimsoc_mutex_init(optimsoc_mutex_t *mutex) {
+    *mutex = 0;
 }
 
 void optimsoc_mutex_lock(optimsoc_mutex_t *mutex) {

@@ -400,7 +400,7 @@ typedef uint32_t optimsoc_mutex_t;
  *
  * \param mutex Mutex to initialize
  */
-extern void optimsoc_mutex_init(optimsoc_mutex_t **mutex);
+extern void optimsoc_mutex_init(optimsoc_mutex_t *mutex);
 
 /**
  * Lock mutex
