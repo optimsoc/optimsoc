@@ -114,6 +114,7 @@ int optimsoc_mp_channel_recv(struct endpoint_handle *eph,
         memcpy(buffer, (void*)eph->ep->buffer->data[read_ptr], *received_size);
     } else {
         memcpy(buffer, (void*)eph->ep->buffer->data[read_ptr], buffer_size);
+        *received_size = buffer_size;
         ret = OPTIMSOC_MP_ERROR_BUFFEROVERFLOW;
     }
 
