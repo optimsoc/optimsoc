@@ -3,8 +3,6 @@
 
 //TODO define error codes & return values
 
-extern uint32_t *taskdir_table[];
-
 struct gzll_app_node {
     uint32_t rank;
     uint32_t nodeid;
