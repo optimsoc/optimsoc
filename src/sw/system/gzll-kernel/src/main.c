@@ -62,11 +62,12 @@ void main() {
 void init() {
     communication_init();
 
-    struct optimsoc_thread_attr attr;
-    optimsoc_thread_attr_init(&attr);
-    attr.identifier = "comm";
-    attr.flags |= OPTIMSOC_THREAD_FLAG_KERNEL;
-    optimsoc_thread_create(&_gzll_comm_thread, &communication_thread, &attr);
+    struct optimsoc_thread_attr *attr;
+    attr = malloc(sizeof(struct optimsoc_thread_attr));
+    optimsoc_thread_attr_init(attr);
+    attr->identifier = "comm";
+    attr->flags |= OPTIMSOC_THREAD_FLAG_KERNEL;
+    optimsoc_thread_create(&_gzll_comm_thread, &communication_thread, attr);
 
     gzll_apps_bootstrap();
 
