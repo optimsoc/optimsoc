@@ -79,18 +79,21 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     // Generate nodeid
     gzll_node_id nodeid = gzll_get_nodeid();
 
-    optimsoc_thread_t thread = malloc(sizeof(optimsoc_thread_t));
-    optimsoc_thread_create(&thread, (void*) 0x2000, 0);
-    optimsoc_thread_set_pagedir(thread, pdir);
-    optimsoc_thread_set_extra_data(thread, (void*) nodeid);
-
-    struct gzll_app_taskdir *taskdir = gzll_app_get_taskdir(app_id);
-    taskdir_task_register(taskdir, app_nodeid, taskname, gzll_rank, nodeid);
-
     struct gzll_task *task = calloc(1, sizeof(struct gzll_task));
     task->id = app_nodeid;
     task->identifier = strdup(taskname);
+    task->app = gzll_app_get(app_id);
+    assert(task->app);
+
     gzll_task_add(task);
+
+    optimsoc_thread_t thread = malloc(sizeof(optimsoc_thread_t));
+    optimsoc_thread_create(&thread, (void*) 0x2000, 0);
+    optimsoc_thread_set_pagedir(thread, pdir);
+    optimsoc_thread_set_extra_data(thread, (void*) task);
+
+    struct gzll_app_taskdir *taskdir = task->app->task_dir;
+    taskdir_task_register(taskdir, app_nodeid, taskname, gzll_rank, nodeid);
 
     // Tell the other ranks
     message_send_node_new(app_id, app_nodeid, nodeid, taskname);

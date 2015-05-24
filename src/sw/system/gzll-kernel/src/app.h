@@ -13,6 +13,6 @@ struct gzll_app {
 };
 
 void gzll_app_new(uint32_t id, const char* name);
-struct gzll_app_taskdir *gzll_app_get_taskdir(uint32_t id);
+struct gzll_app *gzll_app_get(uint32_t id);
 
 #endif

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 
 #include <optimsoc-runtime.h>
 
@@ -12,9 +13,12 @@ struct optimsoc_list_t *gzll_app_list;
 void gzll_app_new(uint32_t id, const char* name) {
 
     struct gzll_app *app = malloc(sizeof(struct gzll_app));
+    assert(app);
+
     app->id = id;
     app->name = strdup(name);
     app->task_dir = malloc(sizeof(struct gzll_app_taskdir));
+    assert(app->task_dir);
 
     taskdir_initialize(app->task_dir);
 
@@ -26,9 +30,9 @@ void gzll_app_new(uint32_t id, const char* name) {
 
 }
 
-struct gzll_app_taskdir *gzll_app_get_taskdir(uint32_t id) {
+struct gzll_app *gzll_app_get(uint32_t id) {
 
-    return(optimsoc_list_find_content_header(gzll_app_list, id));
+    return optimsoc_list_find_content_header(gzll_app_list, id);
 }
 
 void _gzll_app_bootstrap(uint32_t appid, char *appname,

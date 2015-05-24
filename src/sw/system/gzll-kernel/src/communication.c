@@ -7,6 +7,8 @@
 #include <optimsoc-mp.h>
 
 #include "gzll.h"
+#include "app.h"
+#include "taskdir.h"
 #include "messages.h"
 
 optimsoc_mp_endpoint_handle _gzll_mp_ep_system;
@@ -37,8 +39,7 @@ void communication_init() {
             tile = optimsoc_get_ranktile(rank);
 
             optimsoc_mp_endpoint_get(ep, tile, 0, 0);
-            printf("Remote endpoint @%d: %p\n", rank, _gzll_mp_ep_system_remote[rank]);
-        }
+            printf("Remote endpoint @%d: %p\n", rank, _gzll_mp_ep_system_remote[rank]);        }
     }
 }
 
@@ -51,6 +52,7 @@ void communication_thread() {
     while (1) {
         uint32_t received;
         optimsoc_mp_msg_recv(_gzll_mp_ep_system, buffer, 256, &received);
+
         assert((received > 1) && (received == msg->len));
         assert(msg->type < GZLL_NUM_MESSAGE_TYPES);
         gzll_message_handlers[msg->type](msg);
@@ -103,9 +105,17 @@ void gzll_message_node_new_handler(struct gzll_message *msg) {
     memcpy(name, msg_node->app_nodename, strlen);
     name[strlen] = 0;
 
-    printf("Received new node information\n");
+/*    printf("Received new node information\n");
     printf("  on rank: %d\n", msg->source_rank);
     printf("  appid: %d, nodeid: %d, ranknode: %d\n", msg_node->app_id,
            msg_node->app_nodeid, msg_node->rank_nodeid);
-    printf("  nodename: '%s'\n", name);
+    printf("  nodename: '%s'\n", name);*/
+
+    struct gzll_app *app;
+    app = gzll_app_get(msg_node->app_id);
+    assert(app);
+
+    taskdir_task_register(app->task_dir, msg_node->app_nodeid,
+                          msg_node->app_nodename, msg->source_rank,
+                          msg_node->rank_nodeid);
 }

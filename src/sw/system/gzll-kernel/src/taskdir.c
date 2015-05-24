@@ -49,7 +49,7 @@ int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
 
 	uint32_t new_size = taskid + 1;
 
-	dir->tasks = realloc(dir->tasks, new_size);
+	dir->tasks = realloc(dir->tasks, new_size * sizeof(struct gzll_app_node));
 	assert(dir->tasks != NULL);
 
 	/* invalidate unused spare entries between the current last entry and the new end*/
@@ -57,13 +57,14 @@ int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
 	    entry->rank = TASKDIR_INVALID_RANK;
 	    entry->nodeid = TASKDIR_INVALID_NODEID;
 	}
+
+	dir->size = new_size;
     }
 
     entry = dir->tasks + taskid;
 
     /* entry must be unused */
     if(entry->rank == TASKDIR_INVALID_RANK && entry->nodeid == TASKDIR_INVALID_NODEID) {
-
 	entry->rank = rank;
 	entry->nodeid = nodeid;
 	entry->identifier = strdup(identifier);
@@ -148,6 +149,7 @@ int taskdir_nodeid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
         if (strcmp(dir->tasks[i].identifier, identifier) == 0) {
             *nodeid = dir->tasks[i].nodeid;
             optimsoc_mutex_unlock(&dir->lock);
+            return 0;
         }
     }
 
