@@ -190,7 +190,7 @@
 #define OR1K_PTABLE(pte) (pte & 0xffffe000)
 
 /*! Helper macro to verify directory address from user input. */
-#define VERIFY_DIR_ADDR(dir) assert(dir && (((uint32_t) dir & 0x7ff) == 0));
+#define VERIFY_DIR_ADDR(dir) assert(dir && (((uint32_t) dir & 0x3ff) == 0));
 
 optimsoc_page_dir_t optimsoc_vmm_create_page_dir() {
     optimsoc_page_dir_t dir;
@@ -198,11 +198,11 @@ optimsoc_page_dir_t optimsoc_vmm_create_page_dir() {
     // Allocate memory that is aligned to borders of multiples of its size.
     // This is necessary as the hardware-based TLB reload does an OR of the
     // page dir base and the offset.
-    dir = (optimsoc_page_dir_t) memalign(0x800, 0x800);
+    dir = (optimsoc_page_dir_t) memalign(0x400, 0x400);
     assert(dir);
 
     // Zero the directory
-    memset((void*) dir, 0, 0x800);
+    memset((void*) dir, 0, 0x400);
 
     return dir;
 }
