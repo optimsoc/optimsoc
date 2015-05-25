@@ -3,6 +3,10 @@
 #include "messages.h"
 #include "task.h"
 
+#include "gzll-syscall.h"
+
+#include "memcpy_userspace.h"
+
 #include <optimsoc-runtime.h>
 #include <or1k-support.h>
 
@@ -97,4 +101,32 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
 
     // Tell the other ranks
     message_send_node_new(app_id, app_nodeid, nodeid, taskname);
+}
+
+void gzll_syscall_get_nodeid(struct gzll_syscall *syscall) {
+    char identifier[64];
+    gzll_memcpy_from_userspace((void*) identifier,
+                               (void*) syscall->param[0],
+                               syscall->param[1]);
+    optimsoc_thread_t thread;
+    struct gzll_task* task;
+    thread = optimsoc_thread_current();
+    task = (struct gzll_task*) optimsoc_thread_get_extra_data(thread);
+
+    struct gzll_app *app;
+    app = task->app;
+
+    struct gzll_app_taskdir *taskdir = app->task_dir;
+    assert(taskdir);
+
+    uint32_t app_nodeid;
+    int rv = taskdir_nodeid_lookup(taskdir, identifier, &app_nodeid);
+
+    if (rv == 0) {
+        syscall->output = 0;
+    } else {
+        syscall->output = -1;
+    }
+
+    gzll_memcpy_to_userspace((void*) syscall->param[2], &app_nodeid, 4);
 }

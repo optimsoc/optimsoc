@@ -27,17 +27,22 @@
 #include <optimsoc-runtime.h>
 #include "gzll-syscall.h"
 
+void gzll_syscall_get_kernelinfo(struct gzll_syscall *syscall);
+void gzll_syscall_get_nodeid(struct gzll_syscall *syscall);
+
 void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
     struct gzll_syscall *syscall = (struct gzll_syscall*) optimsoc_syscall;
 
     switch (syscall->id) {
     case GZLL_SYSCALL_THREAD_EXIT:
-        printf("Thread exit\n");
         optimsoc_thread_exit();
         break;
     case GZLL_SYSCALL_KERNEL_INFO:
-         gzll_syscall_get_kernelinfo(syscall);
-         break;
+        gzll_syscall_get_kernelinfo(syscall);
+        break;
+    case GZLL_SYSCALL_NODE_LOOKUP:
+        gzll_syscall_get_nodeid(syscall);
+        break;
     default:
         printf("Invalid syscall\n");
         break;
