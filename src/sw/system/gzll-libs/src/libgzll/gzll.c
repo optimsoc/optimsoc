@@ -19,3 +19,14 @@ int gzll_lookup_nodeid(char *name, gzll_node_id *nodeid) {
     return syscall(GZLL_SYSCALL_NODE_LOOKUP, (uint32_t) name, len,
                    (uint32_t) nodeid, 0, 0, 0);
 }
+
+gzll_node_id _gzll_self;
+uint8_t _gzll_self_identified;
+
+gzll_node_id gzll_self(void) {
+    if (!_gzll_self_identified) {
+        _gzll_self = syscall(GZLL_SYSCALL_SELF, 0, 0, 0, 0, 0, 0);
+        _gzll_self_identified = 1;
+    }
+    return _gzll_self;
+}

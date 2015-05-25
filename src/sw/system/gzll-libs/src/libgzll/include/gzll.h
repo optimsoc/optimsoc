@@ -6,6 +6,7 @@
 void gzll_get_kernel_version(char **version_string);
 
 typedef uint32_t gzll_node_id;
+gzll_node_id gzll_self(void);
 int gzll_lookup_nodeid(char *name, gzll_node_id *nodeid);
 
 typedef struct gzll_mp_endpoint* gzll_mp_endpoint_t;
