@@ -147,7 +147,7 @@ int taskdir_nodeid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
 
     for (int i = 0; i < dir->size; i++) {
         if (strcmp(dir->tasks[i].identifier, identifier) == 0) {
-            *nodeid = dir->tasks[i].nodeid;
+            *nodeid = i;
             optimsoc_mutex_unlock(&dir->lock);
             return 0;
         }
