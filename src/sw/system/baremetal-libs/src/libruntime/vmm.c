@@ -232,7 +232,7 @@ int optimsoc_vmm_map(optimsoc_page_dir_t directory, uint32_t vaddr,
     VERIFY_DIR_ADDR(directory);
 
     // Address of the table's pte from the directory base
-    void *taddr = (void*) &directory[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+    void *taddr = (void*) &directory[OR1K_ADDR_L1_INDEX_GET(vaddr)];
 
     // Load-linked the pointer, as we may change it
     dirpte = or1k_sync_ll(taddr);
@@ -343,7 +343,7 @@ int optimsoc_vmm_unmap(optimsoc_page_dir_t directory,
     // do not collide.
 
     // Load table pte in directory
-    dirpte = directory[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+    dirpte = directory[OR1K_ADDR_L1_INDEX_GET(vaddr)];
 
     // Check if table was mapped
     if (OR1K_PTE_PRESENT_GET(dirpte) == 0) {
@@ -380,7 +380,7 @@ optimsoc_pte_t _optimsoc_vmm_lookup(optimsoc_page_dir_t directory,
     VERIFY_DIR_ADDR(directory);
 
     // Load table pte
-    pte = directory[OR1K_ADDR_L2_INDEX_GET(vaddr)];
+    pte = directory[OR1K_ADDR_L1_INDEX_GET(vaddr)];
 
     // Check if the table is present
     if (OR1K_PTE_PRESENT_GET(pte) == 0) {
