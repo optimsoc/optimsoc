@@ -103,6 +103,15 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     message_send_node_new(app_id, app_nodeid, nodeid, taskname);
 }
 
+void gzll_syscall_self(struct gzll_syscall *syscall) {
+    optimsoc_thread_t thread;
+    struct gzll_task* task;
+    thread = optimsoc_thread_current();
+    task = (struct gzll_task*) optimsoc_thread_get_extra_data(thread);
+
+    syscall->output = task->id;
+}
+
 void gzll_syscall_get_nodeid(struct gzll_syscall *syscall) {
     char identifier[64];
     gzll_memcpy_from_userspace((void*) identifier,

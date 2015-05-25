@@ -28,6 +28,7 @@
 #include "gzll-syscall.h"
 
 void gzll_syscall_get_kernelinfo(struct gzll_syscall *syscall);
+void gzll_syscall_self(struct gzll_syscall *syscall);
 void gzll_syscall_get_nodeid(struct gzll_syscall *syscall);
 
 void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
@@ -39,6 +40,9 @@ void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
         break;
     case GZLL_SYSCALL_KERNEL_INFO:
         gzll_syscall_get_kernelinfo(syscall);
+        break;
+    case GZLL_SYSCALL_SELF:
+        gzll_syscall_self(syscall);
         break;
     case GZLL_SYSCALL_NODE_LOOKUP:
         gzll_syscall_get_nodeid(syscall);

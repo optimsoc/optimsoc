@@ -62,9 +62,11 @@ struct gzll_kernel_info {
  */
 #define GZLL_SYSCALL_KERNEL_INFO 1
 
-#define GZLL_SYSCALL_NODE_LOOKUP 2
+#define GZLL_SYSCALL_SELF 2
+
+#define GZLL_SYSCALL_NODE_LOOKUP 3
 
 /** Allocate new page for user application */
-#define GZLL_SYSCALL_VMM_ALLOC_PAGE 3
+#define GZLL_SYSCALL_VMM_ALLOC_PAGE 4
 
 #endif
