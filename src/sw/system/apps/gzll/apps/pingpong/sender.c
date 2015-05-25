@@ -6,7 +6,7 @@
 void main() {
 	int rv;
 	gzll_node_id receiver_node;
-	printf("Sender started\n");
+	printf("Sender started, node id: %d\n", gzll_self());
 
 	rv = gzll_lookup_nodeid("receiver-0", &receiver_node);
 	assert(rv == 0);
