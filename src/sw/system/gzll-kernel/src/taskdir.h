@@ -54,8 +54,8 @@ int taskdir_task_remap(struct gzll_app_taskdir *dir, uint32_t taskid,
  * @param *tileid a pointer to return the tile ID
  * @return error code
  */
-int taskdir_rank_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
-                          uint32_t *tileid);
+int taskdir_mapping_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
+                           uint32_t *rankid, uint32_t *nodeid);
 
 /**
  * Do a lookup of the node id for the task identifier

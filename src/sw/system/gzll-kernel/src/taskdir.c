@@ -111,10 +111,10 @@ int taskdir_task_remap(struct gzll_app_taskdir *dir, uint32_t taskid,
 }
 
 
-int taskdir_rank_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
-			uint32_t *tileid) {
+int taskdir_mapping_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
+                           uint32_t *rankid, uint32_t *nodeid) {
 
-    assert(tileid != NULL);
+    assert(dir && rankid && nodeid);
 
     optimsoc_mutex_lock(&dir->lock);
 
@@ -127,7 +127,8 @@ int taskdir_rank_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
 
 	    /* there is a valid entry for this task id - delete it */
 
-	    *tileid = entry->rank;
+	    *rankid = entry->rank;
+	    *nodeid = entry->nodeid;
 	    optimsoc_mutex_unlock(&dir->lock);
 	    return 0; /*success*/
 	}
