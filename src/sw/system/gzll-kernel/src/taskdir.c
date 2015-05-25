@@ -17,19 +17,19 @@ int taskdir_task_delete(struct gzll_app_taskdir *dir, uint32_t taskid) {
 
     if(taskid < dir->size) {
 
-	struct gzll_app_node *entry = dir->tasks + taskid;
+        struct gzll_app_node *entry = dir->tasks + taskid;
 
-	if(entry->rank != TASKDIR_INVALID_RANK
-	   && entry->nodeid != TASKDIR_INVALID_NODEID) {
+        if(entry->rank != TASKDIR_INVALID_RANK
+                && entry->nodeid != TASKDIR_INVALID_NODEID) {
 
-	    /* there is a valid entry for this task id - delete it */
+            /* there is a valid entry for this task id - delete it */
 
-	    entry->rank = TASKDIR_INVALID_RANK;
-	    entry->nodeid = TASKDIR_INVALID_NODEID;
+            entry->rank = TASKDIR_INVALID_RANK;
+            entry->nodeid = TASKDIR_INVALID_NODEID;
 
-	    optimsoc_mutex_unlock(&dir->lock);
-	    return 0; /*success*/
-	}
+            optimsoc_mutex_unlock(&dir->lock);
+            return 0; /*success*/
+        }
 
     }
 
@@ -45,38 +45,38 @@ int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
     struct gzll_app_node *entry;
 
     if(taskid >= dir->size) {
-	/* table must be expanded */
+        /* table must be expanded */
 
-	uint32_t new_size = taskid + 1;
+        uint32_t new_size = taskid + 1;
 
-	dir->tasks = realloc(dir->tasks, new_size * sizeof(struct gzll_app_node));
-	assert(dir->tasks != NULL);
+        dir->tasks = realloc(dir->tasks, new_size * sizeof(struct gzll_app_node));
+        assert(dir->tasks != NULL);
 
-	/* invalidate unused spare entries between the current last entry and the new end*/
-	for(entry = dir->tasks + dir->size; entry < dir->tasks + new_size; ++entry) {
-	    entry->rank = TASKDIR_INVALID_RANK;
-	    entry->nodeid = TASKDIR_INVALID_NODEID;
-	}
+        /* invalidate unused spare entries between the current last entry and the new end*/
+        for(entry = dir->tasks + dir->size; entry < dir->tasks + new_size; ++entry) {
+            entry->rank = TASKDIR_INVALID_RANK;
+            entry->nodeid = TASKDIR_INVALID_NODEID;
+        }
 
-	dir->size = new_size;
+        dir->size = new_size;
     }
 
     entry = dir->tasks + taskid;
 
     /* entry must be unused */
     if(entry->rank == TASKDIR_INVALID_RANK && entry->nodeid == TASKDIR_INVALID_NODEID) {
-	entry->rank = rank;
-	entry->nodeid = nodeid;
-	entry->identifier = strdup(identifier);
+        entry->rank = rank;
+        entry->nodeid = nodeid;
+        entry->identifier = strdup(identifier);
 
-	optimsoc_mutex_unlock(&dir->lock);
+        optimsoc_mutex_unlock(&dir->lock);
 
-	return 0; /*success*/
+        return 0; /*success*/
     } else {
 
-	optimsoc_mutex_unlock(&dir->lock);
+        optimsoc_mutex_unlock(&dir->lock);
 
-	return -1; /*failed*/
+        return -1; /*failed*/
     }
 
 }
@@ -89,19 +89,19 @@ int taskdir_task_remap(struct gzll_app_taskdir *dir, uint32_t taskid,
 
     if(taskid < dir->size) {
 
-	struct gzll_app_node *entry = dir->tasks + taskid;
+        struct gzll_app_node *entry = dir->tasks + taskid;
 
-	if(entry->rank == old_rank
-	   && entry->nodeid == old_nodeid) {
+        if(entry->rank == old_rank
+                && entry->nodeid == old_nodeid) {
 
-	    /* there is a valid entry for this task id - delete it */
+            /* there is a valid entry for this task id - delete it */
 
-	    entry->rank = new_rank;
-	    entry->nodeid = new_nodeid;
+            entry->rank = new_rank;
+            entry->nodeid = new_nodeid;
 
-	    optimsoc_mutex_unlock(&dir->lock);
-	    return 0; /*success*/
-	}
+            optimsoc_mutex_unlock(&dir->lock);
+            return 0; /*success*/
+        }
 
     }
 
@@ -120,18 +120,18 @@ int taskdir_mapping_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
 
     if(taskid < dir->size) {
 
-	struct gzll_app_node *entry = dir->tasks + taskid;
+        struct gzll_app_node *entry = dir->tasks + taskid;
 
-	if(entry->rank != TASKDIR_INVALID_RANK
-	   && entry->nodeid != TASKDIR_INVALID_NODEID) {
+        if(entry->rank != TASKDIR_INVALID_RANK
+                && entry->nodeid != TASKDIR_INVALID_NODEID) {
 
-	    /* there is a valid entry for this task id - delete it */
+            /* there is a valid entry for this task id - delete it */
 
-	    *rankid = entry->rank;
-	    *nodeid = entry->nodeid;
-	    optimsoc_mutex_unlock(&dir->lock);
-	    return 0; /*success*/
-	}
+            *rankid = entry->rank;
+            *nodeid = entry->nodeid;
+            optimsoc_mutex_unlock(&dir->lock);
+            return 0; /*success*/
+        }
 
     }
 
