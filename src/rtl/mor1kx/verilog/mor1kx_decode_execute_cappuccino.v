@@ -32,6 +32,8 @@ module mor1kx_decode_execute_cappuccino
     parameter FEATURE_DELAY_SLOT = "ENABLED",
 
     parameter FEATURE_MULTIPLIER = "THREESTAGE",
+    
+    parameter FEATURE_FPU   = "NONE", // ENABLED|NONE
 
     parameter FEATURE_INBUILT_CHECKERS = "ENABLED"
     )
@@ -128,6 +130,8 @@ module mor1kx_decode_execute_cappuccino
     input 				  decode_op_shift_i,
     input 				  decode_op_ffl1_i,
     input 				  decode_op_movhi_i,
+    input                                 decode_op_msync_i,
+    input [`OR1K_FPUOP_WIDTH-1:0]         decode_op_fpu_i,
 
     input [`OR1K_OPCODE_WIDTH-1:0] 	  decode_opc_insn_i,
 
@@ -164,6 +168,8 @@ module mor1kx_decode_execute_cappuccino
     output reg 				  execute_op_shift_o,
     output reg 				  execute_op_ffl1_o,
     output reg 				  execute_op_movhi_o,
+    output reg                            execute_op_msync_o,
+    output [`OR1K_FPUOP_WIDTH-1:0]        execute_op_fpu_o,
 
     output reg [OPTION_OPERAND_WIDTH-1:0] execute_jal_result_o,
 
@@ -223,6 +229,7 @@ module mor1kx_decode_execute_cappuccino
 	execute_op_shift_o <= 1'b0;
 	execute_op_ffl1_o <= 1'b0;
 	execute_op_movhi_o <= 1'b0;
+        execute_op_msync_o <= 1'b0;
 	execute_op_mfspr_o <= 1'b0;
 	execute_op_mtspr_o <= 1'b0;
 	execute_op_lsu_load_o <= 1'b0;
@@ -246,6 +253,7 @@ module mor1kx_decode_execute_cappuccino
 	execute_op_shift_o <= 1'b0;
 	execute_op_ffl1_o <= 1'b0;
 	execute_op_movhi_o <= 1'b0;
+        execute_op_msync_o <= 1'b0;
 	execute_op_lsu_load_o <= 1'b0;
 	execute_op_lsu_store_o <= 1'b0;
 	execute_op_lsu_atomic_o <= 1'b0;
@@ -267,6 +275,7 @@ module mor1kx_decode_execute_cappuccino
 	execute_op_shift_o <= decode_op_shift_i;
 	execute_op_ffl1_o <= decode_op_ffl1_i;
 	execute_op_movhi_o <= decode_op_movhi_i;
+        execute_op_msync_o <= decode_op_msync_i;
 	execute_op_mfspr_o <= decode_op_mfspr_i;
 	execute_op_mtspr_o <= decode_op_mtspr_i;
 	execute_op_lsu_load_o <= decode_op_lsu_load_i;
@@ -290,6 +299,7 @@ module mor1kx_decode_execute_cappuccino
 	   execute_op_shift_o <= 1'b0;
 	   execute_op_ffl1_o <= 1'b0;
 	   execute_op_movhi_o <= 1'b0;
+           execute_op_msync_o <= 1'b0;
 	   execute_op_mtspr_o <= 1'b0;
 	   execute_op_mfspr_o <= 1'b0;
 	   execute_op_lsu_load_o <= 1'b0;
@@ -303,6 +313,28 @@ module mor1kx_decode_execute_cappuccino
 	   execute_op_branch_o <= 1'b0;
 	end
      end
+
+   // FPU related
+   generate
+     /* verilator lint_off WIDTH */
+     if (FEATURE_FPU!="NONE") begin : fpu_decode_execute_ena
+     /* verilator lint_on WIDTH */
+       reg [`OR1K_FPUOP_WIDTH-1:0] execute_op_fpu_r;
+       assign execute_op_fpu_o = execute_op_fpu_r;
+       always @(posedge clk `OR_ASYNC_RST) begin
+         if (rst)
+           execute_op_fpu_r <= {`OR1K_FPUOP_WIDTH{1'b0}};
+         else if (pipeline_flush_i)
+           execute_op_fpu_r <= {`OR1K_FPUOP_WIDTH{1'b0}};
+         else if (padv_i)
+           execute_op_fpu_r <= (decode_bubble_o ?
+                               {`OR1K_FPUOP_WIDTH{1'b0}} : decode_op_fpu_i);
+       end // @clk
+     end
+     else begin : fpu_decode_execute_none
+       assign execute_op_fpu_o  = {`OR1K_FPUOP_WIDTH{1'b0}};
+     end
+   endgenerate // FPU related
 
    // rfe is a special case, instead of pushing the pipeline full
    // of nops on a decode_bubble_o, we push it full of rfes.

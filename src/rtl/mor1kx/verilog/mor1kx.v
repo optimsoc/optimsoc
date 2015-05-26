@@ -58,6 +58,7 @@ module mor1kx
     parameter FEATURE_CARRY_FLAG	= "ENABLED",
 
     parameter FEATURE_FASTCONTEXTS	= "NONE",
+    parameter OPTION_RF_CLEAR_ON_INIT	= 0,
     parameter OPTION_RF_NUM_SHADOW_GPR	= 0,
     parameter OPTION_RF_ADDR_WIDTH	= 5,
     parameter OPTION_RF_WORDS		= 32,
@@ -85,6 +86,8 @@ module mor1kx
     parameter FEATURE_CUST7		= "NONE",
     parameter FEATURE_CUST8		= "NONE",
 
+    parameter FEATURE_FPU     = "NONE", // ENABLED|NONE: actual for cappuccino pipeline only
+    
     parameter OPTION_SHIFTER		= "BARREL",
 
     parameter FEATURE_STORE_BUFFER	= "ENABLED",
@@ -486,6 +489,7 @@ module mor1kx
 	     .FEATURE_OVERFLOW(FEATURE_OVERFLOW),
 	     .FEATURE_CARRY_FLAG(FEATURE_CARRY_FLAG),
 	     .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
+	     .OPTION_RF_CLEAR_ON_INIT(OPTION_RF_CLEAR_ON_INIT),
 	     .OPTION_RF_NUM_SHADOW_GPR(OPTION_RF_NUM_SHADOW_GPR),
 	     .OPTION_RF_ADDR_WIDTH(OPTION_RF_ADDR_WIDTH),
 	     .OPTION_RF_WORDS(OPTION_RF_WORDS),
@@ -499,6 +503,7 @@ module mor1kx
 	     .FEATURE_CMOV(FEATURE_CMOV),
 	     .FEATURE_FFL1(FEATURE_FFL1),
 	     .FEATURE_ATOMIC(FEATURE_ATOMIC),
+	     .FEATURE_FPU(FEATURE_FPU), // mor1kx_cpu instance
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
 	     .FEATURE_CUST3(FEATURE_CUST3),
