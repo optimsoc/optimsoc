@@ -30,3 +30,50 @@ gzll_node_id gzll_self(void) {
     }
     return _gzll_self;
 }
+
+struct _gzll_endpoint {
+    uint32_t node;
+    uint32_t port;
+};
+
+int gzll_mp_endpoint_create(gzll_mp_endpoint_t *ep, uint32_t port,
+                            gzll_endpoint_type buffer_type,
+                            uint32_t buffer_size, uint32_t max_elem_size) {
+    struct _gzll_endpoint *eph = malloc(sizeof (struct _gzll_endpoint));
+    *ep = (gzll_mp_endpoint_t) eph;
+
+    eph->node = gzll_self();
+    eph->port = port;
+
+    return syscall(GZLL_SYSCALL_ENDPOINT_CREATE, port, (uint32_t) buffer_type,
+                   buffer_size, max_elem_size, 0, 0);
+}
+
+int gzll_mp_endpoint_get(gzll_mp_endpoint_t *ep, uint32_t node, uint32_t port) {
+    struct _gzll_endpoint *eph = malloc(sizeof (struct _gzll_endpoint));
+    *ep = (gzll_mp_endpoint_t) eph;
+
+    eph->node = node;
+    eph->port = port;
+
+    return syscall(GZLL_SYSCALL_ENDPOINT_GET, node, port, 0, 0, 0, 0);
+}
+
+int gzll_mp_channel_connect(gzll_mp_endpoint_t from, gzll_mp_endpoint_t to) {
+    struct _gzll_endpoint *fep, *tep;
+
+    fep = (struct _gzll_endpoint*) from;
+    tep = (struct _gzll_endpoint*) to;
+
+    return syscall(GZLL_SYSCALL_CHANNEL_CONNECT, fep->node, fep->port,
+                   tep->node, tep->port, 0, 0);
+}
+
+int gzll_mp_channel_send(gzll_mp_endpoint_t from, gzll_mp_endpoint_t to,
+                         uint8_t* buffer, uint32_t size) {
+}
+
+int gzll_mp_channel_recv(gzll_mp_endpoint_t ep, uint8_t* buffer,
+                         uint32_t buffer_size, uint32_t *received_size) {
+
+}
