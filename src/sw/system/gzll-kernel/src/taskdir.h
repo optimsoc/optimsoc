@@ -1,7 +1,8 @@
 #ifndef __TASKDIR_H__
 #define __TASKDIR_H__
 
-#include "optimsoc-baremetal.h"
+#include <optimsoc-baremetal.h>
+#include <optimsoc-mp.h>
 
 //TODO define error codes & return values
 
@@ -9,6 +10,7 @@ struct gzll_app_node {
     char *identifier;
     uint32_t rank;
     uint32_t nodeid;
+    struct gzll_endpoint_table *endpoints;
 };
 
 struct gzll_app_taskdir {
@@ -62,4 +64,5 @@ int taskdir_mapping_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
  */
 int taskdir_nodeid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
                           uint32_t *nodeid);
+
 #endif //__TASKDIR_H__

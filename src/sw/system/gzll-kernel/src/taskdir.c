@@ -68,6 +68,7 @@ int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
         entry->rank = rank;
         entry->nodeid = nodeid;
         entry->identifier = strdup(identifier);
+        endpoint_table_init(&entry->endpoints);
 
         optimsoc_mutex_unlock(&dir->lock);
 

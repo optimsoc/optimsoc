@@ -35,4 +35,5 @@ libgzll_kernel_la_SOURCES = \
 	task.c \
 	taskdir.c \
 	app.c \
-	memcpy_userspace.c
+	memcpy_userspace.c \
+	mp.c

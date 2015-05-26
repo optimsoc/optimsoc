@@ -84,9 +84,10 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     gzll_node_id nodeid = gzll_get_nodeid();
 
     struct gzll_task *task = calloc(1, sizeof(struct gzll_task));
-    task->id = app_nodeid;
+    task->id = nodeid;
     task->identifier = strdup(taskname);
     task->app = gzll_app_get(app_id);
+    task->app_nodeid = app_nodeid;
     assert(task->app);
 
     gzll_task_add(task);
@@ -109,7 +110,7 @@ void gzll_syscall_self(struct gzll_syscall *syscall) {
     thread = optimsoc_thread_current();
     task = (struct gzll_task*) optimsoc_thread_get_extra_data(thread);
 
-    syscall->output = task->id;
+    syscall->output = task->app_nodeid;
 }
 
 void gzll_syscall_get_nodeid(struct gzll_syscall *syscall) {

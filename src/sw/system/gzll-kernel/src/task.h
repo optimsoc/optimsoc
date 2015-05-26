@@ -6,9 +6,10 @@ struct gzll_task;
 #include "app.h"
 
 struct gzll_task {
-    gzll_node_id id;
+    uint32_t id;
     char *identifier;
     struct gzll_app *app;
+    gzll_node_id app_nodeid;
 };
 
 #endif
