@@ -12,4 +12,8 @@ void main() {
 	assert(rv == 0);
 
 	printf("Looked up receiver id: %d\n", receiver_node);
+
+	gzll_mp_endpoint_t local_ep;
+
+	gzll_mp_endpoint_create(&local_ep, 0, OPTIMSOC_MP_EP_CHANNEL, 4, 4);
 }
