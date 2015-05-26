@@ -54,29 +54,29 @@ struct gzll_kernel_info {
 
 #define GZLL_SYSCALL_THREAD_EXIT 0
 
+/** Allocate new page for user application */
+#define GZLL_SYSCALL_VMM_ALLOC_PAGE 1
+
 /**
  *  Get kernel information
  *
  *  - Parameter 0: Pointer to gzll_kernel_info structure
  *  - Output: 0
  */
-#define GZLL_SYSCALL_KERNEL_INFO 1
+#define GZLL_SYSCALL_KERNEL_INFO 2
 
-#define GZLL_SYSCALL_SELF 2
+#define GZLL_SYSCALL_SELF 3
 
-#define GZLL_SYSCALL_NODE_LOOKUP 3
+#define GZLL_SYSCALL_NODE_LOOKUP 4
 
-#define GZLL_SYSCALL_ENDPOINT_CREATE 4
+#define GZLL_SYSCALL_ENDPOINT_CREATE 5
 
-#define GZLL_SYSCALL_ENDPOINT_GET 5
+#define GZLL_SYSCALL_ENDPOINT_GET 6
 
-#define GZLL_SYSCALL_CHANNEL_CONNECT 6
+#define GZLL_SYSCALL_CHANNEL_CONNECT 7
 
-#define GZLL_SYSCALL_CHANNEL_SEND 7
+#define GZLL_SYSCALL_CHANNEL_SEND 8
 
-#define GZLL_SYSCALL_CHANNEL_RECEIVE 8
-
-/** Allocate new page for user application */
-#define GZLL_SYSCALL_VMM_ALLOC_PAGE 9
+#define GZLL_SYSCALL_CHANNEL_RECEIVE 9
 
 #endif

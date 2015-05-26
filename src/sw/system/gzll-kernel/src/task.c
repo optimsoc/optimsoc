@@ -140,3 +140,29 @@ void gzll_syscall_get_nodeid(struct gzll_syscall *syscall) {
 
     gzll_memcpy_to_userspace((void*) syscall->param[2], &app_nodeid, 4);
 }
+
+void gzll_syscall_alloc_page(struct gzll_syscall *syscall) {
+
+    optimsoc_thread_t thread;
+    struct gzll_task* task;
+    thread = optimsoc_thread_current();
+
+    optimsoc_page_dir_t pdir = optimsoc_thread_get_pagedir(thread);
+
+    uint32_t vaddr = syscall->param[0];
+    int size = syscall->param[1];
+
+    while(size > 0) {
+	uint32_t alloced = gzll_page_alloc();
+	assert(alloced);
+
+	optimsoc_vmm_map(pdir, vaddr, alloced << 13);
+
+	printf("alloc new page %p at %p\n", vaddr, alloced * 8192);
+
+	vaddr += 0x2000;
+	size -= 0x2000;
+    }
+
+    syscall->output = vaddr;
+}
