@@ -13,7 +13,17 @@ void main() {
 
 	printf("Looked up receiver id: %d\n", receiver_node);
 
-	gzll_mp_endpoint_t local_ep;
+	gzll_mp_endpoint_t local_ep, remote_ep;
 
 	gzll_mp_endpoint_create(&local_ep, 0, OPTIMSOC_MP_EP_CHANNEL, 4, 4);
+
+	gzll_mp_endpoint_get(&remote_ep, receiver_node, 0);
+
+	gzll_mp_channel_connect(local_ep, remote_ep);
+
+	printf("Connected to receiver\n");
+
+	uint32_t data = 0xdeadbeef;
+
+	gzll_mp_channel_send(local_ep, remote_ep, &data, 4);
 }
