@@ -34,7 +34,11 @@ void gzll_syscall_get_nodeid(struct gzll_syscall *syscall);
 void gzll_syscall_endpoint_create(struct gzll_syscall *syscall);
 void gzll_syscall_endpoint_get(struct gzll_syscall *syscall);
 
+<<<<<<< HEAD
 void gzll_syscall_alloc_page(struct gzll_syscall *syscall);
+=======
+void gzll_syscall_channel_connect(struct gzll_syscall *syscall);
+>>>>>>> Add channel connect stub
 
 void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
     struct gzll_syscall *syscall = (struct gzll_syscall*) optimsoc_syscall;
@@ -61,6 +65,9 @@ void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
     case GZLL_SYSCALL_VMM_ALLOC_PAGE:
 	gzll_syscall_alloc_page(syscall);
 	break;
+    case GZLL_SYSCALL_CHANNEL_CONNECT:
+        gzll_syscall_channel_connect(syscall);
+        break;
     default:
         printf("Invalid syscall, kill thread\n");
         optimsoc_thread_exit();

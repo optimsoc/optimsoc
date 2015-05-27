@@ -86,3 +86,7 @@ void gzll_syscall_endpoint_get(struct gzll_syscall *syscall) {
 
     endpoint_table_add(app_node->endpoints, port, eph);
 }
+
+void gzll_syscall_channel_connect(struct gzll_syscall *syscall) {
+
+}
