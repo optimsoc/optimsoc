@@ -62,7 +62,7 @@ int taskdir_mapping_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
 /**
  * Do a lookup of the node id for the task identifier
  */
-int taskdir_nodeid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
+int taskdir_taskid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
                           uint32_t *nodeid);
 
 #endif //__TASKDIR_H__

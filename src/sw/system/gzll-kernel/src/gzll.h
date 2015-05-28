@@ -45,7 +45,7 @@ unsigned int gzll_page_alloc();
 
 void gzll_apps_bootstrap();
 
-void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
+void gzll_node_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
                      char *taskname, struct gzll_task_descriptor *task);
 
 

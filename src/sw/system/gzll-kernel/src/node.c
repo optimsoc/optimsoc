@@ -1,8 +1,8 @@
+#include "node.h"
+
 #include "gzll.h"
 #include "gzll-apps.h"
 #include "messages.h"
-#include "task.h"
-
 #include "gzll-syscall.h"
 
 #include "memcpy_userspace.h"
@@ -30,22 +30,22 @@ gzll_node_id gzll_get_nodeid() {
     return nodeid;
 }
 
-struct optimsoc_list_t *gzll_task_list;
+struct optimsoc_list_t *gzll_node_list;
 
-void gzll_task_add(struct gzll_task *task) {
-    if (!gzll_task_list) {
-        gzll_task_list = optimsoc_list_init(task);
+void gzll_node_add(struct gzll_node *task) {
+    if (!gzll_node_list) {
+        gzll_node_list = optimsoc_list_init(task);
     } else {
-        optimsoc_list_add_tail(gzll_task_list, task);
+        optimsoc_list_add_tail(gzll_node_list, task);
     }
 }
 
 // TODO: load from global memory
-void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
-                     char* taskname, struct gzll_task_descriptor *taskdesc) {
+void gzll_node_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
+                     char* nodename, struct gzll_task_descriptor *taskdesc) {
     int rv;
 
-    printf("Boot task %s.%s\n", app_name, taskname);
+    printf("Boot node %s.%s\n", app_name, nodename);
 
     unsigned int size = taskdesc->obj_end - taskdesc->obj_start;
 
@@ -83,14 +83,14 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     // Generate nodeid
     gzll_node_id nodeid = gzll_get_nodeid();
 
-    struct gzll_task *task = calloc(1, sizeof(struct gzll_task));
+    struct gzll_node *task = calloc(1, sizeof(struct gzll_node));
     task->id = nodeid;
-    task->identifier = strdup(taskname);
+    task->identifier = strdup(nodename);
     task->app = gzll_app_get(app_id);
-    task->app_nodeid = app_nodeid;
+    task->taskid = app_nodeid;
     assert(task->app);
 
-    gzll_task_add(task);
+    gzll_node_add(task);
 
     optimsoc_thread_t thread = malloc(sizeof(optimsoc_thread_t));
     optimsoc_thread_create(&thread, (void*) 0x2000, 0);
@@ -98,39 +98,39 @@ void gzll_task_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     optimsoc_thread_set_extra_data(thread, (void*) task);
 
     struct gzll_app_taskdir *taskdir = task->app->task_dir;
-    taskdir_task_register(taskdir, app_nodeid, taskname, gzll_rank, nodeid);
+    taskdir_task_register(taskdir, app_nodeid, nodename, gzll_rank, nodeid);
 
     // Tell the other ranks
-    message_send_node_new(app_id, app_nodeid, nodeid, taskname);
+    message_send_node_new(app_id, app_nodeid, nodeid, nodename);
 }
 
 void gzll_syscall_self(struct gzll_syscall *syscall) {
     optimsoc_thread_t thread;
-    struct gzll_task* task;
+    struct gzll_node* task;
     thread = optimsoc_thread_current();
-    task = (struct gzll_task*) optimsoc_thread_get_extra_data(thread);
+    task = (struct gzll_node*) optimsoc_thread_get_extra_data(thread);
 
-    syscall->output = task->app_nodeid;
+    syscall->output = task->taskid;
 }
 
-void gzll_syscall_get_nodeid(struct gzll_syscall *syscall) {
+void gzll_syscall_get_taskid(struct gzll_syscall *syscall) {
     char identifier[64];
     gzll_memcpy_from_userspace((void*) identifier,
                                (void*) syscall->param[0],
                                syscall->param[1]);
     optimsoc_thread_t thread;
-    struct gzll_task* task;
+    struct gzll_node* node;
     thread = optimsoc_thread_current();
-    task = (struct gzll_task*) optimsoc_thread_get_extra_data(thread);
+    node = (struct gzll_node*) optimsoc_thread_get_extra_data(thread);
 
     struct gzll_app *app;
-    app = task->app;
+    app = node->app;
 
     struct gzll_app_taskdir *taskdir = app->task_dir;
     assert(taskdir);
 
-    uint32_t app_nodeid;
-    int rv = taskdir_nodeid_lookup(taskdir, identifier, &app_nodeid);
+    uint32_t taskid;
+    int rv = taskdir_taskid_lookup(taskdir, identifier, &taskid);
 
     if (rv == 0) {
         syscall->output = 0;
@@ -138,13 +138,14 @@ void gzll_syscall_get_nodeid(struct gzll_syscall *syscall) {
         syscall->output = -1;
     }
 
-    gzll_memcpy_to_userspace((void*) syscall->param[2], &app_nodeid, 4);
+    gzll_memcpy_to_userspace((void*) syscall->param[2], &taskid, 4);
 }
 
+// Todo: Move to better place
 void gzll_syscall_alloc_page(struct gzll_syscall *syscall) {
 
     optimsoc_thread_t thread;
-    struct gzll_task* task;
+    struct gzll_node* task;
     thread = optimsoc_thread_current();
 
     optimsoc_page_dir_t pdir = optimsoc_thread_get_pagedir(thread);
@@ -152,7 +153,7 @@ void gzll_syscall_alloc_page(struct gzll_syscall *syscall) {
     uint32_t vaddr = syscall->param[0];
     int size = syscall->param[1];
 
-    while (size > 0) {
+    while(size > 0) {
         uint32_t alloced = gzll_page_alloc();
         assert(alloced);
 

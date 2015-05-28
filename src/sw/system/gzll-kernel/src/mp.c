@@ -2,12 +2,12 @@
 
 #include "gzll-syscall.h"
 #include "gzll.h"
-#include "task.h"
 #include "taskdir.h"
 
 #include <optimsoc-runtime.h>
 
 #include <assert.h>
+#include "node.h"
 
 void endpoint_table_init(struct gzll_endpoint_table **table) {
     *table = calloc(sizeof(struct gzll_endpoint_table) + 8 * 4, 1);
@@ -29,11 +29,11 @@ void gzll_syscall_endpoint_create(struct gzll_syscall *syscall) {
     uint32_t buffer_size, max_size;
 
     optimsoc_thread_t thread;
-    struct gzll_task* task;
+    struct gzll_node* task;
     thread = optimsoc_thread_current();
-    task = (struct gzll_task*) optimsoc_thread_get_extra_data(thread);
+    task = (struct gzll_node*) optimsoc_thread_get_extra_data(thread);
 
-    app_nodeid = task->app_nodeid;
+    app_nodeid = task->taskid;
 
     struct gzll_app *app = task->app;
     assert(app);
@@ -64,9 +64,9 @@ void gzll_syscall_endpoint_get(struct gzll_syscall *syscall) {
     port = syscall->param[1];
 
     optimsoc_thread_t thread;
-    struct gzll_task* task;
+    struct gzll_node* task;
     thread = optimsoc_thread_current();
-    task = (struct gzll_task*) optimsoc_thread_get_extra_data(thread);
+    task = (struct gzll_node*) optimsoc_thread_get_extra_data(thread);
 
     struct gzll_app *app = task->app;
     assert(app);

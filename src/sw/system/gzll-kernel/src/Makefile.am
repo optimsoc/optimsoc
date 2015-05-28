@@ -32,7 +32,7 @@ libgzll_kernel_la_SOURCES = \
 	page.c \
 	main.c \
 	communication.c \
-	task.c \
+	node.c \
 	taskdir.c \
 	app.c \
 	memcpy_userspace.c \

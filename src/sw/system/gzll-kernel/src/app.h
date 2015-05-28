@@ -3,7 +3,7 @@
 
 struct gzll_app;
 
-#include "task.h"
+#include "node.h"
 #include "taskdir.h"
 
 struct gzll_app {

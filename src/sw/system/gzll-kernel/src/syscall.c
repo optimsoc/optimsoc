@@ -29,13 +29,14 @@
 
 void gzll_syscall_get_kernelinfo(struct gzll_syscall *syscall);
 void gzll_syscall_self(struct gzll_syscall *syscall);
-void gzll_syscall_get_nodeid(struct gzll_syscall *syscall);
+void gzll_syscall_get_taskid(struct gzll_syscall *syscall);
 
 void gzll_syscall_endpoint_create(struct gzll_syscall *syscall);
 void gzll_syscall_endpoint_get(struct gzll_syscall *syscall);
 
 void gzll_syscall_alloc_page(struct gzll_syscall *syscall);
 void gzll_syscall_channel_connect(struct gzll_syscall *syscall);
+
 void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
     struct gzll_syscall *syscall = (struct gzll_syscall*) optimsoc_syscall;
 
@@ -49,8 +50,8 @@ void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
     case GZLL_SYSCALL_SELF:
         gzll_syscall_self(syscall);
         break;
-    case GZLL_SYSCALL_NODE_LOOKUP:
-        gzll_syscall_get_nodeid(syscall);
+    case GZLL_SYSCALL_TASK_LOOKUP:
+        gzll_syscall_get_taskid(syscall);
         break;
     case GZLL_SYSCALL_ENDPOINT_CREATE:
         gzll_syscall_endpoint_create(syscall);

@@ -74,7 +74,7 @@ void _gzll_app_bootstrap(uint32_t appid, char *appname,
             char fullname[65];
             snprintf(fullname, 256, "%s.%s", appname, tname);
 
-            gzll_task_start(appid, appname, nodeid, tname, task);
+            gzll_node_start(appid, appname, nodeid, tname, task);
 
         } else if ((map->mappings[idx].rank == 0) ||
                 (map->mappings[idx].rank == GZLL_BOOT_ANYWHERE)) {

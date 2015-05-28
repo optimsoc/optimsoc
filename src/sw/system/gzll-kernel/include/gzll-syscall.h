@@ -67,7 +67,7 @@ struct gzll_kernel_info {
 
 #define GZLL_SYSCALL_SELF 3
 
-#define GZLL_SYSCALL_NODE_LOOKUP 4
+#define GZLL_SYSCALL_TASK_LOOKUP 4
 
 #define GZLL_SYSCALL_ENDPOINT_CREATE 5
 

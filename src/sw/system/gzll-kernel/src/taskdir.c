@@ -148,15 +148,15 @@ int taskdir_mapping_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
 
 }
 
-int taskdir_nodeid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
-                          uint32_t *nodeid) {
-    assert(nodeid != NULL);
+int taskdir_taskid_lookup(struct gzll_app_taskdir *dir, const char* identifier,
+                          uint32_t *taskid) {
+    assert(taskid != NULL);
 
     optimsoc_mutex_lock(&dir->lock);
 
     for (int i = 0; i < dir->size; i++) {
         if (strcmp(dir->tasks[i].identifier, identifier) == 0) {
-            *nodeid = i;
+            *taskid = i;
             optimsoc_mutex_unlock(&dir->lock);
             return 0;
         }
