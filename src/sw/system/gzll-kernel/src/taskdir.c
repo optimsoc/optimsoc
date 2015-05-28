@@ -15,12 +15,12 @@ int taskdir_task_delete(struct gzll_app_taskdir *dir, uint32_t taskid) {
 
     optimsoc_mutex_lock(&dir->lock);
 
-    if(taskid < dir->size) {
+    if (taskid < dir->size) {
 
         struct gzll_app_node *entry = dir->tasks + taskid;
 
-        if(entry->rank != TASKDIR_INVALID_RANK
-                && entry->nodeid != TASKDIR_INVALID_NODEID) {
+        if (entry->rank != TASKDIR_INVALID_RANK
+            && entry->nodeid != TASKDIR_INVALID_NODEID) {
 
             /* there is a valid entry for this task id - delete it */
 
@@ -44,16 +44,21 @@ int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
     optimsoc_mutex_lock(&dir->lock);
     struct gzll_app_node *entry;
 
-    if(taskid >= dir->size) {
+    if (taskid >= dir->size) {
         /* table must be expanded */
 
         uint32_t new_size = taskid + 1;
 
-        dir->tasks = realloc(dir->tasks, new_size * sizeof(struct gzll_app_node));
+        dir->tasks = realloc(dir->tasks,
+                             new_size * sizeof(struct gzll_app_node));
         assert(dir->tasks != NULL);
 
-        /* invalidate unused spare entries between the current last entry and the new end*/
-        for(entry = dir->tasks + dir->size; entry < dir->tasks + new_size; ++entry) {
+        /* invalidate unused spare entries between the current last entry
+           and the new end*/
+
+        for (entry = dir->tasks + dir->size;
+             entry < dir->tasks + new_size;
+             ++entry) {
             entry->rank = TASKDIR_INVALID_RANK;
             entry->nodeid = TASKDIR_INVALID_NODEID;
         }
@@ -64,7 +69,9 @@ int taskdir_task_register(struct gzll_app_taskdir *dir, uint32_t taskid,
     entry = dir->tasks + taskid;
 
     /* entry must be unused */
-    if(entry->rank == TASKDIR_INVALID_RANK && entry->nodeid == TASKDIR_INVALID_NODEID) {
+    if (entry->rank == TASKDIR_INVALID_RANK
+        && entry->nodeid == TASKDIR_INVALID_NODEID) {
+
         entry->rank = rank;
         entry->nodeid = nodeid;
         entry->identifier = strdup(identifier);
@@ -88,12 +95,12 @@ int taskdir_task_remap(struct gzll_app_taskdir *dir, uint32_t taskid,
 
     optimsoc_mutex_lock(&dir->lock);
 
-    if(taskid < dir->size) {
+    if (taskid < dir->size) {
 
         struct gzll_app_node *entry = dir->tasks + taskid;
 
-        if(entry->rank == old_rank
-                && entry->nodeid == old_nodeid) {
+        if (entry->rank == old_rank
+            && entry->nodeid == old_nodeid) {
 
             /* there is a valid entry for this task id - delete it */
 
@@ -119,12 +126,12 @@ int taskdir_mapping_lookup(struct gzll_app_taskdir *dir, uint32_t taskid,
 
     optimsoc_mutex_lock(&dir->lock);
 
-    if(taskid < dir->size) {
+    if (taskid < dir->size) {
 
         struct gzll_app_node *entry = dir->tasks + taskid;
 
-        if(entry->rank != TASKDIR_INVALID_RANK
-                && entry->nodeid != TASKDIR_INVALID_NODEID) {
+        if (entry->rank != TASKDIR_INVALID_RANK
+            && entry->nodeid != TASKDIR_INVALID_NODEID) {
 
             /* there is a valid entry for this task id - delete it */
 

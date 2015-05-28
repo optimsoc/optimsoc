@@ -152,16 +152,16 @@ void gzll_syscall_alloc_page(struct gzll_syscall *syscall) {
     uint32_t vaddr = syscall->param[0];
     int size = syscall->param[1];
 
-    while(size > 0) {
-	uint32_t alloced = gzll_page_alloc();
-	assert(alloced);
+    while (size > 0) {
+        uint32_t alloced = gzll_page_alloc();
+        assert(alloced);
 
-	optimsoc_vmm_map(pdir, vaddr, alloced << 13);
+        optimsoc_vmm_map(pdir, vaddr, alloced << 13);
 
-	printf("alloc new page %p at %p\n", vaddr, alloced * 8192);
+        printf("alloc new page %p at %p\n", vaddr, alloced * 8192);
 
-	vaddr += 0x2000;
-	size -= 0x2000;
+        vaddr += 0x2000;
+        size -= 0x2000;
     }
 
     syscall->output = vaddr;

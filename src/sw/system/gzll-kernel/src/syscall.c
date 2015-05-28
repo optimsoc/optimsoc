@@ -34,12 +34,8 @@ void gzll_syscall_get_nodeid(struct gzll_syscall *syscall);
 void gzll_syscall_endpoint_create(struct gzll_syscall *syscall);
 void gzll_syscall_endpoint_get(struct gzll_syscall *syscall);
 
-<<<<<<< HEAD
 void gzll_syscall_alloc_page(struct gzll_syscall *syscall);
-=======
 void gzll_syscall_channel_connect(struct gzll_syscall *syscall);
->>>>>>> Add channel connect stub
-
 void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
     struct gzll_syscall *syscall = (struct gzll_syscall*) optimsoc_syscall;
 
