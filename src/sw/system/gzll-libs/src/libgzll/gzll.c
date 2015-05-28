@@ -16,7 +16,7 @@ void gzll_get_kernel_version(char **version_string) {
 int gzll_lookup_nodeid(char *name, gzll_node_id *nodeid) {
     uint32_t len = strlen(name) + 1;
 
-    return syscall(GZLL_SYSCALL_NODE_LOOKUP, (uint32_t) name, len,
+    return syscall(GZLL_SYSCALL_TASK_LOOKUP, (uint32_t) name, len,
                    (uint32_t) nodeid, 0, 0, 0);
 }
 
