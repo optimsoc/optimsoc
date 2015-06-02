@@ -35,6 +35,7 @@ libruntime_la_SOURCES =\
     syscall_entry.S \
     scheduler.c \
     thread.c \
+    timer.c \
     vmm.c
 
 libruntime_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)

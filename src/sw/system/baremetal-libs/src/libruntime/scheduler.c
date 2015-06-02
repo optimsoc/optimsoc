@@ -31,6 +31,7 @@
 #include "config.h"
 #include "list.h"
 #include "thread.h"
+#include "timer.h"
 #include "scheduler.h"
 #include "trace.h"
 
@@ -71,6 +72,8 @@ void _optimsoc_scheduler_tick() {
     struct _optimsoc_scheduler_core *core_ctx;
     core_ctx = &_optimsoc_scheduler_core[or1k_coreid()];
 
+    _optimsoc_timer_tick();
+
     /* save context */
     _optimsoc_context_save(core_ctx->active_thread->ctx);
 
@@ -82,12 +85,12 @@ void _optimsoc_scheduler_tick() {
 
     /* schedule next thread */
     _optimsoc_schedule();
+
+    /* activate timer */
+    or1k_timer_reset();
 }
 
 void _optimsoc_scheduler_init() {
-    or1k_exception_handler_add(5, &_optimsoc_scheduler_tick);
-
-    or1k_timer_init(runtime_config_get_numticks());
 
     wait_q = optimsoc_list_init(0);
     ready_q= optimsoc_list_init(0);
@@ -129,8 +132,18 @@ void _optimsoc_scheduler_add(optimsoc_thread_t t, struct optimsoc_list_t* q) {
 }
 
 void _optimsoc_scheduler_start() {
+
+    /* init timer */
+    or1k_timer_init(runtime_config_get_numticks());
+    /* timer set handle must be after timer init */
+    or1k_timer_set_handler(&_optimsoc_scheduler_tick);
+
     _optimsoc_schedule();
-    // We got to nirvana
+
+    /* activate timer */
+    or1k_timer_reset();
+    or1k_timer_enable();
+
     _optimsoc_thread_ctx_t *ctx;
     ctx = _optimsoc_scheduler_core[or1k_coreid()].active_thread->ctx;
     _optimsoc_context_replace(ctx);
@@ -160,10 +173,4 @@ void _optimsoc_schedule() {
     _optimsoc_context_restore(ctx);
 
     // TODO: Clear TLB
-
-    /* activate timer */
-    or1k_timer_reset();
-    or1k_timer_enable();
 }
-
-

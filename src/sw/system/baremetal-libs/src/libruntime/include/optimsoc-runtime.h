@@ -394,4 +394,9 @@ void* optimsoc_list_first_element(struct optimsoc_list_t* l,
 void* optimsoc_list_next_element(struct optimsoc_list_t* l,
                                  optimsoc_list_iterator_t *list_iter);
 
+/**
+ * Suspend the current thread for a number of timer ticks
+ */
+void optimsoc_timer_wait_ticks(uint32_t ticks);
+
 #endif /* OPTIMSOC_RUNTIME_H_ */
