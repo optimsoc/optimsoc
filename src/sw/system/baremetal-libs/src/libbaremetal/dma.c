@@ -102,6 +102,24 @@ dma_success_t dma_alloc(dma_transfer_handle_t *id) {
     }
 }
 
+dma_success_t dma_free(dma_transfer_handle_t id) {
+
+    if (_optimsoc_dma_initialized==0) {
+        return DMA_ERR_NOTINITIALIZED;
+    }
+
+    assert(id < DMA_SLOTS);
+
+    struct dma_slot *slot = dma_slots[id];
+
+    if(slot->flag == DMA_SLOT_ALLOC) {
+        slot->flag = DMA_SLOT_FREE;
+        return DMA_SUCCESS;
+    } else {
+        return DMA_ERR_NOTALLOCATED;
+    }
+}
+
 dma_success_t dma_transfer(void* local, uint32_t remote_tile, void* remote,
                            size_t size, dma_direction_t dir,
                            dma_transfer_handle_t id) {

@@ -30,6 +30,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "optimsoc-baremetal.h"
+
 /**
  * \defgroup libruntime Runtime library
  */
@@ -399,4 +401,12 @@ void* optimsoc_list_next_element(struct optimsoc_list_t* l,
  */
 void optimsoc_timer_wait_ticks(uint32_t ticks);
 
+/**
+ * Initiate a DMA transfer
+ */
+void optimsoc_dma_transfer(void *local,
+                           uint32_t remote_tile,
+                           void *remote,
+                           size_t size,
+                           dma_direction_t dir);
 #endif /* OPTIMSOC_RUNTIME_H_ */

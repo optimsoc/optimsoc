@@ -59,6 +59,7 @@
 #define OPTIMSOC_SRC_MSB 23
 #define OPTIMSOC_SRC_LSB 19
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -439,7 +440,8 @@ extern void optimsoc_mutex_unlock(optimsoc_mutex_t *mutex);
 typedef enum {
     DMA_SUCCESS = 0,            /*!< Successful operation */
     DMA_ERR_NOTINITIALIZED = 1, /*!< Driver not initialized */
-    DMA_ERR_NOSLOT = 2          /*!< No slot available */
+    DMA_ERR_NOSLOT = 2,         /*!< No slot available */
+    DMA_ERR_NOTALLOCATED = 3      /*!< Slot not allocated */
 } dma_success_t;
 
 /**
@@ -478,6 +480,12 @@ extern void dma_init(void);
  * \return Success code
  */
 extern dma_success_t dma_alloc(dma_transfer_handle_t *id);
+
+/**
+ * Free a pre-allocated DMA transfer slot
+ */
+extern dma_success_t dma_free(dma_transfer_handle_t id);
+
 
 /**
  * Initiate a DMA transfer

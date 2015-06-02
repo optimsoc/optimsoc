@@ -30,6 +30,7 @@ libruntime_la_SOURCES =\
     context-asm.S \
     list.c \
     config.c \
+    dma.c \
     runtime.c \
     syscalls.c \
     syscall_entry.S \
