@@ -268,3 +268,75 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
 
     return 0;
 }
+
+void optimsoc_thread_suspend(optimsoc_thread_t thread)
+{
+
+    uint32_t restore = or1k_critical_begin();
+
+    assert(thread->state == THREAD_RUNNABLE);
+
+    if (thread == optimsoc_thread_current()) {
+        /* suspend the current running thread */
+
+        /* only kernel threads can be suspended by themselves */
+        assert(thread->attributes->flags & OPTIMSOC_THREAD_FLAG_KERNEL);
+
+        /* switch to exception stack */
+        if (_optimsoc_context_enter_exception(
+                _optimsoc_scheduler_get_current()->ctx) == 1) {
+
+            /* add thread to wait_q */
+            optimsoc_list_add_tail(wait_q, thread);
+            thread->state = THREAD_SUSPENDED;
+
+            /* re-schedule */
+            _optimsoc_schedule();
+            _optimsoc_context_replace(_optimsoc_scheduler_get_current()->ctx);
+        }
+    } else {
+        /* thread currently not running */
+        assert(optimsoc_list_remove(ready_q, thread));
+        optimsoc_list_add_tail(wait_q, thread);
+        thread->state = THREAD_SUSPENDED;
+    }
+
+    or1k_critical_end(restore);
+}
+
+void optimsoc_thread_resume(optimsoc_thread_t thread)
+{
+    assert(thread->state == THREAD_SUSPENDED);
+    assert(optimsoc_list_remove(wait_q, thread));
+
+    optimsoc_list_add_tail(ready_q, thread);
+    thread->state = THREAD_RUNNABLE;
+}
+
+void optimsoc_thread_remove(optimsoc_thread_t thread)
+{
+    if (optimsoc_list_remove(ready_q, thread) == 0) {
+        /* thread is no in the ready_q */
+        /* either suspended (not supported) */
+        /* or running on other core (not supported) */
+        assert(0);
+    }
+
+    assert(optimsoc_list_remove(all_threads, thread) == 1);
+
+    runtime_trace_destroythread(thread->id);
+}
+
+void optimsoc_thread_add(optimsoc_thread_t thread)
+{
+    /* thread must be runnable */
+    assert(thread->state == THREAD_RUNNABLE);
+
+    optimsoc_list_add_tail(all_threads, thread);
+
+    optimsoc_list_add_tail(ready_q, thread);
+
+    // Trace creation of thread
+    runtime_trace_createthread(thread->name, thread->id, thread,
+                               (void*) thread->ctx->pc);
+}

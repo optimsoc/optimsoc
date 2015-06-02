@@ -255,6 +255,17 @@ void optimsoc_thread_exit();
 void optimsoc_thread_resume(optimsoc_thread_t thread);
 
 /**
+ * Insert a thread in the system.
+ */
+void optimsoc_thread_add(optimsoc_thread_t thread);
+
+/**
+ * Remove a thread from the system.
+ */
+void optimsoc_thread_remove(optimsoc_thread_t thread);
+
+
+/**
  * Wait for a thread until it exits.
  *
  * If the thread is still running, the function blocks and waits for
