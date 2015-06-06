@@ -82,9 +82,15 @@ void gzll_syscall_endpoint_get(struct gzll_syscall *syscall) {
 
     optimsoc_mp_endpoint_handle eph;
 
-    optimsoc_mp_endpoint_get(&eph, optimsoc_get_ranktile(rank), nodeid, port);
+    int rv;
+    rv = optimsoc_mp_endpoint_get(&eph, optimsoc_get_ranktile(rank), nodeid,
+                                  port);
 
-    endpoint_table_add(app_node->endpoints, port, eph);
+    syscall->output = (uint32_t) rv;
+
+    if (rv == 0) {
+        endpoint_table_add(app_node->endpoints, port, eph);
+    }
 }
 
 void gzll_syscall_channel_connect(struct gzll_syscall *syscall) {
