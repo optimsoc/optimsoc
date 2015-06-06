@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "include/gzll.h"
 #include <gzll-syscall.h>
@@ -36,6 +37,11 @@ struct gzll_mp_endpoint {
     uint32_t port;
 };
 
+struct gzll_mp_channel {
+    struct gzll_mp_endpoint *from;
+    struct gzll_mp_endpoint *to;
+};
+
 int gzll_mp_endpoint_create(gzll_mp_endpoint_t *ep, uint32_t port,
                             gzll_endpoint_type buffer_type,
                             uint32_t buffer_size, uint32_t max_elem_size) {
@@ -59,12 +65,18 @@ int gzll_mp_endpoint_get(gzll_mp_endpoint_t *ep, uint32_t node, uint32_t port) {
 
 int gzll_mp_channel_connect(gzll_mp_endpoint_t from, gzll_mp_endpoint_t to,
                             gzll_mp_channel_t *channel) {
+    assert(from);
+    assert(to);
+    assert(channel);
 
-    fep = from;
-    tep = to;
+    *channel = malloc(sizeof(struct gzll_mp_channel));
+    assert(*channel);
 
-    return syscall(GZLL_SYSCALL_CHANNEL_CONNECT, fep->node, fep->port,
-                   tep->node, tep->port, 0, 0);
+    (*channel)->from = from;
+    (*channel)->to = to;
+
+    return syscall(GZLL_SYSCALL_CHANNEL_CONNECT, from->node, from->port,
+                   to->node, to->port, 0, 0);
 }
 
 int gzll_mp_channel_send(gzll_mp_channel_t channel, uint8_t* buffer,
