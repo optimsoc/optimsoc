@@ -9,7 +9,7 @@ typedef uint32_t gzll_node_id;
 gzll_node_id gzll_self(void);
 int gzll_lookup_nodeid(char *name, gzll_node_id *nodeid);
 
-typedef uint32_t gzll_mp_endpoint_t;
+typedef struct gzll_mp_endpoint* gzll_mp_endpoint_t;
 
 typedef enum { OPTIMSOC_MP_EP_CONNECTIONLESS = 0,
     OPTIMSOC_MP_EP_CHANNEL = 1 } gzll_endpoint_type;
