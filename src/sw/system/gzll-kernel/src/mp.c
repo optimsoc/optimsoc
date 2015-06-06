@@ -94,5 +94,44 @@ void gzll_syscall_endpoint_get(struct gzll_syscall *syscall) {
 }
 
 void gzll_syscall_channel_connect(struct gzll_syscall *syscall) {
+    // param 0: from task
+    // param 1: from port
+    // param 2: to task
+    // param 3: to port
+    // return: success status
+
+    uint32_t fromtask, fromport, totask, toport;
+
+    fromtask = syscall->param[0];
+    fromport = syscall->param[1];
+    totask = syscall->param[2];
+    toport = syscall->param[3];
+
+    optimsoc_thread_t thread;
+    struct gzll_node* task;
+    thread = optimsoc_thread_current();
+    task = (struct gzll_node*) optimsoc_thread_get_extra_data(thread);
+
+    struct gzll_app *app = task->app;
+    assert(app);
+
+    struct gzll_app_taskdir *taskdir = app->task_dir;
+    assert(taskdir);
+
+    optimsoc_mp_endpoint_handle fromep, toep;
+
+    assert(fromtask < taskdir->size);
+    assert(fromport < taskdir->tasks[fromtask].endpoints->len);
+
+    fromep = taskdir->tasks[fromtask].endpoints->ep[fromport];
+
+    assert(totask < taskdir->size);
+    assert(toport < taskdir->tasks[totask].endpoints->len);
+
+    toep = taskdir->tasks[totask].endpoints->ep[toport];
+
+    printf("Connect %p->%p\n", fromep, toep);
+    syscall->output = optimsoc_mp_channel_connect(fromep, toep);
+    printf("Connected\n");
 
 }
