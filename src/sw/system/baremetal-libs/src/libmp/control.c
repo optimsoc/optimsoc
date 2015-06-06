@@ -190,6 +190,17 @@ void control_msg_handler(unsigned int* buffer,int len) {
     }
 }
 
+void control_wait_response() {
+    // Get current interrupts by disabling temporarily
+    uint32_t restore = or1k_interrupts_disable();
+    // Enable all interrupts
+    or1k_interrupts_enable();
+    // Wait until the reply arrived
+    while (ctrl_request.done == 0) { }
+    // Restore previous state of interrupts
+    or1k_interrupts_restore(restore);
+}
+
 struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
                                       uint32_t port) {
     struct endpoint *ep;
@@ -213,7 +224,8 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
 
         optimsoc_mp_simple_send(3,ctrl_request.buffer);
 
-        while (ctrl_request.done == 0) { }
+        control_wait_response();
+
         ep = (struct endpoint*) ctrl_request.buffer[1];
         trace_ep_get_resp_recv(domain, ep);
 
@@ -252,7 +264,7 @@ uint32_t control_msg_alloc(struct endpoint_handle *to_ep, uint32_t size) {
 
         optimsoc_mp_simple_send(3,ctrl_request.buffer);
 
-        while (ctrl_request.done == 0) {}
+        control_wait_response();
 
         if (ctrl_request.buffer[1]==CTRL_REQUEST_NACK) {
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
@@ -324,7 +336,7 @@ uint32_t control_channel_connect(struct endpoint_handle *from,
     ctrl_request.done = 0;
     optimsoc_mp_simple_send(4, ctrl_request.buffer);
 
-    while (ctrl_request.done == 0) { }
+    control_wait_response();
 
     return ctrl_request.buffer[1];
 }
