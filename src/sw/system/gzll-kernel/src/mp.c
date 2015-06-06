@@ -58,9 +58,9 @@ void gzll_syscall_endpoint_create(struct gzll_syscall *syscall) {
 }
 
 void gzll_syscall_endpoint_get(struct gzll_syscall *syscall) {
-    uint32_t app_nodeid, app_id, nodeid, port, rank;
+    uint32_t taskid, app_id, nodeid, port, rank;
 
-    app_nodeid = syscall->param[0];
+    taskid = syscall->param[0];
     port = syscall->param[1];
 
     optimsoc_thread_t thread;
@@ -76,7 +76,7 @@ void gzll_syscall_endpoint_get(struct gzll_syscall *syscall) {
     struct gzll_app_taskdir *taskdir = app->task_dir;
     assert(taskdir);
 
-    struct gzll_app_node *app_node = &taskdir->tasks[app_nodeid];
+    struct gzll_app_node *app_node = &taskdir->tasks[taskid];
     rank = app_node->rank;
     nodeid = app_node->nodeid;
 
