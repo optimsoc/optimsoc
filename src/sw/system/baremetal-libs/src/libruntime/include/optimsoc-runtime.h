@@ -396,6 +396,10 @@ void* optimsoc_list_first_element(struct optimsoc_list_t* l,
 void* optimsoc_list_next_element(struct optimsoc_list_t* l,
                                  optimsoc_list_iterator_t *list_iter);
 
+struct optimsoc_list_t *optimsoc_list_dma_copy(uint32_t remote_tile,
+                                               void *remote_list_addr,
+                                               size_t data_size);
+
 /**
  * Suspend the current thread for a number of timer ticks
  */
