@@ -62,6 +62,8 @@ void main() {
 void init() {
     communication_init();
 
+    gzll_agent_init();
+
     struct optimsoc_thread_attr *attr;
     attr = malloc(sizeof(struct optimsoc_thread_attr));
     optimsoc_thread_attr_init(attr);

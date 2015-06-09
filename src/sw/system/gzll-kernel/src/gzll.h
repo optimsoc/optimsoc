@@ -12,6 +12,7 @@ void gzll_init();
 void init();
 void communication_thread();
 void communication_init();
+void gzll_agent_init();
 
 typedef uint32_t gzll_node_id;
 extern gzll_node_id gzll_node_nxtid;

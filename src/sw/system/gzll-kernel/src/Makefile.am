@@ -27,6 +27,7 @@ gzll_kerneldir = $(libdir)/gzll-kernel
 libgzll_kernel_la_CFLAGS = $(OPTIMSOC_BAREMETAL_RUNTIME_CFLAGS) -I $(top_srcdir)/include
 
 libgzll_kernel_la_SOURCES = \
+	agent.c \
 	syscall.c \
 	kernel_info.c \
 	page.c \
