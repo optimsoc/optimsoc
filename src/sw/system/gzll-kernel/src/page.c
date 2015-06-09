@@ -38,8 +38,8 @@ extern void* _or1k_stack_bottom;
 struct optimsoc_list_t *gzll_pagepool_local;
 
 uint32_t gzll_swapping() {
-	// TODO: Check if global memory is there
-	return 0;
+        // TODO: Check if global memory is there
+        return 0;
 }
 
 void gzll_paging_init() {
@@ -55,8 +55,8 @@ void gzll_paging_init() {
     uint32_t start_page = (start+8191) >> 13;
     uint32_t end_page = (end >> 13) - 1;
 
-    void *s = start_page << 13;
-    void *e = (end_page + 1) << 13;
+    void *s = (void*) (start_page << 13);
+    void *e = (void*) ((end_page + 1) << 13);
     unsigned int n = end_page - start_page + 1;
     printf("Initialize local page pool\n");
     printf(" - add %p to %p (%d pages)\n", s, e, n);

@@ -60,8 +60,8 @@ void gzll_syscall_handler(struct optimsoc_syscall *optimsoc_syscall) {
         gzll_syscall_endpoint_get(syscall);
         break;
     case GZLL_SYSCALL_VMM_ALLOC_PAGE:
-	gzll_syscall_alloc_page(syscall);
-	break;
+        gzll_syscall_alloc_page(syscall);
+        break;
     case GZLL_SYSCALL_CHANNEL_CONNECT:
         gzll_syscall_channel_connect(syscall);
         break;
