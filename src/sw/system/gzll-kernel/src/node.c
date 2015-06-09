@@ -1,8 +1,8 @@
-#include "node.h"
-
 #include "gzll.h"
 #include "gzll-apps.h"
 #include "messages.h"
+#include "task.h"
+
 #include "gzll-syscall.h"
 
 #include "memcpy_userspace.h"
@@ -85,7 +85,12 @@ void gzll_node_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
 
     struct gzll_node *task = calloc(1, sizeof(struct gzll_node));
     task->id = nodeid;
-    task->identifier = strdup(nodename);
+
+    /* copy identifier */
+    /* get sure string fits in array with delimiter */
+    assert(strlen(nodename) < GZLL_TASK_IDENTIFIER_LENGTH);
+    strncpy(task->identifier, nodename, GZLL_TASK_IDENTIFIER_LENGTH);
+
     task->app = gzll_app_get(app_id);
     task->taskid = app_nodeid;
     assert(task->app);
@@ -96,6 +101,9 @@ void gzll_node_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
     optimsoc_thread_create(&thread, (void*) 0x2000, 0);
     optimsoc_thread_set_pagedir(thread, pdir);
     optimsoc_thread_set_extra_data(thread, (void*) task);
+
+    task->thread = thread;
+    task->pagedir = pdir;
 
     struct gzll_app_taskdir *taskdir = task->app->task_dir;
     taskdir_task_register(taskdir, app_nodeid, nodename, gzll_rank, nodeid);
@@ -153,7 +161,7 @@ void gzll_syscall_alloc_page(struct gzll_syscall *syscall) {
     uint32_t vaddr = syscall->param[0];
     int size = syscall->param[1];
 
-    while(size > 0) {
+    while (size > 0) {
         uint32_t alloced = gzll_page_alloc();
         assert(alloced);
 
@@ -166,4 +174,66 @@ void gzll_syscall_alloc_page(struct gzll_syscall *syscall) {
     }
 
     syscall->output = vaddr;
+}
+
+void gzll_task_suspend(struct gzll_task *task) {
+    assert(task != NULL);
+
+    if (task->state == GZLL_TASK_ACTIVE) {
+        optimsoc_thread_remove(task->thread);
+        task->state = GZLL_TASK_SUSPENDED;
+    }
+}
+
+void gzll_task_resume(struct gzll_task *task) {
+    assert(task != NULL);
+
+    if (task->state == GZLL_TASK_SUSPENDED) {
+        optimsoc_thread_add(task->thread);
+        task->state = GZLL_TASK_ACTIVE;
+    }
+}
+
+struct gzll_task * gzll_task_task_fetch
+(uint32_t remote_tile, void *remote_addr) {
+
+    dma_transfer_handle_t dma_handle;
+    struct gzll_task remote_task;
+
+    struct gzll_task *local_task = malloc(sizeof(struct gzll_task));
+    assert(local_task != NULL);
+
+    optimsoc_dma_transfer(&remote_task, remote_tile, remote_addr,
+                          sizeof(struct gzll_task), REMOTE2LOCAL);
+
+    /* id */
+    local_task->id = remote_task.id;
+    /* identifier */
+    strcpy(local_task->identifier, remote_task.identifier);
+
+    /* app */
+    local_task->app = malloc(sizeof(struct gzll_app));
+    assert(local_task->app != NULL);
+    optimsoc_dma_transfer(local_task->app, remote_tile, remote_task.app,
+                          sizeof(struct gzll_app), REMOTE2LOCAL);
+
+    /* state */
+    assert(remote_task.state == GZLL_TASK_SUSPENDED);
+    local_task->state = GZLL_TASK_SUSPENDED;
+
+    /* pagedir */
+    local_task->pagedir = optimsoc_page_dir_copy(remote_tile,
+                                                 remote_task.pagedir);
+
+    /* thread */
+    local_task->thread = optimsoc_thread_dma_copy(remote_tile,
+                                                  remote_task.thread);
+    optimsoc_thread_set_pagedir(local_task->thread, local_task->pagedir);
+    optimsoc_thread_set_extra_data(local_task->thread,
+                                   (void*) local_task);
+
+    /* TODO taskdir */
+    /* TODO notify other ranks */
+
+    return local_task;
 }
