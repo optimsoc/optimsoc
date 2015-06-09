@@ -266,6 +266,11 @@ void optimsoc_thread_add(optimsoc_thread_t thread);
  */
 void optimsoc_thread_remove(optimsoc_thread_t thread);
 
+/**
+ * Copy a remote thread with DMA
+ */
+optimsoc_thread_t optimsoc_thread_dma_copy(uint32_t remote_tile,
+                                           void *remote_addr);
 
 /**
  * Wait for a thread until it exits.

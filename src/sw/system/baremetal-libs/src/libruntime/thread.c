@@ -338,4 +338,80 @@ void optimsoc_thread_add(optimsoc_thread_t thread)
     // Trace creation of thread
     runtime_trace_createthread(thread->name, thread->id, thread,
                                (void*) thread->ctx->pc);
+
+
+}
+
+optimsoc_thread_t optimsoc_thread_dma_copy(uint32_t remote_tile,
+                                           void *remote_addr)
+{
+    struct optimsoc_thread *local_thread;
+    struct optimsoc_thread remote_thread;
+    uint32_t id;
+
+    local_thread = malloc(sizeof(struct optimsoc_thread));
+    assert(local_thread != NULL);
+
+    optimsoc_dma_transfer(&remote_thread, remote_tile, remote_addr,
+                          sizeof(struct optimsoc_thread), REMOTE2LOCAL);
+
+    /* uint32_t id */
+
+    /* Assign next thread id and increment next thread id (thread-safe) */
+    do {
+        id = _optimsoc_thread_next_id;
+        local_thread->id = id;
+        /* Try to write new value of thread_next_id. If it was changed
+         * meanwhile, we retry the whole operation.*/
+    } while (or1k_sync_cas((void*) &_optimsoc_thread_next_id, id, id+1) != id);
+
+    /* struct _optimsoc_thread_ctx_t *ctx */
+    local_thread->ctx = malloc(sizeof(struct _optimsoc_thread_ctx_t));
+    assert(local_thread->ctx != NULL);
+
+    optimsoc_dma_transfer(local_thread->ctx, remote_tile, remote_thread.ctx,
+                          sizeof(struct _optimsoc_thread_ctx_t), REMOTE2LOCAL);
+
+    /* void *stack */
+    /* only virtual memory threads are relocated - stack should be NULL */
+    assert(remote_thread.stack == NULL);
+    local_thread->stack = NULL;
+
+    /* uint32_t flags */
+    local_thread->flags = remote_thread.flags;
+
+    /* optimsoc_page_dir_t page_dir */
+    /* page dir will be set from operating system */
+    local_thread->page_dir = NULL;
+
+    /* enum optimsoc_thread_state state */
+    /* thread should be runnable */
+    assert(remote_thread.state == THREAD_RUNNABLE);
+    local_thread->state = remote_thread.state;
+
+    /* uint32_t exit_code */
+    /* we do not migrate terminated threads */
+    local_thread->exit_code = 0;
+
+    /* struct optimsoc_list_t *joinlist */
+    /* TODO */
+    /* at the moment we do not support any join threads */
+    local_thread->joinlist = optimsoc_list_dma_copy(remote_tile,
+                                                    remote_thread.joinlist,
+                                                    0);
+    assert(optimsoc_list_length(local_thread->joinlist) == 0);
+
+    /* char *name */
+    /* TODO name size */
+    local_thread->name = malloc(64);
+    assert(local_thread->name != NULL);
+
+    optimsoc_dma_transfer(local_thread->name, remote_tile, remote_thread.name,
+                          64, REMOTE2LOCAL);
+
+    /* void *extra_data */
+    /* extra data will be added externally */
+    local_thread->extra_data = NULL;
+
+    return local_thread;
 }
