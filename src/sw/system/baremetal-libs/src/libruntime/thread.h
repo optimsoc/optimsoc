@@ -49,12 +49,11 @@ struct optimsoc_thread {
     struct _optimsoc_thread_ctx_t *ctx;
     void *stack;
 
+    uint32_t flags;
+
     optimsoc_page_dir_t page_dir;
 
     enum optimsoc_thread_state state;
-    uint32_t flags;
-
-    struct optimsoc_thread_attr *attributes;
 
     /* Thread exit code */
     uint32_t exit_code;

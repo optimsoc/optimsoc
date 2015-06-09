@@ -98,16 +98,15 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
     t = malloc(sizeof(struct optimsoc_thread));
     assert(t);
 
-    // Set thread attributes
-    t->attributes = attr;
+    t->flags = attr->flags;
 
     // Generate a context for the thread
-    _optimsoc_context_create(t, start, t->attributes->args);
+    _optimsoc_context_create(t, start, attr->args);
 
     // Check if the thread identifier is forced
-    if (t->attributes->flags & OPTIMSOC_THREAD_FLAG_FORCEID) {
+    if (attr->flags & OPTIMSOC_THREAD_FLAG_FORCEID) {
         // Set forced identifier
-        t->id = t->attributes->force_id;
+        t->id = attr->force_id;
     } else {
         uint32_t id;
         // Assign next thread id and increment next thread id (thread-safe)
@@ -120,7 +119,7 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
     }
 
     // Check if a thread identifier name is given
-    if (t->attributes->identifier) {
+    if (attr->identifier) {
         // Allocate memory for the string
         t->name = malloc(65);
         assert(t->name);
@@ -129,7 +128,7 @@ int optimsoc_thread_create(optimsoc_thread_t *thread,
         snprintf(t->name, 64, "thread %lu", t->id);
     } else {
         // Otherwise copy string
-        t->name = strndup(t->attributes->identifier, 64);
+        t->name = strndup(attr->identifier, 64);
     }
 
     // Trace creation of thread
@@ -173,7 +172,7 @@ void optimsoc_thread_yield(optimsoc_thread_t thread) {
     optimsoc_list_add_tail(ready_q, thread);
 
     if (thread == current) {
-        if (thread->attributes->flags & OPTIMSOC_THREAD_FLAG_KERNEL) {
+        if (thread->flags & OPTIMSOC_THREAD_FLAG_KERNEL) {
             uint32_t restore = or1k_critical_begin();
             // Store the current context
             struct _optimsoc_thread_ctx_t *ctx;
@@ -236,7 +235,7 @@ int _optimsoc_context_create(optimsoc_thread_t thread,
     assert(thread->ctx != NULL);
 
     /* Set stack, arguments, starting routine and thread_handler */
-    if (thread->attributes->flags & OPTIMSOC_THREAD_FLAG_KERNEL) {
+    if (thread->flags & OPTIMSOC_THREAD_FLAG_KERNEL) {
         thread->stack = malloc(8*1024);
         assert(thread->stack);
         thread->ctx->regs[1] = (unsigned int) thread->stack + 4092;
@@ -280,7 +279,7 @@ void optimsoc_thread_suspend(optimsoc_thread_t thread)
         /* suspend the current running thread */
 
         /* only kernel threads can be suspended by themselves */
-        assert(thread->attributes->flags & OPTIMSOC_THREAD_FLAG_KERNEL);
+        assert(thread->flags & OPTIMSOC_THREAD_FLAG_KERNEL);
 
         /* switch to exception stack */
         if (_optimsoc_context_enter_exception(
