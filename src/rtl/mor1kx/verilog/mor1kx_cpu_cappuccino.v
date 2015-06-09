@@ -1504,6 +1504,8 @@ module mor1kx_cpu_cappuccino
 		     traceport_exec_valid_o <= 1'b0;
 		     traceport_waitexec <= 1'b1;
 		  end
+	       end else if (ctrl_op_rfe_o) begin
+		  traceport_exec_valid_o <= 1'b1;
 	       end else begin
 		  traceport_exec_valid_o <= 1'b0;
 	       end
