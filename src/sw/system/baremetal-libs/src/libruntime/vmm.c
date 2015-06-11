@@ -672,3 +672,79 @@ void optimsoc_vmm_destroy_page_dir(optimsoc_page_dir_t dir) {
 
     free(dir);
 }
+
+optimsoc_page_dir_t optimsoc_vmm_dir_copy(uint32_t remote_tile,
+                                          void *remote_addr,
+                                          page_alloc_fptr page_alloc_fnc)
+{
+    optimsoc_page_dir_t local_dir;
+    optimsoc_page_dir_t remote_dir;
+
+    local_dir = optimsoc_vmm_create_page_dir();
+
+    remote_dir = (optimsoc_page_dir_t) malloc(0x400);
+    assert(remote_dir);
+
+    uint32_t *remote_table = malloc(0x2000);
+    assert(remote_table);
+
+    /* copy remote page dir */
+    optimsoc_dma_transfer(remote_dir, remote_tile, remote_addr,
+                          0x400, REMOTE2LOCAL);
+
+    for (uint32_t dir_index = 0; dir_index < 0x100; dir_index ++) {
+
+        if (OR1K_PTE_PRESENT_GET(remote_dir[dir_index]) == 1) {
+
+            uint32_t *local_table =
+                _optimsoc_vmm_create_page_table();
+
+            optimsoc_pte_t dirpte = 0;
+            dirpte = OR1K_PTE_PRESENT_SET(dirpte, 1);
+            dirpte = OR1K_PTE_PPN_SET(dirpte, OR1K_PTE_PPN_GET(local_table));
+            local_dir[dir_index] = (uint32_t) dirpte;
+
+            optimsoc_dma_transfer(remote_table, remote_tile,
+                                  (void*) OR1K_PTABLE(remote_dir[dir_index]),
+                                  0x2000,
+                                  REMOTE2LOCAL);
+
+            for (uint32_t table_index = 0;
+                table_index < 0x800;
+                table_index ++) {
+
+                if (OR1K_PTE_PRESENT_GET(remote_table[table_index])) {
+                    void *local_page = (uint32_t)(page_alloc_fnc)() << 13;
+
+                    uint32_t ppn = OR1K_PTE_PPN_GET(local_page);
+                    uint32_t pte = OR1K_PTE_PPN_SET(0, ppn);
+                    pte = OR1K_PTE_PRESENT_SET(pte, 1);
+
+                    uint32_t ppi = (1 << OR1K_PTE_PPI_USER_BIT)
+                        | (1 << OR1K_PTE_PPI_WRITE_BIT)
+                        | (1 << OR1K_PTE_PPI_EXEC_BIT);
+
+                    pte = OR1K_PTE_PPI_SET(pte, ppi);
+
+                    local_table[table_index] = pte;
+
+                    void *remote_page = OR1K_ADDR_PN_SET(0, OR1K_PTE_PPN_GET(remote_table[table_index]));
+
+                    printf("copy page %p (tile %d) to local page %p\n",
+                           remote_page, remote_tile, local_page);
+
+                    optimsoc_dma_transfer(local_page,
+                                          remote_tile,
+                                          remote_page,
+                                          0x2000,
+                                          REMOTE2LOCAL);
+                }
+            }
+
+        }
+    }
+
+    free(remote_table);
+    free(remote_dir);
+    return local_dir;
+}

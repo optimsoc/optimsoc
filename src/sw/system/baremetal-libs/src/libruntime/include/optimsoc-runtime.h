@@ -173,6 +173,12 @@ void optimsoc_vmm_set_ifault_handler(optimsoc_pfault_handler_fptr handler);
  */
 void optimsoc_vmm_destroy_page_dir(optimsoc_page_dir_t dir);
 
+typedef void* (*page_alloc_fptr)();
+
+optimsoc_page_dir_t optimsoc_vmm_dir_copy(uint32_t remote_tile,
+                                          void *remote_addr,
+                                          page_alloc_fptr page_alloc_fnc);
+
 /**
  * @}
  */
