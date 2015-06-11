@@ -19,7 +19,7 @@ struct gzll_app_taskdir {
     struct gzll_app_node *tasks;
 };
 
-#define TASKDIR_INVALID_NODEID 0
+#define TASKDIR_INVALID_NODEID 0xffffffff
 #define TASKDIR_INVALID_RANK   0xffff
 /**
  * Initialize
