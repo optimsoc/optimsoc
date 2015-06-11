@@ -1,5 +1,5 @@
-#ifndef __TASK_H__
-#define __TASK_H__
+#ifndef __NODE_H__
+#define __NODE_H__
 
 struct gzll_node;
 
@@ -16,12 +16,16 @@ struct gzll_node {
     uint32_t taskid;
 
     enum {
-        GZLL_TASK_ACTIVE = 0,
-        GZLL_TASK_SUSPENDED = 0
+        GZLL_NODE_ACTIVE = 0,
+        GZLL_NODE_SUSPENDED = 0
     } state;
     optimsoc_page_dir_t pagedir;
     /* at the moment only one thread per task */
     optimsoc_thread_t thread;
 };
+
+void gzll_node_suspend(struct gzll_node *node);
+void gzll_node_resume(struct gzll_node *node);
+struct gzll_node *gzll_node_fetch(uint32_t remote_tile, void *remote_addr);
 
 #endif

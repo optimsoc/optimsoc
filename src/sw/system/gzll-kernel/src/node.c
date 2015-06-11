@@ -1,7 +1,7 @@
 #include "gzll.h"
 #include "gzll-apps.h"
 #include "messages.h"
-#include "task.h"
+#include "node.h"
 
 #include "gzll-syscall.h"
 
@@ -32,11 +32,11 @@ gzll_node_id gzll_get_nodeid() {
 
 struct optimsoc_list_t *gzll_node_list;
 
-void gzll_node_add(struct gzll_node *task) {
+void gzll_node_add(struct gzll_node *node) {
     if (!gzll_node_list) {
-        gzll_node_list = optimsoc_list_init(task);
+        gzll_node_list = optimsoc_list_init(node);
     } else {
-        optimsoc_list_add_tail(gzll_node_list, task);
+        optimsoc_list_add_tail(gzll_node_list, node);
     }
 }
 
@@ -88,8 +88,8 @@ void gzll_node_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
 
     /* copy identifier */
     /* get sure string fits in array with delimiter */
-    assert(strlen(nodename) < GZLL_TASK_IDENTIFIER_LENGTH);
-    strncpy(task->identifier, nodename, GZLL_TASK_IDENTIFIER_LENGTH);
+    assert(strlen(nodename) < GZLL_NODE_IDENTIFIER_LENGTH);
+    strncpy(task->identifier, nodename, GZLL_NODE_IDENTIFIER_LENGTH);
 
     task->app = gzll_app_get(app_id);
     task->taskid = app_nodeid;
@@ -176,64 +176,67 @@ void gzll_syscall_alloc_page(struct gzll_syscall *syscall) {
     syscall->output = vaddr;
 }
 
-void gzll_task_suspend(struct gzll_task *task) {
-    assert(task != NULL);
+void gzll_node_suspend(struct gzll_node *node) {
+    assert(node != NULL);
 
-    if (task->state == GZLL_TASK_ACTIVE) {
-        optimsoc_thread_remove(task->thread);
-        task->state = GZLL_TASK_SUSPENDED;
+    if (node->state == GZLL_NODE_ACTIVE) {
+        optimsoc_thread_remove(node->thread);
+        node->state = GZLL_NODE_SUSPENDED;
     }
 }
 
-void gzll_task_resume(struct gzll_task *task) {
-    assert(task != NULL);
+void gzll_node_resume(struct gzll_node *node) {
+    assert(node != NULL);
 
-    if (task->state == GZLL_TASK_SUSPENDED) {
-        optimsoc_thread_add(task->thread);
-        task->state = GZLL_TASK_ACTIVE;
+    if (node->state == GZLL_NODE_SUSPENDED) {
+        optimsoc_thread_add(node->thread);
+        node->state = GZLL_NODE_ACTIVE;
     }
 }
 
-struct gzll_task * gzll_task_task_fetch
+struct gzll_node * gzll_node_fetch
 (uint32_t remote_tile, void *remote_addr) {
 
     dma_transfer_handle_t dma_handle;
-    struct gzll_task remote_task;
+    struct gzll_node remote_node;
 
-    struct gzll_task *local_task = malloc(sizeof(struct gzll_task));
-    assert(local_task != NULL);
+    struct gzll_node *local_node = malloc(sizeof(struct gzll_node));
+    assert(local_node != NULL);
 
-    optimsoc_dma_transfer(&remote_task, remote_tile, remote_addr,
-                          sizeof(struct gzll_task), REMOTE2LOCAL);
+    optimsoc_dma_transfer(&remote_node, remote_tile, remote_addr,
+                          sizeof(struct gzll_node), REMOTE2LOCAL);
 
     /* id */
-    local_task->id = remote_task.id;
+    local_node->id = remote_node.id;
     /* identifier */
-    strcpy(local_task->identifier, remote_task.identifier);
+    strncpy(local_node->identifier, remote_node.identifier,
+            GZLL_NODE_IDENTIFIER_LENGTH);
 
     /* app */
-    local_task->app = malloc(sizeof(struct gzll_app));
-    assert(local_task->app != NULL);
-    optimsoc_dma_transfer(local_task->app, remote_tile, remote_task.app,
+    local_node->app = malloc(sizeof(struct gzll_app));
+    assert(local_node->app != NULL);
+    optimsoc_dma_transfer(local_node->app, remote_tile, remote_node.app,
                           sizeof(struct gzll_app), REMOTE2LOCAL);
 
     /* state */
-    assert(remote_task.state == GZLL_TASK_SUSPENDED);
-    local_task->state = GZLL_TASK_SUSPENDED;
+    assert(remote_node.state == GZLL_NODE_SUSPENDED);
+    local_node->state = GZLL_NODE_SUSPENDED;
 
     /* pagedir */
-    local_task->pagedir = optimsoc_page_dir_copy(remote_tile,
-                                                 remote_task.pagedir);
+    local_node->pagedir = optimsoc_vmm_dir_copy(remote_tile,
+                                                remote_node.pagedir,
+                                                &gzll_page_alloc);
 
     /* thread */
-    local_task->thread = optimsoc_thread_dma_copy(remote_tile,
-                                                  remote_task.thread);
-    optimsoc_thread_set_pagedir(local_task->thread, local_task->pagedir);
-    optimsoc_thread_set_extra_data(local_task->thread,
-                                   (void*) local_task);
+    local_node->thread = optimsoc_thread_dma_copy(remote_tile,
+                                                  remote_node.thread);
+    optimsoc_thread_set_pagedir(local_node->thread, local_node->pagedir);
+    optimsoc_thread_set_extra_data(local_node->thread,
+                                   (void*) local_node);
 
-    /* TODO taskdir */
+
+    /* TODO nodedir */
     /* TODO notify other ranks */
 
-    return local_task;
+    return local_node;
 }
