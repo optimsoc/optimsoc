@@ -8,8 +8,9 @@
 
 #include "gzll.h"
 #include "app.h"
-#include "taskdir.h"
 #include "messages.h"
+#include "node.h"
+#include "taskdir.h"
 
 optimsoc_mp_endpoint_handle _gzll_mp_ep_system;
 optimsoc_mp_endpoint_handle *_gzll_mp_ep_system_remote;
@@ -21,6 +22,8 @@ gzll_message_handler_fptr gzll_message_handlers[GZLL_NUM_MESSAGE_TYPES];
 void communication_init() {
     // Initialize function pointers
     gzll_message_handlers[GZLL_NODE_NEW] = &gzll_message_node_new_handler;
+    gzll_message_handlers[GZLL_NODE_MIGRATE] = &gzll_message_node_migrate_handler;
+    gzll_message_handlers[GZLL_NODE_FETCH] = &gzll_message_node_fetch_handler;
 
     optimsoc_mp_endpoint_create(&_gzll_mp_ep_system, 0, 0,
                                 OPTIMSOC_MP_EP_CONNECTIONLESS, 32, 64);
@@ -56,6 +59,7 @@ void communication_thread() {
         assert((received > 1) && (received == msg->len));
         assert(msg->type < GZLL_NUM_MESSAGE_TYPES);
         gzll_message_handlers[msg->type](msg);
+
     }
 
 }
@@ -118,4 +122,87 @@ void gzll_message_node_new_handler(struct gzll_message *msg) {
     taskdir_task_register(app->task_dir, msg_node->app_nodeid,
                           msg_node->app_nodename, msg->source_rank,
                           msg_node->rank_nodeid);
+}
+
+void message_send_node_migrate(uint32_t appid, uint32_t taskid,
+                               uint32_t curr_rank, uint32_t new_rank)
+{
+    uint32_t msg_length = sizeof(struct gzll_message)
+        + sizeof(struct gzll_message_node_migrate);
+
+    struct gzll_message *msg = malloc(msg_length);
+
+    assert(msg != NULL);
+
+    msg->type = GZLL_NODE_MIGRATE;
+    msg->source_rank = gzll_rank;
+    msg->len = msg_length;
+
+    struct gzll_message_node_migrate *msg_node_migrate =
+        (struct gzll_message_node_migrate*) msg->data;
+
+    msg_node_migrate->app_id = appid;
+    msg_node_migrate->node_id = taskid;
+    msg_node_migrate->dest = new_rank;
+
+    optimsoc_mp_msg_send(_gzll_mp_ep_system,
+                         _gzll_mp_ep_system_remote[curr_rank], (uint8_t*) msg,
+                         msg_length);
+
+    free(msg);
+}
+
+void gzll_message_node_migrate_handler(struct gzll_message *msg)
+{
+    struct gzll_message_node_migrate *msg_node_migrate;
+
+    msg_node_migrate = (struct gzll_message_node_migrate*) msg->data;
+
+    gzll_node_migrate(msg_node_migrate->app_id,
+                      msg_node_migrate->node_id,
+                      msg_node_migrate->dest);
+}
+
+void message_send_node_fetch(uint32_t dest_rank, void *node_addr)
+{
+    uint32_t msg_length = sizeof(struct gzll_message)
+        + sizeof(struct gzll_message_node_fetch);
+
+    struct gzll_message *msg = malloc(msg_length);
+
+    assert(msg != NULL);
+
+    msg->type = GZLL_NODE_FETCH;
+    msg->source_rank = gzll_rank;
+    msg->len = msg_length;
+
+    struct gzll_message_node_fetch *msg_node_fetch =
+        (struct gzll_message_node_fetch*) msg->data;
+
+    msg_node_fetch->node_addr = node_addr;
+
+    optimsoc_mp_msg_send(_gzll_mp_ep_system,
+                         _gzll_mp_ep_system_remote[dest_rank], (uint8_t*) msg,
+                         msg_length);
+
+    free(msg);
+}
+
+void gzll_message_node_fetch_handler(struct gzll_message *msg)
+{
+    struct gzll_message_node_fetch *msg_node_fetch;
+
+    msg_node_fetch = (struct gzll_message_node_fetch*) msg->data;
+
+
+    struct gzll_node *node = gzll_node_fetch(msg->source_rank,
+                                             msg_node_fetch->node_addr);
+
+    gzll_node_add(node);
+
+    gzll_node_resume(node);
+
+    // TODO
+    // update app->taskdir (local and global)
+    // notify task origin to destroy the task there and free memory
 }

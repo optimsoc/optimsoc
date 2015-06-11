@@ -24,6 +24,10 @@ struct gzll_node {
     optimsoc_thread_t thread;
 };
 
+void gzll_node_add(struct gzll_node *node);
+int gzll_node_remove(struct gzll_node *node);
+struct gzll_node *gzll_node_find(uint32_t id);
+
 void gzll_node_suspend(struct gzll_node *node);
 void gzll_node_resume(struct gzll_node *node);
 struct gzll_node *gzll_node_fetch(uint32_t remote_tile, void *remote_addr);

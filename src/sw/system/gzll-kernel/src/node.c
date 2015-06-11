@@ -40,6 +40,38 @@ void gzll_node_add(struct gzll_node *node) {
     }
 }
 
+int gzll_node_remove(struct gzll_node *node)
+{
+    if (gzll_node_list != NULL) {
+        if (optimsoc_list_remove(gzll_node_list, node) == 1) {
+            /* success */
+            return 0;
+        }
+    }
+
+    /* failed */
+    return -1;
+}
+
+struct gzll_node *gzll_node_find(uint32_t id)
+{
+    optimsoc_list_iterator_t iter;
+
+    struct gzll_node *node = (struct gzll_node*) optimsoc_list_first_element(
+        gzll_node_list, &iter);
+
+    while (node != NULL) {
+        if (node->id == id) {
+            return node;
+        }
+
+        node = optimsoc_list_next_element(gzll_node_list, &iter);
+    }
+
+    return NULL;
+}
+
+
 // TODO: load from global memory
 void gzll_node_start(uint32_t app_id, char* app_name, uint32_t app_nodeid,
                      char* nodename, struct gzll_task_descriptor *taskdesc) {

@@ -34,6 +34,7 @@ libgzll_kernel_la_SOURCES = \
 	main.c \
 	communication.c \
 	node.c \
+	node_migrate.c \
 	taskdir.c \
 	app.c \
 	memcpy_userspace.c \
