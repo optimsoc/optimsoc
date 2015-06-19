@@ -5,6 +5,9 @@
 
 #include <verilated_vcd_c.h>
 
+#include <ctime>
+#include <cstdlib>
+
 #ifndef NUMCORES
 #define NUMCORES 1
 #endif
@@ -34,6 +37,8 @@ int sc_main(int argc, char *argv[])
 
     standalone = ((argc > 1) &&
                   (strncmp(argv[1], "standalone", 10) == 0));
+
+    srand48((unsigned int) time(0));
 
     Verilated::commandArgs(argc, argv);
 
