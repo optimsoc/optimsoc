@@ -99,3 +99,7 @@ void optimsoc_mutex_lock(optimsoc_mutex_t *mutex) {
 void optimsoc_mutex_unlock(optimsoc_mutex_t *mutex) {
     *mutex = 0;
 }
+
+uint32_t optimsoc_get_seed(void) {
+    return REG32(OPTIMSOC_NA_SEED);
+}

@@ -38,6 +38,7 @@
 #define OPTIMSOC_NA_GMEM_TILE  OPTIMSOC_NA_REGS + 0x20
 #define OPTIMSOC_NA_LMEM_SIZE  OPTIMSOC_NA_REGS + 0x24
 #define OPTIMSOC_NA_CT_NUM     OPTIMSOC_NA_REGS + 0x28
+#define OPTIMSOC_NA_SEED       OPTIMSOC_NA_REGS + 0x2c
 #define OPTIMSOC_NA_CT_LIST    (OPTIMSOC_NA_REGS + 0x200)
 
 #define OPTIMSOC_NA_CONF          OPTIMSOC_NA_REGS + 0xc
@@ -332,7 +333,6 @@ static inline unsigned int extract_bits(uint32_t x, uint32_t msb,
  * \param msb MSB of part to set
  * \param lsb LSB of part to set
  */
-// FIXME move to optimsoc.c
 static inline void set_bits(uint32_t *x, uint32_t v, uint32_t msb,
                             uint32_t lsb) {
     if(msb != 31) {
@@ -342,6 +342,19 @@ static inline void set_bits(uint32_t *x, uint32_t v, uint32_t msb,
         *x = (((~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
     }
 }
+
+/**
+ * Get a random seed for randomization
+ *
+ * This function is used to obtain a random seed from the simulation environment
+ * for randomization tests. It has no function when executing in hardware.
+ *
+ * It is only random when the actual simulation is seeded with a non-static
+ * value.
+ *
+ * \return (random) seed
+ */
+uint32_t optimsoc_get_seed(void);
 
 /**
  * @}
