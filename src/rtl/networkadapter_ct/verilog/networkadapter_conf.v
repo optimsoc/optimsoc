@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,6 @@
  * 
  * This modules provides the configuration information of the network
  * adapter to the software via memory mapped registers.
- * 
- * (c) 2012-2013 by the author(s)
  * 
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
@@ -57,6 +55,8 @@
  * +----------------------------+
  * | 0x28 R: number of compute  |
  * |         tiles              |
+ * +----------------------------+
+ * | 0x2c R: read a random seed |
  * +----------------------------+
  * .
  * .
@@ -94,6 +94,14 @@ module networkadapter_conf(
    parameter NUMCTS = 32'hx;
    parameter [NUMCTS*16-1:0] CTLIST = {NUMCTS*16{1'bx}};
 
+   reg [31:0] seed = 0;
+
+`ifdef verilator
+   initial begin
+      seed = $random();
+   end
+`endif
+
    localparam REG_TILEID   = 0;
    localparam REG_NUMTILES = 1;
    localparam REG_CONF   = 3;
@@ -103,6 +111,7 @@ module networkadapter_conf(
    localparam REG_GMEM_TILE = 8;  
    localparam REG_LMEM_SIZE = 9;
    localparam REG_NUMCTS = 10;
+   localparam REG_SEED = 11;
    
    localparam REG_CDC      = 10'h40;
    localparam REG_CDC_DYN  = 10'h41;
@@ -137,7 +146,7 @@ module networkadapter_conf(
  `endif
 `endif 
 
-   wire [15:0] 		    ctlist_vector[0:NUMCTS-1];
+   wire [15:0]              ctlist_vector[0:NUMCTS-1];
 
    genvar                   i;
    generate
@@ -151,13 +160,13 @@ module networkadapter_conf(
   
    always @(*) begin
       if (adr[11:9] == REG_CTLIST[9:7]) begin
-	 if (adr[1]) begin
-	    data = {16'h0,ctlist_vector[adr[8:1]]};
-	 end else begin
-	    data = {ctlist_vector[adr[8:1]],16'h0};
-	 end
+         if (adr[1]) begin
+            data = {16'h0,ctlist_vector[adr[8:1]]};
+         end else begin
+            data = {ctlist_vector[adr[8:1]],16'h0};
+         end
       end else begin
-	 case (adr[11:2])
+         case (adr[11:2])
            REG_TILEID: begin
               data = TILEID;
            end
@@ -184,10 +193,12 @@ module networkadapter_conf(
            REG_LMEM_SIZE: begin
               data = LOCAL_MEMORY_SIZE;
            end
-	   REG_NUMCTS: begin
-	      data = NUMCTS;
-	   end
-
+           REG_NUMCTS: begin
+              data = NUMCTS;
+           end
+           REG_SEED: begin
+              data = seed;
+           end
            REG_CDC: begin
 `ifdef OPTIMSOC_CLOCKDOMAINS
            data = 32'b1;
@@ -217,7 +228,7 @@ module networkadapter_conf(
            default: begin
               data = 32'hx;
            end
-	 endcase // case (adr[11:2])
+         endcase // case (adr[11:2])
       end
    end
 
