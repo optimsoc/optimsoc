@@ -15,7 +15,10 @@
 SC_MODULE(tracemon) {
     sc_in<bool> clk;
 
-    SC_CTOR(tracemon) : clk("clk") {
+    typedef tracemon SC_CURRENT_USER_MODULE;
+    tracemon(sc_module_name name, unsigned int from = 0,
+	     unsigned int to = 0) : sc_module(name), clk("clk"),
+      u_from(from), u_to(to) {
         vcd = NULL;
         SC_METHOD(dump);
         sensitive << clk;
@@ -23,20 +26,28 @@ SC_MODULE(tracemon) {
 
     void dump()
     {
-        if (vcd) {
-            vcd->dump((uint32_t)(sc_time_stamp().value() / 1000));
+      unsigned int timestamp = sc_time_stamp().value() / 1000;
+      if (vcd && (timestamp > u_from) &&
+	  ((u_to == 0) || (timestamp < u_to))) {
+            vcd->dump((uint32_t) timestamp);
         }
     }
 
     VerilatedVcdC *vcd;
+
+    unsigned int u_from, u_to;
 };
 
 int sc_main(int argc, char *argv[])
 {
     bool standalone;
+    unsigned int from, to;
 
     standalone = ((argc > 1) &&
                   (strncmp(argv[1], "standalone", 10) == 0));
+
+    from = (argc > 2) ? atoi(argv[2]) : 0;
+    to = (argc > 3) ? atoi(argv[3]) : 0;
 
     srand48((unsigned int) time(0));
 
@@ -60,7 +71,7 @@ int sc_main(int argc, char *argv[])
     system.v->u_system->gen_ct__BRA__3__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
 
 #ifdef VCD_TRACE
-    tracemon trace("trace");
+    tracemon trace("trace", from, to);
     trace.clk(clk);
 
     Verilated::traceEverOn(true);
