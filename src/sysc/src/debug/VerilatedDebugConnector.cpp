@@ -128,9 +128,61 @@ bool VerilatedDebugConnector::sendTrace(DebugModule *mod, TracePacket &packet) {
 		}
 
 		// Write all packets to events file
-		*m_standalone_events[stmpacket->coreid] << "[" << stmpacket->timestamp << "] ";
-		*m_standalone_events[stmpacket->coreid] << "Event 0x" << std::hex << stmpacket->id;
-		*m_standalone_events[stmpacket->coreid] << ": 0x" << stmpacket->value << std::dec << std::endl;
+		// and pretty print certain events
+        *m_standalone_events[stmpacket->coreid] << "[" << stmpacket->timestamp << "] ";
+        if (stmpacket->id == 0x10) {
+            switch (stmpacket->value) {
+            case 0x1:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Software reset" << std::endl;
+                break;
+            case 0x2:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Bus Error" << std::endl;
+                break;
+            case 0x3:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Data Page Fault" << std::endl;
+                break;
+            case 0x4:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Instruction Page Fault" << std::endl;
+                break;
+            case 0x5:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Tick Timer" << std::endl;
+                break;
+            case 0x6:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Alignment" << std::endl;
+                break;
+            case 0x7:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Illegal Instruction" << std::endl;
+                break;
+            case 0x8:
+                *m_standalone_events[stmpacket->coreid] << "Exception: External Interrupt" << std::endl;
+                break;
+            case 0x9:
+                *m_standalone_events[stmpacket->coreid] << "Exception: D-TLB Miss" << std::endl;
+                break;
+            case 0xa:
+                *m_standalone_events[stmpacket->coreid] << "Exception: I-TLB Miss" << std::endl;
+                break;
+            case 0xb:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Range" << std::endl;
+                break;
+            case 0xc:
+                *m_standalone_events[stmpacket->coreid] << "Exception: System Call" << std::endl;
+                break;
+            case 0xd:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Floating Point" << std::endl;
+                break;
+            case 0xe:
+                *m_standalone_events[stmpacket->coreid] << "Exception: Trap" << std::endl;
+                break;
+            default:
+                *m_standalone_events[stmpacket->coreid] << "Event 0x" << std::hex << stmpacket->id;
+                *m_standalone_events[stmpacket->coreid] << ": 0x" << stmpacket->value << std::dec << std::endl;
+                break;
+            }
+		} else {
+            *m_standalone_events[stmpacket->coreid] << "Event 0x" << std::hex << stmpacket->id;
+            *m_standalone_events[stmpacket->coreid] << ": 0x" << stmpacket->value << std::dec << std::endl;
+		}
 
 		if ((stmpacket->id == 1) || (stmpacket->id == 10)) {
 			m_standalone_finished[stmpacket->coreid] = true;
