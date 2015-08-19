@@ -41,9 +41,13 @@ SC_MODULE(tracemon) {
 int sc_main(int argc, char *argv[])
 {
     bool standalone;
+    unsigned int from, to;
 
     standalone = ((argc > 1) &&
                   (strncmp(argv[1], "standalone", 10) == 0));
+
+    from = (argc > 2) ? atoi(argv[2]) : 0;
+    to = (argc > 3) ? atoi(argv[3]) : 0;
 
     srand48((unsigned int) time(0));
 
