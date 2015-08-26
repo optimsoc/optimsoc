@@ -148,6 +148,7 @@ module mor1kx_module (
        .FEATURE_INSTRUCTIONCACHE        ("ENABLED"),
        .OPTION_DCACHE_WAYS              (2),
        .OPTION_DCACHE_SET_WIDTH         (8),
+       .OPTION_DCACHE_SNOOP             ("ENABLED"),
        .OPTION_ICACHE_WAYS              (2),
        .OPTION_ICACHE_SET_WIDTH         (8),
        .FEATURE_DMMU                    ("ENABLED"),
