@@ -376,8 +376,8 @@ module clockmanager_ztex115(
                 .PROGEN(1'b0));
 `endif // !`ifndef OPTIMSOC_CLOCKDOMAINS
 
-   // Those are always separate clock domains
-   `ifdef OPTIMSOC_IO_CLOCKS
+// Those are always separate clock domains
+`ifdef OPTIMSOC_IO_CLOCKS
       if (NUM_IO_CLOCKS > 0) begin : gen_ioclk0
          BUFGCE
             u_clk_ct_bufg_gated(.O(clk_io[0]),
