@@ -76,7 +76,7 @@ Furthermore some other files are build:
 
 \begin{itemize}
 \item \verb|hello.dis| is the disassembly of the file
-\item \verb|hello.bin| is the elf file als loaded binary file
+\item \verb|hello.bin| is the elf representation of the binary file
 \item \verb|hello.vmem| is a textual copy of the binary file
 \end{itemize}
 
@@ -113,7 +113,7 @@ But how does the actual printf-output get there when there is no UART
 or similar?
 
 OpTiMSoC software makes excessive use of a useful part of the OpenRISC ISA. The
-``no operation'' instruction \verb|l.nop| has a paramter \verb|K| in assembly.
+``no operation'' instruction \verb|l.nop| has a parameter \verb|K| in assembly.
 This can be used for simulation purposes. It can be used for instrumentation,
 tracing or special purposes as writing characters with minimal intrusion or
 simulation termination.
