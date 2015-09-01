@@ -1,3 +1,5 @@
+# -*- makefile -*- vim:ft=make
+
 CXX ?= g++
 CFLAGS ?= -g -Wall
 VERILATOR ?= verilator
@@ -16,7 +18,7 @@ build-verilator: $(TBENCH) $(TBENCH)-vcd
 $(TBENCH): obj_dir/V$(TBENCH)__ALL.a $(TBENCH).o verilated.o verilated_vcd_c.o
 	$(CXX) $(CFLAGS) -o $(TBENCH) -pthread $(TBENCH).o \
 		obj_dir/V$(TBENCH)__ALL.a verilated.o verilated_vcd_c.o \
-		$(LIB) 
+		$(LIB)
 
 $(TBENCH)-vcd: obj_dir/V$(TBENCH)__ALL.a $(TBENCH)-vcd.o verilated.o verilated_vcd_c.o
 	$(CXX) $(CFLAGS) -o $(TBENCH)-vcd -pthread $(TBENCH)-vcd.o \
@@ -44,6 +46,6 @@ verilated_vcd_c.o:
 		$(VERILATOR_INCDIR)/verilated_vcd_c.cpp
 
 clean:
-	rm -rf obj_dir *.o 
+	rm -rf obj_dir *.o
 
 .PHONY: verilator.vc
