@@ -11,7 +11,7 @@ Some of the tutorials (especially the first ones) build on top of each
 other, so it's recommended to do them in order. Simply stop if you
 think you know enough to implement your own ideas!
 
-\section{RTL Simulation: Compute Tile and Software}
+\section{Starting Small: Compute Tile and Software (Simulated)}
 
 It is a good starting point to simulate a single compute tile of a
 distributed memory system. Therefore a simple testbench is included
@@ -61,17 +61,17 @@ repository. First, you should create an environment variable to point
 to the base:
 
 \begin{lstlisting}
-export OPTIMSOC_APPS=${OPTIMSOC}/apps
+export OPTIMSOC_APPS=$OPTIMSOC/apps
 \end{lstlisting}
 
 Build a simple ``Hello World'' example:
 
 \begin{lstlisting}
-make -C ${OPTIMSOC_APPS}/baremetal/hello
+make -C $OPTIMSOC_APPS/baremetal/hello
 \end{lstlisting}
 
 You will then find the executable elf file as
-\verb|${OPTIMSOC_APPS}/baremetal/hello/hello.elf|.
+\verb|$OPTIMSOC_APPS/baremetal/hello/hello.elf|.
 Furthermore some other files are build:
 
 \begin{itemize}
@@ -81,8 +81,7 @@ Furthermore some other files are build:
 \end{itemize}
 
 (Note: If the latter is not build, ensure you have \verb|bin2vmem| in
-your \verb|PATH|, see
-\ref{chap:installation}).
+your \verb|PATH| as described in Chapter~\ref{chap:installation}).
 
 You can now run the example. First go back to the compute tile
 testbench main folder. Before the simulation warned that
@@ -90,7 +89,7 @@ testbench main folder. Before the simulation warned that
 to this filename
 
 \begin{lstlisting}
-ln -s ${OPTIMSOC_APPS}/baremetal/hello/hello.vmem ct.vmem
+ln -s $OPTIMSOC_APPS/baremetal/hello/hello.vmem ct.vmem
 \end{lstlisting}
 
 If you now run the software again, the simulation should
@@ -113,11 +112,10 @@ There are 1 compute tiles:
 But how does the actual printf-output get there when there is no UART
 or similar?
 
-OpTiMSoC software (especially in future releases) makes excessive use
-of a useful part of the OpenRISC ISA. The ``no operation'' instruction
-\verb|l.nop| has a paramter \verb|K| in assembly. This can be used for
-simulation purposes. It can be used for instrumentation, tracing or
-special purposes as writing characters with minimal intrusion or
+OpTiMSoC software makes excessive use of a useful part of the OpenRISC ISA. The
+``no operation'' instruction \verb|l.nop| has a paramter \verb|K| in assembly.
+This can be used for simulation purposes. It can be used for instrumentation,
+tracing or special purposes as writing characters with minimal intrusion or
 simulation termination.
 
 The termination is forced with \verb|l.nop 0x1|. If you have a look at
@@ -142,7 +140,7 @@ This function is called from printf as write function. The trace
 monitor captures theses characters and puts them to the stdout file.
 
 You can easily add your own ``traces'' using a macro defined in
-\verb|optimsoc.h|:
+\path{baremetal-libraries/src/libbaremetal/include/optimsoc-baremetal.h}:
 
 \begin{lstlisting}[language=C]
 #define OPTIMSOC_TRACE(id,v)                \
@@ -150,9 +148,7 @@ You can easily add your own ``traces'' using a macro defined in
    asm("l.nop %0": :"K" (id));
 \end{lstlisting}
 
-This feature is used extensively by current and future OpTiMSoC software.
-
-\section{Going Multicore: Simulate Small 2x2 Distributed Memory
+\section{Going Multicore: Simulate a Small 2x2 Distributed Memory
   System}
 
 Next you might want to build an actual multicore system. You can find
@@ -161,68 +157,63 @@ such a system in \verb|tbench/rtl/dm| directory as
 first denotes the dimensions and then the instantiated tiles, here
 \verb|cccc| as four compute tiles.
 
-When you switch to this directory, you can build the system using
-\verb|make|. In the following build the \verb|hello_simple| software
-identical to the description above. After running \verb|make sim| you
-will find the files \verb|stdout.0| to \verb|stdout.3|, each
-containing ``Hello World''.
+In our simulation all four cores run the same software. Before you shout
+``that's boring:'' You can still write different code depending on which tile
+and core the software is executed. A couple of functions are useful for that:
 
-There is a second ``hello world'' example available:
-\verb|hello_simplemp|. This program uses the simple message passing
-facilities of the network adapter to send messages. In that example
-all cores send a message to core 0, that prints a message when
-receiving the packets. When all cores sent their messags, the core
-acknowledges this by printing its own ``Hello World'' message.
+\begin{itemize}
+  \item \verb|optimsoc_get_numct()|: The number of compute tiles in the system
+  \item \verb|optimsoc_get_numtiles()|: The number of tiles (of any type) in
+    the system
+  \item \verb|optimsoc_get_ctrank()|: Get the rank of this compute tile in this
+    system. Essentially this is just a number that uniquely identifies a
+    compute tile.
+\end{itemize}
 
-The simulation should output:
+There are more useful utility functions like those available, find them in the
+file \verb|baremetal-libraries/src/libbaremetal/include/optimsoc-baremetal.h|.
+
+A simple application that uses those functions to do message passing between
+the different tiles is the ``hello\_mpsimple'' application. This program uses
+the simple message passing facilities of the network adapter to send messages.
+All cores send a message to core 0. If all messages have been received, core 0
+prints a message ``Received all messages. Hello World!''.
+
+In the following, we'll build our $2 \times 2$ system with this application.
+Building and running the simulation works in the same way as in the previous
+tutorial, refer to the discussion there for explanations. Here's the quick
+version:
 
 \begin{lstlisting}
-# [               52500, 0] Software reset
-# [               52500, 1] Software reset
-# [               52500, 2] Software reset
-# [               52500, 3] Software reset
-# [            46585000, 1] Event 0x0100: 0x00000000
-# [            46617500, 1] Event 0x0100: 0x00000001
-# [            46627500, 2] Event 0x0100: 0x00000000
-# [            46652500, 1] Event 0x0100: 0x000fffec
-# [            46660000, 2] Event 0x0100: 0x00000001
-# [            46670000, 3] Event 0x0100: 0x00000000
-# [            46695000, 2] Event 0x0100: 0x000fffec
-# [            46702500, 3] Event 0x0100: 0x00000001
-# [            46737500, 3] Event 0x0100: 0x000fffec
-# [            47272500, 0] Exception # 8 occured
-# [            48292500, 1] Terminated at address 0x0000dd5c
-# [            48335000, 2] Terminated at address 0x0000dd5c
-# [            48377500, 3] Terminated at address 0x0000dd5c
-# [            48835000, 0] Event 0x0102: 0x00000001
-# [            48867500, 0] Event 0x0102: 0x00000000
-# [            48895000, 0] Event 0x0102: 0x00000001
-# [            65855000, 0] Event 0x0103: 0x00000000
-# [            66337500, 0] Event 0x0102: 0x00000002
-# [            66352500, 0] Event 0x0102: 0x00000000
-# [            66360000, 0] Event 0x0102: 0x00000001
-# [            75940000, 0] Event 0x0103: 0x00000000
-# [            76420000, 0] Event 0x0102: 0x00000003
-# [            76435000, 0] Event 0x0102: 0x00000000
-# [            76442500, 0] Event 0x0102: 0x00000001
-# [            85920000, 0] Event 0x0103: 0x00000000
-# [           100387500, 0] Terminated at address 0x0000dd5c
+make build-verilator
+make -C $OPTIMSOC_APPS/baremetal/hello_mpsimple
+ln -s $OPTIMSOC_APPS/baremetal/hello_mpsimple/hello_mpsimple.vmem ct.vmem
+./tb_system_2x2_cccc standalone
 \end{lstlisting}
 
-After each core is reset they start their execution and after a
-certain time emit events. We will have a more detailed view on the
-events in the remaining tutorial. For the moment, you should know that
-the \verb|0x100| events describe that the processors send their
-messages. \verb|Exception # 8| is the interrupt exception, that occurs
-when data arrives at the network adapter. Core 0 then receives all of
-the messages (event \verb|0x102|).
+Have a look what the software does (you find the code in
+\path{$OPTIMSOC_APPS/baremetal/hello_mpsimple/hello_mpsimple.c}). Let's first
+check the output of core 0.
 
-Finally, a real world example is given by \verb|heat|. Link this
-example similar as above (do not forget to link the correct ct.vmem at
-all time!). This example calculates the heat distribution in a
-distributed manner. The cores coordinate their boundary regions by
-sending messages around. With the debug infrastructure below the trace
-events will be much easier to understand.
+\begin{lstlisting}[language=sh]
+$> cat stdout.000
+Wait for 3 messages
+Received all messages. Hello World!
+\end{lstlisting}
+
+\vspace{2em}
+
+Finally, let's have a quick glance at a more realistic application:
+\verb|heat_mpsimple|. You can find it in the same place as the previous
+applications, \verb|hello| and \verb|hellp_mpsimple|. The application
+calculates the heat distribution in a distributed manner. The cores coordinate
+their boundary regions by sending messages around.
+
+Can you compile this application and run it? Don't get nervous, the simulation
+can take a couple of minutes to finish. Have a look at the source code and try
+to understand what's going on. Also have a look at the \verb|stdout| log files.
+Core 0 will also print the complete heat distribution at the end.
+
 
 \section{The Look Inside: Introducing the Debug System}
 
