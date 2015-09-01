@@ -408,13 +408,13 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/opt/systemc/lib-linux64/pkgconfig
 
 \subsection{Verilator}
 
-Verilator is part of Debian/Ubuntu-based distributions nowadays and it
-should work fine from the repositories. Unfortunately, it just
-recently creates a pkgconfig file and there is a steady deveopment
-although regarding the performance. So we recommend building the most
-recent version, which is actually quite straigt forward.
+Verilator is part of Debian/Ubuntu-based distributions nowadays. A version
+above 3.873 is required for OpTiMSoC (this version adds the pkg-config file).
+If the version included in your distribution is older, building Verilator from
+source is easy.
 
 \begin{lstlisting}
+unset VERILATOR_ROOT
 git clone http://git.veripool.org/git/verilator
 autoconf
 ./configure
