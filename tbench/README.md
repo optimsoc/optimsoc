@@ -3,17 +3,17 @@
 This repository contains examplary OpTiMSoC systems for understanding
 OpTiMSoC and testing.
 
-## Memory models
+## Memory Models
 
 The following memory models are available:
 
- * Distributed Memory (folder `dm`): Each compute tile uses it's own
+ * Distributed Memory (folder `dm`): Each compute tile uses its own
    local memory. It is also possible to have a global memory
    available, where baremetal applications can access it using DMA and
    the gzll operating system can load the OS or application from there
    and use swapping.
 
-## Supported Simulation tools
+## Supported Simulation Tools
 
-Currently verilator is supported as simulation tool. Modelsim and VCS
-will be (re-)integrated soonly.
+Currently simulations with Verilator and ModelSim are supported. VCS support is
+planned in the future.
