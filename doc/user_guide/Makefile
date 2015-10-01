@@ -5,7 +5,7 @@ LATEXMLPOST ?= latexmlpost
 TEXFILES = user_guide-preamble.tex \
            user_guide-title.tex \
            user_guide-changes.tex \
-	   user_guide-documentation.tex \
+           user_guide-documentation.tex \
            ../docoverview.tex \
            user_guide-content.tex \
            user_guide-introduction.tex \
@@ -30,3 +30,4 @@ html/%.xhtml: %-html.tex $(TEXFILES)
 
 clean:
 	rm -rf *.pdf *.aux *.toc *.out *.log *.xml html/
+
