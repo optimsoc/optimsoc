@@ -23,7 +23,7 @@ plus memory and the network adapter, where all I/O of the network
 adapter is not functional in this test case. It can therefore only be
 used to simulate local software.
 
-You can find this example in \verb|tbench/dm/compute_tile|. You
+You can find this example in \path{tbench/dm/compute_tile}. You
 need to have Verilator installed before you run:
 
 \begin{lstlisting}
@@ -56,7 +56,7 @@ This needs to be generated from the compiled source code. Before you
 build your own software you will need the support libraries as
 described in the installation procedures.
 
-The demonstration software is bundled in the \verb|optimsoc/apps|
+The demonstration software is bundled in the \path{optimsoc/apps}
 repository. First, you should create an environment variable to point
 to the base:
 
@@ -71,7 +71,7 @@ make -C $OPTIMSOC_APPS/baremetal/hello
 \end{lstlisting}
 
 You will then find the executable elf file as
-\verb|$OPTIMSOC_APPS/baremetal/hello/hello.elf|.
+\path{$OPTIMSOC_APPS/baremetal/hello/hello.elf}.
 Furthermore some other files are build:
 
 \begin{itemize}
@@ -80,8 +80,11 @@ Furthermore some other files are build:
 \item \verb|hello.vmem| is a textual copy of the binary file
 \end{itemize}
 
-(Note: If the latter is not build, ensure you have \verb|bin2vmem| in
-your \verb|PATH| as described in Chapter~\ref{chap:installation}).
+\begin{docnote}
+If the \verb|hello.vmem| file is not built, ensure that you have the
+\verb|bin2vmem| tool in your \verb|PATH| as described in
+Chapter~\ref{chap:installation}.
+\end{docnote}
 
 You can now run the example. First go back to the compute tile
 testbench main folder. Before the simulation warned that
@@ -152,7 +155,7 @@ You can easily add your own ``traces'' using a macro defined in
   System}
 
 Next you might want to build an actual multicore system. You can find
-such a system in \verb|tbench/rtl/dm| directory as
+such a system in \path{tbench/rtl/dm} directory as
 \verb|system_2x2_cccc|. The nomenclature in all pre-packed systems
 first denotes the dimensions and then the instantiated tiles, here
 \verb|cccc| as four compute tiles.
@@ -171,7 +174,7 @@ and core the software is executed. A couple of functions are useful for that:
 \end{itemize}
 
 There are more useful utility functions like those available, find them in the
-file \verb|baremetal-libraries/src/libbaremetal/include/optimsoc-baremetal.h|.
+file \path{baremetal-libraries/src/libbaremetal/include/optimsoc-baremetal.h}.
 
 A simple application that uses those functions to do message passing between
 the different tiles is the ``hello\_mpsimple'' application. This program uses
@@ -260,7 +263,7 @@ from before using a verilated simulation and observing the system in
 the graphical user interface.
 
 In the following we will have a look at building such a system and how
-to observe it with the GUI. In \verb|tbench/verilator/dm| you find
+to observe it with the GUI. In \path{tbench/verilator/dm} you find
 systems identical to the RTL simulation. We will directly start with
 the \verb|system_2x2_cccc|. In the base folder you should simply make
 it:
@@ -333,7 +336,7 @@ The distribution therefore contains a SystemC module that functionally
 behaves like the USB chip on the ZTEX boards. The host tools can
 connect to the debug system via this module using a TCP socket.
 
-The system can be found at \verb|tbench/rtl/dm/system_2x2_cccc_ztex|.
+The system can be found at \path{tbench/rtl/dm/system_2x2_cccc_ztex}.
 Build the system running \verb|make|. Before you simulate the system
 you will now need to provide a \verb|modelsim.ini| either globally or
 in the system's folder that contains the Xilinx libraries. Once you
@@ -422,7 +425,7 @@ alter your extensions) you can go over to system synthesis for the
 FPGA. At the moment we support the Synopsys FPGA flow (Synplify).
 
 You can find the system synthesis in the folder
-\verb|syn/dm/system_2x2_cccc_ztex/|. A Makefile is used to build the
+\path{syn/dm/system_2x2_cccc_ztex}. A Makefile is used to build the
 systems.
 
 To generate the system first create the project file:
@@ -440,7 +443,7 @@ environment variable \verb|OPTIMSOC_SYN_OUTDIR| to any path you like, e.g. put
 \begin{lstlisting}
 export OPTIMSOC_SYN_OUTDIR=$HOME/syn
 \end{lstlisting}
-in your profile script (e.g. your \verb|.bashrc| file) and reload it.
+in your profile script (e.g. your \path{~/.bashrc} file) and reload it.
 
 Run the synthesis afterwards (for the ZTEX 1.15b or d board):
 
@@ -485,7 +488,7 @@ for example in \verb|/etc/udev/rules.d/60-usb.rules|.
 
 If you are running OpTiMSoC on the board for the first time you need to update
 the firmware on the board. To do that, switch to the folder
-\verb|src/sw/firmware/ztex_usbfpga_1_15_fx2_fw| in your OpTiMSoC source tree.
+\path{src/sw/firmware/ztex_usbfpga_1_15_fx2_fw} in your OpTiMSoC source tree.
 Follow the instructions inside the provided \verb|README| file to build and
 flash the board with the required firmware. All of this only needs to be done
 once for each board (until the firmware changes).
