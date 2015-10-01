@@ -6,7 +6,6 @@
 %% Target specific preamble: PDF
 \usepackage{upquote}
 \usepackage{tikz}
-\newcommand{\referencebox}[1]{\tikz[overlay]\node[fill=black,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm] {\color{white}#1};\phantom{#1}}
 
 % texttt/verb prevent don't do hyphenation (which is a good thing). This,
 % however, causes text going over the right margin (overfull hbox). To prevent
@@ -22,8 +21,6 @@
 %   for source code highlighting)
 \usepackage{lmodern}
 \usepackage[tt=false]{libertine}
-
-\usepackage{xcolor}
 
 \definecolor{light-gray}{gray}{0.92}
 
