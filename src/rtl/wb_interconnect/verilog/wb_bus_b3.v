@@ -62,7 +62,7 @@
  * e0 for the memory range.
  *
  * This results in:
- *  S0_RANGE_WIDTH(1), S0_RANGE_MATCH(1'b1)
+ *  S0_RANGE_WIDTH(1), S0_RANGE_MATCH(1'b0)
  *  S1_RANGE_WIDTH(2), S1_RANGE_MATCH(2'b10)
  *  S2_RANGE_WIDTH(8), S2_RANGE_MATCH(8'he0)
  *
