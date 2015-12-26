@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,26 +20,26 @@
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
- *   Stefan Rösch <roe.stefan@gmail.com>
+ *   Stefan Rösch <stefan.roesch@tum.de>
  */
 
-#include <list.h>
+#include "include/optimsoc-runtime.h"
 #include <assert.h>
 
-struct list_t* list_init(void* data)
-{
-    struct list_t* l = malloc(sizeof(struct list_t));
-    assert(l != NULL);
+// TODO: create non-blocking data structure
 
-//    mutex_init(&l->mutex);
+struct optimsoc_list_t* optimsoc_list_init(void* data)
+{
+    struct optimsoc_list_t* l = malloc(sizeof(struct optimsoc_list_t));
+    assert(l != NULL);
 
     if(data == NULL) { /* create empty list */
         l->head = NULL;
         l->tail = NULL;
     } else {
         /* create first element */
-        l->head =l->tail = malloc(sizeof(struct list_entry_t));
-	assert(l->tail != NULL);
+        l->head =l->tail = malloc(sizeof(struct optimsoc_list_entry_t));
+        assert(l->tail != NULL);
 
         /* set data for first element */
         l->head->data = data;
@@ -50,14 +50,14 @@ struct list_t* list_init(void* data)
     return l;
 }
 
-void list_add_tail(struct list_t* l, void* data)
+void optimsoc_list_add_tail(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
     /* create new element */
-    struct list_entry_t* e = malloc(sizeof(struct list_entry_t));
+    struct optimsoc_list_entry_t* e;
+    e = malloc(sizeof(struct optimsoc_list_entry_t));
     assert(e != NULL);
 
-    //mutex_lock(&l->mutex);
     /* set data */
     e->data = data;
 
@@ -73,18 +73,17 @@ void list_add_tail(struct list_t* l, void* data)
         l->tail->next = e;
         l->tail = e;
     }
-   // mutex_unlock(&l->mutex);
 }
 
 
-void list_add_head(struct list_t* l, void* data)
+void optimsoc_list_add_head(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
     /* create new element */
-    struct list_entry_t* e = malloc(sizeof(struct list_entry_t));
+    struct optimsoc_list_entry_t* e;
+    e = malloc(sizeof(struct optimsoc_list_entry_t));
     assert(e != NULL);
 
-    //mutex_lock(&l->mutex);
     /* set data */
     e->data = data;
 
@@ -100,20 +99,18 @@ void list_add_head(struct list_t* l, void* data)
         l->head->prev = e;
         l->head = e;
     }
-    //mutex_unlock(&l->mutex);
 }
 
-void* list_remove_tail(struct list_t* l)
+void* optimsoc_list_remove_tail(struct optimsoc_list_t* l)
 {
     assert(l != NULL);
-    struct list_entry_t* entry;
+    struct optimsoc_list_entry_t* entry;
 
     /* check if list is empty */
     if(l->tail == NULL) {
         return NULL;
     }
 
-    //mutex_lock(&l->mutex);
     /* save entry and remove from list */
     entry = l->tail;
     void* data = entry->data;
@@ -125,21 +122,19 @@ void* list_remove_tail(struct list_t* l)
         l->head = NULL;
     }
 
-    //mutex_unlock(&l->mutex);
     return data;
 }
 
-void* list_remove_head(struct list_t* l)
+void* optimsoc_list_remove_head(struct optimsoc_list_t* l)
 {
     assert(l != NULL);
-    struct list_entry_t* entry;
+    struct optimsoc_list_entry_t* entry;
 
     /* check if list is empty */
     if(l->head == NULL) {
         return NULL;
     }
 
-    //mutex_lock(&l->mutex);
     /* save entry and remove from list */
     entry = l->head;
     void* data = entry->data;
@@ -151,8 +146,6 @@ void* list_remove_head(struct list_t* l)
         l->tail = NULL;
     }
 
-    //mutex_unlock(&l->mutex);
-
     return data;
 }
 
@@ -161,15 +154,15 @@ void* list_remove_head(struct list_t* l)
  *
  * This does not free the data-pointer.
  */
-int list_remove(struct list_t* l, void* data)
+int optimsoc_list_remove(struct optimsoc_list_t* l, void* data)
 {
     assert(l != NULL);
-    //mutex_lock(&l->mutex);
-    struct list_entry_t* entry = l->head;
+    struct optimsoc_list_entry_t* entry = l->head;
 
     while(entry != NULL) {
         if(entry->data == data) {
-            if(entry == l->head && entry == l->tail) { /* check if only one element in list */
+            if(entry == l->head && entry == l->tail) {
+                /* check if only one element in list */
                 l->head = l->tail = NULL;
             } else if(entry->prev == NULL) { /* check if entry is head */
                 l->head = entry->next;
@@ -182,21 +175,19 @@ int list_remove(struct list_t* l, void* data)
                 entry->next->prev = entry->prev;
             }
 
-            //mutex_unlock(&l->mutex);
-	    free(entry);
+            free(entry);
             return 1;
         }
         entry = entry->next;
     }
-    //mutex_unlock(&l->mutex);
 
     return 0;
 
 }
 
-int list_contains(struct list_t *l, void* data) {
+int optimsoc_list_contains(struct optimsoc_list_t *l, void* data) {
     assert(l != NULL);
-    struct list_entry_t* entry = l->head;
+    struct optimsoc_list_entry_t* entry = l->head;
 
     while(entry != NULL) {
         if(entry->data == data) {
@@ -209,10 +200,26 @@ int list_contains(struct list_t *l, void* data) {
 
 }
 
-unsigned int list_length(struct list_t *l) {
+void *optimsoc_list_find_content_header(struct optimsoc_list_t *l,
+                                        uint32_t content) {
+    assert(l != NULL);
+    struct optimsoc_list_entry_t* entry = l->head;
+
+    while (entry != NULL) {
+        uint32_t *ptr = (uint32_t*) entry->data;
+        if (*ptr == content) {
+            return entry->data;
+        }
+        entry = entry->next;
+    }
+
+    return 0;
+}
+
+size_t optimsoc_list_length(struct optimsoc_list_t *l) {
     assert(l != NULL);
     unsigned int count = 0;
-    struct list_entry_t* entry = l->head;
+    struct optimsoc_list_entry_t* entry = l->head;
     while(entry != NULL) {
         count++;
         entry = entry->next;
@@ -220,25 +227,72 @@ unsigned int list_length(struct list_t *l) {
     return count;
 }
 
-void* list_first_element(struct list_t* l, list_entry_t **list_iter)
+void* optimsoc_list_first_element(struct optimsoc_list_t* l,
+                                  optimsoc_list_iterator_t *list_iter)
 {
     assert(l != NULL);
     if(l->head == NULL) {
-	*list_iter = NULL;
-	return NULL;
+        *list_iter = NULL;
+        return NULL;
     } else {
-	*list_iter = l->head;
-	return l->head->data;
+        *list_iter = l->head;
+        return l->head->data;
     }
 }
 
-void* list_next_element(struct list_t* l, list_entry_t **list_iter)
+void* optimsoc_list_next_element(struct optimsoc_list_t* l,
+                                 optimsoc_list_iterator_t *list_iter)
 {
     assert(l != NULL);
     if((*list_iter)->next == NULL) {
-	return NULL;
+        return NULL;
     } else {
-	*list_iter = (*list_iter)->next;
-	return (*list_iter)->data;
+        *list_iter = (*list_iter)->next;
+        return (*list_iter)->data;
     }
+}
+
+struct optimsoc_list_t *optimsoc_list_dma_copy(uint32_t remote_tile,
+                                               void *remote_list_addr,
+                                               size_t data_size)
+{
+    struct optimsoc_list_t *local_list;
+    struct optimsoc_list_t remote_list;
+
+    struct optimsoc_list_entry_t *remote_entry_next;
+    struct optimsoc_list_entry_t remote_entry;
+
+    void *local_data;
+
+    local_list = optimsoc_list_init(0);
+    assert(local_list != NULL);
+
+    optimsoc_dma_transfer(&remote_list, remote_tile, remote_list_addr,
+                          sizeof(struct optimsoc_list_t), REMOTE2LOCAL);
+
+    remote_entry_next = remote_list.head;
+
+    while (remote_entry_next) {
+        optimsoc_dma_transfer(&remote_entry, remote_tile, remote_entry_next,
+                              sizeof(struct optimsoc_list_entry_t),
+                              REMOTE2LOCAL);
+
+        if (data_size == 0) {
+            /* Put the remote data into the list */
+            optimsoc_list_add_tail(local_list, remote_entry.data);
+        } else {
+            /* Copy the data object */
+            local_data = malloc(data_size);
+            assert(local_data != NULL);
+
+            optimsoc_dma_transfer(local_data, remote_tile, remote_entry.data,
+                                  data_size, REMOTE2LOCAL);
+
+            optimsoc_list_add_tail(local_list, local_data);
+        }
+
+        remote_entry_next = remote_entry.next;
+    }
+
+    return local_list;
 }

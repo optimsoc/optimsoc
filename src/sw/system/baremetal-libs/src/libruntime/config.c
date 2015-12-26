@@ -23,7 +23,7 @@
  */
 
 unsigned int runtime_config_use_globalids = 0;
-unsigned int runtime_config_ticks = 1;
+unsigned int runtime_config_ticks = 100;
 
 void runtime_config_set_use_globalids(unsigned int v) {
     runtime_config_use_globalids = v;

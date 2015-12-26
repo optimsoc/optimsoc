@@ -100,7 +100,11 @@ int optimsoc_mp_channel_recv(struct endpoint_handle *eph,
     int ret = 0;
     uint32_t read_ptr;
 
-    while(endpoint_empty(eph->ep)) { }
+    while(endpoint_empty(eph->ep)) {
+#ifdef RUNTIME
+        optimsoc_thread_yield(optimsoc_thread_current());
+#endif
+    }
 
     endpoint_pop(eph->ep, &read_ptr);
     trace_ep_bufferstate(eph->ep, endpoint_channel_get_fillstate(eph->ep));
@@ -110,6 +114,7 @@ int optimsoc_mp_channel_recv(struct endpoint_handle *eph,
         memcpy(buffer, (void*)eph->ep->buffer->data[read_ptr], *received_size);
     } else {
         memcpy(buffer, (void*)eph->ep->buffer->data[read_ptr], buffer_size);
+        *received_size = buffer_size;
         ret = OPTIMSOC_MP_ERROR_BUFFEROVERFLOW;
     }
 
@@ -182,4 +187,33 @@ int optimsoc_mp_channel_send_i(struct endpoint_handle *from,
     from->ep->remotecredit--;
 
     return 0;
+}
+
+int optimsoc_mp_msg_send(optimsoc_mp_endpoint_handle from,
+                         optimsoc_mp_endpoint_handle to, uint8_t *data,
+                         uint32_t size) {
+
+    uint32_t addr = control_msg_alloc(to, size);
+
+    control_msg_data(to, addr, data, size);
+
+    return 0;
+}
+
+int optimsoc_mp_msg_recv(optimsoc_mp_endpoint_handle eph, uint8_t *buffer,
+                         uint32_t buffer_size, uint32_t *received_size) {
+    int ret = 0;
+    uint32_t read_ptr;
+
+    // TODO: This needs to be extended as another thread may picked up
+    // the data from the endpoint
+    while(endpoint_empty(eph->ep)) {
+#ifdef RUNTIME
+        optimsoc_thread_yield(optimsoc_thread_current());
+#endif
+    }
+
+    endpoint_msg_recv(eph->ep, buffer, buffer_size, received_size);
+
+    return ret;
 }

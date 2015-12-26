@@ -24,6 +24,9 @@ void control_init() {
     // Class 1: control messages
     optimsoc_mp_simple_init();
     optimsoc_mp_simple_addhandler(NOC_CLASS_FIFO, &control_msg_handler);
+
+    optimsoc_mp_simple_enable();
+    or1k_interrupts_enable();
 }
 
 // The following handler is called by the message interrupt service routine
@@ -116,10 +119,11 @@ void control_msg_handler(unsigned int* buffer,int len) {
         endpoint_write_complete(ep, buffer[2], buffer[3]);
 
 #ifdef RUNTIME
-        if (ep->waiting) {
-                thread_resume(ep->waiting_thread);
-                ep->waiting = 0;
-            }
+        // TODO
+        /*        if (ep->waiting_thread) {
+                optimsoc_thread_resume(ep->waiting_thread);
+                ep->waiting_thread = 0;
+            }*/
 #endif
         break;
     }
@@ -147,7 +151,7 @@ void control_msg_handler(unsigned int* buffer,int len) {
         endpoint_write(ep, ep->buffer->write_ptr, offset, (uint32_t*) &buffer[4], len-4);
 
         if (eom) {
-            ep->buffer->data_size[ep->buffer->write_ptr] = offset + eom;
+            ep->buffer->data_size[ep->buffer->write_ptr] = offset*4 + eom;
             uint32_t ptr; // Move the pointer
             endpoint_push(ep, &ptr);
             trace_ep_bufferstate(ep, endpoint_channel_get_fillstate(ep));
@@ -186,10 +190,22 @@ void control_msg_handler(unsigned int* buffer,int len) {
     }
 }
 
+void control_wait_response() {
+    // Get current interrupts by disabling temporarily
+    uint32_t restore = or1k_interrupts_disable();
+    // Enable all interrupts
+    or1k_interrupts_enable();
+    // Wait until the reply arrived
+    while (ctrl_request.done == 0) { }
+    // Restore previous state of interrupts
+    or1k_interrupts_restore(restore);
+}
 
 struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
                                       uint32_t port) {
     struct endpoint *ep;
+
+    while (!optimsoc_mp_simple_ctready(domain));
 
     trace_ep_get_req_begin(domain, node, port);
 
@@ -208,14 +224,16 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
 
         optimsoc_mp_simple_send(3,ctrl_request.buffer);
 
-        while (ctrl_request.done == 0) { }
+        control_wait_response();
+
         ep = (struct endpoint*) ctrl_request.buffer[1];
         trace_ep_get_resp_recv(domain, ep);
 
         if ((int)ep==-1) {
 #ifdef RUNTIME
-            thread_yield();
-
+            assert(0);
+            // TODO: Reactivate
+            //optimsoc_thread_yield();
 #endif
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
             timeout_insns = timeout_insns * 10; // somewhat arbitrary..
@@ -246,12 +264,9 @@ uint32_t control_msg_alloc(struct endpoint_handle *to_ep, uint32_t size) {
 
         optimsoc_mp_simple_send(3,ctrl_request.buffer);
 
-        while (ctrl_request.done == 0) {}
+        control_wait_response();
 
         if (ctrl_request.buffer[1]==CTRL_REQUEST_NACK) {
-#ifdef RUNTIME
-            thread_yield();
-#endif
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
             timeout_insns = timeout_insns * 10; // somewhat arbitrary..
         }
@@ -287,11 +302,11 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
             sz = wordsperpacket;
 
         for (int d=0;d<sz;d++) {
-            ctrl_request.buffer[2+d] = ((unsigned int *)buffer)[i+d];
+            ctrl_request.buffer[4+d] = ((unsigned int *)buffer)[i+d];
         }
 
         trace_msg_data_send(ep, ctrl_request.buffer[2], sz);
-        optimsoc_mp_simple_send(2+sz,ctrl_request.buffer);
+        optimsoc_mp_simple_send(4+sz,ctrl_request.buffer);
     }
 
     ctrl_request.buffer[0] = (ep->domain << OPTIMSOC_DEST_LSB) |
@@ -321,7 +336,7 @@ uint32_t control_channel_connect(struct endpoint_handle *from,
     ctrl_request.done = 0;
     optimsoc_mp_simple_send(4, ctrl_request.buffer);
 
-    while (ctrl_request.done == 0) { }
+    control_wait_response();
 
     return ctrl_request.buffer[1];
 }

@@ -1,4 +1,3 @@
-
-optimsoc_add_file clockmanager_ztex115.v
-optimsoc_add_file dcm_clkgen_ctrl.v
-optimsoc_add_file clk_opt_ctrl.v
+optimsoc_add_file xilinx_spartan6/clockmanager_ztex115.v
+optimsoc_add_file xilinx_spartan6/dcm_clkgen_ctrl.v
+optimsoc_add_file xilinx_spartan6/clk_opt_ctrl.v

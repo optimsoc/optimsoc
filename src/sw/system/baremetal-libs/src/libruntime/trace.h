@@ -45,9 +45,9 @@
 #define TRACE_THREAD_DESTROY    0x30c
 
 static inline void runtime_trace_sendthread(char *name,
-					    unsigned int id,
-					    void *thread,
-					    unsigned int dest) {
+                                            unsigned int id,
+                                            void *thread,
+                                            unsigned int dest) {
 
     while (*name) {
         OPTIMSOC_TRACE(TRACE_THREAD_SEND,*name);
@@ -68,9 +68,9 @@ static inline void runtime_trace_destroythread(unsigned int id) {
 
 
 static inline void runtime_trace_createthread(char *name,
-        unsigned int id,
-        void *thread,
-        void *func) {
+                                              unsigned int id,
+                                              void *thread,
+                                              void *func) {
     if (runtime_config_get_use_globalids()) {
         optimsoc_trace_defineglobalsection(id,name);
     } else {
@@ -96,7 +96,7 @@ static inline void runtime_trace_schedule(unsigned int id) {
 }
 
 static inline void runtime_trace_resume(unsigned int id,
-        unsigned int byid) {
+                                        unsigned int byid) {
     OPTIMSOC_TRACE(TRACE_RESUME,id);
     OPTIMSOC_TRACE(TRACE_RESUME,byid);
 }
@@ -113,16 +113,12 @@ static inline void runtime_trace_yield(unsigned int id) {
     OPTIMSOC_TRACE(TRACE_YIELD,id);
 }
 
-static inline void runtime_trace_itlb_miss(void* vaddr) {
+static inline void runtime_trace_itlb_miss(uint32_t vaddr) {
     OPTIMSOC_TRACE(TRACE_ITLBMISS,vaddr);
 }
 
-static inline void runtime_trace_dtlb_miss(void* vaddr) {
+static inline void runtime_trace_dtlb_miss(uint32_t vaddr) {
     OPTIMSOC_TRACE(TRACE_DTLBMISS,vaddr);
-}
-
-static inline void runtime_trace_dtlb_allocate_page(void* vaddr) {
-    OPTIMSOC_TRACE(TRACE_DTLBPAGEALLOC,vaddr);
 }
 
 static inline void runtime_trace_thread_exit() {

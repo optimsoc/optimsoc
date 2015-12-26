@@ -1,57 +1,6 @@
 \chapter{Toolchain}
 \label{chap:toolchain}
 
-\section{Build Baremetal Toolchain}
-
-As low level toolchain we will use the \verb|or1k-elf-*| toolchain. At
-the moment there are many different versions of this toolchain.
-
-You can either install this toolchain as described in the user guide
-or build manually as described here.
-
-The configuration will go to \verb|PREFIX|, which is here set to
-
-\begin{alltt}
-\$> export PREFIX=/opt/optimsoc/toolchain
-\end{alltt}
-
-You should set this to your preferred path.
-
-Futhermore it is necessary to add the future installation to the
-\verb|PATH| variable:
-
-\begin{alltt}
-\$> export PATH=\$PREFIX/bin:\$PATH
-\end{alltt}
-
-A line like this is necessary in your \verb|.bashrc| or similar to use
-the toolchain in the future and incrementally during the build
-process.
-
-Next you should go to a temporary build directory and checkout
-the sourceware (binutils, gdb, newlib, ..) and the gcc git
-repositories:
-
-\begin{alltt}
-\$> mkdir ~/tmp-builddir
-\$> cd ~/tmp-builddir
-\$> git clone https://github.com/TUM-LIS/optimsoc-sourceware.git
-\$> git clone https://github.com/TUM-LIS/optimsoc-gcc.git
-\end{alltt}
-
-%We recommend to switch to the current (or another release) and not use
-%the current development head. You can switch to the latest release by:
-%
-%\begin{alltt}
-%\$> cd optimsoc-sourceware
-%\$> git checkout -b rel-current
-%\$> cd ..
-%\$> cd optimsoc-gcc
-%\$> git checkout -b rel-current
-%\$> cd ..
-%\end{alltt}
-%
-%Of course you can take any other release, the master branch or other
 %branches. It is recommended to use the latest release.
 
 The actual build contains 4 stages as the base binutils are needed to
@@ -60,7 +9,7 @@ complete gcc is built.
 
 \subsection{Build Sourceware -- Stage 1}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-sourceware-stage1
 $> cd bld-sourceware-stage1
 $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
@@ -71,14 +20,14 @@ $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 
 You may run \verb|make -j8| to run 8 parallel build jobs or similar to
 speed up the build here and in the following.
 
 \subsection{Build GCC -- Stage 1}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-gcc-stage1
 $> cd bld-gcc-stage1
 $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
@@ -86,11 +35,11 @@ $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Build Sourceware -- Stage 2}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-sourceware-stage2
 $> cd bld-sourceware-stage2
 $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
@@ -101,11 +50,11 @@ $> ../optimsoc-sourceware/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Build GCC -- Stage 2}
 
-\begin{verbatim}
+\begin{lstlisting}
 $> mkdir bld-gcc-stage2
 $> cd bld-gcc-stage2
 $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
@@ -114,5 +63,5 @@ $> ../optimsoc-gcc/configure --target=or1k-elf --prefix=$PREFIX \
 $> make
 $> make install
 $> cd ..
-\end{verbatim}
+\end{lstlisting}
 

@@ -107,3 +107,11 @@ proc optimsoc_build {} {
 
     quit
 }
+
+if {[info level] == 0} {
+    for {set i 1} {$i < 10} {incr i} {
+        if {[info exists $i]} {
+            source [subst $$i]
+        }
+    }
+}

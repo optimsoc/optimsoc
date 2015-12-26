@@ -1,4 +1,4 @@
-# Copyright (c) 2013 by the author(s)
+# Copyright (c) 2015 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,22 @@
 #
 # Author(s):
 #   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
-#
 
-libgzll_kernel_LTLIBRARIES = libgzll-kernel.la
-libgzll_kerneldir = $(libdir)/gzll-kernel
+gzll_kernel_LTLIBRARIES = libgzll-kernel.la
+gzll_kerneldir = $(libdir)/gzll-kernel
 
-libgzll_kernel_la_SOURCES =\
-    kernel.c
+libgzll_kernel_la_CFLAGS = $(OPTIMSOC_BAREMETAL_RUNTIME_CFLAGS) -I $(top_srcdir)/include
 
-libgzll_kernel_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
-libgzll_kernel_la_CPPFLAGS = $(AM_CPPFLAGS) $(OPTIMSOC_BAREMETAL_RUNTIME_CFLAGS) -Wall
+libgzll_kernel_la_SOURCES = \
+	agent.c \
+	syscall.c \
+	kernel_info.c \
+	page.c \
+	main.c \
+	communication.c \
+	node.c \
+	node_migrate.c \
+	taskdir.c \
+	app.c \
+	memcpy_userspace.c \
+	mp.c

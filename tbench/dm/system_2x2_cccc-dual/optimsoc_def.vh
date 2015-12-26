@@ -1,0 +1,1 @@
+../system_2x2_cccc/optimsoc_def.vh

@@ -45,7 +45,7 @@
  *
  * \ingroup debug
  */
-class DebugConnector: ::sc_core::sc_module
+class DebugConnector : public ::sc_core::sc_module
 {
 public:
     /**
@@ -64,7 +64,7 @@ public:
      * messages to the debug modules and replies back. It gets the messages
      * from the TCP connection and calls handleMessage on each received message.
      */
-    void connection();
+    virtual void connection();
 
     /**
      * Add a debug module to this connection.
@@ -88,7 +88,7 @@ public:
      * \param packet The trace packet to send
      * \return operation successful?
      */
-    bool sendTrace(DebugModule *mod, TracePacket &packet);
+    virtual bool sendTrace(DebugModule *mod, TracePacket &packet);
 
 protected:
     /**
@@ -116,13 +116,12 @@ protected:
 
     virtual void resetSystem() = 0;
 
+    /** Vector of registered debug modules */
+    std::vector<DebugModule*> m_debugModules;
 private:
     int m_port; /*!< Port of the TCP connection. */
     int m_connectionfd; /*!< The socket of the TCP connection. */
     uint16_t m_systemid; /*!< ID of the system. */
-
-    /** Vector of registered debug modules */
-    std::vector<DebugModule*> m_debugModules;
 };
 
 #endif /* DEBUGCONNECTOR_H_ */

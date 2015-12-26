@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,7 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-#ifndef RUNTIME_H_
-#define RUNTIME_H_
-
-#include <context.h>
-
-extern arch_thread_ctx_t *exception_ctx;
-
-extern void ctx_replace();
-extern void yield_switchctx(struct arch_thread_ctx_t *ctx);
-
+#ifndef __RUNTIME_H__
+#define __RUNTIME_H__
 
 #endif /* RUNTIME_H_ */

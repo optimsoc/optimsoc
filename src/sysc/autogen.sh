@@ -2,7 +2,7 @@
 
 autoreconf --install --symlink
 
-args="--prefix=/opt/optimsoc/sysc"
+args="--prefix=${OPTIMSOC_INSTALLATION}/systemc"
 
 echo
 echo "----------------------------------------------------------------"
@@ -12,5 +12,5 @@ echo
 echo "mkdir build; cd build"
 echo "../configure CFLAGS='-g -O0' $args"
 echo "make"
-echo "make install"
+echo "sudo make install"
 echo

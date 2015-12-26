@@ -1,8 +1,0 @@
-stdout.*
-stdout
-trace.*
-trace
-transcript
-*.wlf
-work
-ct.vmem

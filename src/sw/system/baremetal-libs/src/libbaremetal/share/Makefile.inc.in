@@ -46,13 +46,10 @@ EXTRA_OBJS = $(EXTRA_SRCS:.c=.o)
 $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 	@PROGRAM=$(PROGRAM) sh $(BUILDSCRIPTS)/create_pgas_binary.sh 
 
-$(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS) optimsoc-sysconfig.o
+$(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS)
 	$(CC_FOR_TARGET) $(CFLAGS) -Wall \
-	$(PROGRAM).o  $(EXTRA_OBJS) optimsoc-sysconfig.o -o $@ \
+	$(PROGRAM).o  $(EXTRA_OBJS) -o $@ \
 	$(LIBS)
-
-optimsoc-sysconfig.o: ../optimsoc-sysconfig.c
-	$(CC_FOR_TARGET) -O0 -c -o $@ $^
 
 %.dis: %.elf
 	$(OBJDUMP_FOR_TARGET) -D $^ > $@

@@ -1,0 +1,6 @@
+*/apps.c
+*.o
+*.bin
+*.elf
+*.vmem
+Makefile

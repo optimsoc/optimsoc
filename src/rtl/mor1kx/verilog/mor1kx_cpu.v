@@ -61,6 +61,7 @@ module mor1kx_cpu
     parameter FEATURE_CARRY_FLAG	= "ENABLED",
 
     parameter FEATURE_FASTCONTEXTS	= "NONE",
+    parameter OPTION_RF_CLEAR_ON_INIT 	= 0,
     parameter OPTION_RF_NUM_SHADOW_GPR 	= 0,
     parameter OPTION_RF_ADDR_WIDTH	= 5,
     parameter OPTION_RF_WORDS		= 32,
@@ -81,10 +82,12 @@ module mor1kx_cpu
     parameter FEATURE_EXT		= "NONE",
     parameter FEATURE_CMOV		= "NONE",
     parameter FEATURE_FFL1		= "NONE",
-    parameter FEATURE_MSYNC		= "NONE",
+    parameter FEATURE_MSYNC		= "ENABLED",
     parameter FEATURE_PSYNC		= "NONE",
     parameter FEATURE_CSYNC		= "NONE",
     parameter FEATURE_ATOMIC		= "ENABLED",
+
+    parameter FEATURE_FPU		= "NONE", // ENABLED|NONE
 
     parameter FEATURE_CUST1		= "NONE",
     parameter FEATURE_CUST2		= "NONE",
@@ -230,6 +233,7 @@ module mor1kx_cpu
 	     .OPTION_PIC_NMI_WIDTH(OPTION_PIC_NMI_WIDTH),
 	     .FEATURE_DSX(FEATURE_DSX),
 	     .FEATURE_FASTCONTEXTS(FEATURE_FASTCONTEXTS),
+	     .OPTION_RF_CLEAR_ON_INIT(OPTION_RF_CLEAR_ON_INIT),
 	     .OPTION_RF_NUM_SHADOW_GPR(OPTION_RF_NUM_SHADOW_GPR),
 	     .FEATURE_OVERFLOW(FEATURE_OVERFLOW),
 	     .FEATURE_CARRY_FLAG(FEATURE_CARRY_FLAG),
@@ -248,6 +252,7 @@ module mor1kx_cpu
 	     .FEATURE_PSYNC(FEATURE_PSYNC),
 	     .FEATURE_CSYNC(FEATURE_CSYNC),
 	     .FEATURE_ATOMIC(FEATURE_ATOMIC),
+	     .FEATURE_FPU(FEATURE_FPU),
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
 	     .FEATURE_CUST3(FEATURE_CUST3),

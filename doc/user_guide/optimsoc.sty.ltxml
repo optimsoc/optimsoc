@@ -1,0 +1,27 @@
+# -*- mode: Perl -*-
+#
+# Implementation of optimsoc.sty for LaTeXML
+#
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+# {docnote} Note block
+DefEnvironment('{docnote}',
+  "<ltx:para class='ltx_docnote'><ltx:p class='ltx_docnote_title'>Note</ltx:p> #body </ltx:para>",
+  beforeDigest => sub {
+    Let('\par', '\inner@par');
+    Let('\\\\', '\inner@par'); });
+
+#======================================================================
+# {optimsoc} OpTiMSoC text
+DefMacro('\optimsoc',  'OpTiMSoC');
+
+#======================================================================
+# {referencebox} Reference Box
+# TODO: Actual implementation needed.
+DefMacro('\referencebox[]{}',  '#1');
+
+1;

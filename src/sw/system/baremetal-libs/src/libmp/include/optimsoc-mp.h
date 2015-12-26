@@ -60,6 +60,13 @@ int optimsoc_mp_channel_pause(optimsoc_mp_endpoint_handle ep);
 
 int optimsoc_mp_channel_continue(optimsoc_mp_endpoint_handle ep);
 
+int optimsoc_mp_msg_send(optimsoc_mp_endpoint_handle from,
+                         optimsoc_mp_endpoint_handle to, uint8_t *data,
+                         uint32_t size);
+
+int optimsoc_mp_msg_recv(optimsoc_mp_endpoint_handle ep, uint8_t *buffer,
+                         uint32_t buffer_size, uint32_t *received_size);
+
 #define OPTIMSOC_MP_ERROR_NOT_INITIALIZED       -1
 #define OPTIMSOC_MP_ERROR_DOMAINS_NOT_SUPPORTED -2
 #define OPTIMSOC_MP_ERROR_BUFFEROVERFLOW        -3

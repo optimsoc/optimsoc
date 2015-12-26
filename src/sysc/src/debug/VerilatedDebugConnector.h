@@ -32,18 +32,47 @@
 
 #include <vector>
 
+/**
+ * Debug connector for verilated simulations
+ *
+ * This connector is used with verilated simulations and has two modi:
+ *  - It can run standalone and write events to an event file
+ *  - It can start a TCP server and wait for the host software to connect
+ */
 class VerilatedDebugConnector: public DebugConnector
 {
 public:
-    sc_out<bool> rst_sys;
-    sc_out<bool> rst_cpu;
+    sc_in<bool> clk;      /*!< system clk */
+    sc_out<bool> rst_sys; /*!< system reset */
+    sc_out<bool> rst_cpu; /*!< cpu reset */
 
-    VerilatedDebugConnector(sc_module_name nm, uint16_t systemid);
-    typedef DebugConnector SC_CURRENT_USER_MODULE;
+    /**
+     * Constructor
+     *
+     * Set name, system id and enable standalone mode (default start server)
+     */
+    VerilatedDebugConnector(sc_module_name nm, uint16_t systemid, bool standalone = false);
+    typedef VerilatedDebugConnector SC_CURRENT_USER_MODULE;
 
-    void start();
-    void stop();
-    void resetSystem();
+    virtual void start(); /*!< Overload start function to start the SystemC simulation */
+    virtual void stop(); /*!< Overload stop function to stop the SystemC simulation */
+    virtual void resetSystem(); /*!< Overload reset function to reset the SystemC simulation */
+
+    virtual void connection(); /*!< Overload connection to handle standalone mode */
+
+    /**
+     * Overloaded send trace
+     *
+     * Handle trace event in standalone mode or forward to host via TCP connection.
+     */
+    virtual bool sendTrace(DebugModule *mod, TracePacket &packet);
+private:
+    // All for standalone
+    bool m_standalone; /*!< This is a standalone simulation */
+    std::vector<std::ofstream*> m_standalone_stdout; /*!< stdout files */
+    std::vector<std::ofstream*> m_standalone_events; /*!< event files */
+    std::vector<bool> m_standalone_finished;
+    unsigned int m_standalone_finished_count;
 };
 
 #endif /* VERILATEDDEBUGCONNECTOR_H_ */

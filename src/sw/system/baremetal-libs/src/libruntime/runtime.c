@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,21 +26,13 @@
 #include "scheduler.h"
 #include "vmm.h"
 #include "thread.h"
-#include <context.h>
+#include "context.h"
 #include <assert.h>
 #include <or1k-support.h>
 #include <optimsoc-baremetal.h>
 
 #include <stdio.h>
 #include "syscalls.h"
-
-arch_thread_ctx_t *exception_ctx;
-
-/*void exit_syscall(unsigned int subid, void *arg2){
-    thread_exit();
-}*/
-
-void runtime_syscall(unsigned int id, void *args);
 
 // This is placed in the BSS section and core 0 will initialize it
 // to 0 during the reset routine.
@@ -51,27 +43,24 @@ void optimsoc_runtime_boot(void) {
 
     // Activate proper handling of exceptions in section trace
     OPTIMSOC_TRACE(0x23, 0);
-    exception_ctx = (arch_thread_ctx_t*) 0x4;
 
-    if (optimsoc_get_relcoreid() == 0) {
+    if (or1k_coreid() == 0) {
         printf("Initializing OpTiMSoC platform..\n");
         optimsoc_init(0);
-
-        printf("Initialize message passing..\n");
-        optimsoc_mp_simple_init();
-        optimsoc_mp_simple_addhandler(0, thread_receive);
 
         printf("Initialize DMA..\n");
         dma_init();
 
+        _optimsoc_context_init();
+
         printf("Bringing virtual memory up..\n");
-        vmm_init();
+        _optimsoc_vmm_init();
 
         printf("Initialize system call interface..\n");
-        _optimsoc_runtime_syscalls_init();
+        _optimsoc_syscalls_init();
 
         printf("Initialize scheduler..\n");
-        scheduler_init();
+        _optimsoc_scheduler_init();
 
         printf("Core 0 boot finished.\n");
 
@@ -83,22 +72,8 @@ void optimsoc_runtime_boot(void) {
         printf("Core %d woken up.\n", optimsoc_get_relcoreid());
     }
 
-    scheduler_start();
+    _optimsoc_scheduler_start();
 
     return;
 }
 
-void runtime_syscall(unsigned int id, void *args) {
-    switch (id) {
-        case 1:
-            syscall_task_create(args);
-            break;
-        case 2:
-            syscall_thread_create(args);
-            break;
-        default:
-            printf("Unhandled syscall: %d\n", id);
-            exit(1);
-            break;
-    }
-}

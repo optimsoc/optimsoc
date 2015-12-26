@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,6 @@
  * 
  * This modules provides the configuration information of the network
  * adapter to the software via memory mapped registers.
- * 
- * (c) 2012-2013 by the author(s)
  * 
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
@@ -55,9 +53,17 @@
  * +----------------------------+
  * | 0x24 R: local memory size  |
  * +----------------------------+
+ * | 0x28 R: number of compute  |
+ * |         tiles              |
+ * +----------------------------+
+ * | 0x2c R: read a random seed |
+ * +----------------------------+
  * .
  * .
- * |
+ * +----------------------------+
+ * | 0x200 R: list of compute   |
+ * |          tiles             |
+ * +----------------------------+
  */
 
 module networkadapter_conf(
@@ -85,6 +91,17 @@ module networkadapter_conf(
    parameter GLOBAL_MEMORY_TILE = 32'hx;
    parameter LOCAL_MEMORY_SIZE = 32'hx;
 
+   parameter NUMCTS = 32'hx;
+   parameter [NUMCTS*16-1:0] CTLIST = {NUMCTS*16{1'bx}};
+
+   reg [31:0] seed = 0;
+
+`ifdef verilator
+   initial begin
+      seed = $random();
+   end
+`endif
+
    localparam REG_TILEID   = 0;
    localparam REG_NUMTILES = 1;
    localparam REG_CONF   = 3;
@@ -93,10 +110,14 @@ module networkadapter_conf(
    localparam REG_GMEM_SIZE = 7;
    localparam REG_GMEM_TILE = 8;  
    localparam REG_LMEM_SIZE = 9;
+   localparam REG_NUMCTS = 10;
+   localparam REG_SEED = 11;
    
-   localparam REG_CDC      = 10'h80;
-   localparam REG_CDC_DYN  = 10'h81;
-   localparam REG_CDC_CONF = 10'h82;
+   localparam REG_CDC      = 10'h40;
+   localparam REG_CDC_DYN  = 10'h41;
+   localparam REG_CDC_CONF = 10'h42;
+
+   localparam REG_CTLIST = 10'h80;
    
    localparam REGBIT_CONF_MPSIMPLE = 0;
    localparam REGBIT_CONF_DMA      = 1;
@@ -113,7 +134,7 @@ module networkadapter_conf(
    output            rty;
    output            err;
 
-   assign ack = ~|adr[15:12] & ~|adr[1:0];
+   assign ack = ~|adr[15:12];
    assign err = ~ack;
    assign rty = 1'b0;
 
@@ -124,37 +145,61 @@ module networkadapter_conf(
    output reg               cdc_enable;
  `endif
 `endif 
+
+   wire [15:0]              ctlist_vector[0:NUMCTS-1];
+
+   genvar                   i;
+   generate
+      for(i=0;i<NUMCTS;i=i+1) begin // array is indexed by the desired destination
+         // The entries of this array are subranges from the parameter, where
+         // the indexing is reversed (num_dests-i-1)!
+         assign ctlist_vector[NUMCTS-i-1] = CTLIST[(i+1)*16-1:i*16];
+      end
+   endgenerate
+
   
    always @(*) begin
-      case (adr[11:2])
-        REG_TILEID: begin
-           data = TILEID;
-        end
-        REG_NUMTILES: begin
-           data = NUMTILES;
-        end
-        REG_CONF: begin
-           data = 32'h0000_0000;
-           data[REGBIT_CONF_MPSIMPLE] = CONF_MPSIMPLE_PRESENT;
-           data[REGBIT_CONF_DMA] = CONF_DMA_PRESENT;
-        end
-        REG_COREBASE: begin
-           data = COREBASE;
-        end
-        REG_DOMAIN_NUMCORES: begin
-           data = DOMAIN_NUMCORES;
-        end
-        REG_GMEM_SIZE: begin
-           data = GLOBAL_MEMORY_SIZE;
-        end
-        REG_GMEM_TILE: begin
-           data = GLOBAL_MEMORY_TILE;
-        end
-        REG_LMEM_SIZE: begin
-           data = LOCAL_MEMORY_SIZE;
-        end
-        
-        REG_CDC: begin
+      if (adr[11:9] == REG_CTLIST[9:7]) begin
+         if (adr[1]) begin
+            data = {16'h0,ctlist_vector[adr[8:1]]};
+         end else begin
+            data = {ctlist_vector[adr[8:1]],16'h0};
+         end
+      end else begin
+         case (adr[11:2])
+           REG_TILEID: begin
+              data = TILEID;
+           end
+           REG_NUMTILES: begin
+              data = NUMTILES;
+           end
+           REG_CONF: begin
+              data = 32'h0000_0000;
+              data[REGBIT_CONF_MPSIMPLE] = CONF_MPSIMPLE_PRESENT;
+              data[REGBIT_CONF_DMA] = CONF_DMA_PRESENT;
+           end
+           REG_COREBASE: begin
+              data = COREBASE;
+           end
+           REG_DOMAIN_NUMCORES: begin
+              data = DOMAIN_NUMCORES;
+           end
+           REG_GMEM_SIZE: begin
+              data = GLOBAL_MEMORY_SIZE;
+           end
+           REG_GMEM_TILE: begin
+              data = GLOBAL_MEMORY_TILE;
+           end
+           REG_LMEM_SIZE: begin
+              data = LOCAL_MEMORY_SIZE;
+           end
+           REG_NUMCTS: begin
+              data = NUMCTS;
+           end
+           REG_SEED: begin
+              data = seed;
+           end
+           REG_CDC: begin
 `ifdef OPTIMSOC_CLOCKDOMAINS
            data = 32'b1;
 `else
@@ -180,10 +225,11 @@ module networkadapter_conf(
 `endif
         end            
 
-        default: begin
-           data = 32'hx;
-        end
-      endcase
+           default: begin
+              data = 32'hx;
+           end
+         endcase // case (adr[11:2])
+      end
    end
 
 `ifdef OPTIMSOC_CLOCKDOMAINS

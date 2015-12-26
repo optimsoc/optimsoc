@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2014 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,14 +37,18 @@
 #define OPTIMSOC_NA_GMEM_SIZE  OPTIMSOC_NA_REGS + 0x1c
 #define OPTIMSOC_NA_GMEM_TILE  OPTIMSOC_NA_REGS + 0x20
 #define OPTIMSOC_NA_LMEM_SIZE  OPTIMSOC_NA_REGS + 0x24
+#define OPTIMSOC_NA_CT_NUM     OPTIMSOC_NA_REGS + 0x28
+#define OPTIMSOC_NA_SEED       OPTIMSOC_NA_REGS + 0x2c
+#define OPTIMSOC_NA_CT_LIST    (OPTIMSOC_NA_REGS + 0x200)
 
 #define OPTIMSOC_NA_CONF          OPTIMSOC_NA_REGS + 0xc
 #define OPTIMSOC_NA_CONF_MPSIMPLE 0x1
 #define OPTIMSOC_NA_CONF_DMA      0x2
 
-#define OPTIMSOC_MPSIMPLE       OPTIMSOC_NA_BASE + 0x100000
-#define OPTIMSOC_MPSIMPLE_SEND  OPTIMSOC_MPSIMPLE + 0x0
-#define OPTIMSOC_MPSIMPLE_RECV  OPTIMSOC_MPSIMPLE + 0x0
+#define OPTIMSOC_MPSIMPLE        OPTIMSOC_NA_BASE + 0x100000
+#define OPTIMSOC_MPSIMPLE_SEND   OPTIMSOC_MPSIMPLE + 0x0
+#define OPTIMSOC_MPSIMPLE_RECV   OPTIMSOC_MPSIMPLE + 0x0
+#define OPTIMSOC_MPSIMPLE_ENABLE OPTIMSOC_MPSIMPLE + 0x4
 
 #define OPTIMSOC_MPSIMPLE_STATUS_WAITING OPTIMSOC_MPSIMPLE + 0x18
 
@@ -56,6 +60,7 @@
 #define OPTIMSOC_SRC_MSB 23
 #define OPTIMSOC_SRC_LSB 19
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -312,7 +317,7 @@ extern void uart_printf(const char *fmt, ...);
  *
  */
 static inline unsigned int extract_bits(uint32_t x, uint32_t msb,
-                                           uint32_t lsb) {
+                                        uint32_t lsb) {
     return ((x>>lsb) & ~(~0 << (msb-lsb+1)));
 }
 
@@ -328,16 +333,28 @@ static inline unsigned int extract_bits(uint32_t x, uint32_t msb,
  * \param msb MSB of part to set
  * \param lsb LSB of part to set
  */
-// FIXME move to optimsoc.c
 static inline void set_bits(uint32_t *x, uint32_t v, uint32_t msb,
-                              uint32_t lsb) {
+                            uint32_t lsb) {
     if(msb != 31) {
-    *x = (((~0 << (msb+1) | ~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
+        *x = (((~0 << (msb+1) | ~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
     } else {
-    /* only the last 5 bits from the shift left operand are used -> can not shift 32 bits */
-    *x = (((~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
+        /* only the last 5 bits from the shift left operand are used -> can not shift 32 bits */
+        *x = (((~(~0 << lsb))&(*x)) | ((v & ~(~0<<(msb-lsb+1))) << lsb));
     }
 }
+
+/**
+ * Get a random seed for randomization
+ *
+ * This function is used to obtain a random seed from the simulation environment
+ * for randomization tests. It has no function when executing in hardware.
+ *
+ * It is only random when the actual simulation is seeded with a non-static
+ * value.
+ *
+ * \return (random) seed
+ */
+uint32_t optimsoc_get_seed(void);
 
 /**
  * @}
@@ -397,7 +414,7 @@ typedef uint32_t optimsoc_mutex_t;
  *
  * \param mutex Mutex to initialize
  */
-extern void optimsoc_mutex_init(optimsoc_mutex_t **mutex);
+extern void optimsoc_mutex_init(optimsoc_mutex_t *mutex);
 
 /**
  * Lock mutex
@@ -436,7 +453,8 @@ extern void optimsoc_mutex_unlock(optimsoc_mutex_t *mutex);
 typedef enum {
     DMA_SUCCESS = 0,            /*!< Successful operation */
     DMA_ERR_NOTINITIALIZED = 1, /*!< Driver not initialized */
-    DMA_ERR_NOSLOT = 2          /*!< No slot available */
+    DMA_ERR_NOSLOT = 2,         /*!< No slot available */
+    DMA_ERR_NOTALLOCATED = 3      /*!< Slot not allocated */
 } dma_success_t;
 
 /**
@@ -477,6 +495,12 @@ extern void dma_init(void);
 extern dma_success_t dma_alloc(dma_transfer_handle_t *id);
 
 /**
+ * Free a pre-allocated DMA transfer slot
+ */
+extern dma_success_t dma_free(dma_transfer_handle_t id);
+
+
+/**
  * Initiate a DMA transfer
  *
  * This function initiates a DMA transfer between the local address in this tile
@@ -492,11 +516,11 @@ extern dma_success_t dma_alloc(dma_transfer_handle_t *id);
  * \return Success code
  */
 extern dma_success_t dma_transfer(void* local,
-                                    uint32_t remote_tile,
-                                    void* remote,
-                                    size_t size,
-                                    dma_direction_t dir,
-                                    dma_transfer_handle_t id);
+                                  uint32_t remote_tile,
+                                  void* remote,
+                                  size_t size,
+                                  dma_direction_t dir,
+                                  dma_transfer_handle_t id);
 
 /**
  * Blocking wait for DMA transfer
@@ -524,6 +548,13 @@ extern dma_success_t dma_wait(dma_transfer_handle_t id);
 extern void optimsoc_mp_simple_init(void);
 
 /**
+ * Enable hardware to receive packets
+ */
+void optimsoc_mp_simple_enable(void);
+
+int optimsoc_mp_simple_ctready(uint32_t rank);
+
+/**
  * Send a message
  *
  * Sends a message of size from buf.
@@ -545,7 +576,7 @@ extern void optimsoc_mp_simple_send(unsigned int size, uint32_t* buf);
  * \param hnd Function pointer to handler for this class
  */
 extern void optimsoc_mp_simple_addhandler(unsigned int class,
-                                               void (*hnd)(unsigned int*,int));
+                                          void (*hnd)(unsigned int*,int));
 
 /**
  * @}

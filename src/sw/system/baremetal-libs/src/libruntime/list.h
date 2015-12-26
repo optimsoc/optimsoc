@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,36 +26,5 @@
 #ifndef LIST_H
 #define LIST_H
 
-#include "stdlib.h"
-#include "string.h"
-#include <optimsoc-baremetal.h>
-
-/* TODO move lock out of list or implement lock-free list */
-
-typedef struct list_entry_t {
-    void* data;
-    struct list_entry_t* prev;
-    struct list_entry_t* next;
-} list_entry_t;
-
-typedef struct list_t {
-    struct list_entry_t* head;
-    struct list_entry_t* tail;
-    optimsoc_mutex_t mutex;
-} list_t;
-
-typedef list_entry_t* list_entry_i;
-
-struct list_t* list_init(void* data);
-void list_add_tail(struct list_t* l, void* data);
-void list_add_head(struct list_t* l, void* data);
-void* list_remove_tail(struct list_t* l);
-void* list_remove_head(struct list_t* l);
-int list_remove(struct list_t* l, void* data);
-int list_contains(struct list_t *l, void* data);
-unsigned int list_length(struct list_t* l);
-
-void* list_first_element(struct list_t* l, list_entry_i *list_iter);
-void* list_next_element(struct list_t* l, list_entry_i *list_iter);
 
 #endif

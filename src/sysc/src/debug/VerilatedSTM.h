@@ -51,6 +51,9 @@ public:
     {
         m_coreid = coreid;
     }
+    uint32_t getCoreId() {
+        return m_coreid;
+    }
     void setInsn(uint32_t *wb_insn)
     {
         m_insn = wb_insn;

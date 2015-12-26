@@ -1,0 +1,276 @@
+#!/usr/bin/python
+
+# Copyright (c) 2015 by the author(s)
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+# Author(s):
+#   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+#   Max Koenen <koenenwmn@googlemail.com>
+
+# Usage:
+
+# Create a configuration file (e.g., image.ini) with the following format:
+#
+# [app0]
+# path: app0
+# tasks: task0 task1
+
+# [app0.inst0]
+# name: myapp0instance
+# task0: 0
+# task1: 1
+#
+# If a section does not contain a dot it is an application description. The
+# script searches in the apps/<appname>/ folder for the application binaries.
+# If the path is different you can set it (not necessary in the example above).
+# Finally, there is a list of tasks that are part of the application.
+#
+# The other section that contains a dot that means that it is an instance of
+# an application. The instance can have a name and if none is given it defaults
+# to <app>-<instance>. It can contain entries for the tasks to be started plus
+# a list of tiles where to start it. Those are ranks. In future it is also
+# allowed to set it to '*' (everywhere) or '?' (anywhere). 
+#
+# Run: gzll-image-create image.ini
+
+import ConfigParser
+import sys
+import os
+
+def print_usage():
+    print "Usage: gzll-image-create <configuration>"
+    print "       The default configuration is 'image.ini'"
+
+inifile = "image.ini"
+
+# Check if configuration is set
+if len(sys.argv) == 2:
+    inifile = sys.argv[1]
+
+print "(I) optimsoc-build-image started with configuration %s" % inifile
+
+# Parse the input file
+conf = ConfigParser.RawConfigParser()
+# read returns a list of files that were read successfully
+if not inifile in conf.read(inifile):
+    print "(E) Configuration cannot be read from %s" % inifile
+    exit(1)
+
+# Generate list of apps
+
+appid = 0 # Count up the appid
+
+# Dictionary with all apps. Dict key is the app identifier and value is a dict:
+#  - path: Path to the app
+#  - tasks: list of task names
+#  - id: The identifier of the app
+apps = {}
+
+for section in conf.sections():
+    # Iterate all app definitions
+    if "." in section:
+        continue
+
+    # If an app has no tasks, don't add it
+    if not conf.has_option(section, "tasks"):
+        continue
+
+    # Default path is app identifier
+    path = section
+
+    # Set path differently when it is given
+    if conf.has_option(section, "path"):
+        path = conf.get(section, "path")
+
+    # Get the list of tasks
+    tasks = conf.get(section, "tasks").split(" ")
+
+    # Add app to container and increase appid
+    app = { "path": path, "tasks": tasks, "id": appid }
+    apps[section] = app
+    appid = appid + 1
+
+# List of app instances, each entry is a dict:
+#  - app: App identifier (not id)
+#  - inst: Inst idenfier
+#  - name: Instance name, default: <app>-<inst>
+#  - taskinst: Dict with key task identifier and value is the list of ranks
+#  - numinst: Total number of instance entries
+appinsts = []
+
+for section in conf.sections():
+    # Iterate all instance entries
+    if not "." in section:
+        continue
+
+    # Generate app and instance identifier from section name 
+    s = section.split(".")
+    app = s[0]
+    inst = s[1]
+
+    # Set the default name
+    name = "%s-%s" % (app, inst)
+
+    tinst = {}
+    numinst = 0
+
+    for o in conf.options(section):
+        if o == "name":
+            name = conf.get(section, "name")
+        else:
+            # Generate list of task instances and add to total number
+            tinst[o] = []
+            for x in conf.get(section, o).split(" "):
+                if x == '*':
+                    tinst[o].append(-2)
+                elif x == '?':
+                    tinst[o].append(-1)
+                else:
+                    tinst[o].append(int(x))
+            numinst = numinst + len(tinst[o])
+
+    # Add instance
+    appinsts.append({"app": app, "inst": inst, "name": name, "taskinst": tinst, "numinst": numinst})
+
+# This is a list of objects to be compiled for tasks. Each list entry is a dict:
+#  - path: Path to the elf file
+#  - objname: Output object name
+objects = []
+
+for a in apps:
+    # Generate elf to object entries for all apps and tasks
+    for t in apps[a]["tasks"]:
+        path = "../../apps/%s/%s.elf" % (apps[a]["path"], t)
+        objname = "%s_%s" % (a, t)
+        objects.append({"path": path, "objname": objname})
+
+# Open and start Makefile
+print "(I) Generate Makefile"
+
+makefile = open("Makefile", "w")
+makefile.write("# Automatically generated with gzll-image-create, do not edit\n\n")
+
+# We get the include Makefile from here
+makefile.write("SCRIPTDIR=$(shell pkg-config --variable=buildscriptdir optimsoc-gzll)\n\n")
+
+# Make first dependency as default
+makefile.write("all: image.elf image.bin image.vmem Makefile\n\n")
+
+# Regenerate Makefile when inifile changes or the script gets updated
+makefile.write("SCRIPT=$(shell which gzll-image-create)\n")
+makefile.write("Makefile: %s $(SCRIPT)\n" % inifile)
+makefile.write("\tgzll-image-create %s\n\n" % inifile)
+
+# This is a list of all objects of all tasks for all apps
+makefile.write("APP_BINARY_OBJECTS = ")
+for o in objects:
+     makefile.write("%s_binary.o " % o["objname"])
+makefile.write("\n\n")
+
+# Generate build rules for all objects' binary file. The further compilation
+# is standard in the include Makefile
+for o in objects:
+    makefile.write("%s.bin: %s\n" % (o["objname"], o["path"]))
+    makefile.write("\tor1k-elf-objcopy -O binary $^ $@\n")
+
+# include the gzll kernel Makefile
+makefile.write("include $(SCRIPTDIR)/Makefile-images.inc\n")
+# We are already done
+makefile.close()
+
+print "(I) Generate application information table"
+# Open the file with the gzll application structs
+f = open("apps.c", "w")
+
+f.write("// Automatically generated with gzll-image-create, do not edit\n\n")
+f.write("#include <gzll-apps.h>\n\n")
+
+# Generate the symbols for the binaries in the tasks' objects 
+for a in apps:
+    for t in apps[a]["tasks"]:
+        tname = "%s_%s" % (a, t)
+        f.write("extern void *_binary_%s_bin_start;\n" % tname);
+        f.write("extern void *_binary_%s_bin_end;\n" % tname);
+    f.write("\n")
+
+# Describe the tasks in each app
+for a in apps:
+    f.write("struct gzll_task_descriptor_list gzll_%s_tasks = {\n" % a)
+    # Number of tasks
+    f.write("    %d,\n" % len(apps[a]["tasks"]))
+    f.write("    {\n");
+    for t in apps[a]["tasks"]:
+        # Task identifier and object's start and end
+        tname = "%s_%s" % (a, t)
+        f.write("        {\"%s\", (void*) &_binary_%s_bin_start, (void*) &_binary_%s_bin_end },\n" % (t, tname, tname))
+    f.write("    }\n");
+    f.write("};\n")
+f.write("\n")
+
+# Describe the list of all apps
+f.write("struct gzll_application_descriptor_table gzll_application_descriptor_table = {\n")
+
+# Number of apps
+f.write("    %d,\n" % len(apps))
+
+for a in apps:
+    # App identifier and pointer to the task list
+    f.write("    { \"%s\", &gzll_%s_tasks },\n" % (a, a))
+f.write("};\n\n");
+
+# Describe all boot mappings for each instance
+for a in appinsts:
+    f.write("struct gzll_boot_mappings gzll_boot_mappings_%s_%s = {\n" % (a["app"], a["inst"]))
+    # Number of mapped tasks
+    f.write("    %d, {\n" % a["numinst"])
+    app = a["app"]
+    for i in a["taskinst"]:
+        # Entry is rank, task descriptor from above
+        ranks = a["taskinst"][i]
+        tindex = apps[app]["tasks"].index(i)
+        instidx = 0
+        for r in ranks:
+            if r == -2:
+                r = "GZLL_BOOT_EVERYWHERE"
+            elif r == -1:
+                r = "GZLL_BOOT_ANYWHERE"
+            else:
+                r = "%d" % r
+            f.write("    { %s, &gzll_%s_tasks.tasks[%d], %d },\n" % (r, app, tindex, instidx))
+            instidx = instidx + 1
+    f.write("    }\n")
+    f.write("};\n")
+f.write("\n")
+
+# Generate list of all boot instances
+f.write("struct gzll_boot_apps gzll_boot_apps = {\n");
+
+# Number of instances
+f.write("    %d, {\n" % len(appinsts))
+for a in appinsts:
+    # Instance entries as idenfitier and pointer to mapping from above
+    f.write("        { \"%s\", &gzll_boot_mappings_%s_%s },\n" % (a["name"], a["app"], a["inst"]))
+f.write("    }\n")
+f.write("};\n")
+
+# Done
+f.close()
+
+print "(I) Done. Run 'make' to build the image."

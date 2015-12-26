@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013 by the author(s)
+/* Copyright (c) 2012-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,67 +26,87 @@
 #ifndef VMM_H
 #define VMM_H
 
-//#include "stdlib.h"
-//#include "string.h"
-#include "scheduler.h"
-#include "thread.h"
-//#include "arch.h"
-//#include "services.h"
-//#include ARCH_INCL(mm.h)
+#include "include/optimsoc-runtime.h"
 
-#define NUM_VIRT_PAGES 10
-#define PAGE_BASE(addr) ((void*) ((unsigned int) addr & ~PAGEMASK))
+/**
+ * \ingroup paging
+ * @{
+ */
 
-extern char _apps_begin;
-extern char _app_end;
+/**
+ * Page table entry
+ *
+ * A page table entry is a 32 bit value as defined by the architecture
+ * specification.
+ */
+typedef uint32_t optimsoc_pte_t;
 
-/*optimsoc_rts/arch/openrisc/board.h*/
-/*TODO verify and move to right position*/
+/**
+ * Page table
+ *
+ * A page table is an array of page table entries.
+ */
+typedef optimsoc_pte_t* optimsoc_page_table_t;
 
-#define PHYSMEM_START ((unsigned)&_app_end)
-#define PHYSMEM_END   0x000fffff
+/**
+ * Initialize virtual memory subsystem
+ *
+ * Set the exception handlers for the memory management units.
+ */
+void _optimsoc_vmm_init(void);
 
-#define VIRTMEM_START 0x00002000
-#define VIRTMEM_END   0x000fffff // TODO: increase virtual memory
+/**
+ * Allocate page table
+ *
+ * Allocate a page table in memory and initialize all entries to 0.
+ *
+ * @return New allocated table
+ */
+optimsoc_page_table_t _optimsoc_vmm_create_page_table();
 
-#define PAGESIZE 0x2000
-#define PAGEBITS 13
-#define PAGEMASK 0x1fff
+/**
+ * Lookup virtual address in page directory
+ *
+ * This is the lookup function that does the two level lookup for a virtual
+ * address and returns the page table entry. Call optimsoc_vmm_virt2phys if
+ * you need the physical address.
+ *
+ * @param directory Directory to search
+ * @param vaddr Virtual address to lookup
+ * @return Page table entry for virtual address
+ */
+optimsoc_pte_t _optimsoc_vmm_lookup(optimsoc_page_dir_t directory,
+                                    uint32_t vaddr);
 
-#define PAGETABLE_ENTRIES 128
-#define PAGETABLE_SIZE    0x100000
-#define PAGETABLE_BITS    20
-#define PAGETABLE_MASK    0x0fffff
+/**
+ * Set the DTLB entry
+ *
+ * @param vaddr Virtual address to set
+ * @param pte Corresponding page table entry
+ */
+void _optimsoc_set_dtlb(uint32_t vaddr, optimsoc_pte_t pte);
 
-#define PAGETABLEENTRY_BITS  7
-#define PAGETABLEENTRY_MASK  0x000fe000
+/**
+ * Set the ITLB entry
+ *
+ * @param vaddr Virtual address to set
+ * @param pte Corresponding page table entry
+ */
+void _optimsoc_set_itlb(uint32_t vaddr, optimsoc_pte_t pte);
 
-#define PAGETABLEENTRY_VPN   0xfffff000
-#define PAGETABLEENTRY_VALID 0x00000001
 
-#define STACK_SIZE 256 // in words
-#define PAGE_SIZE  0x2000
-#define PAGE_BITS  13
-/*optimsoc_rts/arch/openrisc/board.h*/
+/*! DTLB miss handler */
+void _optimsoc_dtlb_miss(void);
+/*! ITLB miss handler */
+void _optimsoc_itlb_miss(void);
 
-/* TODO auslagern in page.h/c ? */
-struct list_t* page_pool;
-struct list_t* virt_page_pool;
+/*! DMMU fault handler */
+void _optimsoc_dpage_fault(void);
+/*! IMMU fault handler */
+void _optimsoc_ipage_fault(void);
 
-typedef struct page_table_entry_t {
-    void *vaddr_base;
-    void *paddr_base;
-    unsigned int flags;
-} page_table_entry_t;
-
-void vmm_init();
-void vmm_init_thread(thread_t thread);
-void dtlb_miss();
-void itlb_miss();
-page_table_entry_t* find_page_entry(struct list_t* page_table, void* vaddr);
-void* vmm_virt2phys(thread_t thread, void* vaddr, size_t size);
-void vmm_page_table_free(list_t *page_table);
-
-void *vmm_alloc_page();
+/**
+ * @}
+ */
 
 #endif

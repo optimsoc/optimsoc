@@ -158,7 +158,7 @@ you will need to adjust the Emacs configuration (even though it is the Emacs
 configuration, it also configures Verilog-mode).
 
 Open the file \verb|~/.emacs| and add the following lines at the end:
-\begin{verbatim}
+\begin{lstlisting}[language=Lisp]
 (add-hook 'verilog-mode-hook '(lambda ()
   ;; Don't auto-insert spaces after ";"
   (setq verilog-auto-newline nil)
@@ -169,7 +169,7 @@ Open the file \verb|~/.emacs| and add the following lines at the end:
   (add-hook 'write-file-functions (lambda()
     (untabify (point-min) (point-max))
     nil))))
-\end{verbatim}
+\end{lstlisting}
 
 
 If you also use Emacs as your code editor,
@@ -190,9 +190,9 @@ Verilog-mode which is part of your Emacs installation, it is probably located
 somewhere in \verb|/usr/share/emacs|, e.g.
 \verb|/usr/share/emacs/24.3/lisp/progmodes/verilog-mode.elc| on Ubuntu 14.04.
 You can run
-\begin{verbatim}
+\begin{lstlisting}
 $> find /usr/share/emacs -name 'verilog-mode.el*'
-\end{verbatim}
+\end{lstlisting}
 to search for it. If you found it, write down the path as we'll need it later.
 If you installed Verilog-mode from source, just note the path where you put
 your \verb|verilog-mode.el| file (e.g. somewhere in your home directory).
@@ -205,11 +205,11 @@ main menu on \emph{Project $\rightarrow$ Properties} and nagivate to
 tab, write \verb|/usr/bin/emacs| into the field \emph{Location}. Leave the field
 \emph{Working Directory} empty and enter the following string into the field
 \emph{Arguments}:
-\begin{verbatim}
+\begin{lstlisting}
 --batch --no-site-file -u ${env_var:USER}
 -l /usr/share/emacs/24.3/lisp/progmodes/verilog-mode.elc
 "${selected_resource_loc}" -f verilog-auto -f save-buffer
-\end{verbatim}
+\end{lstlisting}
 
 Replace the path to the verilog-mode.el or verilog-mode.elc file with your own
 path you found out above.

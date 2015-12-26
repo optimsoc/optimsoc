@@ -60,6 +60,9 @@ module compute_tile_dm(
    parameter COREBASE = 0;
    parameter DOMAIN_NUMCORES = CORES;
 
+   parameter NUMCTS = 32'h1;
+   parameter [NUMCTS*16-1:0] CTLIST = {NUMCTS{16'b0}};
+
    parameter NR_MASTERS = CORES * 2 + 1;
    parameter NR_SLAVES = 3;
 
@@ -235,7 +238,8 @@ module compute_tile_dm(
           .trace          (trace[`DEBUG_TRACE_EXEC_WIDTH*(c+1)-1:`DEBUG_TRACE_EXEC_WIDTH*c]),
           ); */
          mor1kx_module
-               #(.ID(c))
+               #(.ID(c),
+                 .NUMCORES(CORES))
          u_core (
                  /*AUTOINST*/
                  // Outputs
@@ -464,7 +468,9 @@ module compute_tile_dm(
         .DOMAIN_NUMCORES(DOMAIN_NUMCORES),
         .GLOBAL_MEMORY_SIZE(GLOBAL_MEMORY_SIZE),
         .GLOBAL_MEMORY_TILE(GLOBAL_MEMORY_TILE),
-        .LOCAL_MEMORY_SIZE(MEM_SIZE))
+        .LOCAL_MEMORY_SIZE(MEM_SIZE),
+        .NUMCTS(NUMCTS),
+        .CTLIST(CTLIST))
       u_na(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC

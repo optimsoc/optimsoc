@@ -63,6 +63,9 @@ module system_2x2_cccc_dm(
 
    parameter CORES = 1;
 
+   localparam NUMCTS = 32'h4;
+   localparam [NUMCTS*16-1:0] CTLIST = {16'h0, 16'h1, 16'h2, 16'h3};
+
    input clk, rst_sys, rst_cpu;
 
    output [`DEBUG_TRACE_EXEC_WIDTH*4*CORES-1:0] trace;
@@ -154,7 +157,9 @@ module system_2x2_cccc_dm(
               .CORES(CORES),
               .COREBASE(i*CORES),
               .MEM_SIZE(MEM_SIZE),
-              .MEM_FILE(MEM_FILE))
+              .MEM_FILE(MEM_FILE),
+              .NUMCTS(NUMCTS),
+              .CTLIST(CTLIST))
             u_ct(// Outputs
                  .trace                      (trace[(`DEBUG_TRACE_EXEC_WIDTH*CORES*(i+1))-1:`DEBUG_TRACE_EXEC_WIDTH*CORES*i]),
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
