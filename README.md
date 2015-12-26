@@ -1,3 +1,4 @@
-This is the legacy OpTiMSoC repository. It should not be used anymore. Please find the new repositories in the organization https://github.com/optimsoc and visit our website http://www.optimsoc.org.
-
-You can use the repository https://github.com/optimsoc/optimsoc-repo with the Google repo tool to automatically create an entire OpTiMSoC tree similar to the old one hosted here.
+This is the [OpTiMSoC](http://www.optimsoc.org) source repository. It
+contains the framework sources of hardware modules, software
+libraries, tools etc. While using the release bundles may better suite
+you in the beginning, this is the resource for OpTiMSoC development.
