@@ -7,6 +7,10 @@ addons:
     packages:
     - build-essential
 
+# Environment
+env:
+ - OPTIMSOC=/$HOME/optimsoc
+
 # Execute the build
 script:
-  - ./tools/install.py -d /tmp/optimsoc
+  - ./tools/install.py -d $OPTIMSOC
