@@ -125,7 +125,11 @@ def create_base(options):
                       "Use -f to force install.".format(base))
             info("Destination not empty. Force clean.")
             for d in listdir:
-                shutil.rmtree(os.path.join(base, d))
+                p = os.path.join(base, d)
+                if os.path.isdir(p):
+                    shutil.rmtree(p)
+                else:
+                    os.remove(p)
 
 """Install the OpTiMSoC tools
 
