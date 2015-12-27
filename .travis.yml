@@ -12,6 +12,7 @@ env:
  global:
   - OPTIMSOC=$HOME/optimsoc/current
   - PATH=$HOME/optimsoc/toolchains/or1k-elf-multicore/bin:$PATH
+  - LD_LIBRARY_PATH=$HOME/optimsoc/toolchains/or1k-elf-multicore/x86_64-unknown-linux-gnu/or1k-elf/lib
 
 before_install:
  - mkdir -p $HOME/optimsoc/toolchains
@@ -21,4 +22,3 @@ before_install:
 # Execute the build
 script:
   - ./tools/install.py -d $OPTIMSOC
-  - or1k-elf-gcc -v
