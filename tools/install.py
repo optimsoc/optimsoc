@@ -266,6 +266,28 @@ def install_systemc_library(options):
     cmd = "make install"
     run_command(cmd, cwd=cwdbuild)
 
+def install_hw_modules(options):
+    dest = options.dest
+    src = options.src
+
+    info("Install hardware modules")
+
+    modsrcdir = os.path.join(src, "src", "rtl")
+    moddestdir = os.path.join(dest, "modules")
+
+    try:
+        shutil.copytree(modsrcdir, moddestdir)
+    except Exception as e:
+        fatal(e)
+
+    modsrcdir = os.path.join(src, "external", "lisnoc")
+    moddestdir = os.path.join(dest, "external", "lisnoc")
+
+    try:
+        shutil.copytree(modsrcdir, moddestdir)
+    except Exception as e:
+        fatal(e)
+
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
     mysrcdir = os.path.dirname(os.path.dirname(scriptname))
@@ -292,4 +314,6 @@ if __name__ == '__main__':
     
     install_systemc_library(options)
     
+    install_hw_modules(options)
+
     info("Done")
