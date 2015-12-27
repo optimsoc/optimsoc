@@ -1,0 +1,12 @@
+# Run in container-based environment
+sudo: false
+
+# Install the build requirements
+addons:
+  apt:
+    packages:
+    - build-essential
+
+# Execute the build
+script:
+  - ./tools/install.py -d /tmp/optimsoc
