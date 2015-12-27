@@ -288,6 +288,23 @@ def install_hw_modules(options):
     except Exception as e:
         fatal(e)
 
+"""Write files to setup the environment
+"""
+def write_setup_files(options):
+    setup_sh = open("{}/setup.sh".format(options.dest), "w")
+    setup_sh.write("""
+    export OPTIMSOC={}
+    export OPTIMSOC_RTL=$OPTIMSOC/modules
+    export OPTIMSOC_TCL=$OPTIMSOC/tools/tcl
+    export LISNOC=$OPTIMSOC/external/lisnoc
+    export LISNOC_RTL=$LISNOC/rtl
+
+    export PKG_CONFIG_PATH=$OPTIMSOC/share/pkgconfig:$OPTIMSOC/sw/share/pkgconfig:$PKG_CONFIG_PATH
+    export PATH=$OPTIMSOC/tools/utils:$PATH
+    export LD_LIBRARY_PATH=$OPTIMSOC/lib:$LD_LIBRARY_PATH
+    """.format(options.dest))
+
+
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
     mysrcdir = os.path.dirname(os.path.dirname(scriptname))
@@ -315,5 +332,7 @@ if __name__ == '__main__':
     install_systemc_library(options)
     
     install_hw_modules(options)
+
+    write_setup_files(options)
 
     info("Done")
