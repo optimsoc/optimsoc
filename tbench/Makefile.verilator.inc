@@ -11,6 +11,9 @@ LIB+=$(shell pkg-config --libs systemc)
 INC+=$(shell pkg-config --cflags verilator)
 LIB+=$(shell pkg-config --libs verilator)
 
+export SYSTEMC_INCLUDE=$(shell pkg-config --variable=includedir systemc)
+export SYSTEMC_LIBDIR=$(shell pkg-config --variable=libarchdir systemc)
+
 VERILATOR_INCDIR=$(shell pkg-config --variable=includedir verilator)
 
 build-verilator: $(TBENCH) $(TBENCH)-vcd
