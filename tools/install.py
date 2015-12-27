@@ -107,11 +107,11 @@ def install_tools(options):
         destf = os.path.join(utilsdestdir, f) 
         shutil.copy(srcf, destf)
 
-def install_soc_libraries(options):
+def install_soc_software(options):
     src = options.src
     dest = options.dest
     
-    info("Install SoC libraries")
+    info("Install SoC software")
     check_autotools()
     check_or1kelf()
     
@@ -143,6 +143,36 @@ def install_soc_libraries(options):
         cmd = "make install"
         run_command(cmd, cwd=cwdbuild)
 
+def install_systemc_library(options):
+    src = options.src
+    dest = options.dest
+
+    systemcsrc = os.path.join(src, "src", "sysc")
+    systemcdest = dest
+    
+    info("Install SystemC libs")
+    check_autotools()
+    check_make()
+    
+    info(" + autogen")
+    cmd = "./autogen.sh"
+    run_command(cmd, cwd=systemcsrc)
+        
+    info("  + Configure")
+    cwdbuild = os.path.join(systemcsrc, "build")
+    try:
+        os.mkdir(cwdbuild)
+    except OSError as e:
+        shutil.rmtree(cwdbuild)
+        os.mkdir(cwdbuild)
+        
+    cmd = "../configure --prefix={}".format(systemcdest)
+    run_command(cmd, cwd=cwdbuild)
+
+    info("  + Build and Install")
+    cmd = "make install"
+    run_command(cmd, cwd=cwdbuild)
+
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
     mysrcdir = os.path.dirname(os.path.dirname(scriptname))
@@ -165,6 +195,8 @@ if __name__ == '__main__':
 
     install_tools(options)
     
-    install_soc_libraries(options)
+    install_soc_software(options)
+    
+    install_systemc_library(options)
     
     info("Done")

@@ -13,11 +13,19 @@ env:
   - OPTIMSOC=$HOME/optimsoc/current
   - PATH=$HOME/optimsoc/toolchains/or1k-elf-multicore/bin:$PATH
   - LD_LIBRARY_PATH=$HOME/optimsoc/toolchains/or1k-elf-multicore/x86_64-unknown-linux-gnu/or1k-elf/lib
+  - PREBUILT_SYSTEMC=https://raw.githubusercontent.com/optimsoc/prebuilts/master/systemc-2.3.1.tgz
+  - PKG_CONFIG_PATH=$HOME/optimsoc/prebuilt/systemc-2.3.1/lib-linux64/pkgconfig
 
 before_install:
+ # Get baremetal toolchain
  - mkdir -p $HOME/optimsoc/toolchains
  - curl http://lis.ei.tum.de/pub-download/openrisc-builds/or1k-elf/dev/or1k-elf-multicore-latest-ubuntu-12.04-amd64.tgz -o $HOME/optimsoc/toolchains/or1k-elf-multicore-latest-ubuntu-12.04-amd64.tgz
  - tar -xzf $HOME/optimsoc/toolchains/or1k-elf-multicore-latest-ubuntu-12.04-amd64.tgz --strip-components=1 -C $HOME/optimsoc/toolchains/
+ # Get SystemC prebuilt
+ - mkdir -p $HOME/optimsoc/prebuilt/
+ - curl ${PREBUILT_SYSTEMC} -o $HOME/optimsoc/prebuilt/systemc-2.3.1.tgz
+ - tar -xzf $HOME/optimsoc/prebuilt/systemc-2.3.1.tgz -C $HOME/optimsoc/prebuilt
+ - $HOME/optimsoc/prebuilt/systemc-2.3.1/relocate.sh
 
 # Execute the build
 script:
