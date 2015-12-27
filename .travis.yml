@@ -9,8 +9,16 @@ addons:
 
 # Environment
 env:
- - OPTIMSOC=/$HOME/optimsoc
+ global:
+  - OPTIMSOC=$HOME/optimsoc/current
+  - PATH=$HOME/optimsoc/toolchains/or1k-elf-multicore/bin:$PATH
+
+before_install:
+ - mkdir -p $HOME/optimsoc/toolchains
+ - curl http://lis.ei.tum.de/pub-download/openrisc-builds/or1k-elf/dev/or1k-elf-multicore-latest-ubuntu-12.04-amd64.tgz -o $HOME/optimsoc/toolchains/or1k-elf-multicore-latest-ubuntu-12.04-amd64.tgz
+ - tar -xzf $HOME/optimsoc/toolchains/or1k-elf-multicore-latest-ubuntu-12.04-amd64.tgz --strip-components=1 -C $HOME/optimsoc/toolchains/
 
 # Execute the build
 script:
   - ./tools/install.py -d $OPTIMSOC
+  - or1k-elf-gcc -v
