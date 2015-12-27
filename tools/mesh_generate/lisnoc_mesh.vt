@@ -1,0 +1,134 @@
+`include "lisnoc_def.vh"
+
+module ${emit(modulename)}$
+  (
+${for p in range(0,xdim*ydim):}$
+    link${emit(p)}$_in_flit_i, link${emit(p)}$_in_valid_i, link${emit(p)}$_in_ready_o,
+    link${emit(p)}$_out_flit_o, link${emit(p)}$_out_valid_o, link${emit(p)}$_out_ready_i,
+${:end}$
+    clk, rst
+    );
+
+   parameter vchannels = ${emit(vc)}$;
+   parameter flit_data_width = 32;
+   parameter flit_type_width = 2;
+   parameter flit_width = flit_data_width + flit_type_width;
+
+   input clk;
+   input rst;
+${for p in range(0,xdim*ydim):}$
+   input [flit_width-1:0] link${emit(p)}$_in_flit_i;
+   input [vchannels-1:0] link${emit(p)}$_in_valid_i /*verilator sc_bv*/;
+   output [vchannels-1:0] link${emit(p)}$_in_ready_o /*verilator sc_bv*/;
+   output [flit_width-1:0] link${emit(p)}$_out_flit_o;
+   output [vchannels-1:0] link${emit(p)}$_out_valid_o /*verilator sc_bv*/;
+   input [vchannels-1:0] link${emit(p)}$_out_ready_i /*verilator sc_bv*/;
+${:end}$
+
+   wire [flit_width-1:0] north_in_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] north_in_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] north_in_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [flit_width-1:0] north_out_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] north_out_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] north_out_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [flit_width-1:0] east_in_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] east_in_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] east_in_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [flit_width-1:0] east_out_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] east_out_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] east_out_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [flit_width-1:0] south_in_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] south_in_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] south_in_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [flit_width-1:0] south_out_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] south_out_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] south_out_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [flit_width-1:0] west_in_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] west_in_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] west_in_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [flit_width-1:0] west_out_flit[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] west_out_valid[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+   wire [vchannels-1:0] west_out_ready[0:${emit(xdim-1)}$][0:${emit(ydim-1)}$];
+
+${for x in range(0,xdim):}$
+${for y in range(0,ydim):}$
+${if x>0:}$   /* Connecting (${emit(x)}$,${emit(y)}$) */
+   assign north_in_flit[${emit(x)}$][${emit(y)}$]     = south_out_flit[${emit(x-1)}$][${emit(y)}$];
+   assign north_in_valid[${emit(x)}$][${emit(y)}$]    = south_out_valid[${emit(x-1)}$][${emit(y)}$];
+   assign south_out_ready[${emit(x-1)}$][${emit(y)}$] = north_in_ready[${emit(x)}$][${emit(y)}$];
+   assign south_in_flit[${emit(x-1)}$][${emit(y)}$]   = north_out_flit[${emit(x)}$][${emit(y)}$];
+   assign south_in_valid[${emit(x-1)}$][${emit(y)}$]  = north_out_valid[${emit(x)}$][${emit(y)}$];
+   assign north_out_ready[${emit(x)}$][${emit(y)}$]   = south_in_ready[${emit(x-1)}$][${emit(y)}$];
+${:else:}$   /* Connecting (${emit(x)}$,${emit(y)}$) */
+   assign north_in_flit[${emit(x)}$][${emit(y)}$]   = {flit_width{1'b0}};
+   assign north_in_valid[${emit(x)}$][${emit(y)}$]  = {vchannels{1'b0}};
+   assign north_out_ready[${emit(x)}$][${emit(y)}$] = {vchannels{1'b0}};
+${:end}$
+${if x==xdim-1:}$   assign south_in_flit[${emit(x)}$][${emit(y)}$]   = {flit_width{1'b0}};
+   assign south_in_valid[${emit(x)}$][${emit(y)}$]  = {vchannels{1'b0}};
+   assign south_out_ready[${emit(x)}$][${emit(y)}$] = {vchannels{1'b0}};
+${:end}$
+${if y>0:}$   assign west_in_flit[${emit(x)}$][${emit(y)}$]     = east_out_flit[${emit(x)}$][${emit(y-1)}$];
+   assign west_in_valid[${emit(x)}$][${emit(y)}$]    = east_out_valid[${emit(x)}$][${emit(y-1)}$];
+   assign east_out_ready[${emit(x)}$][${emit(y-1)}$] = west_in_ready[${emit(x)}$][${emit(y)}$];
+   assign east_in_flit[${emit(x)}$][${emit(y-1)}$]   = west_out_flit[${emit(x)}$][${emit(y)}$];
+   assign east_in_valid[${emit(x)}$][${emit(y-1)}$]  = west_out_valid[${emit(x)}$][${emit(y)}$];
+   assign west_out_ready[${emit(x)}$][${emit(y)}$]   = east_in_ready[${emit(x)}$][${emit(y-1)}$];
+${:else:}$   assign west_in_flit[${emit(x)}$][${emit(y)}$]   = {flit_width{1'b0}};
+   assign west_in_valid[${emit(x)}$][${emit(y)}$]  = {vchannels{1'b0}};
+   assign west_out_ready[${emit(x)}$][${emit(y)}$] = {vchannels{1'b0}};
+${:end}$
+${if y==ydim-1:}$   assign east_in_flit[${emit(x)}$][${emit(y)}$]   = {flit_width{1'b0}};
+   assign east_in_valid[${emit(x)}$][${emit(y)}$]  = {vchannels{1'b0}};
+   assign east_out_ready[${emit(x)}$][${emit(y)}$] = {vchannels{1'b0}};
+${:end}$
+${:end}$
+${:end}$
+
+
+${for x in range(0,xdim):}$
+${for y in range(0,ydim):}$
+   lisnoc_router_2dgrid
+   # (.num_dests(${emit(xdim*ydim)}$),.vchannels(vchannels),.lookup(${emit(lookup[x*ydim+y])}$))
+   u_router_${emit(x)}$_${emit(y)}$
+     (
+       .clk			(clk),
+       .rst			(rst),
+       .north_out_flit_o	(north_out_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .north_out_valid_o	(north_out_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .east_out_flit_o		(east_out_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .east_out_valid_o	(east_out_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .south_out_flit_o	(south_out_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .south_out_valid_o	(south_out_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .west_out_flit_o		(west_out_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .west_out_valid_o	(west_out_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .local_out_flit_o	(link${emit(x*ydim+y)}$_out_flit_o[flit_width-1:0]),
+       .local_out_valid_o	(link${emit(x*ydim+y)}$_out_valid_o[vchannels-1:0]),
+       .north_in_ready_o	(north_in_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .east_in_ready_o		(east_in_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .south_in_ready_o	(south_in_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .west_in_ready_o		(west_in_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .local_in_ready_o	(link${emit(x*ydim+y)}$_in_ready_o[vchannels-1:0]),
+
+       .north_out_ready_i	(north_out_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .east_out_ready_i	(east_out_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .south_out_ready_i	(south_out_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .west_out_ready_i	(west_out_ready[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .local_out_ready_i	(link${emit(x*ydim+y)}$_out_ready_i[vchannels-1:0]),
+       .north_in_flit_i		(north_in_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .north_in_valid_i	(north_in_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .east_in_flit_i		(east_in_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .east_in_valid_i		(east_in_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .south_in_flit_i		(south_in_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .south_in_valid_i	(south_in_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .west_in_flit_i		(west_in_flit[${emit(x)}$][${emit(y)}$][flit_width-1:0]),
+       .west_in_valid_i		(west_in_valid[${emit(x)}$][${emit(y)}$][vchannels-1:0]),
+       .local_in_flit_i		(link${emit(x*ydim+y)}$_in_flit_i[flit_width-1:0]),
+       .local_in_valid_i	(link${emit(x*ydim+y)}$_in_valid_i[vchannels-1:0])
+    );
+${:end}$
+${:end}$
+
+endmodule
+
+`include "lisnoc_undef.vh"
