@@ -31,8 +31,9 @@ env:
     # Verilator 3.880
   - PREBUILT_VERILATOR_TGZ=verilator-3.880.tgz
   - PREBUILT_VERILATOR_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_VERILATOR_TGZ}
-  - PATH=${PREBUILT}/verilator-3.880/bin:$PATH
-  - PKG_CONFIG_PATH=${PREBUILT}/verilator-3.880/share/pkgconfig:$PKG_CONFIG_PATH
+  - VERILATOR_ROOT=${PREBUILT}/verilator-3.880
+  - PATH=${VERILATOR_ROOT}/bin:$PATH
+  - PKG_CONFIG_PATH=${VERILATOR_ROOT}:$PKG_CONFIG_PATH
 
 before_install:
  # Create folders for toolchain and pre-builts
