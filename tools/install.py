@@ -288,10 +288,36 @@ def install_hw_modules(options):
     except Exception as e:
         fatal(e)
 
+"""Set an environment
+"""
+def set_environment(options, env):
+    dest = options.dest
+
+    env['OPTIMSOC'] = dest
+    env['OPTIMSOC_RTL'] = "{}/modules".format(dest)
+    env['OPTIMSOC_TCL'] = "{}/tools/tcl".format(dest)
+    env['LISNOC'] = "{}/external/lisnoc".format(dest)
+    env['LISNOC_RTL'] = "{}/external/lisnoc/rtl".format(dest)
+
+    pkgconfig = "{dest}/share/pkgconfig:{dest}/sw/sharepkgconfig".format(dest=dest)
+    if 'PKG_CONFIG_PATH' in env:
+        env['PKG_CONFIG_PATH'] = "{}:{}".format(pkgconfig, env['PKG_CONFIG_PATH'])
+    else:
+        env['PKG_CONFIG_PATH'] = pkgconfig
+
+    ldlibrary = "{}/lib".format(dest)
+    if 'LD_LIBRARY_PATH' in env:
+        env['LD_LIBRARY_PATH'] = "{}:{}".format(ldlibrary, env['LD_LIBRARY_PATH'])
+    else:
+        env['LD_LIBRARY_PATH'] = ldlibrary
+
 """Write files to setup the environment
 """
 def write_setup_files(options):
     setup_sh = open("{}/setup.sh".format(options.dest), "w")
+
+    info("Write setup files")
+
     setup_sh.write("""
     export OPTIMSOC={}
     export OPTIMSOC_RTL=$OPTIMSOC/modules
@@ -334,5 +360,9 @@ if __name__ == '__main__':
     install_hw_modules(options)
 
     write_setup_files(options)
+
+    # From here on we will need our new environment
+    env = os.environ
+    set_environment(options, env)
 
     info("Done")
