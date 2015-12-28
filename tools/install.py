@@ -288,6 +288,36 @@ def install_hw_modules(options):
     except Exception as e:
         fatal(e)
 
+"""Build and install the examples
+"""
+def install_examples(options, env):
+    src = options.src
+    dest = options.dest
+
+    info("Install examples")
+
+    exsrc = os.path.join(src, "tbench")
+    exdest = os.path.join(dest, "examples")
+
+    examples = [ { "path": "dm/compute_tile",
+                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] } ]
+
+    for ex in examples:
+        info(" + {}".format(ex["path"]))
+        buildcwd = os.path.join(exsrc, ex["path"])
+        info("  + Clean")
+        cmd = "make clean"
+        run_command(cmd, cwd=buildcwd, env=env)
+        info("  + Build")
+        cmd = "make build-verilator"
+        run_command(cmd, cwd=buildcwd, env=env)
+        info("  + Install")
+        os.makedirs(os.path.join(exdest, ex["path"]))
+        for f in ex["files"]:
+            srcf = os.path.join(exsrc, ex["path"], f)
+            destf = os.path.join(exdest, ex["path"], f)
+            shutil.copy(srcf, destf)
+
 """Set an environment
 """
 def set_environment(options, env):
@@ -363,5 +393,7 @@ if __name__ == '__main__':
     # From here on we will need our new environment
     env = os.environ
     set_environment(options, env)
+
+    install_examples(options, env)
 
     info("Done")
