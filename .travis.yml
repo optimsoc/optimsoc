@@ -13,7 +13,7 @@ env:
  global:
     # Installation target
   - TARGET_BASE=$HOME/optimsoc
-  - TARGET=$(TARGET_BASE)/current
+  - TARGET=${TARGET_BASE}/current
   - PREBUILT_DEPLOY=optimsoc-prebuilt-deploy.py
   - PREBUILT_DEPLOY_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_DEPLOY}
 
