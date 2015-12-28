@@ -12,44 +12,17 @@ addons:
 env:
  global:
     # Installation target
-  - TARGET=$HOME/optimsoc/current
-    # Toolchain installation path
-  - TOOLCHAINS=$HOME/optimsoc/toolchains
-    # Baremetal toolchain
-  - TOOLCHAIN_BARE_TGZ=or1k-elf-multicore-latest-ubuntu-12.04-amd64.tgz
-  - TOOLCHAIN_BARE_URL=http://lis.ei.tum.de/pub-download/openrisc-builds/or1k-elf/dev/${TOOLCHAIN_BARE_TGZ}
-  - PATH=${TOOLCHAINS}/or1k-elf-multicore/bin:$PATH
-    # It is required to point the environment to libopcodes etc. as they are
-    # not properly picked up after relocation of the installation
-  - LD_LIBRARY_PATH=${TOOLCHAINS}/or1k-elf-multicore/x86_64-unknown-linux-gnu/or1k-elf/lib
-    # Prebuilt installation path
-  - PREBUILT=$HOME/optimsoc/prebuilt
-    # SystemC 2.3.1
-  - PREBUILT_SYSTEMC_TGZ=systemc-2.3.1.tgz
-  - PREBUILT_SYSTEMC_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_SYSTEMC_TGZ}
-  - PKG_CONFIG_PATH=${PREBUILT}/systemc-2.3.1/lib-linux64/pkgconfig
-    # Verilator 3.880
-  - PREBUILT_VERILATOR_TGZ=verilator-3.880.tgz
-  - PREBUILT_VERILATOR_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_VERILATOR_TGZ}
-  - VERILATOR_ROOT=${PREBUILT}/verilator-3.880
-  - PATH=${VERILATOR_ROOT}/bin:$PATH
-  - PKG_CONFIG_PATH=${VERILATOR_ROOT}:$PKG_CONFIG_PATH
+  - TARGET_BASE=$HOME/optimsoc
+  - TARGET=$(TARGET_BASE)/current
+  - PREBUILT_DEPLOY=optimsoc-prebuilt-deploy.py
+  - PREBUILT_DEPLOY_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_DEPLOY}
 
 before_install:
- # Create folders for toolchain and pre-builts
- - mkdir -p $TOOLCHAINS
- - mkdir -p $PREBUILT
- # Get baremetal toolchain
- - curl ${TOOLCHAIN_BARE_URL} -o /tmp/${TOOLCHAIN_BARE_TGZ}
- - tar -xzf /tmp/${TOOLCHAIN_BARE_TGZ} --strip-components=1 -C ${TOOLCHAINS}
- # Get SystemC prebuilt
- - curl ${PREBUILT_SYSTEMC_URL} -o /tmp/${PREBUILT_SYSTEMC_TGZ}
- - tar -xzf /tmp/${PREBUILT_SYSTEMC_TGZ} -C ${PREBUILT}
- - ${PREBUILT}/systemc-2.3.1/relocate.sh
- # Get Verilator prebuilt
- - curl ${PREBUILT_VERILATOR_URL} -o /tmp/${PREBUILT_VERILATOR_TGZ}
- - tar -xzf /tmp/${PREBUILT_VERILATOR_TGZ} -C ${PREBUILT}
- - ${PREBUILT}/verilator-3.880/relocate.sh
+ # Create folder for target
+ - mkdir -p ${TARGET_BASE}
+ # Get prebuilts
+ - curl ${PREBUILT_DEPLOY_URL} -o /tmp/${PREBUILT_DEPLOY}
+ - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} -r 12.04 all
 
 # Execute the build
 script:
