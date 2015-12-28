@@ -27,4 +27,5 @@ before_install:
 
 # Execute the build
 script:
+ - source ${TARGET_BASE}/setup_prebuilt.sh
  - ./tools/install.py -d $TARGET
