@@ -366,7 +366,7 @@ if __name__ == '__main__':
 
     parser = OptionParser()
     parser.add_option("-d", "--destination", dest="dest",
-                      help="destination folder", default="/opt/optimsoc")
+                      help="destination folder", default="/opt/optimsoc/current")
     parser.add_option("-s", "--source", dest="src",
                       help="source folder", default=mysrcdir)
     parser.add_option("-f", "--force-install", dest="force", action="store_true",
