@@ -34,4 +34,5 @@ before_install:
 
 # Execute the build
 script:
-  - ./tools/install.py -d $OPTIMSOC
+ - ./tools/install.py -d $OPTIMSOC
+

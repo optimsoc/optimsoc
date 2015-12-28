@@ -58,7 +58,7 @@ def check_program(program):
         subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError:
         fatal("'{}' not found".format(program))
-    
+
 """Check for make
 """
 def check_make():
@@ -91,7 +91,7 @@ def run_command(cmd, **kwargs):
         subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, **kwargs)
     except subprocess.CalledProcessError as e:
         fatal("make error: {}\n{}".format(e, e.output))
-    
+
 """Create the base folder
 
 Creates the base folder as given as options.dest. If the folder exists, all the
@@ -101,7 +101,7 @@ fails and exits of the base cannot be created.
 def create_base(options):
     base = options.dest
     force = options.force
-    
+
     if not os.access(base, os.F_OK):
         # The base folder does not exist
         try:
@@ -138,28 +138,28 @@ Install host tools (small utilities).
 def install_tools(options):
     src = options.src
     dest = options.dest
-    
+
     info("Install tools")
-    
+
     check_make()
 
     # Create folder tools
-    toolsinstdir = os.path.join(dest,"tools")
+    toolsinstdir = os.path.join(dest, "tools")
     try:
         os.mkdir(toolsinstdir)
     except Exception as e:
         fatal(e)
-    
+
     info(" + tcl")
-    tclsrcdir = os.path.join(src,"tools","tcl")
-    tcldestdir = os.path.join(dest,"tools","tcl")
-    
+    tclsrcdir = os.path.join(src, "tools", "tcl")
+    tcldestdir = os.path.join(dest, "tools", "tcl")
+
     # Plainly copy tcl sources
     try:
         shutil.copytree(tclsrcdir, tcldestdir)
     except Exception as e:
         fatal(e)
-    
+
     info(" + utils")
     utilssrcdir = os.path.join(src, "tools", "utils")
     utilsdestdir = os.path.join(dest, "tools", "utils")
@@ -174,13 +174,13 @@ def install_tools(options):
         run_command(makecmd)
     except Exception as e:
         fatal(e)
-    
+
     # Copy the util files
     info("  + Install")
     utilsfiles = ['bin2vmem', 'optimsoc-pgas-binary']
     for f in utilsfiles:
-        srcf = os.path.join(utilssrcdir, f) 
-        destf = os.path.join(utilsdestdir, f) 
+        srcf = os.path.join(utilssrcdir, f)
+        destf = os.path.join(utilsdestdir, f)
         shutil.copy(srcf, destf)
 
 """Build and install SoC software
@@ -190,18 +190,18 @@ Builds the SoC software and installs it.
 def install_soc_software(options):
     src = options.src
     dest = options.dest
-    
+
     info("Install SoC software")
     check_autotools()
     check_or1kelf()
-    
+
     # List of libraries to build
     libs = {}
     libs["baremetal-libs"] = {}
-    
+
     libssrc = os.path.join(src, "src", "sw", "system")
     libsdest = os.path.join(dest, "sw")
-    
+
     # Build each lib and install
     for lib in libs:
         info(" + {}".format(lib))
@@ -209,7 +209,7 @@ def install_soc_software(options):
         cmd = "./autogen.sh"
         cwd = os.path.join(libssrc, lib)
         run_command(cmd, cwd=cwd)
-        
+
         info("  + Configure")
         cwdbuild = os.path.join(cwd, "build")
         try:
@@ -221,7 +221,7 @@ def install_soc_software(options):
                 os.mkdir(cwdbuild)
             else:
                 fatal(e)
-        
+
         cmd = "../configure --prefix={} --host=or1k-elf".format(libsdest)
         run_command(cmd, cwd=cwdbuild)
 
@@ -330,11 +330,10 @@ def write_setup_files(options):
     export LD_LIBRARY_PATH=$OPTIMSOC/lib:$LD_LIBRARY_PATH
     """.format(options.dest))
 
-
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
     mysrcdir = os.path.dirname(os.path.dirname(scriptname))
-    
+
     parser = OptionParser()
     parser.add_option("-d", "--destination", dest="dest",
                       help="destination folder", default="/opt/optimsoc")
@@ -352,11 +351,11 @@ if __name__ == '__main__':
     create_base(options)
 
     install_tools(options)
-    
+
     install_soc_software(options)
-    
+
     install_systemc_library(options)
-    
+
     install_hw_modules(options)
 
     write_setup_files(options)
