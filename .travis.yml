@@ -1,0 +1,31 @@
+# Run in container-based environment
+sudo: false
+
+# Install the build requirements
+addons:
+  apt:
+    packages:
+    - build-essential
+    - tcl
+
+# Environment
+env:
+ global:
+    # Installation target
+  - TARGET_BASE=$HOME/optimsoc
+  - TARGET=${TARGET_BASE}/current
+  - PREBUILT_DEPLOY=optimsoc-prebuilt-deploy.py
+  - PREBUILT_DEPLOY_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_DEPLOY}
+
+before_install:
+ # Create folder for target
+ - mkdir -p ${TARGET_BASE}
+ # Get prebuilts
+ - curl ${PREBUILT_DEPLOY_URL} -o /tmp/${PREBUILT_DEPLOY}
+ - chmod a+x /tmp/${PREBUILT_DEPLOY}
+ - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} -r 12.04 all
+
+# Execute the build
+script:
+ - source ${TARGET_BASE}/setup_prebuilt.sh
+ - ./tools/install.py -d $TARGET

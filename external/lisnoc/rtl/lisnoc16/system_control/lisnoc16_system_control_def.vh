@@ -1,0 +1,9 @@
+`define SYSTEM_RESET_BIT 0
+`define CPU_RESET_BIT 1
+`define CLK_SYS_ON_BIT 2
+`define CLK_SYS_OFF_BIT 3
+`define START_CPU_BIT 4
+`define STOP_CPU_BIT 5
+`define START_MONITORING_BIT 6
+`define STOP_MONITORING_BIT 7
+

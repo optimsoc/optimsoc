@@ -6,6 +6,7 @@
 \#*\#
 
 # eclipse project files
-/.externalToolBuilders
-/.project
-/.settings
+.externalToolBuilders
+.project
+.settings
+.pydevproject
