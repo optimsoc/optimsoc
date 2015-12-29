@@ -410,6 +410,8 @@ if __name__ == '__main__':
                       help="source folder", default=mysrcdir)
     parser.add_option("-f", "--force-install", dest="force", action="store_true",
                       help="force installation (removes old)", default=False)
+    parser.add_option("--no-doc", dest="nodoc", action="store_true",
+                      help="Skip installing of documentation", default=False)
 
     (options, args) = parser.parse_args()
 
@@ -427,7 +429,8 @@ if __name__ == '__main__':
 
     install_hw_modules(options)
 
-    install_docs(options)
+    if not options.nodoc:
+        install_docs(options)
 
     write_setup_files(options)
 
