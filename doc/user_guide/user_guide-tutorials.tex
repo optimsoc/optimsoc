@@ -14,33 +14,24 @@ think you know enough to implement your own ideas!
 \section{Starting Small: Compute Tile and Software (Simulated)}
 
 It is a good starting point to simulate a single compute tile of a
-distributed memory system. Therefore a simple testbench is included
-and demonstrates the general simulation approach and gives an insight
-in the software building process.
+distributed memory system. Therefore a simple example is included and
+demonstrates the general simulation approach and gives an insight in
+the software building process.
 
 Simulating only a single compute tile is essentially an OpenRISC core
 plus memory and the network adapter, where all I/O of the network
 adapter is not functional in this test case. It can therefore only be
 used to simulate local software.
 
-You can find this example in \path{tbench/dm/compute_tile}. You
-need to have Verilator installed before you run:
-
-\begin{lstlisting}
-make build-verilator
-\end{lstlisting}
-
-In case you see errors check that the environment variables are set
-correctly. The build creates two files: \verb|tb_compute_tile| and
-\verb|tb_compute_tile-vcd|. Both run the RTL simulation in a testbench,
-but the latter also writes the waveform to \verb|sim.vcd|.
+You can find this example in
+\path{$OPTIMSC/examples/dm/compute_tile}.
 
 In default mode they start a server to connect the host software to,
-but you can use the parameter \verb|standalone| to run them in
+but you can use the parameter \verb|--standalone| to run them in
 standalone. If you start the simulation now
 
 \begin{lstlisting}
-./tb_compute_tile standalone
+$OPTIMSOC/examples/dm/compute_tile/tb_compute_tile --standalone
 \end{lstlisting}
 
 you will get this output
@@ -52,26 +43,23 @@ Aborted (core dumped)
 \end{lstlisting}
 
 The simulations always expect vmem files that initialize the memories.
-This needs to be generated from the compiled source code. Before you
-build your own software you will need the support libraries as
-described in the installation procedures.
+This needs to be generated from the compiled source code.
 
-The demonstration software is bundled in the \path{optimsoc/apps}
-repository. First, you should create an environment variable to point
-to the base:
+Our demonstration software is available in an extra repository:
 
 \begin{lstlisting}
-export OPTIMSOC_APPS=$OPTIMSOC/apps
+git clone https://github.com/optimsoc/baremetal-apps
+cd baremetal-apps
 \end{lstlisting}
 
 Build a simple ``Hello World'' example:
 
 \begin{lstlisting}
-make -C $OPTIMSOC_APPS/baremetal/hello
+cd hello
+make
 \end{lstlisting}
 
-You will then find the executable elf file as
-\path{$OPTIMSOC_APPS/baremetal/hello/hello.elf}.
+You will then find the executable elf file as \path{hello/hello.elf}.
 Furthermore some other files are build:
 
 \begin{itemize}
@@ -80,31 +68,22 @@ Furthermore some other files are build:
 \item \verb|hello.vmem| is a textual copy of the binary file
 \end{itemize}
 
-\begin{docnote}
-If the \verb|hello.vmem| file is not built, ensure that you have the
-\verb|bin2vmem| tool in your \verb|PATH| as described in
-Chapter~\ref{chap:installation}.
-\end{docnote}
-
-You can now run the example. First go back to the compute tile
-testbench main folder. Before the simulation warned that
-\verb|ct.vmem| cannot be found. Therefore we simply link the software
-to this filename
+You can now run the example again, this time with a different memory
+initialization file:
 
 \begin{lstlisting}
-ln -s $OPTIMSOC_APPS/baremetal/hello/hello.vmem ct.vmem
+$OPTIMSOC/examples/dm/compute_tile/tb_compute_tile --standalone --meminit=hello.vmem
 \end{lstlisting}
 
-If you now run the software again, the simulation should
-terminate with:
+the simulation should terminate with:
 
 \begin{lstlisting}
-[178512] Core 0 has terminated
-[178512] All cores terminated. Exiting..
+[157801] Core 0 has terminated
+[157801] All cores terminated. Exiting..
 \end{lstlisting}
 
-Further you will find a file called \verb|stdout.000| which shows the
-actual output:
+Furthermore, you will find a file called \verb|stdout.000| which shows
+the actual output:
 
 \begin{lstlisting}
 Hello World! Core 0 of 1 in tile 0, my absolute core id is: 0
@@ -121,10 +100,9 @@ This can be used for simulation purposes. It can be used for instrumentation,
 tracing or special purposes as writing characters with minimal intrusion or
 simulation termination.
 
-The termination is forced with \verb|l.nop 0x1|. If you have a look at
-the disassembly \verb|hello_simple.dis| at instruction \verb|0x8080|
-(see above) you exactly find this instruction. The actual action is
-then done with the trace monitor.
+The termination is forced with \verb|l.nop 0x1|. The instruction is
+observed and a trace monitor terminates when it was observed at all
+cores (shortly after \verb|main| returned).
 
 With this method you can simply provide constants to your simulation
 environments. For variables this method is extended by putting data in
@@ -143,7 +121,7 @@ This function is called from printf as write function. The trace
 monitor captures theses characters and puts them to the stdout file.
 
 You can easily add your own ``traces'' using a macro defined in
-\path{baremetal-libraries/src/libbaremetal/include/optimsoc-baremetal.h}:
+\path{baremetal-libs/src/libbaremetal/include/optimsoc-baremetal.h}:
 
 \begin{lstlisting}[language=C]
 #define OPTIMSOC_TRACE(id,v)                \
@@ -151,18 +129,39 @@ You can easily add your own ``traces'' using a macro defined in
    asm("l.nop %0": :"K" (id));
 \end{lstlisting}
 
-\section{Going Multicore: Simulate a Small 2x2 Distributed Memory
+\section{Going Multicore: Simulate Multicore Compute Tiles}
+
+Next you might want to build an actual multicore system. In a first
+step, you can just start simulations of compute tiles with multiple
+cores:
+
+\begin{lstlisting}
+$OPTIMSOC/examples/dm/compute_tile-dual/tb_compute_tile --standalone --meminit=hello.vmem
+$OPTIMSOC/examples/dm/compute_tile-quad/tb_compute_tile --standalone --meminit=hello.vmem
+$OPTIMSOC/examples/dm/compute_tile-octa/tb_compute_tile --standalone --meminit=hello.vmem
+\end{lstlisting}
+
+You can observe, the simulation runs become longer. After each run,
+inspect the \verb|stdout.*| files.
+
+\section{Tiled Manycore SoC: Simulate a Small 2x2 Distributed Memory
   System}
 
-Next you might want to build an actual multicore system. You can find
-such a system in \path{tbench/rtl/dm} directory as
-\verb|system_2x2_cccc|. The nomenclature in all pre-packed systems
-first denotes the dimensions and then the instantiated tiles, here
-\verb|cccc| as four compute tiles.
+Next we want to run an actual NoC-based tiled manycore system-on-chip,
+with the examples you get \verb|system_2x2_cccc|. The nomenclature in
+all pre-packed systems first denotes the dimensions and then the
+instantiated tiles, here \verb|cccc| as four compute tiles.
 
-In our simulation all four cores run the same software. Before you shout
-``that's boring:'' You can still write different code depending on which tile
-and core the software is executed. A couple of functions are useful for that:
+Execute it again to get the hello world experience:
+
+\begin{lstlisting}
+$OPTIMSOC/examples/dm/system_2x2_cccc/tb_system_2x2_cccc --standalone --meminit=hello.vmem
+\end{lstlisting}
+
+In our simulation all cores in the four tiles run the same
+software. Before you shout ``that's boring:'' You can still write
+different code depending on which tile and core the software is
+executed. A couple of functions are useful for that:
 
 \begin{itemize}
   \item \verb|optimsoc_get_numct()|: The number of compute tiles in the system
@@ -174,29 +173,23 @@ and core the software is executed. A couple of functions are useful for that:
 \end{itemize}
 
 There are more useful utility functions like those available, find them in the
-file \path{baremetal-libraries/src/libbaremetal/include/optimsoc-baremetal.h}.
+file \path{baremetal-libs/src/libbaremetal/include/optimsoc-baremetal.h}.
 
 A simple application that uses those functions to do message passing between
-the different tiles is the ``hello\_mpsimple'' application. This program uses
+the different tiles is \verb|hello\_mpsimple|. This program uses
 the simple message passing facilities of the network adapter to send messages.
 All cores send a message to core 0. If all messages have been received, core 0
 prints a message ``Received all messages. Hello World!''.
 
-In the following, we'll build our $2 \times 2$ system with this application.
-Building and running the simulation works in the same way as in the previous
-tutorial, refer to the discussion there for explanations. Here's the quick
-version:
-
 \begin{lstlisting}
-make build-verilator
-make -C $OPTIMSOC_APPS/baremetal/hello_mpsimple
-ln -s $OPTIMSOC_APPS/baremetal/hello_mpsimple/hello_mpsimple.vmem ct.vmem
-./tb_system_2x2_cccc standalone
+cd ../hello_mpsimple
+make
+$OPTIMSOC/examples/dm/system_2x2_cccc/tb_system_2x2_cccc --standalone --meminit=hello_mpsimple.vmem
 \end{lstlisting}
 
 Have a look what the software does (you find the code in
-\path{$OPTIMSOC_APPS/baremetal/hello_mpsimple/hello_mpsimple.c}). Let's first
-check the output of core 0.
+\path{$OPTIMSOC_APPS/baremetal/hello_mpsimple/hello_mpsimple.c}). Let's
+first check the output of core 0.
 
 \begin{lstlisting}[language=sh]
 $> cat stdout.000
@@ -208,7 +201,7 @@ Received all messages. Hello World!
 
 Finally, let's have a quick glance at a more realistic application:
 \verb|heat_mpsimple|. You can find it in the same place as the previous
-applications, \verb|hello| and \verb|hellp_mpsimple|. The application
+applications, \verb|hello| and \verb|hello_mpsimple|. The application
 calculates the heat distribution in a distributed manner. The cores coordinate
 their boundary regions by sending messages around.
 
@@ -217,8 +210,14 @@ can take a couple of minutes to finish. Have a look at the source code and try
 to understand what's going on. Also have a look at the \verb|stdout| log files.
 Core 0 will also print the complete heat distribution at the end.
 
-
 \section{The Look Inside: Introducing the Debug System}
+
+\begin{docnote}
+This and the following sections have not been tested for this release,
+and may most probably not run as described. But as a reference, they
+can serve you to better understand OpTiMSoC. They will be rewritten
+for the upcoming release. Thanks for your understanding!
+\end{docnote}
 
 In the previous tutorials you have seen some software running on a simple
 OpTiMSoC system. Until now, you have only seen the output of the applications,
