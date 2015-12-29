@@ -7,9 +7,6 @@ addons:
     packages:
     - build-essential
     - tcl
-    - texlive
-    - texlive-latex-extra
-    - texlive-fonts-extra
 
 # Environment
 env:
@@ -31,7 +28,7 @@ before_install:
 # Execute the build
 install:
  - source ${TARGET_BASE}/setup_prebuilt.sh
- - ./tools/install.py -d $TARGET
+ - ./tools/install.py -d $TARGET --no-doc
 
 script:
  -
