@@ -3,6 +3,8 @@
 #include "debug/VerilatedDebugConnector.h"
 #include "debug/VerilatedSTM.h"
 
+#include <util/OptionsParser.h>
+
 #include <verilated_vcd_c.h>
 
 #include <ctime>
@@ -11,6 +13,10 @@
 #ifndef NUMCORES
 #define NUMCORES 1
 #endif
+
+using namespace optimsoc;
+
+void _VL_STRING_TO_VINT(int obits, void* destp, int srclen, const char* srcp);
 
 SC_MODULE(tracemon) {
     sc_in<bool> clk;
@@ -40,14 +46,9 @@ SC_MODULE(tracemon) {
 
 int sc_main(int argc, char *argv[])
 {
-    bool standalone;
-    unsigned int from, to;
+    OptionsParser options;
 
-    standalone = ((argc > 1) &&
-                  (strncmp(argv[1], "standalone", 10) == 0));
-
-    from = (argc > 2) ? atoi(argv[2]) : 0;
-    to = (argc > 3) ? atoi(argv[3]) : 0;
+    options.parse(argc, argv);
 
     srand48((unsigned int) time(0));
 
@@ -65,13 +66,22 @@ int sc_main(int argc, char *argv[])
     system.rst_sys(rst_sys);
     system.cpu_stall(cpu_stall);
     
-    system.v->u_system->gen_ct__BRA__0__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
-    system.v->u_system->gen_ct__BRA__1__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
-    system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
-    system.v->u_system->gen_ct__BRA__3__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
+    if (options.hasMemInit()) {
+      unsigned int filename[16];
+      _VL_STRING_TO_VINT(16*sizeof(unsigned int)*8, filename, 10, options.getMemInit());
+      system.v->u_system->gen_ct__BRA__0__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh_file(filename);
+      system.v->u_system->gen_ct__BRA__1__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh_file(filename);
+      system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh_file(filename);
+      system.v->u_system->gen_ct__BRA__3__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh_file(filename);
+    } else {
+      system.v->u_system->gen_ct__BRA__0__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
+      system.v->u_system->gen_ct__BRA__1__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
+      system.v->u_system->gen_ct__BRA__2__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
+      system.v->u_system->gen_ct__BRA__3__KET____DOT__u_ct->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
+    }
 
 #ifdef VCD_TRACE
-    tracemon trace("trace", from, to);
+    tracemon trace("trace", options.getVcdFrom(), options.getVcdTo());
     trace.clk(clk);
 
     Verilated::traceEverOn(true);
@@ -82,7 +92,7 @@ int sc_main(int argc, char *argv[])
     trace.vcd = &vcd;
 #endif
 
-    VerilatedDebugConnector debugconn("DebugConnector", 0xc200, standalone);
+    VerilatedDebugConnector debugconn("DebugConnector", 0xc200, options.getStandalone());
     debugconn.clk(clk);
     debugconn.rst_sys(rst_sys);
     debugconn.rst_cpu(rst_cpu);
