@@ -19,10 +19,10 @@ html: html/user_guide.xhtml
 
 pdf: user_guide.pdf
 
-%.pdf: %.tex $(TEXFILES)
-	$(PDFLATEX) $*.tex
+%.pdf: %.tex $(TEXFILES) Makefile
+	$(PDFLATEX) -interaction nonstopmode $*.tex
 	# Run again to get references right
-	$(PDFLATEX) $*.tex 
+	$(PDFLATEX) -interaction nonstopmode $*.tex
 
 html/%.xhtml: %-html.tex $(TEXFILES)
 	$(LATEXML) --dest=$*.xml $*-html.tex
