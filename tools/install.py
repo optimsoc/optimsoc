@@ -357,6 +357,14 @@ def install_docs(options):
     destuser_guide = os.path.join(destdoc, "UserGuide.pdf")
     shutil.copy(user_guide, destuser_guide)
 
+    srcreadme = os.path.join(src, "README.installed")
+    destreadme = os.path.join(dest, "README")
+    shutil.copy(srcreadme, destreadme)
+
+    srccopying = os.path.join(src, "COPYING")
+    destcopying = os.path.join(dest, "COPYING")
+    shutil.copy(srccopying, destcopying)
+
 """Set an environment
 """
 def set_environment(options, env):
