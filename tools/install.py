@@ -361,16 +361,16 @@ def write_setup_files(options):
     info("Write setup files")
 
     setup_sh.write("""
-    export OPTIMSOC={}
-    export OPTIMSOC_RTL=$OPTIMSOC/modules
-    export OPTIMSOC_TCL=$OPTIMSOC/tools/tcl
-    export LISNOC=$OPTIMSOC/external/lisnoc
-    export LISNOC_RTL=$LISNOC/rtl
+export OPTIMSOC={}
+export OPTIMSOC_RTL=$OPTIMSOC/modules
+export OPTIMSOC_TCL=$OPTIMSOC/tools/tcl
+export LISNOC=$OPTIMSOC/external/lisnoc
+export LISNOC_RTL=$LISNOC/rtl
 
-    export PKG_CONFIG_PATH=$OPTIMSOC/share/pkgconfig:$OPTIMSOC/sw/share/pkgconfig:$PKG_CONFIG_PATH
-    export PATH=$OPTIMSOC/tools/utils:$PATH
-    export LD_LIBRARY_PATH=$OPTIMSOC/lib:$LD_LIBRARY_PATH
-    """.format(options.dest))
+export PKG_CONFIG_PATH=$OPTIMSOC/share/pkgconfig:$OPTIMSOC/sw/share/pkgconfig:$PKG_CONFIG_PATH
+export PATH=$OPTIMSOC/tools/utils:$PATH
+export LD_LIBRARY_PATH=$OPTIMSOC/lib:$LD_LIBRARY_PATH
+""".format(options.dest))
 
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
