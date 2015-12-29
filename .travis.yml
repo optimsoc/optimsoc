@@ -26,6 +26,9 @@ before_install:
  - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} -r 12.04 all
 
 # Execute the build
-script:
+install:
  - source ${TARGET_BASE}/setup_prebuilt.sh
  - ./tools/install.py -d $TARGET
+
+script:
+ -
