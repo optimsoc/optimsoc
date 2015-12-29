@@ -330,6 +330,33 @@ def install_examples(options, env):
             destf = os.path.join(exdest, ex["path"], f)
             shutil.copy(srcf, destf)
 
+"""Build and install the documentation
+"""
+def install_docs(options):
+    src = options.src
+    dest = options.dest
+
+    info("Build and install documentation")
+
+
+    check_program("pdflatex")
+
+    cwd = os.path.join(src, "doc", "user_guide")
+    user_guide = os.path.join(cwd, "user_guide.pdf")
+
+    info(" + Clean")
+    run_command("make clean", cwd=cwd)
+
+    info(" + Build")
+    run_command("make pdf", cwd=cwd)
+
+    destdoc = os.path.join(dest, "doc")
+    os.makedirs(destdoc)
+
+    info(" + Install")
+    destuser_guide = os.path.join(destdoc, "UserGuide.pdf")
+    shutil.copy(user_guide, destuser_guide)
+
 """Set an environment
 """
 def set_environment(options, env):
@@ -399,6 +426,8 @@ if __name__ == '__main__':
     install_systemc_library(options)
 
     install_hw_modules(options)
+
+    install_docs(options)
 
     write_setup_files(options)
 

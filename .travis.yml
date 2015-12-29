@@ -7,6 +7,9 @@ addons:
     packages:
     - build-essential
     - tcl
+    - texlive
+    - texlive-latex-extra
+    - texlive-fonts-extra
 
 # Environment
 env:
