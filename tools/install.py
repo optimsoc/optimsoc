@@ -300,7 +300,19 @@ def install_examples(options, env):
     exdest = os.path.join(dest, "examples")
 
     examples = [ { "path": "dm/compute_tile",
-                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] } ]
+                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                 { "path": "dm/compute_tile-dual",
+                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                 { "path": "dm/compute_tile-quad",
+                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                 { "path": "dm/compute_tile-octa",
+                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                 { "path": "dm/system_2x2_cccc",
+                   "files": [ "tb_system_2x2_cccc", "tb_system_2x2_cccc-vcd" ] },
+                 { "path": "dm/system_2x2_cccc-dual",
+                   "files": [ "tb_system_2x2_cccc", "tb_system_2x2_cccc-vcd" ] },
+                 { "path": "dm/system_2x2_cccc-quad",
+                   "files": [ "tb_system_2x2_cccc", "tb_system_2x2_cccc-vcd" ] }]
 
     for ex in examples:
         info(" + {}".format(ex["path"]))
