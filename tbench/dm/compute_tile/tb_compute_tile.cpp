@@ -67,9 +67,10 @@ int sc_main(int argc, char *argv[])
     ct.cpu_stall(cpu_stall);
 
     if (options.hasMemInit()) {
-      unsigned int filename[16];
-      _VL_STRING_TO_VINT(16*sizeof(unsigned int)*8, filename, 10, options.getMemInit());
-      ct.v->u_compute_tile->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh_file(filename);
+      unsigned int filename_vl[16];
+      const char *filename = options.getMemInit();
+      _VL_STRING_TO_VINT(16*sizeof(unsigned int)*8, filename_vl, strlen(filename), filename);
+      ct.v->u_compute_tile->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh_file(filename_vl);
     } else {
       ct.v->u_compute_tile->u_ram->sp_ram->gen_sram_sp_impl__DOT__u_impl->do_readmemh();
     }
