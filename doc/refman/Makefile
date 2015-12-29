@@ -20,8 +20,8 @@ html: html/refman.xhtml
 pdf: refman.pdf
 
 %.pdf: %.tex $(TEXFILES) Makefile
-	$(PDFLATEX) $*.tex 
-	$(PDFLATEX) $*.tex 
+	$(PDFLATEX) -interaction nonstopmode $*.tex
+	$(PDFLATEX) -interaction nonstopmode $*.tex
 
 html/%.xhtml: %-html.tex $(TEXFILES) Makefile
 	$(LATEXML) --dest=$*.xml $*-html.tex
