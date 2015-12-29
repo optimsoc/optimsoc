@@ -30,7 +30,8 @@ liboptimsocsysc_la_SOURCES =\
     debug/DebugConnector.cpp \
     debug/VerilatedDebugConnector.cpp \
     debug/VerilatedSTM.cpp \
-    debug/TracePacket.cpp
+    debug/TracePacket.cpp \
+    util/OptionsParser.cpp
 
 liboptimsocsysc_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 liboptimsocsysc_la_CPPFLAGS = $(AM_CPPFLAGS)
@@ -40,6 +41,9 @@ liboptimsocsysc_debuginc_HEADERS = debug/VerilatedDebugConnector.h \
 	debug/DebugConnector.h \
 	debug/TracePacket.h \
 	debug/VerilatedSTM.h
+
+liboptimsocsysc_utilincdir = $(includedir)/util
+liboptimsocsysc_utilinc_HEADERS = util/OptionsParser.h
 
 # prepare pkg-config file
 share/%.pc: share/%.pc.in Makefile
