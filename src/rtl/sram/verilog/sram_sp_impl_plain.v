@@ -115,6 +115,12 @@ module sram_sp_impl_plain(/*AUTOARG*/
       $readmemh(MEM_FILE, mem);
    endtask
 
+   task do_readmemh_file;
+      // verilator public
+      input [64*8-1:0] file;
+      $readmemh(file, mem);
+   endtask
+
     // Function to access RAM (for use by Verilator).
    function [31:0] get_mem;
       // verilator public
