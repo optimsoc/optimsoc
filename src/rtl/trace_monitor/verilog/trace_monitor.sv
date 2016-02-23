@@ -83,10 +83,12 @@ module trace_monitor(/*AUTOARG*/
    reg terminated = 0;
    
    always @(posedge clk) begin
-      if (&{termination_all}) begin
-         if (!terminated) begin
-            $finish();
-         end
+      if (termination & !terminated) begin
+	 if (&{termination_all}) begin
+            if (!terminated) begin
+               $finish();
+            end
+	 end
          terminated <= 1;
       end
 
