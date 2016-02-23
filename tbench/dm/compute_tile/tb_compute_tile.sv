@@ -97,7 +97,6 @@ module tb_compute_tile(
                         .data (trace_wbdata[i]),
                         .r3 (trace_r3[i]));
 
-`ifndef verilator
             /* trace_monitor AUTO_TEMPLATE(
              .enable  (trace_enable[i]),
              .wb_pc   (trace_pc[i]),
@@ -123,7 +122,6 @@ module tb_compute_tile(
                 .wb_insn                (trace_insn[i]),         // Templated
                 .r3                     (trace_r3[i]),           // Templated
                 .termination_all        (termination));          // Templated
-`endif
       end
    endgenerate
 

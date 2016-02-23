@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013, 2016 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -110,14 +110,16 @@ module sram_sp_impl_plain(/*AUTOARG*/
    endgenerate
 
 `ifdef verilator
+   export "DPI-C" task do_readmemh;
+
    task do_readmemh;
-      // verilator public
       $readmemh(MEM_FILE, mem);
    endtask
 
+   export "DPI-C" task do_readmemh_file;
+
    task do_readmemh_file;
-      // verilator public
-      input [64*8-1:0] file;
+      input bit [64*8-1:0] file;
       $readmemh(file, mem);
    endtask
 

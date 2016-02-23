@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+datadir=@datadir@
+
+Name: OpTiMSoC Simulation library
+Description: OpTiMSoC simulation library
+Version: @VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -loptimsocsim

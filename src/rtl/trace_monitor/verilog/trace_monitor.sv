@@ -68,12 +68,12 @@ module trace_monitor(/*AUTOARG*/
       count = 0;
       is_newline = 1;
 
-      stdout = $fopen(STDOUT_FILENAME);
+      stdout = $fopen(STDOUT_FILENAME, "w");
       $fwrite(stdout, "# OpTiMSoC trace_monitor stdout file\n");
       $fwrite(stdout, "# [TIME, CORE] MESSAGE\n");
 
       if (ENABLE_TRACE) begin
-         tracefile = $fopen(TRACEFILE_FILENAME);
+         tracefile = $fopen(TRACEFILE_FILENAME, "w");
          $fwrite(tracefile, "# OpTiMSoC trace_monitor trace file\n");
          $fwrite(tracefile, "# [TIME, CORE] COUNT, INSTRUCTION\n");
       end
@@ -85,7 +85,6 @@ module trace_monitor(/*AUTOARG*/
    always @(posedge clk) begin
       if (&{termination_all}) begin
          if (!terminated) begin
-            $write("Finished\n");
             $finish();
          end
          terminated <= 1;
