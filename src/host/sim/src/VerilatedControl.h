@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,28 +19,52 @@
  * THE SOFTWARE.
  *
  * Author(s):
- *   Philipp Wagner <philipp.wagner@tum.de>
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-#include "TracePacket.h"
+#ifndef _VERILATEDCONTROL_H_
+#define _VERILATEDCONTROL_H_
 
-#include <stdlib.h>
+#include <verilated.h>
+#include <vltstd/svdpi.h>
+#include "VerilatedToplevel.h"
+#include "OptionsParser.h"
 
-TracePacket::TracePacket() : m_rawPacket(0)
-{
-}
+#include <vector>
 
-TracePacket::~TracePacket()
-{
-    if (m_rawPacket) {
-        free(m_rawPacket);
-        m_rawPacket = NULL;
+namespace optimsoc {
+
+typedef void (*readmemh_func)();
+typedef void (*readmemh_file_func)(const svBitVecVal* file);
+
+class VerilatedControl {
+public:
+    static VerilatedControl& instance() {
+        static VerilatedControl inst;
+        return inst;
     }
+    void init(VerilatedToplevel &top, int argc, char* argv[]);
+    ~VerilatedControl();
+    void run();
+    void setMemoryFuncs(readmemh_func, readmemh_file_func);
+    void addMemory(const char* scopename);
+    uint64_t getTime();
+private:
+    OptionsParser *m_opt;
+    VerilatedToplevel *m_top;
+
+    std::vector<const char*> m_Memories;
+    readmemh_func m_readmemh;
+    readmemh_file_func m_readmemh_file;
+
+    uint64_t m_time;
+
+    // Singleton
+    VerilatedControl() { }
+    VerilatedControl(const VerilatedControl&);
+    VerilatedControl& operator = (const VerilatedControl &);
+};
+
 }
 
-const uint8_t* TracePacket::getRawPacket()
-{
-    refreshRawPacketData();
-    return m_rawPacket;
-}
+#endif

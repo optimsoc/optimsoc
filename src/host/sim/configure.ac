@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 by the author(s)
+# Copyright (c) 2012-2016 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,26 +19,26 @@
 # THE SOFTWARE.
 #
 # Author(s):
-#   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+#   Stefan Wallentowitz <stefan@wallentowitz.de>
 
 AC_PREREQ(2.60)
-AC_INIT([optimsoc-sysc],
+AC_INIT([optimsoc-sim],
         [0.1],
-        [stefan.wallentowitz@tum.de],
-        [optimsoc-sysc],
+        [stefan@wallentowitz.de],
+        [optimsoc-sim],
         [http://www.optimsoc.org])
 
-AC_CONFIG_SRCDIR([src/debug/DebugConnector.cpp])
+AC_CONFIG_SRCDIR([src/OptionsParser.cpp])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax no-dist-gzip dist-xz subdir-objects])
 
 # Library versioning
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # http://sourceware.org/autobook/autobook/autobook_91.html
-LIBOPTIMSOCSYSC_CURRENT=1
-LIBOPTIMSOCSYSC_REVISION=0
-LIBOPTIMSOCSYSC_AGE=0
-LTLDFLAGS="-version-info ${LIBOPTIMSOCSYSC_CURRENT}:${LIBOPTIMSOCSYSC_REVISION}:${LIBOPTIMSOCSYSC_AGE}"
+LIBOPTIMSOCSIM_CURRENT=1
+LIBOPTIMSOCSIM_REVISION=0
+LIBOPTIMSOCSIM_AGE=0
+LTLDFLAGS="-version-info ${LIBOPTIMSOCSIM_CURRENT}:${LIBOPTIMSOCSIM_REVISION}:${LIBOPTIMSOCSIM_AGE}"
 AC_SUBST(LTLDFLAGS)
 
 AC_PROG_CXX
@@ -52,9 +52,12 @@ AC_PREFIX_DEFAULT([/usr])
 AC_PROG_SED
 AC_PROG_MKDIR_P
 
-PKG_CHECK_MODULES([SYSTEMC], [systemc], , )
-AC_SUBST([SYSTEMC_CFLAGS])
-AC_SUBST([SYSTEMC_LIBS])
+PKG_CHECK_MODULES([verilator], [verilator],
+	[AC_SUBST([verilator_CFLAGS]) AC_SUBST([verilator_LIBS])],
+	[AS_IF([test "x${VERILATOR_ROOT}" != x],
+		   [AC_SUBST([verilator_CFLAGS]) AC_SUBST([verilator_LIBS])],
+		   [AC_MSG_ERROR([Cannot find Verilator])]	
+	)])
 
 AC_CONFIG_FILES([
         Makefile

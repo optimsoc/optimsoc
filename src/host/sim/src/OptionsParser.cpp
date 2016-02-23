@@ -32,9 +32,11 @@ namespace optimsoc {
 
 OptionsParser::OptionsParser() {
     mStandalone = false;
+    mVcd = false;
     mVcdFrom = 0;
     mVcdTo = 0;
     mMemInit = "";
+    mLimit = 0;
 }
 
 OptionsParser::~OptionsParser() {
@@ -57,13 +59,15 @@ void OptionsParser::parse(int argc, char **argv) {
         static struct option long_options[] = {
                 {"standalone", no_argument,       0, 'a'},
                 {"meminit",    required_argument, 0, 'b'},
-                {"vcd-from",   required_argument, 0, 'c'},
-                {"vcd-to",     required_argument, 0, 'd'},
+                {"vcd", no_argument, 0, 'c' },
+                {"vcd-from",   required_argument, 0, 'd'},
+                {"vcd-to",     required_argument, 0, 'e'},
+                {"limit", required_argument, 0, 'f'},
                 {0, 0, 0, 0}
         };
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "ab:c:d:", long_options, &option_index);
+        c = getopt_long(argc, argv, "ab:cd:e:", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -78,15 +82,25 @@ void OptionsParser::parse(int argc, char **argv) {
             mMemInit = optarg;
             break;
         case 'c':
+            mVcd = true;
+            break;
+        case 'd':
             try {
                 mVcdFrom = str2ull(optarg);
             } catch (std::runtime_error &) {
                 // Do nothing
             }
             break;
-        case 'd':
+        case 'e':
             try {
                 mVcdTo = str2ull(optarg);
+            } catch (std::runtime_error &) {
+                // Do nothing
+            }
+            break;
+        case 'f':
+            try {
+                mLimit = str2ull(optarg);
             } catch (std::runtime_error &) {
                 // Do nothing
             }

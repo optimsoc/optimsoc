@@ -19,11 +19,20 @@
 # THE SOFTWARE.
 #
 # Author(s):
-#   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+#   Stefan Wallentowitz <stefan@wallentowitz.de>
 
-EXTRA_DIST =
-CLEANFILES =
-ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
-AM_MAKEFLAGS = --no-print-directory
+lib_LTLIBRARIES = liboptimsocsim.la
 
-SUBDIRS = src
+liboptimsocsim_ladir = $(includedir)
+
+liboptimsocsim_la_SOURCES =\
+    OptionsParser.cpp \
+    VerilatedControl.cpp
+
+liboptimsocsim_la_HEADERS =\
+    OptionsParser.h \
+    VerilatedToplevel.h \
+    VerilatedControl.h
+
+liboptimsocsim_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
+liboptimsocsim_la_CPPFLAGS = $(AM_CPPFLAGS) $(verilator_CFLAGS)

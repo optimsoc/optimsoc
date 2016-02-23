@@ -1,4 +1,4 @@
-# Copyright (c) 2013 by the author(s)
+# Copyright (c) 2013-2016 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,34 +19,15 @@
 # THE SOFTWARE.
 #
 # Author(s):
-#   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+#   Stefan Wallentowitz <stefan@wallentowitz.de>
 
-lib_LTLIBRARIES = liboptimsocsysc.la
+ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+AM_MAKEFLAGS = --no-print-directory
 
-AM_CPPFLAGS = $(SYSTEMC_CFLAGS)
-AM_LDFLAGS = $(SYSTEMC_LIBS)
-
-liboptimsocsysc_la_SOURCES =\
-    debug/DebugConnector.cpp \
-    debug/VerilatedDebugConnector.cpp \
-    debug/VerilatedSTM.cpp \
-    debug/TracePacket.cpp \
-    util/OptionsParser.cpp
-
-liboptimsocsysc_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
-liboptimsocsysc_la_CPPFLAGS = $(AM_CPPFLAGS)
-liboptimsocsysc_debugincdir = $(includedir)/debug
-liboptimsocsysc_debuginc_HEADERS = debug/VerilatedDebugConnector.h \
-	debug/DebugModule.h \
-	debug/DebugConnector.h \
-	debug/TracePacket.h \
-	debug/VerilatedSTM.h
-
-liboptimsocsysc_utilincdir = $(includedir)/util
-liboptimsocsysc_utilinc_HEADERS = util/OptionsParser.h
+SUBDIRS = src
 
 # prepare pkg-config file
-share/%.pc: share/%.pc.in Makefile
+%.pc: %.pc.in Makefile
 	$(AM_V_GEN)$(MKDIR_P) share; \
 	$(SED) \
 	-e 's,@VERSION\@,$(VERSION),g' \
@@ -55,8 +36,9 @@ share/%.pc: share/%.pc.in Makefile
 	-e 's,@libdir\@,$(libdir),g' \
 	-e 's,@includedir\@,$(includedir),g' \
 	< $< > $@ || rm $@
+	
 
 pkgconfigdir = $(datadir)/pkgconfig
-pkgconfig_DATA = share/optimsoc-sysc.pc
-EXTRA_DIST = share/optimsoc-sysc.pc.in
-CLEANFILES = share/optimsoc-sysc.pc
+pkgconfig_DATA = optimsoc-sim.pc
+EXTRA_DIST = optimsoc-sim.pc.in
+CLEANFILES = optimsoc-sim.pc

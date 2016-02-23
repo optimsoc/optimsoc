@@ -53,10 +53,13 @@ private:
     bool mStandalone;
     /*! --meminit vmem file */
     std::string mMemInit;
+    bool mVcd;
     /*! --vcd-from timestamp */
     unsigned long long mVcdFrom;
     /*! --vcd-to timestamp */
     unsigned long long mVcdTo;
+    /*! maximum number of cycles */
+    unsigned long long mLimit;
 public:
     /*! Default constructor */
     OptionsParser();
@@ -91,6 +94,10 @@ public:
      */
     bool getStandalone() {
         return mStandalone;
+    }
+
+    bool isVcd() {
+        return mVcd;
     }
 
     /**
@@ -136,6 +143,10 @@ public:
      */
     const char* getMemInit() {
         return mMemInit.c_str();
+    }
+
+    unsigned long long getLimit() {
+        return mLimit;
     }
 };
 

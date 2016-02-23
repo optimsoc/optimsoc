@@ -107,7 +107,6 @@ module tb_system_2x2_cccc(
                         .data  (trace_wbdata[i]),
                         .r3    (trace_r3[i]));
 
-`ifndef verilator
          /* trace_monitor AUTO_TEMPLATE(
           .enable  (trace_enable[i]),
           .wb_pc   (trace_pc[i]),
@@ -133,7 +132,6 @@ module tb_system_2x2_cccc(
                 .wb_insn                (trace_insn[i]),         // Templated
                 .r3                     (trace_r3[i]),           // Templated
                 .termination_all        (termination));          // Templated
-`endif
       end // for (i = 0; i < NUM_CORES; i++)
    endgenerate
 

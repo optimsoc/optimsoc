@@ -2,7 +2,7 @@
 
 autoreconf --install --symlink
 
-args="--prefix=${OPTIMSOC_INSTALLATION}/systemc"
+args="--prefix=\${OPTIMSOC}/host"
 
 echo
 echo "----------------------------------------------------------------"

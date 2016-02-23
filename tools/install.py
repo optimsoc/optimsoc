@@ -229,28 +229,25 @@ def install_soc_software(options):
         cmd = "make install"
         run_command(cmd, cwd=cwdbuild)
 
-"""Install SystemC library
-
-Installs the OpTiMSoC SystemC library. It requires SystemC to be installed
-and pkgconfig to be able to find it.
+"""Install simulation library
 """
-def install_systemc_library(options):
+def install_sim_library(options):
     src = options.src
     dest = options.dest
 
-    systemcsrc = os.path.join(src, "src", "sysc")
-    systemcdest = dest
+    simsrc = os.path.join(src, "src", "host", "sim")
+    simdest = os.path.join(dest, "host")
 
-    info("Install SystemC libs")
+    info("Install simulation libs")
     check_autotools()
     check_make()
 
     info(" + autogen")
     cmd = "./autogen.sh"
-    run_command(cmd, cwd=systemcsrc)
+    run_command(cmd, cwd=simsrc)
 
     info(" + Configure")
-    cwdbuild = os.path.join(systemcsrc, "build")
+    cwdbuild = os.path.join(simsrc, "build")
     try:
         os.mkdir(cwdbuild)
     except OSError as e:
@@ -259,7 +256,7 @@ def install_systemc_library(options):
             shutil.rmtree(cwdbuild)
             os.mkdir(cwdbuild)
 
-    cmd = "../configure --prefix={}".format(systemcdest)
+    cmd = "../configure --prefix={}".format(simdest)
     run_command(cmd, cwd=cwdbuild)
 
     info(" + Build and Install")
@@ -300,19 +297,19 @@ def install_examples(options, env):
     exdest = os.path.join(dest, "examples")
 
     examples = [ { "path": "dm/compute_tile",
-                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                   "files": [ "tb_compute_tile" ] },
                  { "path": "dm/compute_tile-dual",
-                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                   "files": [ "tb_compute_tile" ] },
                  { "path": "dm/compute_tile-quad",
-                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                   "files": [ "tb_compute_tile" ] },
                  { "path": "dm/compute_tile-octa",
-                   "files": [ "tb_compute_tile", "tb_compute_tile-vcd" ] },
+                   "files": [ "tb_compute_tile" ] },
                  { "path": "dm/system_2x2_cccc",
-                   "files": [ "tb_system_2x2_cccc", "tb_system_2x2_cccc-vcd" ] },
+                   "files": [ "tb_system_2x2_cccc" ] },
                  { "path": "dm/system_2x2_cccc-dual",
-                   "files": [ "tb_system_2x2_cccc", "tb_system_2x2_cccc-vcd" ] },
+                   "files": [ "tb_system_2x2_cccc" ] },
                  { "path": "dm/system_2x2_cccc-quad",
-                   "files": [ "tb_system_2x2_cccc", "tb_system_2x2_cccc-vcd" ] }]
+                   "files": [ "tb_system_2x2_cccc" ] }]
 
     for ex in examples:
         info(" + {}".format(ex["path"]))
@@ -376,13 +373,13 @@ def set_environment(options, env):
     env['LISNOC'] = "{}/external/lisnoc".format(dest)
     env['LISNOC_RTL'] = "{}/external/lisnoc/rtl".format(dest)
 
-    pkgconfig = "{dest}/share/pkgconfig:{dest}/sw/sharepkgconfig".format(dest=dest)
+    pkgconfig = "{dest}/share/pkgconfig:{dest}/host/share/pkgconfig:{dest}/sw/sharepkgconfig".format(dest=dest)
     if 'PKG_CONFIG_PATH' in env:
         env['PKG_CONFIG_PATH'] = "{}:{}".format(pkgconfig, env['PKG_CONFIG_PATH'])
     else:
         env['PKG_CONFIG_PATH'] = pkgconfig
 
-    ldlibrary = "{}/lib".format(dest)
+    ldlibrary = "{dest}/lib:{dest}/host/lib".format(dest=dest)
     if 'LD_LIBRARY_PATH' in env:
         env['LD_LIBRARY_PATH'] = "{}:{}".format(ldlibrary, env['LD_LIBRARY_PATH'])
     else:
@@ -402,10 +399,10 @@ export OPTIMSOC_TCL=$OPTIMSOC/tools/tcl
 export LISNOC=$OPTIMSOC/external/lisnoc
 export LISNOC_RTL=$LISNOC/rtl
 
-export PKG_CONFIG_PATH=$OPTIMSOC/share/pkgconfig:$OPTIMSOC/sw/share/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=$OPTIMSOC/share/pkgconfig:$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/sw/share/pkgconfig:$PKG_CONFIG_PATH
 export PATH=$OPTIMSOC/tools/utils:$PATH
-export LD_LIBRARY_PATH=$OPTIMSOC/lib:$LD_LIBRARY_PATH
-""".format(options.dest))
+export LD_LIBRARY_PATH=$OPTIMSOC/lib:$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
+""".format(options.dest.rstrip("/")))
 
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
@@ -433,7 +430,7 @@ if __name__ == '__main__':
 
     install_soc_software(options)
 
-    install_systemc_library(options)
+    install_sim_library(options)
 
     install_hw_modules(options)
 
