@@ -5,4 +5,6 @@ all:
 TBENCH=tb_system_2x2_cccc
 TBENCH_CFLAGS?=-DNUMCORES=4
 
-include ../../Makefile.verilator.inc
+buildtools=$(shell pkg-config --variable=buildtools optimsoc-sim)
+
+include $(buildtools)/Makefile.verilator.inc
