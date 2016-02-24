@@ -191,7 +191,7 @@ def install_soc_software(options):
     src = options.src
     dest = options.dest
 
-    info("Install SoC software")
+    info("Build and install SoC software")
     check_autotools()
     check_or1kelf()
 
@@ -199,8 +199,8 @@ def install_soc_software(options):
     libs = {}
     libs["baremetal-libs"] = {}
 
-    libssrc = os.path.join(src, "src", "sw", "system")
-    libsdest = os.path.join(dest, "sw")
+    libssrc = os.path.join(src, "src", "soc", "sw")
+    libsdest = os.path.join(dest, "soc", "sw")
 
     # Build each lib and install
     for lib in libs:
@@ -269,8 +269,8 @@ def install_hw_modules(options):
 
     info("Install hardware modules")
 
-    modsrcdir = os.path.join(src, "src", "rtl")
-    moddestdir = os.path.join(dest, "modules")
+    modsrcdir = os.path.join(src, "src", "soc", "hw")
+    moddestdir = os.path.join(dest, "soc", "hw")
 
     try:
         shutil.copytree(modsrcdir, moddestdir)
@@ -368,7 +368,7 @@ def set_environment(options, env):
     dest = options.dest
 
     env['OPTIMSOC'] = dest
-    env['OPTIMSOC_RTL'] = "{}/modules".format(dest)
+    env['OPTIMSOC_RTL'] = "{}/soc/hw".format(dest)
     env['OPTIMSOC_TCL'] = "{}/tools/tcl".format(dest)
     env['LISNOC'] = "{}/external/lisnoc".format(dest)
     env['LISNOC_RTL'] = "{}/external/lisnoc/rtl".format(dest)
@@ -388,18 +388,22 @@ def set_environment(options, env):
 """Write files to setup the environment
 """
 def write_setup_files(options):
-    setup_sh = open("{}/setup.sh".format(options.dest), "w")
+    environment_sh = open("{}/optimsoc-environment.sh".format(options.dest), "w")
 
     info("Write setup files")
 
-    setup_sh.write("""
+    environment_sh.write("""
+# This file sets all environment variables necessary to run the installed
+# OpTiMSoC framework distribution contained in this folder.
+# Source this file to work with OpTiMSoC, i.e. run in your console
+# $> source optimsoc-environment.sh
 export OPTIMSOC={}
-export OPTIMSOC_RTL=$OPTIMSOC/modules
+export OPTIMSOC_RTL=$OPTIMSOC/soc/hw
 export OPTIMSOC_TCL=$OPTIMSOC/tools/tcl
 export LISNOC=$OPTIMSOC/external/lisnoc
 export LISNOC_RTL=$LISNOC/rtl
 
-export PKG_CONFIG_PATH=$OPTIMSOC/share/pkgconfig:$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/sw/share/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
 export PATH=$OPTIMSOC/tools/utils:$PATH
 export LD_LIBRARY_PATH=$OPTIMSOC/lib:$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
 """.format(options.dest.rstrip("/")))
