@@ -4,4 +4,6 @@ all:
 
 TBENCH=tb_compute_tile
 
-include ../../Makefile.verilator.inc
+buildtools=$(shell pkg-config --variable=buildtools optimsoc-sim)
+
+include $(buildtools)/Makefile.verilator.inc

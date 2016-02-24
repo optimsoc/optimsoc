@@ -23,7 +23,7 @@
 
 lib_LTLIBRARIES = liboptimsocsim.la
 
-liboptimsocsim_ladir = $(includedir)
+liboptimsocsim_ladir = $(includedir)/optimsoc-sim
 
 liboptimsocsim_la_SOURCES =\
     OptionsParser.cpp \
@@ -36,3 +36,7 @@ liboptimsocsim_la_HEADERS =\
 
 liboptimsocsim_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 liboptimsocsim_la_CPPFLAGS = $(AM_CPPFLAGS) $(verilator_CFLAGS)
+
+makefilesdir = $(datadir)/optimsoc-sim
+makefiles_DATA = share/Makefile.verilator.inc
+
