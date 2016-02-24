@@ -416,11 +416,11 @@ if __name__ == '__main__':
     parser.add_option("-d", "--destination", dest="dest",
                       help="destination folder", default="/opt/optimsoc/current")
     parser.add_option("-s", "--source", dest="src",
-                      help="source folder", default=mysrcdir)
+                      help="source folder [default: %default]", default=mysrcdir)
     parser.add_option("-f", "--force-install", dest="force", action="store_true",
-                      help="force installation (removes old)", default=False)
+                      help="force installation (removes old) [default: %default]", default=False)
     parser.add_option("--no-doc", dest="nodoc", action="store_true",
-                      help="Skip installing of documentation", default=False)
+                      help="Skip installing of documentation [default: %default]", default=False)
 
     (options, args) = parser.parse_args()
 
