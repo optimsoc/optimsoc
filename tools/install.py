@@ -408,15 +408,28 @@ export PATH=$OPTIMSOC/tools/utils:$PATH
 export LD_LIBRARY_PATH=$OPTIMSOC/lib:$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
 """.format(options.dest.rstrip("/")))
 
+"""Get the version number from the source code
+"""
+def get_version(src):
+    srctools = os.path.join(src, "tools")
+
+    get_version_tool = os.path.join(srctools, "get-version.sh")
+
+    proc = subprocess.Popen(get_version_tool, stdout=subprocess.PIPE, shell=True, cwd=srctools)
+    return proc.stdout.read().split("\n", 1)[0]
+
+
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
     mysrcdir = os.path.dirname(os.path.dirname(scriptname))
 
     parser = OptionParser()
     parser.add_option("-d", "--destination", dest="dest",
-                      help="destination folder", default="/opt/optimsoc/current")
+                      help="destination folder [default: /opt/optimsoc/<VERSION>]")
     parser.add_option("-s", "--source", dest="src",
                       help="source folder [default: %default]", default=mysrcdir)
+    parser.add_option("-v", "--set-version", dest="version",
+                      help="set the version number to the given value, overriding the detected version.")
     parser.add_option("-f", "--force-install", dest="force", action="store_true",
                       help="force installation (removes old) [default: %default]", default=False)
     parser.add_option("--no-doc", dest="nodoc", action="store_true",
@@ -424,7 +437,14 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
+    if not options.version:
+        options.version = get_version(mysrcdir)
+
+    if not options.dest:
+        options.dest = os.path.join("/", "opt", "optimsoc", options.version)
+
     info("Install OpTiMSoC")
+    info(" version: {}".format(options.version))
     info(" source: {}".format(options.src))
     info(" destination: {}".format(options.dest))
 
