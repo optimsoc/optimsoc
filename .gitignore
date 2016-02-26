@@ -5,6 +5,9 @@
 *.bak
 \#*\#
 
+# default build output directory
+/objdir
+
 # eclipse project files
 .externalToolBuilders
 .project
