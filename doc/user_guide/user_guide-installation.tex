@@ -26,16 +26,17 @@ packages to be installed:
 sudo apt-get -y install git python build-essential automake autoconf
 \end{lstlisting}
 
-\section{Get OpTiMSoC -- Quick Start}
+\section{Option 1: Install the OpTiMSoC binary distribution (recommended)}
 
 The most simple way to get started is with the release packages. You
 can find the OpTiMSoC releases here:
 \url{https://github.com/optimsoc/sources/releases}. With the release
-you can find the distribution packets that need to be extracted to
-\verb|/opt/optimsoc|. There are two packages: the \verb|base| package
-contains the programs, libraries and tools to get started. The
-\verb|examples| package contains prebuilt verilator simulations for
-the real quick start.
+you can find the distribution packets that can be extracted into any
+directory and used directly from there. The recommended default is to
+install OpTiMSoC into \verb|/opt/optimsoc|. There are two packages:
+the \verb|base| package contains the programs, libraries and tools
+to get started. The \verb|examples| package contains prebuilt verilator
+simulations for the real quick start.
 
 For example take the 2015.1 release and download both \verb|base| and
 \verb|examples|. Then create the base folder and extract the package:
@@ -51,10 +52,11 @@ You can now use the installation after setting the environment with
 the pre-installed environment source script:
 
 \begin{lstlisting}
-source /opt/optimsoc/2015.1/setup.sh
+cd /opt/optimsoc/2015.1
+source optimsoc-environment.sh
 \end{lstlisting}
 
-We encourage you to put this line into your \verb|~/.bashrc|.
+We encourage you to put this code into your \verb|~/.bashrc|.
 
 Now you are near to get started, but you need some programs to build
 software to run in OpTiMSoC and execute the verilator-based
@@ -83,7 +85,7 @@ source /opt/optimsoc/setup_prebuilt.sh
 
 You are now ready to go to the tutorials.
 
-\section{Get OpTiMSoC -- Build yourself}
+\section{Option 2: Build OpTiMSoC from sources}
 
 You can also build OpTiMSoC from the sources. This options usually
 becomes standard if you start developing for or around OpTiMSoC. The
@@ -133,12 +135,12 @@ directories.
 
 \end{docnote}
 
-\subsection{Pre-requisites}
+\subsection{Prerequisites}
 
 You will need some programs to build OpTiMSoC, e.g., on Ubuntu 14.04:
 
 \begin{lstlisting}
-sudo apt-get install autoconf automake libtool tcl texlivetexlive-latex-extra texlive-fonts-extra
+sudo apt-get install autoconf automake libtool tcl texlive texlive-latex-extra texlive-fonts-extra
 \end{lstlisting}
 
 \subsection{Get the sources}
@@ -150,10 +152,39 @@ git clone https://github.com/optimsoc/sources.git optimsoc-sources
 cd optimsoc-sources
 \end{lstlisting}
 
-\subsection{Run installer}
+\subsection{Build the code}
 
-Now simply run the installer to install:
+OpTiMSoC contains a Makefile which controls the whole build process. Building is
+as simple as calling (inside the top-level source directory)
 
 \begin{lstlisting}
-./tools/install.py -d /opt/optimsoc/2015.1
+make
+\end{lstlisting}
+
+\subsection{Install the code}
+To install OpTiMSoC to the default location in \verb|/opt/optimsoc/VERSION|
+it's sufficient to run
+
+\begin{lstlisting}
+sudo make install
+\end{lstlisting}
+
+You can also modify the target directory using environment variables passed to
+make. This is especially useful if you don't have enough permissions to
+write to \verb|/opt/optimsoc|.
+
+\begin{itemize}
+  \item Use \verb|INSTALL_PREFIX| to change the installation prefix from
+    \verb|/opt/optimsoc| to something else. The installation will then go
+    into \verb|INSTALL_PREFIX/VERSION|.
+  \item Use \verb|INSTALL_TARGET| to fully override the installation path.
+    The installation will then go exactly into this directory.
+\end{itemize}
+
+\begin{lstlisting}
+# recommended option: use INSTALL_PREFIX
+make install INSTALL_PREFIX=~/optimsoc
+
+# full control for special cases: use INSTALL_TARGET
+make install INSTALL_TARGET=~/optimsoc-testversion
 \end{lstlisting}
