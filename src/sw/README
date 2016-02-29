@@ -1,7 +1,0 @@
-= Software =
-
-Different pieces of software are needed in an OpTiMSoC system. This is 
-basically system software (found in system) and host/debug software 
-(found in host). Beside this the folder special currently contains 
-firmware for the ZTEX board.
-

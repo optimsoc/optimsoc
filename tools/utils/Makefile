@@ -1,7 +1,15 @@
-all: bin2vmem
+OBJDIR := .
 
-bin2vmem: bin2vmem.c
-	gcc -Wall -o bin2vmem bin2vmem.c
+all: $(OBJDIR)/bin2vmem $(OBJDIR)/optimsoc-pgas-binary
+
+$(OBJDIR)/bin2vmem: bin2vmem.c
+	gcc -Wall -o $(OBJDIR)/bin2vmem bin2vmem.c
+
+$(OBJDIR)/optimsoc-pgas-binary:
+	cp optimsoc-pgas-binary $(OBJDIR)/optimsoc-pgas-binary
 
 clean:
-	rm bin2vmem
+	rm $(_OBJS)
+
+.PHONY: clean
+

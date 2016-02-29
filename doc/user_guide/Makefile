@@ -2,6 +2,8 @@ PDFLATEX ?= pdflatex
 LATEXML ?= latexml
 LATEXMLPOST ?= latexmlpost
 
+OBJDIR := .
+
 TEXFILES = user_guide-preamble.tex \
            user_guide-title.tex \
            user_guide-changes.tex \
@@ -15,19 +17,22 @@ TEXFILES = user_guide-preamble.tex \
 
 all: pdf html
 
-html: html/user_guide.xhtml
+html: $(OBJDIR)/html/user_guide.xhtml
 
-pdf: user_guide.pdf
+pdf: $(OBJDIR)/user_guide.pdf
 
-%.pdf: %.tex $(TEXFILES) Makefile
-	$(PDFLATEX) -interaction nonstopmode $*.tex
+$(OBJDIR)/%.pdf: %.tex $(TEXFILES) Makefile
+	$(PDFLATEX) -output-directory=$(OBJDIR) -interaction nonstopmode $*.tex
 	# Run again to get references right
-	$(PDFLATEX) -interaction nonstopmode $*.tex
+	$(PDFLATEX) -output-directory=$(OBJDIR) -interaction nonstopmode $*.tex
 
-html/%.xhtml: %-html.tex $(TEXFILES)
-	$(LATEXML) --dest=$*.xml $*-html.tex
-	$(LATEXMLPOST) --dest=html/$*.xhtml $*.xml
+$(OBJDIR)/html/%.xhtml: %-html.tex $(TEXFILES)
+	$(LATEXML) --dest=$(OBJDIR)/$*.xml $<
+	$(LATEXMLPOST) --dest=$(OBJDIR)/html/$*.xhtml $(OBJDIR)/$*.xml
 
 clean:
-	rm -rf *.pdf *.aux *.toc *.out *.log *.xml html/
+	rm -rf $(OBJDIR)/*.pdf $(OBJDIR)/*.aux $(OBJDIR)/*.toc $(OBJDIR)/*.out \
+		$(OBJDIR)/*.log $(OBJDIR)/*.xml $(OBJDIR)/html
 
+
+.PHONY: clean
