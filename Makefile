@@ -24,3 +24,6 @@ dist: build
 	@echo $(OBJDIR)/optimsoc-$(version)-base.tar.gz and
 	@echo $(OBJDIR)/optimsoc-$(version)-examples.tar.gz
 
+clean:
+	rm -rf $(OBJDIR)
+
