@@ -9,7 +9,7 @@ build:
 
 install: build
 	mkdir -p $(INSTALL_TARGET)
-	cp -r $(OBJDIR)/dist $(INSTALL_TARGET)
+	cp -rT $(OBJDIR)/dist $(INSTALL_TARGET)
 
 dist: build
 	tar -cz --directory $(OBJDIR) --exclude examples \
