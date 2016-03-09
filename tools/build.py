@@ -240,6 +240,9 @@ def build_soc_software(options):
     libssrc = os.path.join(src, "src", "soc", "sw")
     libsobjdir = os.path.join(objdir, "soc", "sw")
     libsdist = os.path.join(dist, "soc", "sw")
+    # magic escaping to ultimately get prefix=${OPTIMSOC}/soc/sw into the
+    # pkg-config file
+    libsprefix = os.path.join("\$\$\\{OPTIMSOC\\}", "soc", "sw")
 
     # Build each lib and install
     for lib in libs:
@@ -255,7 +258,7 @@ def build_soc_software(options):
         ensure_directory(libobjdir)
 
         info("  + Configure")
-        cmd = "{}/configure --prefix={} --host=or1k-elf".format(libsrc, libsdist)
+        cmd = "{}/configure --prefix={} --host=or1k-elf".format(libsrc, libsprefix)
         run_command(cmd, cwd=libobjdir)
 
         info("  + Build")
@@ -263,7 +266,7 @@ def build_soc_software(options):
         run_command(cmd, cwd=libobjdir)
 
         info("  + Install build artifacts")
-        cmd = "make install"
+        cmd = "make install prefix={}".format(libsdist)
         run_command(cmd, cwd=libobjdir)
 
 """Build simulation library
@@ -276,6 +279,9 @@ def build_sim_library(options):
     simsrc = os.path.join(src, "src", "host", "sim")
     simobjdir = os.path.join(objdir, "host", "sim")
     simdist = os.path.join(dist, "host")
+    # magic escaping to ultimately get prefix=${OPTIMSOC}/sim into the
+    # pkg-config file
+    simprefix = os.path.join("\$\$\\{OPTIMSOC\\}", "host")
 
     info("Build simulation libs")
     check_autotools()
@@ -288,7 +294,7 @@ def build_sim_library(options):
     info(" + Configure")
     ensure_directory(simobjdir)
 
-    cmd = "{}/configure --prefix={}".format(simsrc, simdist)
+    cmd = "{}/configure --prefix={}".format(simsrc, simprefix)
     run_command(cmd, cwd=simobjdir)
 
     info(" + Build")
@@ -296,7 +302,7 @@ def build_sim_library(options):
     run_command(cmd, cwd=simobjdir)
 
     info(" + Install build artifacts")
-    cmd = "make install"
+    cmd = "make install prefix={}".format(simdist)
     run_command(cmd, cwd=simobjdir)
 
 """Build the hardware modules
