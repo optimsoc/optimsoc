@@ -214,7 +214,7 @@ def build_tools(options):
     # Copy build artifacts
     info("  + Copy build artifacts")
     ensure_directory(utilsdistdir)
-    utilsfiles = ['bin2vmem', 'optimsoc-pgas-binary']
+    utilsfiles = ['bin2vmem', 'optimsoc-pgas-binary', 'pkg-config']
     for f in utilsfiles:
         srcf = os.path.join(utilsobjdir, f)
         destf = os.path.join(utilsdistdir, f)
@@ -421,6 +421,8 @@ def set_environment(options, env):
         env['PKG_CONFIG_PATH'] = "{}:{}".format(pkgconfig, env['PKG_CONFIG_PATH'])
     else:
         env['PKG_CONFIG_PATH'] = pkgconfig
+
+    env['PATH'] =  "{dist}/tools/utils:{existing_path}".format(dist=dist, existing_path=env['PATH'])
 
     ldlibrary = "{dist}/host/lib".format(dist=dist)
     if 'LD_LIBRARY_PATH' in env:
