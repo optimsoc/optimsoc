@@ -46,7 +46,7 @@ EXTRA_OBJS = $(EXTRA_SRCS:.c=.o)
 $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 	@PROGRAM=$(PROGRAM) sh $(BUILDSCRIPTS)/create_pgas_binary.sh 
 
-$(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS)
+$(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS) $(EXTRA_DEPS)
 	$(CC_FOR_TARGET) $(CFLAGS) -Wall \
 	$(PROGRAM).o  $(EXTRA_OBJS) -o $@ \
 	$(LIBS)

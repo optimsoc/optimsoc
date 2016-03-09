@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Wrapper around pkg-config to define the OPTIMSOC variable inside *.pc files
+#
+
+# Reset path to ensure we don't call ourself again
+# XXX: This could be handled more elegantly, but resetting should do it for now.
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+exec pkg-config --define-variable=OPTIMSOC=$OPTIMSOC $@
