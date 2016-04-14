@@ -26,6 +26,8 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
+`include "dbg_config.vh"
+
 module mor1kx_module (
    /*AUTOARG*/
    // Outputs
