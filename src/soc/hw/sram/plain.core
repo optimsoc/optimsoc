@@ -2,6 +2,7 @@ CAPI=1
 [main]
 name = optimsoc:sram:plain
 description = "Single-Port SRAM implementation using no vendor-specific blocks"
+depend = optimsoc:base:functions
 
 [fileset src_files]
 file_type = verilogSource
