@@ -445,7 +445,7 @@ def write_environment_file(options):
 # $> source optimsoc-environment.sh
 
 if [ -n "$BASH_SOURCE" ]; then
-   OPTIMSOC="`dirname $BASH_SOURCE`"
+   OPTIMSOC="`cd "$( dirname "${{BASH_SOURCE[0]}}" )" && pwd `"
 elif [ -n "$ZSH_NAME" ]; then
    OPTIMSOC="`dirname $0`"
 else
