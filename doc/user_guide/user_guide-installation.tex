@@ -60,19 +60,18 @@ We encourage you to put this code into your \verb|~/.bashrc|.
 
 Now you are near to get started, but you need some programs to build
 software to run in OpTiMSoC and execute the verilator-based
-simulations. Those are: the \verb|or1k-elf-multicore| toolchain,
-\verb|SystemC| and \verb|Verilator|. All those tools are free, but are
-(except for an outdated \verb|Verilator| version) not part of the
-Linux package systems. Hence you need to built those tools as
-described in the Reference Manual, or you can simply download some
-prebuilt-versions.
+simulations. Those are: the \verb|or1k-elf-multicore| toolchain and
+\verb|Verilator|. All those tools are free, but are (except for an
+outdated \verb|Verilator| version) not part of the Linux package
+systems. Hence you need to built those tools as described in the
+Reference Manual, or you can simply download some prebuilt-versions.
 
 To do so simply run a script for your version:
 
 \begin{lstlisting}
-wget https://raw.githubusercontent.com/optimsoc/prebuilts/master/optimsoc-prebuilt-deploy.py
-chmod a+x optimsoc-prebuilt-deploy.py
-./optimsoc-prebuilt-deploy -d /opt/optimsoc systemc verilator or1kelf
+  wget https://raw.githubusercontent.com/optimsoc/prebuilts/master/optimsoc-prebuilt-deploy.py
+  chmod a+x optimsoc-prebuilt-deploy.py
+  ./optimsoc-prebuilt-deploy.py -d /opt/optimsoc verilator or1kelf
 \end{lstlisting}
 
 You may of course leave out any of the tools if you already have it
@@ -98,9 +97,9 @@ detailed explanation of how to get your personal copies of OpTiMSoC
 and (potentially) update them.
 
 The start of a successful built is to install the tools
-\verb|Verilator|, \verb|SystemC|, and the \verb|or1k-elf-multicore|
-toolchain. The most simple way is to start with the prebuilt tools as
-described above, then set the environment for the tools.
+\verb|Verilator| and the \verb|or1k-elf-multicore| toolchain. The most
+simple way is to start with the prebuilt tools as described above,
+then set the environment for the tools.
 
 \begin{docnote}
 During the installation, you'll frequently encounter three types of
