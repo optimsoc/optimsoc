@@ -22,7 +22,7 @@ before_install:
  # Get prebuilts
  - curl ${PREBUILT_DEPLOY_URL} -o /tmp/${PREBUILT_DEPLOY}
  - chmod a+x /tmp/${PREBUILT_DEPLOY}
- - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} -r 12.04 all
+ - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} all
 
 # Execute the build
 install:
