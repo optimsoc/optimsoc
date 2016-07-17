@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013-2016 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
  * This is the compute tile for distributed memory systems.
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
 `include "lisnoc_def.vh"
@@ -44,10 +44,9 @@ module compute_tile_dm(
 `endif
    /*AUTOARG*/
    // Outputs
-   noc_in_ready, noc_out_flit, noc_out_valid, trace,
+   noc_in_ready, noc_out_flit, noc_out_valid,
    // Inputs
-   clk, rst_cpu, rst_sys, noc_in_flit, noc_in_valid, noc_out_ready,
-   cpu_stall
+   clk, rst_cpu, rst_sys, noc_in_flit, noc_in_valid, noc_out_ready
    );
 
    parameter NOC_FLIT_DATA_WIDTH = 32;
@@ -66,16 +65,18 @@ module compute_tile_dm(
    parameter NR_MASTERS = CORES * 2 + 1;
    parameter NR_SLAVES = 3;
 
+   parameter USE_DEBUG = 1;
+   parameter DEBUG_BASEID = 0;
+
    /* memory size in bytes */
    parameter MEM_SIZE = 30*1024; // 30 kByte
    parameter MEM_FILE = "ct.vmem";
 
    parameter GLOBAL_MEMORY_SIZE = 32'h0;
    parameter GLOBAL_MEMORY_TILE = 32'hx;
-   
+
    parameter NA_ENABLE_DMA = 1;
    parameter DMA_ENTRIES = 4;
-   // TODO: make define out of it
 
    input clk;
    input rst_cpu, rst_sys;
@@ -87,9 +88,7 @@ module compute_tile_dm(
    output [VCHANNELS-1:0] noc_out_valid;
    input [VCHANNELS-1:0] noc_out_ready;
 
-   input cpu_stall;
-
-   output [`DEBUG_TRACE_EXEC_WIDTH*CORES-1:0] trace;
+   wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace [0:CORES-1];
 
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    input [31:0]  wb_mam_adr_o;
@@ -199,7 +198,7 @@ module compute_tile_dm(
          assign busms_sel_o_flat[4*(m+1)-1:4*m] = busms_sel_o[m];
          assign busms_stb_o_flat[m] = busms_stb_o[m];
          assign busms_we_o_flat[m] = busms_we_o[m];
-         assign busms_cab_o_flat[m] = busms_cab_o[m];      
+         assign busms_cab_o_flat[m] = busms_cab_o[m];
          assign busms_cti_o_flat[3*(m+1)-1:3*m] = busms_cti_o[m];
          assign busms_bte_o_flat[2*(m+1)-1:2*m] = busms_bte_o[m];
          assign busms_ack_i[m] = busms_ack_i_flat[m];
@@ -208,7 +207,7 @@ module compute_tile_dm(
          assign busms_dat_i[m] = busms_dat_i_flat[32*(m+1)-1:32*m];
       end
    endgenerate
-   
+
    generate
       for (c = 1; c < CORES; c = c + 1) begin
          assign pic_ints_i[c] = 31'h0;
@@ -224,7 +223,7 @@ module compute_tile_dm(
           .bus_clk_i      (clk),
           .bus_rst_i      (rst_cpu),
           .dbg_.*_o       (),
-          .dbg_stall_i    (cpu_stall),
+          .dbg_stall_i    (1'b0),
           .dbg_ewt_i      (1'b0),
           .dbg_stb_i      (1'b0),
           .dbg_we_i       (1'b0),
@@ -235,7 +234,7 @@ module compute_tile_dm(
           .pic_ints_i     (pic_ints_i[c]),
           .snoop_enable_i (snoop_enable),
           .snoop_adr_i    (snoop_adr),
-          .trace          (trace[`DEBUG_TRACE_EXEC_WIDTH*(c+1)-1:`DEBUG_TRACE_EXEC_WIDTH*c]),
+          .trace          (trace[c]),
           ); */
          mor1kx_module
                #(.ID(c),
@@ -265,13 +264,13 @@ module compute_tile_dm(
                  .dwb_dat_o             (busms_dat_o[c*2+1][31:0]), // Templated
                  .dwb_bte_o             (busms_bte_o[c*2+1][1:0]), // Templated
                  .dwb_cti_o             (busms_cti_o[c*2+1][2:0]), // Templated
-                 .trace                 (trace[`DEBUG_TRACE_EXEC_WIDTH*(c+1)-1:`DEBUG_TRACE_EXEC_WIDTH*c]), // Templated
+                 .trace                 (trace[c]), // Templated
                  // Inputs
                  .clk_i                 (clk),                   // Templated
                  .bus_clk_i             (clk),                   // Templated
                  .rst_i                 (rst_cpu),               // Templated
                  .bus_rst_i             (rst_cpu),               // Templated
-                 .dbg_stall_i           (cpu_stall),             // Templated
+                 .dbg_stall_i           (1'b0),                  // Templated
                  .dbg_ewt_i             (1'b0),                  // Templated
                  .dbg_stb_i             (1'b0),                  // Templated
                  .dbg_we_i              (1'b0),                  // Templated
@@ -289,12 +288,12 @@ module compute_tile_dm(
                  .snoop_enable_i        (snoop_enable),          // Templated
                  .snoop_adr_i           (snoop_adr));            // Templated
 
-         
+
          assign busms_cab_o[c*2] = 1'b0;
          assign busms_cab_o[c*2+1] = 1'b0;
       end
    endgenerate
-         
+
    /* wb_bus_b3 AUTO_TEMPLATE(
     .clk_i      (clk),
     .rst_i      (rst_sys),
@@ -345,6 +344,12 @@ module compute_tile_dm(
          .s_err_i                       ({bussl_err_o[2],bussl_err_o[1],bussl_err_o[0]}), // Templated
          .s_rty_i                       ({bussl_rty_o[2],bussl_rty_o[1],bussl_rty_o[0]}), // Templated
          .bus_hold                      (1'b0));                         // Templated
+
+   generate
+      if (USE_DEBUG) begin
+
+      end
+   endgenerate
 
 
    /* mam_wb_adapter AUTO_TEMPLATE(
@@ -549,6 +554,6 @@ module compute_tile_dm(
 endmodule
 
 // Local Variables:
-// verilog-library-directories:("../../*/verilog/")
+// verilog-library-directories:("../../*/verilog/" "../../../../../external/osd/hardware/*/*/common/")
 // verilog-auto-inst-param-value: t
 // End:

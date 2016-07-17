@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = optimsoc:debug:debug_interface
+depend =
+   opensocdebug:modules:scm
+   opensocdebug:modules:him
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/debug_interface.sv
+
