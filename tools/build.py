@@ -1,4 +1,18 @@
 #!/usr/bin/python
+#
+# Build, package and install the OpTiMSoC distribution
+#
+# This script controls the build process of the various components making up the
+# OpTiMSoC framework. Its output is a "distribution directory," which can then
+# be copied to a installation location, or zipped and released as binary
+# distribution.
+#
+# We try hard not to leave any intermediate build artifacts inside the source
+# tree. All build steps are done inside the "object directory", short objdir.
+# The build is then "installed" into the distribution directory.
+# One notable exception where files are modified in the source directory are
+# the autotools-generated scripts, mostly the configure script.
+#
 
 from optparse import OptionParser
 import os
@@ -196,7 +210,7 @@ def build_tools(options):
     info(" + utils")
     utilssrcdir = os.path.join(src, "tools", "utils")
     utilsobjdir = os.path.join(objdir, "tools", "utils")
-    utilsdistdir = os.path.join(dist, "tools", "utils")
+    bindistdir = os.path.join(dist, "host", "bin")
 
     # Build the utils (bin2vmem currently)
     info("  + Build")
@@ -206,11 +220,11 @@ def build_tools(options):
 
     # Copy build artifacts
     info("  + Copy build artifacts")
-    ensure_directory(utilsdistdir)
+    ensure_directory(bindistdir)
     utilsfiles = ['bin2vmem', 'optimsoc-pgas-binary', 'pkg-config']
     for f in utilsfiles:
         srcf = os.path.join(utilsobjdir, f)
-        destf = os.path.join(utilsdistdir, f)
+        destf = os.path.join(bindistdir, f)
         file_copy(srcf, destf)
 
 """Build the SoC software
@@ -311,11 +325,6 @@ def build_hw_modules(options):
 
     file_copytree(modsrcdir, moddistdir)
 
-    modsrcdir = os.path.join(src, "external", "lisnoc")
-    moddistdir = os.path.join(dist, "external", "lisnoc")
-
-    file_copytree(modsrcdir, moddistdir)
-
 """Build and install the examples
 """
 def build_examples(options, env):
@@ -398,7 +407,171 @@ def build_docs(options):
     distcopying = os.path.join(dist, "COPYING")
     file_copy(srccopying, distcopying)
 
-"""Set an environment
+""" Copy lisnoc
+"""
+def build_externals_lisnoc(options):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    info("Copy lisnoc")
+    srcdir = os.path.join(src, "external", "lisnoc")
+    distdir = os.path.join(dist, "external", "lisnoc")
+
+    file_copytree(srcdir, distdir)
+
+""" Copy extra_cores
+"""
+def build_externals_extra_cores(options):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    info("Copy extra_cores hardware modules")
+    srcdir = os.path.join(src, "external", "extra_cores")
+    distdir = os.path.join(dist, "external", "extra_cores")
+
+    file_copytree(srcdir, distdir)
+
+""" Copy GLIP hardware modules
+"""
+def build_externals_glip(options):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    info("Copy GLIP hardware modules")
+    # XXX: Only copy hardware, not the full tree.
+    srcdir = os.path.join(src, "external", "glip")
+    distdir = os.path.join(dist, "external", "glip")
+
+    file_copytree(srcdir, distdir)
+
+""" Build and install our private copy of the Open SoC Debug host software
+"""
+def build_externals_glip_software(options):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    src = os.path.join(src, "external", "glip")
+    objdir = os.path.join(objdir, "external", "opensocdebug")
+    dist = os.path.join(dist, "host")
+    # magic escaping to ultimately get prefix=${OPTIMSOC}/host into the
+    # pkg-config file
+    prefix = os.path.join("\$\$\\{OPTIMSOC\\}", "host")
+
+    info("Build GLIP (for host)")
+    check_autotools()
+    check_make()
+
+    info(" + autogen")
+    cmd = "./autogen.sh"
+    run_command(cmd, cwd=src)
+
+    info(" + Configure")
+    ensure_directory(objdir)
+
+    cmd = "{}/configure --prefix={} --enable-cypressfx2 --enable-jtag --enable-tcp".format(src, prefix)
+    run_command(cmd, cwd=objdir)
+
+    info(" + Build")
+    cmd = "make"
+    run_command(cmd, cwd=objdir)
+
+    info(" + Install build artifacts")
+    cmd = "make install prefix={}".format(dist)
+    run_command(cmd, cwd=objdir)
+
+""" Build and install the Open SoC Debug hardware components
+"""
+def build_externals_opensocdebug_hardware(options):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    srcdir = os.path.join(src, "external", "opensocdebug", "hardware")
+    distdir = os.path.join(dist, "external", "opensocdebug", "hardware")
+
+    file_copytree(srcdir, distdir)
+
+""" Build and install our private copy of the Open SoC Debug host software
+"""
+def build_externals_opensocdebug_software(options, env):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    src = os.path.join(src, "external", "opensocdebug", "software")
+    objdir = os.path.join(objdir, "external", "opensocdebug", "software")
+    dist = os.path.join(dist, "host")
+    # magic escaping to ultimately get prefix=${OPTIMSOC}/host into the
+    # pkg-config file
+    prefix = os.path.join("\$\$\\{OPTIMSOC\\}", "host")
+
+    info("Build opensocdebug host software")
+    check_autotools()
+    check_make()
+
+    info(" + autogen")
+    cmd = "./autogen.sh"
+    run_command(cmd, cwd=src, env=env)
+
+    info(" + Configure")
+    ensure_directory(objdir)
+
+    cmd = "{}/configure --prefix={}".format(src, prefix)
+    run_command(cmd, cwd=objdir, env=env)
+
+    info(" + Build")
+    cmd = "make"
+    run_command(cmd, cwd=objdir, env=env)
+
+    info(" + Install build artifacts")
+    cmd = "make install prefix={}".format(dist)
+    run_command(cmd, cwd=objdir, env=env)
+
+
+""" Build and install our private copy of FuseSoC
+
+We don't "build" or "install" fusesoc using setuptools, pip or any other of the
+numerous options in python to install things. All those methods output
+directories which depend on a specific python version, in addition to a specific
+OS and architecture.
+Instead, just copying the fusesoc sources and calling them directly works just
+fine.
+"""
+def build_externals_fusesoc(options):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    info("Build and install our private copy of FuseSoC")
+
+    info(" + Copy sources")
+    srcdir = os.path.join(src, "external", "fusesoc", "fusesoc")
+    distdir = os.path.join(dist, "tools", "fusesoc")
+
+    file_copytree(srcdir, distdir)
+
+    info(" + Create optimsoc-fusesoc wrapper script")
+    bindistdir  = os.path.join(dist, "host", "bin")
+    ensure_directory(bindistdir)
+
+    fusesoc_wrapper_file = "{}/optimsoc-fusesoc".format(bindistdir)
+
+    fusesoc_wrapper = open(fusesoc_wrapper_file, "w")
+    fusesoc_wrapper.write("""#!/bin/sh
+test -z "$OPTIMSOC" && (echo 'The environment variable $OPTIMSOC must be set.' >&2; exit 1)
+exec python3 $OPTIMSOC/tools/fusesoc/main.py $@
+""")
+    os.chmod(fusesoc_wrapper_file, 0755)
+
+
+"""Setup the OpTiMSoC environment variables pointing towards the dist directory
+
+This environment can be used to build software depending on an OpTiMSoC
+installation.
 """
 def set_environment(options, env):
     dist = os.path.join(options.objdir, "dist")
@@ -408,13 +581,23 @@ def set_environment(options, env):
     env['LISNOC'] = "{}/external/lisnoc".format(dist)
     env['LISNOC_RTL'] = "{}/external/lisnoc/rtl".format(dist)
 
-    pkgconfig = "{dist}/host/share/pkgconfig:{dist}/soc/sw/share/pkgconfig".format(dist=dist)
+    env['FUSESOC_CORES'] = (
+        "{dist}/soc/hw:"
+        "{dist}/external/lisnoc:"
+        "{dist}/external/opensocdebug/hardware:"
+        "{dist}/external/extra_cores:"
+        "{dist}/external/glip".format(dist=dist));
+
+    pkgconfig = (
+        "{dist}/host/share/pkgconfig:"
+        "{dist}/host/lib/pkgconfig:"
+        "{dist}/soc/sw/share/pkgconfig".format(dist=dist))
     if 'PKG_CONFIG_PATH' in env:
         env['PKG_CONFIG_PATH'] = "{}:{}".format(pkgconfig, env['PKG_CONFIG_PATH'])
     else:
         env['PKG_CONFIG_PATH'] = pkgconfig
 
-    env['PATH'] =  "{dist}/tools/utils:{existing_path}".format(dist=dist, existing_path=env['PATH'])
+    env['PATH'] =  "{dist}/host/bin:{existing_path}".format(dist=dist, existing_path=env['PATH'])
 
     ldlibrary = "{dist}/host/lib".format(dist=dist)
     if 'LD_LIBRARY_PATH' in env:
@@ -422,7 +605,7 @@ def set_environment(options, env):
     else:
         env['LD_LIBRARY_PATH'] = ldlibrary
 
-"""Write the OpTiMSoC environment setup file
+"""Write the OpTiMSoC environment setup file (optimsoc-environment.sh)
 """
 def write_environment_file(options):
     dist = os.path.join(options.objdir, "dist")
@@ -444,15 +627,28 @@ else
    OPTIMSOC="`pwd`"
 fi
 
+# Check if we were able to determine the optimsoc installation path properly.
+# It is known to fail with some shells if sourced not from the installation
+# directory itself.
+if [ ! -f "$OPTIMSOC/optimsoc-environment.sh" ]; then
+  echo "Unable to determine OpTiMSoC path from shell." >&2
+  echo "Source this file directly from the installation directory." >&2
+  echo "$> cd optimsoc/installation/directory" >&2
+  echo "$> source optimsoc-environment.sh" >&2
+  return
+fi
+
 export OPTIMSOC
 export OPTIMSOC_RTL=$OPTIMSOC/soc/hw
 export OPTIMSOC_VERSION={}
 export LISNOC=$OPTIMSOC/external/lisnoc
 export LISNOC_RTL=$LISNOC/rtl
 
-export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
-export PATH=$OPTIMSOC/tools/utils:$PATH
-export LD_LIBRARY_PATH=$OPTIMSOC/lib:$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
+export FUSESOC_CORES=$OPTIMSOC/soc/hw:$OPTIMSOC/external/lisnoc:$OPTIMSOC/external/opensocdebug/hardware:$OPTIMSOC/external/extra_cores:$OPTIMSOC/external/glip:$FUSESOC_CORES
+
+export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/host/lib/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
+export PATH=$OPTIMSOC/host/bin:$PATH
+export LD_LIBRARY_PATH=$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
 """.format(options.version))
 
 """Get the version number from the source code
@@ -483,6 +679,9 @@ if __name__ == '__main__':
                            "overriding the detected version.")
     parser.add_option("--no-doc", dest="nodoc", action="store_true",
                       help="Skip building of documentation [default: %default]",
+                      default=False)
+    parser.add_option("--no-examples", dest="noexamples", action="store_true",
+                      help="Skip building of examples [default: %default]",
                       default=False)
     parser.add_option("-d", "--debug", dest="debug", action="store_true",
                       help="Enable verbose debug logging output [default: %default]",
@@ -522,13 +721,33 @@ if __name__ == '__main__':
         if not options.nodoc:
             build_docs(options)
 
-        write_environment_file(options)
+        # External dependencies
+        build_externals_fusesoc(options)
 
-        # From here on we will need our new environment
+        # Additional hardware
+        build_externals_lisnoc(options)
+        build_externals_opensocdebug_hardware(options)
+        build_externals_extra_cores(options)
+
+        # GLIP
+        build_externals_glip(options)
+        build_externals_glip_software(options)
+
+        # OSD (uses GLIP; pass the previously built version in the environment)
         env = os.environ
         set_environment(options, env)
+        build_externals_opensocdebug_software(options, env)
 
-        build_examples(options, env)
+        # write out optimsoc-environment.sh for our users
+        write_environment_file(options)
+
+        # Examples
+        if not options.noexamples:
+            # From here on we will need our new environment
+            env = os.environ
+            set_environment(options, env)
+
+            build_examples(options, env)
     except Exception as e:
         if logging_debug:
             raise
