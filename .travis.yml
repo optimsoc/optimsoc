@@ -7,6 +7,10 @@ addons:
     packages:
     - build-essential
     - tcl
+    # for GLIP
+    - libusb-1.0-0-dev
+    # for the OSD software
+    - libelf-dev
 
 # Environment
 env:
