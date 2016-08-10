@@ -276,42 +276,6 @@ def build_soc_software(options):
         cmd = "make install prefix={}".format(libsdist)
         run_command(cmd, cwd=libobjdir)
 
-"""Build simulation library
-"""
-def build_sim_library(options):
-    src = options.src
-    objdir = options.objdir
-    dist = os.path.join(objdir, "dist")
-
-    simsrc = os.path.join(src, "src", "host", "sim")
-    simobjdir = os.path.join(objdir, "host", "sim")
-    simdist = os.path.join(dist, "host")
-    # magic escaping to ultimately get prefix=${OPTIMSOC}/sim into the
-    # pkg-config file
-    simprefix = os.path.join("\$\$\\{OPTIMSOC\\}", "host")
-
-    info("Build simulation libs")
-    check_autotools()
-    check_make()
-
-    info(" + autogen")
-    cmd = "./autogen.sh"
-    run_command(cmd, cwd=simsrc)
-
-    info(" + Configure")
-    ensure_directory(simobjdir)
-
-    cmd = "{}/configure --prefix={}".format(simsrc, simprefix)
-    run_command(cmd, cwd=simobjdir)
-
-    info(" + Build")
-    cmd = "make"
-    run_command(cmd, cwd=simobjdir)
-
-    info(" + Install build artifacts")
-    cmd = "make install prefix={}".format(simdist)
-    run_command(cmd, cwd=simobjdir)
-
 """Build the hardware modules
 """
 def build_hw_modules(options):
@@ -713,8 +677,6 @@ if __name__ == '__main__':
         build_tools(options)
 
         build_soc_software(options)
-
-        build_sim_library(options)
 
         build_hw_modules(options)
 
