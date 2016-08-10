@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = opensocdebug:blocks:buffer
+
+depend = 
+   opensocdebug:interfaces:dii_channel
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  common/dii_buffer.sv
+  common/osd_fifo.sv

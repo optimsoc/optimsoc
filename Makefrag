@@ -1,0 +1,16 @@
+
+# make sure the variable "osd_base" is defined
+
+osd_srcs := $(wildcard $(osd_base)/interfaces/rocket/*.scala)
+osd_srcs += $(wildcard $(osd_base)/interconnect/rocket/*.scala)
+osd_srcs += $(wildcard $(osd_base)/blocks/buffer/rocket/*.scala)
+osd_srcs += $(wildcard $(osd_base)/blocks/arbiter/rocket/*.scala)
+osd_srcs += $(wildcard $(osd_base)/modules/rocket/*.scala)
+osd_srcs += $(wildcard $(osd_base)/modules/mam/rocket/*.scala)
+osd_srcs += $(wildcard $(osd_base)/modules/stm/rocket/*.scala)
+
+# emacs local variable
+
+# Local Variables:
+# mode: makefile
+# End:

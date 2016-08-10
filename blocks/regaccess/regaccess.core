@@ -1,0 +1,16 @@
+CAPI=1
+[main]
+name = opensocdebug:blocks:regaccess
+
+depend =
+  opensocdebug:interfaces:dii_channel
+  opensocdebug:interconnect:debug_ring
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  common/osd_regaccess.sv
+  common/osd_regaccess_layer.sv
+  common/osd_regaccess_demux.sv
+  

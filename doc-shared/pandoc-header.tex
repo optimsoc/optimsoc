@@ -1,0 +1,19 @@
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[RE,LO]{CC BY-SA 4.0 International License}
+\fancyfoot[CO,CE]{}
+\fancyfoot[LE,RO]{\thepage}
+
+% Don't wrap pages for code listings
+\let\standardshaded\Shaded
+\let\standardendshaded\endShaded
+\def\Shaded{\par\noindent\begin{minipage}{\linewidth} \standardshaded}
+\def\endShaded{\standardendshaded\end{minipage}\par\addvspace{\topskip}}
+
+% Don't wrap pages for tables
+\let\standardtable\longtable
+\let\standardendtable\endlongtable
+\def\longtable{\par\noindent\begin{minipage}{\linewidth} \standardtable}
+\def\endlongtable{\standardendtable\end{minipage}\par\addvspace{\topskip}}
+
+\usepackage[all]{nowidow}
