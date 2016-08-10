@@ -1,0 +1,127 @@
+1.5 2016-07-12 Olof Kindgren <olof.kindgren@gmail.com>
+======================================================
+* Improve plusargs handling
+* Fix core-info for verilator sections
+* Allow multiple top-level modules in Icarus
+* Fix VHDL and SystemVerilog support in ISIM
+* Add support for the GHDL simulator
+* Add support for Vivado Logicore cores
+* Add support for ISE CoreGen cores
+* Support IP-XACT 2009 and 2014 versions
+* Add icestorm backend
+* Allow settings default values for parameters
+* Add support for Altera qip files
+* Add CI testing with Travis and appveyor
+* Experimental Windows support
+* Allow Modelsim to run user TCL files
+* Parallelize verilator jobs to speed up compilation
+* + improved error handling, bug fixes and refactoring
+
+Contributors:
+Andrzej Radecki <ndrwrdck@gmail.com>
+Neil Turley <neilpturley@gmail.com>
+Olof Kindgren <olof.kindgren@gmail.com>
+Philipp Wagner <philipp.wagner@tum.de>
+Stefan Wallentowitz <stefan@wallentowitz.de>
+
+1.4 2016-01-29 Olof Kindgren <olof.kindgren@gmail.com>
+======================================================
+* Allow setting top-level parameters in backends
+* Allow FuseSoC to handle verilator CLI arguments
+* Parse command-line before building sim model
+* Support plusargs in XSIM
+* Initial IP-Xact support (FileSets and description)
+* Add distutils-based build system and add to pypi
+* Support mixed-language (VHDL, verilog, SV) in ModelSim
+* Support mixed-language (VHDL, verilog, SV) in XSIM
+* Add fileset sections (replaces vhdl/verilog sections)
+* Allow per-file attributes in .core
+* + improved error handlig, bug fixes and refactoring
+
+Contributors:
+Chris Higgs <chris.higgs@potentialventures.com>
+Franck Jullien <franck.jullien@gmail.com>
+Olof Kindgren <olof.kindgren@gmail.com>
+
+1.3 2015-11-16 Olof Kindgren <olof.kindgren@gmail.com>
+======================================================
+* Add item to .core files to explicitly apply patches
+* Export FuseSoC dirs as env vars to external commands
+* Use relative paths everywhere
+* Always rebuild sim model, except when --keep is used
+* Prettify core-info output
+* Generate CAPI directly from section.py
+* Add more helpful data types to section members
+* Support multiple top-level testbenches
+* Add git provider
+* Add pgm option to ISE backend
+* Add support for Xilinx ISIM Simulator
+* Abort FuseSoC on scripts with non-zero return code
+* Run scripts from all core deps in simulations
+* Add parameter section (replaces plusargs)
+* Add support for Xilinx XSIM Simulator
+* + improved error handling, bug fixes and refactoring
+
+Contributors:
+Andrzej Radecki <ndrwrdck@gmail.com>
+Franck Jullien <franck.jullien@gmail.com>
+Jeffrey Esquivel S <jeff@estudiomanati.com>
+Leonardo Lessa <llessa@users.noreply.github.com>
+Lukas Rinderer <lukas@gastro-plan.at>
+Michael Gielda <mgielda@antmicro.com>
+Olof Kindgren <olof.kindgren@gmail.com>
+
+1.2 2015-02-24 Olof Kindgren <olof.kindgren@gmail.com>
+======================================================
+* Allow files in core root to overlay files in cache
+* Add support for pre_build_scripts in cores
+* Fix checks for SystemC environment variables
+* Allow absolute file paths in core files
+* Add --verbose flag for detailed output
+* Add --monochrome flag for monochrome output
+* Report all sections in core-info
+* Allow cores to specify themselves as non-cachable
+* Allow symlinks in core libraries
+* Add update command to update core libraries
+* Add init command for initial setup of core libraries
+* Remove deprecated --systems-root flag
+* Add configure flag to optionally disable SVN providers
+* Allow cores to be located anywhere in the core libraries
+* Add 32/64-bit autodetection with override
+* Add git submodule provider
+* Generate detailed ISE map report
+* + improved error handling, bug fixes and refactoring
+
+Contributors:
+Christian Svensson <blue@cmd.nu>
+Franck Jullien <franck.jullien@gmail.com>
+Jeremy Bennett <jeremy.bennett@embecosm.com>
+Olof Kindgren <olof.kindgren@gmail.com>
+Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+
+1.1 2014-04-15 Olof Kindgren <olof.kindgren@gmail.com>
+======================================================
+* Support system-installed Verilator
+* Allow tool-specific dependencies
+* Allow custom names on synthesis/simulator top levels
+* Allow subdirectories in cores_root
+* Colorized status output
+* Improved exception handling
+* Allow verilator test benches to access functions in other cores
+* Allow passing options directly to backend tools
+* Add preliminary VHDL support
+* Integrate Altera Qsys generation in Quartus flow
+* Add support for building with Xilinx ISE
+* + lots of bug fixes and refactoring
+
+Contributors:
+carlos <carlos@marte.inesc-id.pt>
+Franck Jullien <franck.jullien@gmail.com>
+Olof Kindgren <olof.kindgren@gmail.com>
+Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+Kenneth Lorthioir <ibelimb@gmail.com>
+Jose T. de Sousa <jts@inesc-id.pt>
+
+1.0 2014-02-22 Olof Kindgren <olof.kindgren@gmail.com>
+======================================================
+* Renamed version of ORPSoC 3.2 without any functional changes
