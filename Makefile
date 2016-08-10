@@ -29,12 +29,14 @@ OBJDIR := objdir
 # Build configuration
 # Build and package the examples (yes/no)
 BUILD_EXAMPLES := yes
+# Build documentation (yes/no)
+BUILD_DOCS := yes
 
-# Only for |make install|: use either INSTALL_PREFIX /or/ INSTALL_TARGET to 
+# Only for |make install|: use either INSTALL_PREFIX /or/ INSTALL_TARGET to
 # choose an installation destination. In most cases use INSTALL_PREFIX.
 # Installation prefix: the OpTiMSoC version will be appended as subdirectory.
 INSTALL_PREFIX := /opt/optimsoc
-# Full installation directory: OpTiMSoC will be installed into exactly that 
+# Full installation directory: OpTiMSoC will be installed into exactly that
 # directory
 INSTALL_TARGET := $(INSTALL_PREFIX)/$(version)
 
@@ -43,6 +45,9 @@ INSTALL_TARGET := $(INSTALL_PREFIX)/$(version)
 BUILD_ARGS = ''
 ifneq ($(BUILD_EXAMPLES),yes)
 	BUILD_ARGS += '--no-examples'
+endif
+ifneq ($(BUILD_DOCS),yes)
+	BUILD_ARGS += '--no-docs'
 endif
 
 build:
