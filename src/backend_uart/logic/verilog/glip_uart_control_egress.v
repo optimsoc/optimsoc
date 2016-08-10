@@ -72,7 +72,7 @@ module glip_uart_control_egress
    // Sequential part of state machine
    always @(posedge clk) begin
       if (rst) begin
-         state <= STATE_PASSTHROUGH;
+         state <= STATE_IDLE;
       end else begin
          state <= nxt_state;
       end

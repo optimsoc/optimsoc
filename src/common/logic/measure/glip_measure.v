@@ -20,8 +20,8 @@
  *
  * =============================================================================
  *
- * Control state machine for the UART interface
- * 
+ * Measure how many triggers occur in one second
+ *
  * Parameters:
  *  - FREQ: The frequency of the design, to match the second
  *  - DIGITS: Number of digits to emit
@@ -83,7 +83,7 @@ module glip_measure
             count <= count - 1;
          end
       end
-   end   
+   end
 
    // Generate the set of BCD counters
    genvar                i;

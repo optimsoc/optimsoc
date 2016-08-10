@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = glip:common:credit
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/creditor.v
+  verilog/debtor.v

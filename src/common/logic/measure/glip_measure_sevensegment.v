@@ -20,7 +20,8 @@
  *
  * =============================================================================
  *
- * Control state machine for the UART interface
+ * Measure the number of triggers in a second, and display it on a seven 
+ * segment display.
  * 
  * Parameters:
  *  - FREQ: The frequency of the design, to match the second
@@ -63,11 +64,10 @@ module glip_measure_sevensegment
 
    generate
       for (i = 0; i < DIGITS; i = i + 1) begin
-     sevensegment
-           u_seg(.in  (bcd_digits[(i+1)*4-1:i*4]),
-             .out (digits[(i+1)*7-1:i*7]));
+         sevensegment
+            u_seg(.in  (bcd_digits[(i+1)*4-1:i*4]),
+                  .out (digits[(i+1)*7-1:i*7]));
       end
    endgenerate
    
 endmodule // glip_measure_sevensegment
-

@@ -27,27 +27,37 @@
  * bit, no parity and one stop bit. All baud rates are supported, but
  * be careful with low frequencies and large baud rates that the
  * tolerance of the rounded bit divisor (rounding error of
- * FREQ/BAUD) is within 2%.
- * 
+ * FREQ_CLK_IO/BAUD) is within 2%.
+ *
+ * The uart_* signals are seen from the side of this module, i.e. from the DCE
+ * side. To connect them to a host, connect the signals in a crossed way.
+ *
  * Parameters:
- *  - FREQ: The frequency of the design, to match the second
+ *  - FREQ_CLK_IO: The frequency of clk_io
  *  - BAUD: Interface baud rate
  *  - XILINX_TARGET_DEVICE: Xilinx device, allowed: "7SERIES"
+ *
+ *
+ * Limitations:
+ * - Only Xilinx 7 series devices are supported due to the use of
+ *   Xilinx-specific dual-clock FIFO macros.
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
 module glip_uart_toplevel
-  #(parameter FREQ = 32'hx,
+  #(parameter FREQ_CLK_IO = 32'hx,
     parameter BAUD = 115200,
     parameter WIDTH = 8,
     parameter XILINX_TARGET_DEVICE = "7SERIES")
    (
     // Clock & Reset
-    input              clk_io,
-    input              clk_logic,
+    input              clk,     // Logic clock (GLIP default)
+    input              clk_io,  // I/O clock
     input              rst,
+
+    output             com_rst,
 
     // GLIP FIFO Interface
     input [WIDTH-1:0]  fifo_out_data,
@@ -58,18 +68,39 @@ module glip_uart_toplevel
     input              fifo_in_ready,
 
     // GLIP Control Interface
-    output             logic_rst,
-    output             com_rst,
-    
+    output             ctrl_logic_rst,
+
     // UART Interface
+    // All ports are seen from our side, i.e. from the DCE side
     input              uart_rx,
     output             uart_tx,
-    input              uart_cts,
-    output             uart_rts,
-    
+    input              uart_cts_n, // active low
+    output             uart_rts_n, // active low
+
     // Error signal if failure on the line
     output reg         error
     );
+
+   // Assert that the actual baud rate is within two percent of the specified
+   // baud rate.
+`ifndef SYNTHESIS
+// synthesis translate_off
+   integer divisor, baud_used, baud_err;
+   real baud_err_percent;
+   initial begin
+      assign divisor = FREQ_CLK_IO / BAUD;
+      assign baud_used = FREQ_CLK_IO / divisor;
+      assign baud_err = (baud_used > BAUD ? baud_used - BAUD : BAUD - baud_used);
+      assign baud_err_percent = $itor(baud_err) / $itor(BAUD);
+      $display("%m: Using baud rate of %d, resulting in an error of %f percent from the specified baud rate of %d.",
+               baud_used, baud_err_percent, BAUD);
+      if (baud_err_percent > 0.02) begin
+         $display("%m: Baud error larger than two percent.");
+         $stop;
+      end
+   end
+// synthesis translate on
+`endif
 
    wire [7:0]     fifo_out_data_scale;
    wire           fifo_out_valid_scale;
@@ -111,13 +142,62 @@ module glip_uart_toplevel
    assign egress_in_valid = ~out_fifo_empty;
    assign fifo_out_ready_scale = ~out_fifo_full;
 
-   assign uart_rts = 0;
+   // We are always ready to send
+   assign uart_rts_n = 1'b0;
+
+   // FIFO enable and reset control
+   // "WREN and RDEN must be held Low before and during the Reset cycle. In
+   //  addition, WREN and RDEN should be held Low for two WRCLK and RDCLK
+   //  cycles, respectively, after the Reset is deasserted to guarantee timing."
+   //  [UG473 (v1.11), p 49,  Xilinx]
+
+   wire          in_fifo_rden;
+   wire          in_fifo_wren;
+   wire          in_buffer_rden;
+   wire          in_buffer_wren;
+   wire          out_fifo_rden;
+   wire          out_fifo_wren;
+   wire          fifo_rst;
+
+   reg [2:0]     fifo_en_io;
+   reg [1:0]     fifo_rst_io ;
+   reg [2:0]     fifo_en_logic;
+   reg [1:0]     fifo_rst_logic;
+
+   assign fifo_rst = fifo_rst_io[0] & fifo_rst_logic[0];
+   assign in_fifo_rden = fifo_in_ready_scale & fifo_en_logic[0];
+   assign in_fifo_wren = ingress_buffer_valid & fifo_en_io[0];
+   assign in_buffer_rden = ingress_buffer_ready & fifo_en_io[0];
+   assign in_buffer_wren =  ingress_out_valid & fifo_en_io[0];
+   assign out_fifo_rden = egress_in_ready & fifo_en_io[0];
+   assign out_fifo_wren = fifo_out_valid_scale & fifo_en_logic[0];
+
+   // Generate delayed enable and rst signals for the different clocks
+   always @(posedge clk_io) begin
+      if (com_rst) begin
+         fifo_en_io <= 3'b000;
+         fifo_rst_io <= {1'b1, fifo_rst_io[1]};
+      end else begin
+         fifo_en_io <= {1'b1, fifo_en_io[2:1]};
+         fifo_rst_io <= 2'b0;
+      end
+   end
+
+   always @(posedge clk) begin
+      if (com_rst) begin
+         fifo_en_logic <= 3'b000;
+         fifo_rst_logic <= {1'b1, fifo_rst_logic[1]};
+      end else begin
+         fifo_en_logic <= {1'b1, fifo_en_logic[2:1]};
+         fifo_rst_logic <= 2'b0;
+      end
+   end
 
    // Generate error. Sticky when an error occured.
    wire          rcv_error;
    wire          control_error;
    always @(posedge clk_io) begin
-      if (rst | com_rst) begin
+      if (com_rst) begin
          error <= 0;
       end else begin
          error <= error | rcv_error | control_error;
@@ -164,8 +244,7 @@ module glip_uart_toplevel
     ); */
    glip_uart_control
      #(.FIFO_CREDIT_WIDTH(12),
-       .INPUT_FIFO_CREDIT(4090),
-       .FREQ(FREQ))
+       .INPUT_FIFO_CREDIT(4090))
    u_control(/*AUTOINST*/
              // Outputs
              .ingress_in_ready          (ingress_in_ready),
@@ -174,7 +253,7 @@ module glip_uart_toplevel
              .egress_in_ready           (egress_in_ready),
              .egress_out_data           (egress_out_data[7:0]),
              .egress_out_enable         (egress_out_enable),
-             .logic_rst                 (logic_rst),
+             .ctrl_logic_rst            (ctrl_logic_rst),
              .com_rst                   (com_rst),
              .error                     (control_error),         // Templated
              // Inputs
@@ -187,7 +266,7 @@ module glip_uart_toplevel
              .egress_in_valid           (egress_in_valid),
              .egress_out_done           (egress_out_done),
              .transfer_in               (transfer_in));
-   
+
    /* glip_uart_receive AUTO_TEMPLATE(
     .clk (clk_io),
     .rx  (uart_rx),
@@ -196,7 +275,7 @@ module glip_uart_toplevel
     .error  (rcv_error),
     ); */
    glip_uart_receive
-     #(.DIVISOR(FREQ/BAUD))
+     #(.DIVISOR(FREQ_CLK_IO/BAUD))
    u_receive(/*AUTOINST*/
              // Outputs
              .enable                    (ingress_in_valid),      // Templated
@@ -212,11 +291,11 @@ module glip_uart_toplevel
     .clk    (clk_io),
     .tx     (uart_tx),
     .done   (egress_out_done),
-    .enable (egress_out_enable & ~uart_cts),
+    .enable (egress_out_enable & ~uart_cts_n),
     .data   (egress_out_data[]),
     ); */
    glip_uart_transmit
-     #(.DIVISOR(FREQ/BAUD))
+     #(.DIVISOR(FREQ_CLK_IO/BAUD))
    u_transmit(/*AUTOINST*/
               // Outputs
               .tx                       (uart_tx),               // Templated
@@ -225,7 +304,7 @@ module glip_uart_toplevel
               .clk                      (clk_io),                // Templated
               .rst                      (com_rst),               // Templated
               .data                     (egress_out_data[7:0]),  // Templated
-              .enable                   (egress_out_enable & ~uart_cts)); // Templated
+              .enable                   (egress_out_enable & ~uart_cts_n)); // Templated
 
    // Buffer uart -> logic
    FIFO_DUALCLOCK_MACRO
@@ -247,13 +326,13 @@ module glip_uart_toplevel
       .WRERR       (),
       .DI          (ingress_out_data[7:0]),
       .RDCLK       (clk_io),
-      .RDEN        (ingress_buffer_ready),
-      .RST         (com_rst),
+      .RDEN        (in_buffer_rden),
+      .RST         (fifo_rst_io[0]),
       .WRCLK       (clk_io),
-      .WREN        (ingress_out_valid)
+      .WREN        (in_buffer_wren)
       );
 
-   
+
    // Clock domain crossing uart -> logic
    FIFO_DUALCLOCK_MACRO
      #(.ALMOST_FULL_OFFSET(9'h006), // Sets almost full threshold
@@ -274,13 +353,13 @@ module glip_uart_toplevel
       .WRCOUNT     (),
       .WRERR       (),
       .DI          (ingress_buffer_data[7:0]),
-      .RDCLK       (clk_logic),
-      .RDEN        (fifo_in_ready_scale),
-      .RST         (com_rst),
+      .RDCLK       (clk),
+      .RDEN        (in_fifo_rden),
+      .RST         (fifo_rst),
       .WRCLK       (clk_io),
-      .WREN        (ingress_buffer_valid)
+      .WREN        (in_fifo_wren)
       );
-   
+
    // Clock domain crossing logic -> uart
    FIFO_DUALCLOCK_MACRO
      #(.ALMOST_EMPTY_OFFSET(9'h006), // Sets the almost empty threshold
@@ -302,10 +381,10 @@ module glip_uart_toplevel
       .WRERR       (),
       .DI          (fifo_out_data_scale[7:0]),
       .RDCLK       (clk_io),
-      .RDEN        (egress_in_ready),
-      .RST         (com_rst),
-      .WRCLK       (clk_logic),
-      .WREN        (fifo_out_valid_scale)
+      .RDEN        (out_fifo_rden),
+      .RST         (fifo_rst),
+      .WRCLK       (clk),
+      .WREN        (out_fifo_wren)
       );
-   
+
 endmodule // glip_uart_toplevel

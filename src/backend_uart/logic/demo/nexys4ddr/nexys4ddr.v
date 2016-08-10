@@ -33,14 +33,16 @@ module nexys4ddr
    input        rstn,
 
    // UART Interface
+   // Signal names are DIFFERENT THAN IN THE DIGILENT DEFAULT CONSTRAINT FILE!
+   // The signals here are named from a FPGA point-of-view.
    input        uart_rx,
    output       uart_tx,
-   input        uart_cts,
-   output       uart_rts,
+   input        uart_cts, // active low
+   output       uart_rts, // active low
 
    // Slide switches SW0-SW3
    input [2:0]  switch,
-   
+
    // 7 Segment display
    output       CA,
    output       CB,
@@ -57,7 +59,7 @@ module nexys4ddr
 
    parameter WIDTH = 8;
 
-   localparam FREQ = 100000000;
+   localparam FREQ = 100000000; // frequency of clk [Hz]
    localparam BAUD = 3000000;
 
    wire         rst;
@@ -93,7 +95,7 @@ module nexys4ddr
 
    wire error;
    reg  error_reg;
-   
+
    always @(posedge clk) begin
       if (rst) begin
          error_reg <= 0;
@@ -106,21 +108,21 @@ module nexys4ddr
       end
    end
 
-   wire logic_rst;
+   wire ctrl_logic_rst;
 
    glip_uart_toplevel
-     #(.FREQ(FREQ),
+     #(.FREQ_CLK_IO(FREQ),
        .BAUD(BAUD),
        .WIDTH(WIDTH))
    u_uart(.clk_io         (clk),
-          .clk_logic      (clk),
+          .clk            (clk),
           .rst            (rst),
           .uart_rx        (uart_rx),
           .uart_tx        (uart_tx),
-          .uart_cts       (uart_cts),
-          .uart_rts       (uart_rts),
+          .uart_cts_n     (uart_cts),
+          .uart_rts_n     (uart_rts),
           .error          (error),
-          .logic_rst      (logic_rst),
+          .ctrl_logic_rst (ctrl_logic_rst),
           .com_rst        (com_rst),
           .fifo_in_data   (in_data),
           .fifo_in_valid  (in_valid),
@@ -135,7 +137,7 @@ module nexys4ddr
    glip_measure_sevensegment
      #(.FREQ(FREQ), .DIGITS(8), .OFFSET(0), .STEP(WIDTH/8))
    u_measure(.clk      (clk),
-             .rst      (logic_rst),
+             .rst      (ctrl_logic_rst),
              .trigger  ((in_valid & in_ready) | (out_valid & out_ready)),
              .digits   (digits),
              .overflow (overflow));
@@ -143,7 +145,7 @@ module nexys4ddr
    nexys4ddr_display
      #(.FREQ(FREQ))
    u_display(.clk       (clk),
-             .rst       (logic_rst),
+             .rst       (ctrl_logic_rst),
              .digits    (digits),
              .decpoints (8'b00001000),
              .CA        (CA),
@@ -155,5 +157,5 @@ module nexys4ddr
              .CG        (CG),
              .DP        (DP),
              .AN        (AN));
-   
-endmodule // nexys4ddr_loopback
+
+endmodule // nexys4ddr

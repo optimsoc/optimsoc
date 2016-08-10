@@ -12,7 +12,7 @@ long the clock frequency is sufficiently larger than the baud rate.
 Supported Features
 ==================
 - Number of channels: 1 (fixed)
-- FIFO width: 8 bit (fixed)
+- FIFO width: 8 or 16 bit
 - Logic reset
 - Robust end-to-end flow control, even without CTS/RTS
 
