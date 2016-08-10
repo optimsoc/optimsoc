@@ -47,7 +47,7 @@ module mesh(/*AUTOARG*/
    parameter payload_length = 6;   //Maximum packet lenght if recursive partitioning is selected
 
    localparam nodes = xdim*ydim;
-   parameter dest_width = $clog2(nodes);
+   localparam dest_width = $clog2(nodes);
 
    localparam flit_width = flit_data_width + flit_type_width;
 

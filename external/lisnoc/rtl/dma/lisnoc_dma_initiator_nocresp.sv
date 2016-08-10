@@ -44,8 +44,7 @@ module lisnoc_dma_initiator_nocresp(/*AUTOARG*/
    parameter flit_width = `FLIT_WIDTH;
 
    parameter table_entries = 4;
-//   parameter table_entries_ptrwidth = $clog2(table_entries);
-   parameter table_entries_ptrwidth = 2;
+   localparam table_entries_ptrwidth = $clog2(table_entries);
 
    parameter noc_packet_size = 16;
 

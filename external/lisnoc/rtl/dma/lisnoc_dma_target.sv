@@ -63,8 +63,7 @@ module lisnoc_dma_target (/*AUTOARG*/
 
 
    parameter table_entries = 4;
-//   parameter table_entries_ptrwidth = $clog2(table_entries);
-   parameter table_entries_ptrwidth = 2;
+   localparam table_entries_ptrwidth = $clog2(table_entries);
 
    parameter tileid = 0;
 

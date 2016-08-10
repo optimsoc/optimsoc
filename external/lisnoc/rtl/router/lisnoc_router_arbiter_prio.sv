@@ -47,7 +47,7 @@ module lisnoc_router_arbiter_prio(
 
    parameter  vchannels = 1;
    parameter  ports = 5;
-   parameter  port_width = $clog2(ports);
+   localparam port_width = $clog2(ports);
 
    // Clock and Reset declaration
    input clk;

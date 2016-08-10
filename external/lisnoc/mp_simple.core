@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:lisnoc:mp_simple
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  rtl/mp_simple/lisnoc_mp_simple_wb.sv
+  rtl/mp_simple/lisnoc_mp_simple.sv
+  rtl/infrastructure/lisnoc_packet_buffer.sv

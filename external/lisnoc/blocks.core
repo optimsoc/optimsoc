@@ -1,0 +1,9 @@
+CAPI=1
+[main]
+name = optimsoc:lisnoc:blocks
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  rtl/lisnoc_arb_rr.v

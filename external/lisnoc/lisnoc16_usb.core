@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+name = optimsoc:lisnoc:lisnoc16_usb
+description = "LISNoC 16 bit packager for streaming data format (e.g. for USB)"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  rtl/lisnoc16/usb/lisnoc16_usb_from_noc.v
+  rtl/lisnoc16/usb/lisnoc16_usb_packet_buffer.sv
+  rtl/lisnoc16/usb/lisnoc16_usb_to_noc.v
