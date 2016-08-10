@@ -296,43 +296,33 @@ def build_examples(options, env):
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
 
-    info("Build examples")
+    info("Build examples (verilator based)")
 
-    exsrc = os.path.join(src, "tbench")
+    exsrc = os.path.join(src, "examples")
     exobjdir = os.path.join(objdir, "examples")
     exdist = os.path.join(dist, "examples")
 
-    examples = [ { "path": "dm/compute_tile",
-                   "files": [ "tb_compute_tile" ] },
-                 { "path": "dm/compute_tile-dual",
-                   "files": [ "tb_compute_tile" ] },
-                 { "path": "dm/compute_tile-quad",
-                   "files": [ "tb_compute_tile" ] },
-                 { "path": "dm/compute_tile-octa",
-                   "files": [ "tb_compute_tile" ] },
-                 { "path": "dm/system_2x2_cccc",
-                   "files": [ "tb_system_2x2_cccc" ] },
-                 { "path": "dm/system_2x2_cccc-dual",
-                   "files": [ "tb_system_2x2_cccc" ] },
-                 { "path": "dm/system_2x2_cccc-quad",
-                   "files": [ "tb_system_2x2_cccc" ] }]
+    examples = [
+      { "name": "compute_tile_simonly",
+        "files": [ "build/optimsoc_examples_compute_tile_simonly/sim-verilator/obj_dir/Vtb_compute_tile" ] },
+    ]
 
     for ex in examples:
-        info(" + {}".format(ex["path"]))
-        buildsrcdir = os.path.join(exsrc, ex["path"])
-        buildobjdir = os.path.join(exobjdir, ex["path"])
-        builddist = os.path.join(exdist, ex["path"])
+        info(" + {}".format(ex["name"]))
+        buildsrcdir = os.path.join(exsrc, ex["name"])
+        buildobjdir = os.path.join(exobjdir, ex["name"])
+        builddist = os.path.join(exdist, ex["name"])
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "make build-verilator OBJDIR={}".format(buildobjdir)
-        run_command(cmd, cwd=buildsrcdir, env=env)
+        cmd = "optimsoc-fusesoc --cores-root {} sim --build-only optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Install build artifacts")
         ensure_directory(builddist)
         for f in ex["files"]:
             srcf = os.path.join(buildobjdir, f)
-            destf = os.path.join(builddist, f)
+            destf = os.path.join(builddist, ex["name"])
             file_copy(srcf, destf)
 
 """Build and install the documentation
