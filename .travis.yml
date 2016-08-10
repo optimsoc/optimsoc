@@ -1,5 +1,7 @@
-# Run in container-based environment
-sudo: false
+# We do not support Ubuntu < 14.04 any more.
+# Unfortunately, travis does not support containerized builds in trusty
+sudo: required
+dist: trusty
 
 # Install the build requirements
 addons:
