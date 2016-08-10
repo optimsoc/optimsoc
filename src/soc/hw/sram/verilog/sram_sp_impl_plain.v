@@ -140,7 +140,7 @@ module sram_sp_impl_plain(/*AUTOARG*/
 `else
    initial
      begin
-        $readmemh(MEM_FILE, mem);
+//        $readmemh(MEM_FILE, mem);
      end
 `endif
 
