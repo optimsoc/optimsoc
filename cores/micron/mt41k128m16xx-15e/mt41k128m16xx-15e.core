@@ -1,0 +1,14 @@
+CAPI=1
+[main]
+description = "Micron 2Gb DDR3-SDRAM Verilog model"
+
+[verilog]
+src_files =
+ ddr.v
+include_files =
+ ddr_parameters.vh
+
+[provider]
+name = url
+url = https://www.micron.com/~/media/documents/products/sim-model/dram/ddr3/ddr3-sdram-verilog-model.zip
+filetype = zip

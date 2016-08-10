@@ -1,0 +1,17 @@
+CAPI=1
+[main]
+depend =
+  arty-ddr
+  arty-clk-sys
+
+[fileset rtl_files]
+files =
+  rtl/verilog/arty.sv
+file_type = verilogSource
+usage = sim synth
+
+[fileset constraints]
+usage = vivado
+file_type = xdc
+files =
+  data/pins.xdc

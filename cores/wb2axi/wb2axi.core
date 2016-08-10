@@ -1,0 +1,15 @@
+CAPI=1
+[main]
+name = wallento:wb2axi:wb2axi
+
+[fileset verilog]
+files =
+ src/wb2axi.sv
+file_type = systemVerilogSource
+usage = sim synth
+
+[provider]
+name = github
+user = wallento
+repo = wb2axi
+branch = master

@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = wallento:boards:nexys4ddr-clk_sys
+depend =
+
+[fileset xci]
+usage = vivado
+file_type = xci
+files =
+  ip/clk_gen_sys.xci

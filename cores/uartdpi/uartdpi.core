@@ -1,0 +1,20 @@
+CAPI=1
+[main]
+name = wallento:uartdpi:uartdpi
+
+[fileset verilog]
+files =
+ src/uartdpi.sv
+file_type = systemVerilogSource
+usage = sim synth
+
+[dpi]
+libs = util
+src_files =
+ src/uartdpi.c
+
+[provider]
+name = github
+user = wallento
+repo = uartdpi
+branch = master

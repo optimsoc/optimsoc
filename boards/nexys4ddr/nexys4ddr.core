@@ -1,0 +1,29 @@
+CAPI=1
+[main]
+name = wallento:boards:nexys4ddr
+depend =
+  wallento:boards:nexys4ddr-ddr
+  wallento:boards:nexys4ddr-clk_sys
+
+[fileset rtl_files]
+files =
+  rtl/verilog/nexys4ddr.sv
+file_type = verilogSource
+usage = sim synth
+
+[fileset constraints]
+usage = vivado
+file_type = xdc
+files =
+  data/pins.xdc
+
+[fileset testbench]
+usage = xsim
+file_type = systemVerilogSource
+files =
+  tbench/verilog/tb_nexys4ddr.sv
+
+[xsim]
+depend =
+  micron:ddr:mt47h64m16hr-25e
+  wallento:uartdpi:uartdpi

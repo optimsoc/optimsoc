@@ -1,0 +1,15 @@
+CAPI=1
+[main]
+depend =
+  arty
+  wallento/svchannels/nasti
+  wallento/svchannels/wishbone
+  wallento/wb2nasti/wb2nasti
+
+[verilog]
+src_files =
+  rtl/verilog/mor1kx_arty.sv
+
+
+
+
