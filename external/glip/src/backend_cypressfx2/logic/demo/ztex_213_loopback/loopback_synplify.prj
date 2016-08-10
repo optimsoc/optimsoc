@@ -1,0 +1,87 @@
+#--  Synopsys, Inc.
+#--  Version I-2013.09-SP1 
+#--  Project file /home/no56hud/src/glip/src/backend_cypressfx2/logic/demo/ztex_213_loopback/loopback_synplify.prj
+
+#project files
+add_file -verilog "./ztex_213_loopback.v"
+add_file "./ztex_213.xdc"
+add_file "../../boards/ztex_213/fx2.xdc"
+add_file -verilog "../../verilog/glip_cypressfx2_toplevel.v"
+add_file -ucf "./ztex_213.ucf"
+add_file -constraint "./ztex_213.sdc"
+add_file -constraint "../../boards/ztex_213/fx2.sdc"
+add_file -ucf "../../boards/ztex_213/fx2.ucf"
+add_file -verilog "../../verilog/cdc/cdc_fifo.v"
+add_file -verilog "../../verilog/cdc/cdc_fifo_mem.v"
+add_file -verilog "../../verilog/cdc/cdc_rdptr_empty.v"
+add_file -verilog "../../verilog/cdc/cdc_sync_rd2wr.v"
+add_file -verilog "../../verilog/cdc/cdc_sync_wr2rd.v"
+add_file -verilog "../../verilog/cdc/cdc_wrptr_full.v"
+
+
+
+#implementation: "rev_1"
+impl -add rev_1 -type fpga
+
+#
+#implementation attributes
+
+set_option -vlog_std v2001
+
+#pr_1 attributes
+set_option -job pr_1 -add par
+set_option -job pr_1 -option enable_run 1
+
+#device options
+set_option -technology Artix7
+set_option -part XC7A100T
+set_option -package CSG324
+set_option -speed_grade -2
+set_option -part_companion ""
+
+#compilation/mapping options
+set_option -use_fsm_explorer 0
+set_option -top_module "ztex_213_loopback"
+
+# mapper_options
+set_option -frequency 1.000000
+set_option -write_verilog 1
+set_option -write_vhdl 0
+set_option -srs_instrumentation 1
+
+# xilinx_options
+set_option -RWCheckOnRam 1
+
+# Xilinx Virtex2
+set_option -run_prop_extract 1
+set_option -maxfan 10000
+set_option -disable_io_insertion 0
+set_option -pipe 1
+set_option -update_models_cp 0
+set_option -retiming 0
+set_option -no_sequential_opt 0
+set_option -fix_gated_and_generated_clocks 1
+
+# Xilinx Artix7
+set_option -use_vivado 0
+set_option -enable_prepacking 1
+
+# sequential_optimization_options
+set_option -symbolic_fsm_compiler 1
+
+# Compiler Options
+set_option -compiler_compatible 0
+set_option -resource_sharing 1
+
+# Compiler Options
+set_option -auto_infer_blackbox 0
+
+#automatic place and route (vendor) options
+set_option -write_apr_constraint 1
+
+#set result format/file last
+project -result_file "./rev_1/loopback.edf"
+
+#design plan options
+
+impl -active "rev_1"
