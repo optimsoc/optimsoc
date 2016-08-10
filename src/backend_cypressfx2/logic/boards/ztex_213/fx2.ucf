@@ -1,0 +1,42 @@
+#
+# FX2 Interface Constraints for use by Xilinx ISE
+#
+# Board: ZTEX USB-FPGA 2.13
+#   http://www.ztex.de/usb-fpga-2/usb-fpga-2.13.e.html
+#
+NET "fx2_ifclk" LOC = "P17" | IOSTANDARD = LVCMOS33;
+NET "fx2_ifclk" TNM_NET = "fx2_ifclk";
+TIMESPEC TS_fx2_ifclk = PERIOD fx2_ifclk 30 MHz HIGH 50 %;
+
+NET "fx2_com_rst"   LOC = "R17" | IOSTANDARD = LVCMOS33;
+NET "fx2_logic_rst" LOC = "R18" | IOSTANDARD = LVCMOS33;
+
+NET "fx2_sloe_n"   LOC = "T14" | IOSTANDARD = LVCMOS33 | DRIVE = 12;
+NET "fx2_slrd_n"   LOC = "V16" | IOSTANDARD = LVCMOS33 | DRIVE = 12;
+NET "fx2_slwr_n"   LOC = "U16" | IOSTANDARD = LVCMOS33 | DRIVE = 12;
+NET "fx2_pktend_n" LOC = "R10" | IOSTANDARD = LVCMOS33 | DRIVE = 12;
+
+NET "fx2_fifoadr[0]" LOC = "R11" | IOSTANDARD = LVCMOS33 | DRIVE = 12;
+NET "fx2_fifoadr[1]" LOC = "T11" | IOSTANDARD = LVCMOS33 | DRIVE = 12;
+
+NET "fx2_flaga_n" LOC = "N16" | IOSTANDARD = LVCMOS33;
+NET "fx2_flagb_n" LOC = "N15" | IOSTANDARD = LVCMOS33;
+NET "fx2_flagc_n" LOC = "N14" | IOSTANDARD = LVCMOS33;
+NET "fx2_flagd_n" LOC = "N17" | IOSTANDARD = LVCMOS33;
+
+NET "fx2_fd[0]"  LOC = "M16" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[1]"  LOC = "L16" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[2]"  LOC = "L14" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[3]"  LOC = "M14" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[4]"  LOC = "L18" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[5]"  LOC = "M18" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[6]"  LOC = "R12" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[7]"  LOC = "R13" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[8]"  LOC = "T9"  | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[9]"  LOC = "V10" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[10]" LOC = "U11" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[11]" LOC = "V11" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[12]" LOC = "V12" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[13]" LOC = "U13" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[14]" LOC = "U14" | IOSTANDARD = LVCMOS33;
+NET "fx2_fd[15]" LOC = "V14" | IOSTANDARD = LVCMOS33;

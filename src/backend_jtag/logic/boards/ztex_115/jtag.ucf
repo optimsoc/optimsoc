@@ -1,0 +1,13 @@
+#
+# GLIP JTAG Interface Constraints for use by Xilinx ISE
+#
+# Board: ZTEX USB-FPGA 1.15
+#   http://www.ztex.de/usb-fpga-1/usb-fpga-1.15.d.html
+#
+
+NET "tdi" LOC = "B8" | IOSTANDARD="LVCMOS33";
+NET "tms" LOC = "A8" | IOSTANDARD="LVCMOS33";
+NET "tck" LOC = "D7" | IOSTANDARD="LVCMOS33";
+NET "tdo" LOC = "C5" | IOSTANDARD="LVCMOS33" | DRIVE = 12;
+
+NET "tck" CLOCK_DEDICATED_ROUTE = FALSE;

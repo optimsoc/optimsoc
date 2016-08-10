@@ -1,0 +1,34 @@
+GLIP Installation
+=================
+
+libglip uses GNU autotools, the build and installation process
+is straightforward.
+
+Run the following commands inside the top-level source directory to
+build GLIP with the cypressfx2 and tcp backends and install it
+to /opt/glip. See the documentation of the individual backends for
+configure options and third-party library dependencies.
+
+$> ./autogen.sh
+$> mkdir build; cd build
+$> ../configure --prefix=/opt/glip --enable-cypressfx2 --enable-tcp
+$> make
+$> make install
+
+Building the Documentation
+---------------------------
+
+GLIP contains extensive documentation, which can be generated using doxygen.
+First, choose which output formats of the documentation you want and pass
+those options to the configure script. Inside the build directory, run
+$> ../configure --help | grep doxygen
+for a list of all available options. By default only the HTML documentation
+is built (which is also the most useful output format).
+
+After running configure, build the API documentation by running
+$> make doc
+
+All resulting documentation will be inside the build/apidoc folder.
+To view the HTML documentation, open build/apidoc/html/index.html in your
+browser, e.g. by calling
+$> firefox apidoc/html/index.html

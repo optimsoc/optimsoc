@@ -1,0 +1,16 @@
+GLIP Documentation Guidelines
+=============================
+
+We generate two types of documentation from the same sources:
+- the API documentation for the users of the GLIP API
+- the documentation for developers of GLIP itself, mainly people writing
+  new backends.
+
+The internal developer's documentation contains the API documentation. 
+Additional internal documentation is added using the Doxygen tag "@internal".
+
+Functions, structs, etc. that should not be part of any documentation (e.g. 
+that are an implementation detail not required by API users or backend 
+developers) can be marked with @private and will be present in neither of the
+two documentation types.
+

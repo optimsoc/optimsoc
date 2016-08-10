@@ -1,0 +1,20 @@
+CAPI=1
+[main]
+name = glip:backend:tcp
+description = "GLIP DPI TCP backend (for simulation only)"
+depend = glip:common:channel
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim
+files =
+  glip_tcp_toplevel.sv
+
+[fileset dpi]
+file_type = CPP
+usage = sim
+files =
+  glip_tcp_dpi.cpp
+  GlipTcp.cpp  
+  GlipTcp.h[is_include_file]
+

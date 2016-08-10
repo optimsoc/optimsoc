@@ -1,0 +1,153 @@
+/**
+@defgroup library-init-deinit Library Initialization/Deinitialization
+Before using any of the library's functionality, it's necessary to initialize
+it. After using it, you need to free all claimed resources again.
+
+To create a new library instance, call glip_new() and pass the name of the used
+backend and all necessary options (e.g. connection parameters). The available
+options differ from backend to backend, refer to the backend documentation for
+details. As result you get an initialized library context of type
+<code>struct glip_ctx</code>. This context needs to be passed to all other
+GLIP function calls, and is similar to a <code>this</code> pointer in C++.
+
+After you're done using GLIP, free all resources by calling glip_free().
+
+
+@defgroup connection-handling Connection Handling
+Before communicating with a device, you need to connect to it; and after you're
+done, you need to disconnect. This functionality is provided by the two
+functions glip_open() and glip_close().
+
+When opening a connection you need to specify the number of channels you want
+to open. Depending on the target device and the used GLIP backend additional
+connection options may be required, like the communication port, the name of
+the USB device, etc. All those settings are done through options that you
+passed when calling glip_new(). Refer to the documentation of the backend for
+information on the required and optional options.
+
+@defgroup communication Communication
+
+The main purpose of GLIP is to communicate with a target device. Two main
+categories of communication exist: control and data communication.
+
+<b>Control communication</b> is done by the following functions:
+
+- glip_reset()
+
+<b>Data communication</b>, i.e. reading and writing data from and to the device,
+is done by these functions:
+
+- glip_read() and glip_read_b()
+- glip_write() and glip_write_b()
+
+All data communication functions need to be given the channel on which the
+communication should occur.
+
+The GLIP API is modeled after a FIFO interface. This essentially means two
+things:
+
+- There are no latency guarantees or acknowledgements: when you call one of the
+  write functions, the data is queued to be transferred to the device. You
+  don't know when or if it will arrive there. When you read from the device, you
+  don't know when the data has been sent (and the device does not know when you
+  read it).
+- Just like in a regular FIFO, the data ordering is preserved. Whatever data you
+  write first will reach the target first.
+
+The read and write functions offer two types of API: a non-blocking API
+(glip_read() and glip_write()) and a blocking API (glip_read_b() and
+glip_write_b()). The <b>non-blocking API functions</b> return immediately with
+the data written to or read from an internal buffer inside GLIP. Since not
+enough data might be available for reading or not enough buffer space available
+for writing data, only a part of the requested data size could have been read
+or written. The amount of data actually processed is returned as
+<code>size_read</code> resp. <code>size_written</code>. The non-blocking API
+fits well into a polling style application which might e.g. poll the library
+for new data using an already existing event loop (like in GUI applications).
+
+The <b>blocking API functions</b> on the other hand wait until all requested
+data has been read or written, i.e. if the internal buffers are full (for
+writes) or empty (for reads), the functions wait until further writing or
+reading is possible to transfer the requested amount of data. All blocking
+functions support a <code>timeout</code> parameter. A value of <code>0</code>
+blocks an unlimited amount of time, any other value makes the function abort
+after an specified amount of time, even if not all data has been transferred
+yet.
+
+
+@defgroup utilities Utility Functionality
+Some functionality of GLIP cannot be put into a real category, so this
+"Utility" group contains a mixed bag of useful library functions.
+
+
+@defgroup log Logging
+GLIP emits log messages in many cases to help to find problems both during
+development as well during usage. A configurable logging mechanism allows you
+to redirect, filter and/or discard the messages based on your application's
+needs.
+
+GLIP supports three levels of log messages (out of the set defined in
+<code>syslog.h</code>):
+- errors (<code>LOG_ERR</code>)
+- information (<code>LOG_INFO</code>)
+- debug messages (<code>LOG_DEBUG</code>)
+
+The logging is controlled at build time of the library as well as at runtime.
+You can set the destination of the log message (i.e. stdout/stderr or a custom
+message handler) as well as the log level, i.e. which messages are discarded and
+which are actually logged.
+
+When building glip, two configure options are relevant:
+
+<ul>
+<li><pre>--enable-logging/--disable-logging</pre>
+  Enable/disable any logging infrastructure</li>
+<li><pre>--enable-debug/--disable-debug</pre>
+  Enable debug code and debug log messages</li>
+</ul>
+
+@note All debugging log messages require debug support to be enabled at build
+  time of GLIP!
+
+Library users can modify the log level through he functions
+glip_get_log_priority() and glip_set_log_priority().
+
+The end-user of an application using GLIP can modify the log level by setting
+the <code>GLIP_LOG</code> environment variable to one of the possible log
+levels to restrict the log output to messages of that level and above. Allowed
+values for the <code>GLIP_LOG</code> environment variable are:
+- <pre>err</pre>
+- <pre>info</pre>
+- <pre>debug</pre>
+
+
+In many cases your application using GLIP already has some kind of logging
+framework in place. In this case, you can route the log messages generated by
+GLIP to your own logging framework, show them in the user interface, etc.
+First, create a function matching the glip_log_fn() signature. Then, tell GLIP
+to use this function as destination for all log messages by registering it with
+glip_set_log_fn().
+
+@note It is not possible to redirect messages created by glip_new() to your
+  own logging function; those messages will always be handled by the default
+  log message handler.
+
+@defgroup backend Backends
+GLIP attempts to provide a common API for the different ways of talking to a
+target device. This leads to a library structure with a thin common API layer
+and backends which implement most of the communication functionality.
+
+When creating a new GLIP instance with glip_new() one backend needs to be
+selected. Each GLIP instance can use only one backend; you can of course use
+more than one GLIP instance at the same time if you need to connect to different
+targets at the same time.
+
+Each backend implements one communication method, such as USB 2.0, TCP or
+PCI Express, possibly other libraries to do the low-level communication. Most
+backends need a set of configuration parameters to connect to the target device.
+Those options are passed as key/value pairs when calling glip_new().
+
+Backends can be enabled and disabled at compile time, as library user you cannot
+rely on a backend to be always present. You can use glip_get_backends() to get
+a list of all supported backends by the installed library version.
+*/

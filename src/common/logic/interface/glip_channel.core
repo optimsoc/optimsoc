@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = glip:common:channel
+description = "GLIP Communication Channel (SV interface)"
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim
+files =
+  glip_channel.sv
+

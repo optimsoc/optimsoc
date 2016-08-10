@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libglip
+Description: GLIP, the Generic Logic Interfacing Library
+Version: @VERSION@
+Libs: -L${libdir} -lglip
+Libs.private:
+Cflags: -I${includedir}/glip

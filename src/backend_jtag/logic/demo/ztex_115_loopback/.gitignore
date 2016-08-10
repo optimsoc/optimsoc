@@ -1,0 +1,9 @@
+/_xmsgs
+/rev_*
+/stdout.log
+/synlog.tcl
+/xilinx_device_details.xml
+/ipc_tcp_xilinx.log
+/ipc_tcp_xilinx_srv.log
+/loopback_synplify.prd
+
