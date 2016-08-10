@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:wb_cas_unit:wb_cas_unit
+description = "Wishbone Compare-and-Swap (CAS) unit"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/wb_cas_unit.v
+  verilog/wb_cas_fsm.v

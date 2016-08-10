@@ -1,2 +1,0 @@
-optimsoc_add_file wb_bus_b3.v
-optimsoc_add_file wb_interconnect_arb_rr.v

@@ -1,3 +1,0 @@
-optimsoc_add_file memory_tile_dm.v
-
-optimsoc_add_module lisnoc.dma

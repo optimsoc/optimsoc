@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+name = optimsoc:clockmanager:ztex115
+
+[fileset src_files]
+file_type = verilogSource
+# XXX: is this synth only?
+usage = sim synth
+files =
+  verilog/xilinx_spartan6/clockmanager_ztex115.v
+  verilog/xilinx_spartan6/dcm_clkgen_ctrl.v
+  verilog/xilinx_spartan6/clk_opt_ctrl.v

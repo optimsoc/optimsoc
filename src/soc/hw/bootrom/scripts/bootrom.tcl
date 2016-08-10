@@ -1,2 +1,0 @@
-optimsoc_add_file bootrom.v
-optimsoc_inc_dir $OPTIMSOC_RTL/bootrom/verilog

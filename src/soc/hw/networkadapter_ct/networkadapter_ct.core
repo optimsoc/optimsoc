@@ -1,0 +1,19 @@
+CAPI=1
+[main]
+description = "Networkadapter for a compute tile"
+name = optimsoc:networkadapter:networkadapter_ct
+depend =
+  optimsoc:lisnoc:dma
+  optimsoc:lisnoc:mp_simple
+  optimsoc:lisnoc:router
+
+# XXX. Fix import from lisnoc optimsoc:lisnoc:router should be only
+# lisnoc_add_file router/lisnoc_router_output_arbiter.v
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/networkadapter_ct.v
+  verilog/networkadapter_conf.v
+

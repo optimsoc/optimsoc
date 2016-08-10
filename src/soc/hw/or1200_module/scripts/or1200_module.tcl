@@ -1,5 +1,0 @@
-
-optimsoc_add_file or1200_module.v
-
-optimsoc_add_module or1200mp
-optimsoc_add_module wb_cas_unit

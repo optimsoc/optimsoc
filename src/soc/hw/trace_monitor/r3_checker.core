@@ -1,0 +1,9 @@
+CAPI=1
+[main]
+name = optimsoc:trace_monitor:r3_checker
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/r3_checker.v

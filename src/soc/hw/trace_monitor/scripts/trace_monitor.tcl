@@ -1,2 +1,0 @@
-optimsoc_add_file trace_monitor.sv
-optimsoc_add_file r3_checker.v

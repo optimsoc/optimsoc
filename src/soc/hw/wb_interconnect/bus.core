@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:wb_interconnect:bus
+description = "Wishbone B3 bus"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/wb_bus_b3.v
+  verilog/wb_interconnect_arb_rr.v

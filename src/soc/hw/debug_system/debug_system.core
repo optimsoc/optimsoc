@@ -1,0 +1,42 @@
+CAPI=1
+[main]
+# XXX: Most likely this should be split up into individual parts
+# Let's do this later as part of the move to OSD
+name = optimsoc:debug_system:debug_system
+depend =
+  optimsoc:lisnoc:lisnoc16
+  optimsoc:lisnoc:lisnoc16_converter
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/debug_system.v
+  verilog/global_timestamp_provider.v
+  verilog/dbgnoc_conf_if.v
+  verilog/tcm.v
+  verilog/ctm.v
+  verilog/itm.v
+  verilog/itm_dbgnoc_if.v
+  verilog/debug_data_sr.v
+  verilog/itm_trace_collector.v
+  verilog/itm_trace_compression.v
+  verilog/itm_trace_qualificator.v
+  verilog/stm.v
+  verilog/stm_data_sr.v
+  verilog/stm_trace_collector.v
+  verilog/stm_dbgnoc_if.v
+  verilog/nrm.v
+  verilog/nrm_statistics_collector.v
+  verilog/nrm_link_statistics_collector.v
+  verilog/nrm_dbgnoc_if.v
+  verilog/ncm.v
+  verilog/mam_wb_adapter.v
+  verilog/mam.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  verilog/dbg_config.vh

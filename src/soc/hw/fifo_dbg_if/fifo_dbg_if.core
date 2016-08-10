@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:debug_system:fifo_dbg_if
+depend =
+  optimsoc:lisnoc:lisnoc16_usb
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/fifo_dbg_if.v

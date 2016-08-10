@@ -1,0 +1,15 @@
+CAPI=1
+[main]
+name = optimsoc:tile:compute_tile_pgas
+depend =
+  optimsoc:core:or1200_module
+  optimsoc:cdc:cdc
+  optimsoc:lsu:noclsu
+  optimsoc:networkadapter:networkadapter_ct
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/ct_select.v
+  verilog/compute_tile_pgas.v

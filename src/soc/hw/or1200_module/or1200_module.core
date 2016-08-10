@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = optimsoc:core:or1200_module
+# XXX: Fix naming of upstream dependencies
+depend =
+  openrisc:or1200:mp
+  optimsoc:wb_cas_unit:wb_cas_unit
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/or1200_module.v

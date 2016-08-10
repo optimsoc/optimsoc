@@ -1,1 +1,0 @@
-optimsoc_add_file r3_checker.v

@@ -1,0 +1,58 @@
+CAPI=1
+[main]
+description = "OpenRISC or1200 CPU core with multi-core extensions"
+name = openrisc:or1200:mp
+# XXX: find common core file with upstream/use the upstream version directly?
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/or1200_top.v
+  verilog/or1200_wb_biu.v
+  verilog/or1200_immu_top.v
+  verilog/or1200_immu_tlb.v
+  verilog/or1200_ic_top.v
+  verilog/or1200_ic_fsm.v
+  verilog/or1200_ic_ram.v
+  verilog/or1200_ic_tag.v
+  verilog/or1200_dmmu_top.v
+  verilog/or1200_dmmu_tlb.v
+  verilog/or1200_dc_top.v
+  verilog/or1200_dc_fsm.v
+  verilog/or1200_dc_ram.v
+  verilog/or1200_dc_tag.v
+  verilog/or1200_qmem_top.v
+  verilog/or1200_sb.v
+  verilog/or1200_du.v
+  verilog/or1200_pic.v
+  verilog/or1200_tt.v
+  verilog/or1200_pm.v
+  verilog/or1200_cpu.v
+  verilog/or1200_genpc.v
+  verilog/or1200_if.v
+  verilog/or1200_ctrl.v
+  verilog/or1200_rf.v
+  verilog/or1200_operandmuxes.v
+  verilog/or1200_alu.v
+  verilog/or1200_mult_mac.v
+  verilog/or1200_sprs.v
+  verilog/or1200_lsu.v
+  verilog/or1200_wbmux.v
+  verilog/or1200_freeze.v
+  verilog/or1200_except.v
+  verilog/or1200_cfgr.v
+  verilog/or1200_spram.v
+  verilog/or1200_dpram.v
+  verilog/or1200_gmultp2_32x32.v
+  verilog/or1200_mem2reg.v
+  verilog/or1200_reg2mem.v
+  verilog/or1200_spram_32_bw.v
+  verilog/or1200_fpu.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  verilog/or1200_defines.v

@@ -1,0 +1,16 @@
+CAPI=1
+[main]
+name = optimsoc:tile:compute_tile_dm
+depend =
+  optimsoc:core:mor1kx_module
+  optimsoc:networkadapter:networkadapter_ct
+  optimsoc:bootrom:bootrom
+  optimsoc:sram:plain
+  optimsoc:debug_system:mam_wb_adapter
+  optimsoc:wb_interconnect:bus
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/compute_tile_dm.v

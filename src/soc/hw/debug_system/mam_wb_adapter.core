@@ -1,0 +1,16 @@
+CAPI=1
+[main]
+name = optimsoc:debug_system:mam_wb_adapter
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/mam_wb_adapter.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  verilog/dbg_config.vh

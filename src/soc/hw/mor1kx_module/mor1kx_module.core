@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = optimsoc:core:mor1kx_module
+depend = openrisc:mor1kx:cappuccino
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/mor1kx_module.v

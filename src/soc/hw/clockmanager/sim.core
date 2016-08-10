@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:clockmanager:sim
+
+[fileset src_files]
+file_type = verilogSource
+# XXX: should this be sim only?
+usage = sim synth
+files =
+  verilog/sim/clockmanager_sim.v
+  verilog/sim/clkmgr_sim.v

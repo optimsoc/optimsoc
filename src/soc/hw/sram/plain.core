@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = optimsoc:sram:plain
+description = "Single-Port SRAM implementation using no vendor-specific blocks"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/wb_sram_sp.v
+  verilog/wb2sram.v
+  verilog/sram_sp.v
+  verilog/sram_sp_impl_plain.v

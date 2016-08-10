@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = optimsoc:tile:memory_tile_pgas
+description = "Memory tile for PGAS systems"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/memory_tile_pgas.v

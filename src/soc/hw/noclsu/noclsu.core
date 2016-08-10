@@ -1,0 +1,17 @@
+CAPI=1
+[main]
+name = optimsoc:lsu:noclsu
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/noclsu_tile.v
+  verilog/noclsu_memory.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  verilog/noclsu_nocparms.vh

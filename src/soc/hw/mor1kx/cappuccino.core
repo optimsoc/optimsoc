@@ -1,0 +1,47 @@
+CAPI=1
+[main]
+description = "OpenRISC mor1kx CPU core with Cappuccino pipeline"
+name = openrisc:mor1kx:cappuccino
+# XXX: find common core file with upstream/use the upstream version directly?
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/mor1kx_branch_prediction.v
+  verilog/mor1kx_bus_if_wb32.v
+  verilog/mor1kx_cfgrs.v
+  verilog/mor1kx_cpu_cappuccino.v
+  verilog/mor1kx_cpu.v
+  verilog/mor1kx_ctrl_cappuccino.v
+  verilog/mor1kx_dcache.v
+  verilog/mor1kx_decode_execute_cappuccino.v
+  verilog/mor1kx_decode.v
+  verilog/mor1kx_dmmu.v
+  verilog/mor1kx_execute_alu.v
+  verilog/mor1kx_execute_ctrl_cappuccino.v
+  verilog/mor1kx_fetch_cappuccino.v
+  verilog/mor1kx_icache.v
+  verilog/mor1kx_immu.v
+  verilog/mor1kx_lsu_cappuccino.v
+  verilog/mor1kx_pic.v
+  verilog/mor1kx_rf_cappuccino.v
+  verilog/mor1kx_simple_dpram_sclk.v
+  verilog/mor1kx_store_buffer.v
+  verilog/mor1kx_ticktimer.v
+  verilog/mor1kx_true_dpram_sclk.v
+  verilog/mor1kx.v
+  verilog/mor1kx_wb_mux_cappuccino.v
+  verilog/mor1kx_cache_lru.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+ verilog/mor1kx-defines.v
+ verilog/mor1kx-sprs.v
+ verilog/mor1kx_utils.vh
+
+# XXX: include params and other stuff from upstream?
+# https://github.com/openrisc/orpsoc-cores/blob/master/cores/mor1kx/mor1kx.core
