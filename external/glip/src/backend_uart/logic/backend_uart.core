@@ -1,0 +1,19 @@
+CAPI=1
+[main]
+name = glip:backend:uart
+description = "GLIP UART backend"
+depend =
+  glip:common:channel
+  glip:common:scaler
+  glip:common:credit
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/glip_uart_control_egress.v
+  verilog/glip_uart_control_ingress.v
+  verilog/glip_uart_control.v
+  verilog/glip_uart_receive.v
+  verilog/glip_uart_toplevel.v
+  verilog/glip_uart_transmit.v

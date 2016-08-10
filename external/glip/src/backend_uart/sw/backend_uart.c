@@ -98,28 +98,28 @@ static int write_blocking(int fd, uint8_t *buffer, size_t size,
                           size_t *size_written, unsigned int timeout);
 
 /**
- * Reset the user logic
+ * Reset the user logic (ctrl_logic_rst)
  *
  * @private
  * Sets the user logic reset register
  *
- * @param fd Terminal to send the reset to
+ * @param ctx GLIP context
  * @param state Value (binary) to set the register to
  * @return Always returns 0
  */
-static int reset_logic(int fd, uint8_t state);
+static int reset_logic(struct glip_ctx *ctx, uint8_t state);
 
 /**
- * Reset the communication logic
+ * Reset the communication logic (com_rst)
  *
  * @private
  * Sets the communication logic register
  *
- * @param fd Terminal to use
+ * @param ctx GLIP context
  * @param state Value (binary) to set the register to
  * @return Always returns 0
  */
-static int reset_com(int fd, uint8_t state);
+static int reset_com(struct glip_ctx *ctx, uint8_t state);
 
 /**
  * Update a received debt value
@@ -152,18 +152,18 @@ static int send_credit(struct glip_backend_ctx* ctx, uint16_t tranche);
  * @private
  * Resets the buffers, counters etc.
  *
- * @param ctx Context
+ * @param ctx GLIP context
  * @return 0 on success, -1 otherwise
  */
-static int reset(struct glip_backend_ctx* ctx);
+static int reset(struct glip_ctx* ctx);
 
 /**
  * Communication (POSIX) thread function
  *
- * @param arg The glip_backend_ctx
- * @return Ignorned
+ * @param ctx_void GLIP context
+ * @return Ignored
  */
-void* thread_func(void *arg);
+void* thread_func(void *ctx_void);
 
 /**
  * Parses an incoming buffer and filters credits
@@ -281,20 +281,19 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
     if (glip_option_get_uint32(ctx, "speed", &bctx->speed) != 0) {
         bctx->speed = 115200;
     }
+    dbg(ctx, "Connecting to device %s using %d baud\n", bctx->device, bctx->speed);
 
     /* Open the device, the best source for serial terminal handling is:
      * http://www.cmrr.umn.edu/~strupp/serial.html */
-    bctx->fd = open (bctx->device, O_RDWR | O_NOCTTY | O_NDELAY);
-    if (bctx->fd < 0)
-    {
+    bctx->fd = open(bctx->device, O_RDWR | O_NOCTTY | O_NDELAY);
+    if (bctx->fd < 0) {
         err(ctx, "Cannot open device %s\n", bctx->device);
         return -1;
     }
 
     /* Translate the integer speed to the proper define value for termios */
     int baud = speed_lookup(bctx->speed);
-    if (baud == -1)
-    {
+    if (baud == -1) {
         err(ctx, "Speed not known: %d."
             "Custom baud rates are not supported currently\n", baud);
         return -1;
@@ -302,16 +301,15 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
 
     /* Get the attributes of the terminal to manipulate them */
     struct termios tty;
-    memset (&tty, 0, sizeof tty);
-    if (tcgetattr (bctx->fd, &tty) != 0)
-    {
+    memset(&tty, 0, sizeof tty);
+    if (tcgetattr(bctx->fd, &tty) != 0) {
         err(ctx, "Cannot get device attributes\n");
         return -1;
     }
 
     /* Set line speed */
-    cfsetospeed (&tty, baud);
-    cfsetispeed (&tty, baud);
+    cfsetospeed(&tty, baud);
+    cfsetispeed(&tty, baud);
 
     /* 8N1 */
     tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
@@ -322,7 +320,7 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
     tty.c_cflag |= CRTSCTS;
 
     /* read doesn't block */
-    tty.c_cc[VMIN]  = 0; 
+    tty.c_cc[VMIN]  = 0;
     /* 0.5 seconds read timeout */
     tty.c_cc[VTIME] = 5;
 
@@ -335,8 +333,7 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
     tty.c_oflag = 0;
 
     /* Write the changed attributes */
-    if (tcsetattr (bctx->fd, TCSANOW, &tty) != 0)
-    {
+    if (tcsetattr(bctx->fd, TCSANOW, &tty) != 0) {
         err(ctx, "Cannot set attributes\n");
         return -1;
     }
@@ -351,7 +348,8 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
     int autodetect = 0; /* We entered autodetect */
     /* Options to autodetect */
     int autodetect_candidates[] = { 4000000, 3000000, 2000000, 1000000,
-            500000, 230400, 115200, 57600, 38400, 19200, 9600, 0 };
+                                    500000, 230400, 115200, 57600, 38400,
+                                    19200, 9600, 0 };
     /* Current autodetect (from autodetect_candidates) */
     int *autodetect_try = 0;
     /* Indicate if we successfully connected */
@@ -360,11 +358,10 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
     do {
         if (autodetect) {
             /* If we are in autodetecting, adopt speed */
-            err(ctx, "Try speed: %d\n", *autodetect_try);
+            dbg(ctx, "Try speed: %d\n", *autodetect_try);
 
-            memset (&tty, 0, sizeof tty);
-            if (tcgetattr (bctx->fd, &tty) != 0)
-            {
+            memset(&tty, 0, sizeof tty);
+            if (tcgetattr(bctx->fd, &tty) != 0) {
                 err(ctx, "Cannot get device attributes\n");
                 return -1;
             }
@@ -372,20 +369,21 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
             bctx->speed = *autodetect_try;
 
             baud = speed_lookup(bctx->speed);
-            cfsetospeed (&tty, baud);
-            cfsetispeed (&tty, baud);
+            cfsetospeed(&tty, baud);
+            cfsetispeed(&tty, baud);
 
-            if (tcsetattr (bctx->fd, TCSANOW, &tty) != 0)
-            {
+            if (tcsetattr(bctx->fd, TCSANOW, &tty) != 0) {
                 err(ctx, "Cannot set attributes\n");
                 return -1;
             }
         }
 
+        dbg(ctx, "Trying to establish connection ...\n");
+
         /* The ramp up sequence is */
         /* - Set com_rst to high (flush buffers) */
         int rv;
-        rv = reset_com(bctx->fd, 1);
+        rv = reset_com(ctx, 1);
 
         /* - Wait for one millisecond to be sure it is in there */
         usleep(1000);
@@ -397,12 +395,13 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
         } while (rv > 0);
 
         /* - De-assert reset */
-        rv = reset_com(bctx->fd, 0);
+        rv = reset_com(ctx, 0);
 
         /* - Read the debt
          *   We do this just to check the read and if we have detected
          *   the correct speed */
         {
+            dbg(ctx, "Reading debt from target\n");
             uint8_t debt[2];
             size_t size_read;
 
@@ -443,14 +442,15 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
             }
         }
     } while (!success);
+    dbg(ctx, "Device connection established.\n");
 
     /* Reset the communication logic, state and data buffers */
-    reset(bctx);
+    reset(ctx);
 
     /* Start the communication thread. From here on all read and write
      * operations go to the circular buffers, and the thread handles
      * the device interface. */
-    pthread_create(&bctx->thread, 0, thread_func, bctx);
+    pthread_create(&bctx->thread, 0, thread_func, ctx);
 
     return 0;
 }
@@ -738,60 +738,64 @@ unsigned int gb_uart_get_fifo_width(struct glip_ctx *ctx)
 static int speed_lookup(int speed)
 {
     switch(speed) {
-    KNOWN(50);
-    KNOWN(75);
-    KNOWN(110);
-    KNOWN(134);
-    KNOWN(150);
-    KNOWN(200);
-    KNOWN(300);
-    KNOWN(600);
-    KNOWN(1200);
-    KNOWN(1800);
-    KNOWN(2400);
-    KNOWN(4800);
-    KNOWN(9600);
-    KNOWN(19200);
-    KNOWN(38400);
-    KNOWN(57600);
-    KNOWN(115200);
-    KNOWN(230400);
-    KNOWN(460800);
-    KNOWN(500000);
-    KNOWN(576000);
-    KNOWN(921600);
-    KNOWN(1000000);
-    KNOWN(1152000);
-    KNOWN(1500000);
-    KNOWN(2000000);
-    KNOWN(2500000);
-    KNOWN(3000000);
-    KNOWN(3500000);
-    KNOWN(4000000);
-    default: return -1;
+        KNOWN(50);
+        KNOWN(75);
+        KNOWN(110);
+        KNOWN(134);
+        KNOWN(150);
+        KNOWN(200);
+        KNOWN(300);
+        KNOWN(600);
+        KNOWN(1200);
+        KNOWN(1800);
+        KNOWN(2400);
+        KNOWN(4800);
+        KNOWN(9600);
+        KNOWN(19200);
+        KNOWN(38400);
+        KNOWN(57600);
+        KNOWN(115200);
+        KNOWN(230400);
+        KNOWN(460800);
+        KNOWN(500000);
+        KNOWN(576000);
+        KNOWN(921600);
+        KNOWN(1000000);
+        KNOWN(1152000);
+        KNOWN(1500000);
+        KNOWN(2000000);
+        KNOWN(2500000);
+        KNOWN(3000000);
+        KNOWN(3500000);
+        KNOWN(4000000);
+        default: return -1;
     }
 }
 
-static int reset_logic(int fd, uint8_t state)
+static int reset_logic(struct glip_ctx *ctx, uint8_t state)
 {
+    struct glip_backend_ctx *bctx = ctx->backend_ctx;
     uint8_t reset[2];
     size_t written;
 
     reset[0] = 0xfe;
     reset[1] = ((state & 0x1) << 1) | 0x81;
 
-    return write_blocking(fd, reset, 2, &written, 0);
+    dbg(ctx, "Setting ctrl_logic_rst to %d\n", state);
+    return write_blocking(bctx->fd, reset, 2, &written, 0);
 }
 
-static int reset_com(int fd, uint8_t state)
+static int reset_com(struct glip_ctx *ctx, uint8_t state)
 {
+    struct glip_backend_ctx *bctx = ctx->backend_ctx;
     uint8_t reset[2];
     size_t written;
 
     reset[0] = 0xfe;
     reset[1] = ((state & 0x1) << 1) | 0x85;
 
-    return write_blocking(fd, reset, 2, &written, 0);
+    dbg(ctx, "Setting com_rst to %d\n", state);
+    return write_blocking(bctx->fd, reset, 2, &written, 0);
 }
 
 int total = 0;
@@ -859,87 +863,88 @@ void parse_buffer(struct glip_backend_ctx *ctx, uint8_t *buffer, size_t size)
 
 int wtotal = 0;
 
-void* thread_func(void *arg)
+void* thread_func(void *ctx_void)
 {
+    struct glip_ctx *ctx = ctx_void;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
     uint8_t buffer[TMP_BUFFER_SIZE];
     size_t avail, actual;
     int rv;
 
-    struct glip_backend_ctx *ctx = (struct glip_backend_ctx*) arg;
-
     while (1) {
         /* Check for reset */
-        if (ctx->reset_request == 1) {
-            rv = reset_logic(ctx->fd, 1);
+        if (bctx->reset_request == 1) {
+            rv = reset_logic(ctx, 1);
             assert(rv == 0);
 
-            rv = reset_logic(ctx->fd, 0);
+            rv = reset_logic(ctx, 0);
             assert(rv == 0);
-            ctx->reset_request = 0;
+            bctx->reset_request = 0;
         }
 
-        if (ctx->term_request) {
+        if (bctx->term_request) {
             /* Termination requested from user */
             break;
         }
 
         /* Read */
-        avail = cbuf_free_level(ctx->input_buffer);
+        avail = cbuf_free_level(bctx->input_buffer);
         if (avail == 0) {
             /* We are only expecting a credit message now
              * Check if there is one */
-            rv = read(ctx->fd, buffer, 1);
+            rv = read(bctx->fd, buffer, 1);
             if (rv == 1) {
                 assert(buffer[0] == 0xfe);
-                rv = read_blocking(ctx->fd, buffer, 2, &actual, 0);
+                rv = read_blocking(bctx->fd, buffer, 2, &actual, 0);
                 assert(rv == 0);
                 assert(actual == 2);
-                update_debt(ctx, buffer[0], buffer[1]);
+                update_debt(bctx, buffer[0], buffer[1]);
             }
         } else {
             /* Read a chunk of data if the circular buffer can accept it */
             size_t size = min(avail, TMP_BUFFER_SIZE);
-            rv = read(ctx->fd, buffer, size);
+            rv = read(bctx->fd, buffer, size);
             if (rv > 0) {
-                parse_buffer(ctx, buffer, rv);
+                parse_buffer(bctx, buffer, rv);
             }
         }
 
         /* Write */
-        if (ctx->debt > 0) {
-            size_t size = min(ctx->debt, TMP_BUFFER_SIZE);
-            avail = cbuf_fill_level(ctx->output_buffer);
+        if (bctx->debt > 0) {
+            size_t size = min(bctx->debt, TMP_BUFFER_SIZE);
+            avail = cbuf_fill_level(bctx->output_buffer);
             if (avail > 0) {
                 /* If there is data to be transfered, take the smallest
                  * number of available words, the debt size and the
-                 * size of the temporaty buffer as transfer size */
+                 * size of the temporary buffer as transfer size */
                 size = min(avail, size);
 
                 /* Read the words */
-                assert(cbuf_read(ctx->output_buffer, buffer, size) != -EINVAL);
+                assert(cbuf_read(bctx->output_buffer, buffer, size) != -EINVAL);
 
                 for (size_t i = 0; i < size; i++) {
                     /* Write each word */
-                    rv = write_blocking(ctx->fd, &buffer[i], 1, &actual, 0);
+                    rv = write_blocking(bctx->fd, &buffer[i], 1, &actual, 0);
                     assert(rv == 0);
                     assert(actual == 1);
                     if (buffer[i] == 0xfe) {
                         /* .. and repeat the marker word 0xfe */
-                        rv = write_blocking(ctx->fd, &buffer[i], 1, &actual, 0);
+                        rv = write_blocking(bctx->fd, &buffer[i], 1, &actual, 0);
                         assert(rv == 0);
                         assert(actual == 1);
                     }
                 }
-                ctx->debt -= size;
+                bctx->debt -= size;
             }
         }
 
         /* Update credit if necessary */
-        if (ctx->credit < ctx->buffer_size-UART_MAX_TRANCHE) {
+        if (bctx->credit < bctx->buffer_size - UART_MAX_TRANCHE) {
             /* Give new credit */
-            ctx->credit += UART_MAX_TRANCHE;
+            bctx->credit += UART_MAX_TRANCHE;
 
-            send_credit(ctx, UART_MAX_TRANCHE);
+            send_credit(bctx, UART_MAX_TRANCHE);
         }
     }
 
@@ -1015,7 +1020,7 @@ static int write_blocking(int fd, uint8_t *buffer, size_t size,
                 return -ETIMEDOUT;
             }
         }
-    } while(*size_written != size);
+    } while (*size_written != size);
 
     return 0;
 }
@@ -1068,12 +1073,13 @@ static int send_credit(struct glip_backend_ctx* ctx, uint16_t tranche)
     return 0;
 }
 
-static int reset(struct glip_backend_ctx* ctx)
+static int reset(struct glip_ctx* ctx)
 {
+    struct glip_backend_ctx *bctx = ctx->backend_ctx;
     int rv;
 
     /* Assert reset */
-    rv = reset_com(ctx->fd, 1);
+    rv = reset_com(ctx, 1);
     if (rv != 0) {
         return -1;
     }
@@ -1081,33 +1087,33 @@ static int reset(struct glip_backend_ctx* ctx)
     /* Drain the interface */
     uint8_t buffer[16];
     do {
-        rv = read(ctx->fd, buffer, 16);
+        rv = read(bctx->fd, buffer, 16);
     } while (rv > 0);
 
     /* De-assert reset */
-    rv = reset_com(ctx->fd, 0);
+    rv = reset_com(ctx, 0);
     if (rv != 0) {
         return -1;
     }
 
     /* Clear the buffers */
-    rv = cbuf_discard(ctx->input_buffer, cbuf_fill_level(ctx->input_buffer));
+    rv = cbuf_discard(bctx->input_buffer, cbuf_fill_level(bctx->input_buffer));
     assert(rv == 0);
 
-    rv = cbuf_discard(ctx->output_buffer, cbuf_fill_level(ctx->output_buffer));
+    rv = cbuf_discard(bctx->output_buffer, cbuf_fill_level(bctx->output_buffer));
     assert(rv == 0);
 
     /* Reset values to defaults */
-    ctx->credit = UART_MAX_TRANCHE;
-    ctx->debt = 0;
+    bctx->credit = UART_MAX_TRANCHE;
+    bctx->debt = 0;
 
     /* Send our initial credit tranche to the logic */
-    send_credit(ctx, UART_MAX_TRANCHE);
+    send_credit(bctx, UART_MAX_TRANCHE);
 
     /* Read the debt from the logic */
     uint8_t debt[3];
     size_t read;
-    rv = read_blocking(ctx->fd, debt, 3, &read, 0);
+    rv = read_blocking(bctx->fd, debt, 3, &read, 0);
     assert(rv == 0);
 
     /* Strangely, the UART sometimes returns a trash byte on the first
@@ -1116,13 +1122,13 @@ static int reset(struct glip_backend_ctx* ctx)
         debt[0] = debt[1];
         debt[1] = debt[2];
 
-        rv = read_blocking(ctx->fd, &debt[2], 1, &read, 0);
+        rv = read_blocking(bctx->fd, &debt[2], 1, &read, 0);
         assert(rv == 0);
     }
 
     assert(debt[0] == 0xfe);
 
-    update_debt(ctx, debt[1], debt[2]);
+    update_debt(bctx, debt[1], debt[2]);
 
     return 0;
 }

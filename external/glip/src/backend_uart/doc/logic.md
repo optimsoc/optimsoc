@@ -5,32 +5,40 @@ The GLIP logic provides the interface between the UART controller and
 the user logic. This is essentially serialization and de-serialization
 of the UART data stream.
 
+Due to the use of Xilinx FIFO primitives, only Xilinx 7-series devices are
+supported at the moment. (However, support for other devices should be possible
+by exchanging the FIFOs.)
+
 The Verilog toplevel module `glip_uart_toplevel` implements the
 [common GLIP logic interface](@ref logicif).
 
-| Port Name | Width | Direction | Description                        |
-|-----------|:-----:|:---------:|------------------------------------|
-| uart_rx   | 1     | IN        | RX signal                          |
-| uart_tx   | 1     | OUT       | TX signal                          |
-| uart_cts  | 1     | IN        | clear to send, flow control for TX |
-| uart_rts  | 1     | OUT       | ready to send, flow control for RX |
+Additionally, the following signals are available in `glip_uart_toplevel`.
 
-The following parameters need to be set:
+| Port Name  | Width | Direction | Description                                    |
+|------------|:-----:|:---------:|------------------------------------------------|
+| clk_io     | 1     | IN        | I/O clock                                      |
+| uart_rx    | 1     | IN        | RX signal                                      |
+| uart_tx    | 1     | OUT       | TX signal                                      |
+| uart_cts_n | 1     | IN        | clear to send, flow control for TX. active low |
+| uart_rts_n | 1     | OUT       | ready to send, flow control for RX. active low |
 
-| Name | Description     |
-|------|-----------------|
-| FREQ | Clock frequency |
-| BAUD | Baud rate       |
+The following parameters are available.
 
-The backend currently does not support logic reset as there is no
-out-of-band signaling. Doing it in-band is a peding feature.
+| Name        | Description                         |
+|-------------|-------------------------------------|
+| FREQ_CLK_IO | Frequency of the I/O clock `clk_io` |
+| BAUD        | Baud rate (default: 115200)         |
+| XILINX_TARGET_DEVICE | Xilinx target device. Valid options: `7SERIES` for Xilinx 7 series devices (Virtex, Kintex, Artix). Default: `7SERIES` |
+| WIDTH       | Width of the FIFO (`fifo_*`) ports. Supported values: 8 and 16. Default: 8 |
 
 
-Ressource Utilization
----------------------
+Resource Utilization
+--------------------
 
 The following resource utilization of the hardware logic was measured
 on a Xilinx 7 Series device:
 
 | LUTs | Registers | BRAMs |
+|------|-----------|-------|
 | 323  | 154       | 2     |
+

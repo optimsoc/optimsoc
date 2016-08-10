@@ -29,8 +29,7 @@
 
 module glip_uart_control
   #(parameter FIFO_CREDIT_WIDTH = 1'bx,
-    parameter INPUT_FIFO_CREDIT = 1'bx,
-    parameter FREQ = 1'bx)
+    parameter INPUT_FIFO_CREDIT = 1'bx)
    (
     input        clk,
     input        rst,
@@ -53,8 +52,8 @@ module glip_uart_control
 
     input        transfer_in,
 
-    output reg   logic_rst,
-    output reg   com_rst,
+    output reg   ctrl_logic_rst,
+    output       com_rst,
     output       error
     );
 
@@ -163,19 +162,21 @@ module glip_uart_control
    end
 
    // Control the reset registers
+   reg com_rst_host;
    always @(posedge clk) begin
       if (rst) begin
-         logic_rst <= 0;
-         com_rst <= 0;
+         com_rst_host <= 0;
+         ctrl_logic_rst <= 0;
       end else begin
          if (logic_rst_en) begin
-            logic_rst <= logic_rst_val;
+            ctrl_logic_rst <= logic_rst_val;
          end
          if (com_rst_en) begin
-            com_rst <= com_rst_val;
+            com_rst_host <= com_rst_val;
          end
       end
    end
+   assign com_rst = com_rst_host | rst;
    
    /* debtor AUTO_TEMPLATE(
     .rst     (com_rst),

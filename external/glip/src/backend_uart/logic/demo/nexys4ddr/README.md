@@ -52,10 +52,11 @@ Execute the loopback measurement tool
 Execute the GLIP tool "Loopback Measure" that measures the loopback
 performance.
 
-    glip_loopback_measure -b uart -ospeed=3000000
+    glip_loopback_measure -b uart -ospeed=3000000,device=/dev/ttyUSB0
 
 If the UART device cannot be found at `/dev/ttyUSB0` try others like
 `/dev/ttyUSB1` etc. If you can see the device, but cannot open, check
 the permissions.
 
 The performance should be 300 kByte/s bidirectional.
+
