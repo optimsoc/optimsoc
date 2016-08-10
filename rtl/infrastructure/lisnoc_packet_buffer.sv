@@ -44,7 +44,7 @@ module lisnoc_packet_buffer(/*AUTOARG*/
    localparam flit_width = data_width+2;
 
    parameter  fifo_depth = 16;
-   localparam size_width = clog2(fifo_depth+1);
+   localparam size_width = $clog2(fifo_depth+1);
 
    localparam READY = 1'b0, BUSY = 1'b1;
 
@@ -154,14 +154,5 @@ module lisnoc_packet_buffer(/*AUTOARG*/
          end
       end
    end // block: shift_register
-
-   function integer clog2;
-      input integer value;
-      begin
-         value = value-1;
-         for (clog2=0; value>0; clog2=clog2+1)
-           value = value>>1;
-      end
-   endfunction
 
 endmodule

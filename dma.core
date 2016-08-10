@@ -1,0 +1,27 @@
+CAPI=1
+[main]
+name = optimsoc:lisnoc:dma
+depend = optimsoc:lisnoc:blocks
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  rtl/dma/lisnoc_dma.sv
+  rtl/dma/lisnoc_dma_target.sv
+  rtl/dma/lisnoc_dma_initiator.sv
+  rtl/dma/lisnoc_dma_initiator_wbreq.v
+  rtl/dma/lisnoc_dma_initiator_nocreq.sv
+  rtl/dma/lisnoc_dma_initiator_nocresp.sv
+  rtl/dma/lisnoc_dma_request_table.sv
+  rtl/dma/lisnoc_dma_wbinterface.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  rtl/dma/lisnoc_dma_def.vh
+  rtl/dma/lisnoc_dma_undef.vh
+  rtl/lisnoc_def.vh
+  rtl/lisnoc_undef.vh

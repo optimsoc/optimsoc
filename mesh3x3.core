@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+name = optimsoc:lisnoc:mesh3x3
+depend =
+  optimsoc:lisnoc:router
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  rtl/meshs/lisnoc_mesh3x3.v
+  rtl/router/lisnoc_router_2dgrid.v

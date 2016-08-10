@@ -1,0 +1,20 @@
+CAPI=1
+[main]
+name = optimsoc:lisnoc:lisnoc16_converter
+description = "16 bit to 32 bit NoC converter"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  rtl/infrastructure/lisnoc_vc_multiplexer.v
+  rtl/infrastructure/lisnoc_vc_serializer.v
+  rtl/lisnoc16/converter/lisnoc16_converter_16to32.v
+  rtl/lisnoc16/converter/lisnoc16_converter_32to16.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  rtl/lisnoc16/converter/lisnoc16_converter_def.vh

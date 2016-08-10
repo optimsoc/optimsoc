@@ -42,7 +42,7 @@ module lisnoc_mp_simple_wb(/*AUTOARG*/
    localparam noc_flit_width = noc_data_width + noc_type_width;
 
    parameter  fifo_depth = 16;
-   localparam size_width = clog2(fifo_depth+1);
+   localparam size_width = $clog2(fifo_depth+1);
 
    input clk;
    input rst;
@@ -103,14 +103,5 @@ module lisnoc_mp_simple_wb(/*AUTOARG*/
                .bus_we                  (bus_we),
                .bus_en                  (bus_en),
                .bus_data_in             (bus_data_in[noc_data_width-1:0]));
-
-   function integer clog2;
-      input integer value;
-      begin
-         value = value-1;
-         for (clog2=0; value>0; clog2=clog2+1)
-           value = value>>1;
-      end
-   endfunction
 
 endmodule // lisnoc_mp_simple_wb

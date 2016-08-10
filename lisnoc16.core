@@ -1,0 +1,19 @@
+CAPI=1
+[main]
+name = optimsoc:lisnoc:lisnoc16
+description = "16 bit unidirectional ring NoC (aka lisnoc16)"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  rtl/rings/lisnoc_uni_ring.v
+  rtl/router/lisnoc_router_uni_ring.v
+  rtl/lisnoc16/lisnoc16_fifo.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  rtl/lisnoc16/lisnoc16_def.vh
