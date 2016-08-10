@@ -126,7 +126,7 @@ module compute_tile_dm_nexys4
         .XILINX_TARGET_DEVICE("7SERIES"))
       u_glip(
          .clk_io(sys_clk),
-         .clk_logic(sys_clk),
+         .clk(sys_clk),
          .rst(sys_rst),
          .com_rst(glip_com_rst),
          .ctrl_logic_rst(glip_ctrl_logic_rst),
