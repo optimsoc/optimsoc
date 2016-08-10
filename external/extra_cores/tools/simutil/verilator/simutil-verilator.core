@@ -1,0 +1,14 @@
+CAPI=1
+[main]
+name = wallento:simutil:verilator
+description = "Verilator simulator support"
+
+[verilator]
+source_type = CPP
+include_files =
+  inc/VerilatedToplevel.h
+  inc/VerilatedControl.h
+  inc/OptionsParser.h
+src_files =
+  src/VerilatedControl.cpp
+  src/OptionsParser.cpp

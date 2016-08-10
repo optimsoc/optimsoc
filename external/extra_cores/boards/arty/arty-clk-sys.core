@@ -1,0 +1,9 @@
+CAPI=1
+[main]
+depend =
+
+[fileset xci]
+usage = vivado
+file_type = xci
+files =
+  ip/clk_gen_sys.xci

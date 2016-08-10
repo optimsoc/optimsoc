@@ -1,0 +1,9 @@
+CAPI=1
+[main]
+name = wallento:svchannels:nasti
+
+[fileset verilog]
+files =
+ rtl/verilog/nasti_channel.sv
+file_type = systemVerilogSource
+usage = sim synth

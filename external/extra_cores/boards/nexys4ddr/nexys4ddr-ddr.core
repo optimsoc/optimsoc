@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = wallento:boards:nexys4ddr-ddr
+depend =
+  wallento:boards:nexys4ddr-clk_ddr
+
+[fileset core]
+usage = vivado xsim
+files =
+  ip/mig_7series.xci[file_type=xci]
+  ip/mig_config.prj[file_type=data]

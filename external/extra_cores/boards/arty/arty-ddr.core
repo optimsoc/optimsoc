@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+depend =
+  arty-clk-ddr
+
+[fileset core]
+usage = vivado
+files =
+  ip/mig_7series.xci[file_type=xci]
+  ip/mig_a.prj[file_type=data]

@@ -1,0 +1,15 @@
+CAPI=1
+[main]
+name = micron:ddr:mt47h64m16hr-25e
+description = "Micron 1024Mb DDR-SDRAM Verilog model"
+
+[verilog]
+src_files =
+ ddr2.v
+include_files =
+ ddr2_parameters.vh
+
+[provider]
+name = url
+url = http://www.micron.com/~/media/Documents/Products/Sim%%20Model/DRAM/DRAM/39571024mb_ddr2.zip
+filetype = zip
