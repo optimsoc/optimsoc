@@ -193,13 +193,6 @@ def build_tools(options):
     toolsdistdir = os.path.join(dist, "tools")
     ensure_directory(toolsdistdir)
 
-    info(" + tcl")
-    tclsrcdir = os.path.join(src, "tools", "tcl")
-    tcldistdir = os.path.join(dist, "tools", "tcl")
-
-    # Simply copy tcl sources
-    file_copytree(tclsrcdir, tcldistdir)
-
     info(" + utils")
     utilssrcdir = os.path.join(src, "tools", "utils")
     utilsobjdir = os.path.join(objdir, "tools", "utils")
@@ -412,7 +405,6 @@ def set_environment(options, env):
 
     env['OPTIMSOC'] = dist
     env['OPTIMSOC_RTL'] = "{}/soc/hw".format(dist)
-    env['OPTIMSOC_TCL'] = "{}/tools/tcl".format(dist)
     env['LISNOC'] = "{}/external/lisnoc".format(dist)
     env['LISNOC_RTL'] = "{}/external/lisnoc/rtl".format(dist)
 
@@ -454,7 +446,6 @@ fi
 
 export OPTIMSOC
 export OPTIMSOC_RTL=$OPTIMSOC/soc/hw
-export OPTIMSOC_TCL=$OPTIMSOC/tools/tcl
 export OPTIMSOC_VERSION={}
 export LISNOC=$OPTIMSOC/external/lisnoc
 export LISNOC_RTL=$LISNOC/rtl
