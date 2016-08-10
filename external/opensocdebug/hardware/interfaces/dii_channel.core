@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = opensocdebug:interfaces:dii_channel
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  common/dii_channel.sv
+  common/dii_channel_flat.sv
+  
