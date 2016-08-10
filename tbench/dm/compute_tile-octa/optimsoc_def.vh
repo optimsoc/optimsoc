@@ -1,1 +1,0 @@
-../compute_tile/optimsoc_def.vh
