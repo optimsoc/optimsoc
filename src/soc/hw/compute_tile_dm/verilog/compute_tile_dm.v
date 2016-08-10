@@ -90,6 +90,10 @@ module compute_tile_dm(
 
    wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace [0:CORES-1];
 
+   wire wb_mem_clk_i, wb_mem_rst_i;
+   assign wb_mem_clk_i = clk;
+   assign wb_mem_rst_i = rst_sys;
+
 `ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    input [31:0]  wb_mam_adr_o;
    input         wb_mam_cyc_o;
@@ -134,9 +138,6 @@ module compute_tile_dm(
    wire          wb_mem_err_o;
    wire          wb_mem_rty_o;
    wire [32-1:0] wb_mem_dat_o;
-
-   wire          wb_mem_clk_i;
-   wire          wb_mem_rst_i;
 `endif
 
    wire [31:0]   busms_adr_o[0:NR_MASTERS-1];
