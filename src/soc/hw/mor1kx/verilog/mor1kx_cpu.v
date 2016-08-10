@@ -319,36 +319,6 @@ module mor1kx_cpu
 	    .snoop_adr_i		(snoop_adr_i[31:0]),
 	    .snoop_en_i			(snoop_en_i));
 
-	 // synthesis translate_off
-`ifndef SYNTHESIS
-
-	 assign monitor_flag =  monitor_flag_set ? 1 :
-			        monitor_flag_clear ? 0 :
-				monitor_flag_sr;
-	 assign monitor_clk = clk;
-
-	 assign monitor_execute_advance = cappuccino.mor1kx_cpu.padv_execute_o;
- 	 assign monitor_flag_set = cappuccino.mor1kx_cpu.mor1kx_execute_ctrl_cappuccino.flag_set_i;
-	 assign monitor_flag_clear = cappuccino.mor1kx_cpu.mor1kx_execute_ctrl_cappuccino.flag_clear_i;
-	 assign monitor_flag_sr = cappuccino.mor1kx_cpu.mor1kx_ctrl_cappuccino.ctrl_flag_o;
-	 assign monitor_spr_sr = {16'd0,cappuccino.mor1kx_cpu.mor1kx_ctrl_cappuccino.spr_sr[15:`OR1K_SPR_SR_F+1],cappuccino.mor1kx_cpu.mor1kx_ctrl_cappuccino.ctrl_flag_o,cappuccino.mor1kx_cpu.mor1kx_ctrl_cappuccino.spr_sr[`OR1K_SPR_SR_F-1:0]};
-	 assign monitor_execute_pc = cappuccino.mor1kx_cpu.pc_decode_to_execute;
-	 assign monitor_rf_result_in = cappuccino.mor1kx_cpu.mor1kx_rf_cappuccino.result_i;
-	 assign monitor_spr_esr = {16'd0,cappuccino.mor1kx_cpu.mor1kx_ctrl_cappuccino.spr_esr};
-	 assign monitor_spr_epcr = cappuccino.mor1kx_cpu.mor1kx_ctrl_cappuccino.spr_epcr;
-	 assign monitor_spr_eear = cappuccino.mor1kx_cpu.mor1kx_ctrl_cappuccino.spr_eear;
-	 assign monitor_branch_mispredict = cappuccino.mor1kx_cpu.branch_mispredict_o;
-
-        reg [`OR1K_INSN_WIDTH-1:0]          monitor_execute_insn_reg;
-        always @(posedge clk)
-          if (cappuccino.mor1kx_cpu.padv_decode_o)
-            monitor_execute_insn_reg <= cappuccino.mor1kx_cpu.mor1kx_decode.decode_insn_i;
-
-        assign monitor_execute_insn = monitor_execute_insn_reg;
-
-`endif
-	 // synthesis translate_on
-
 
       end // block: cappuccino
       /* verilator lint_off WIDTH */
@@ -455,30 +425,6 @@ module mor1kx_cpu
 	    .spr_bus_ack_fpu_i		(spr_bus_ack_fpu_i),
 	    .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]));
 
-	 // synthesis translate_off
-`ifndef SYNTHESIS
-	 assign monitor_flag =  monitor_flag_set ? 1 :
-			        monitor_flag_clear ? 0 :
-				monitor_flag_sr;
-	 assign monitor_clk = clk;
-	 assign monitor_execute_insn = espresso.mor1kx_cpu.mor1kx_fetch_espresso.decode_insn_o;
-	 assign monitor_execute_advance = espresso.mor1kx_cpu.mor1kx_ctrl_espresso.execute_done;
-	 assign monitor_flag_set = espresso.mor1kx_cpu.mor1kx_ctrl_espresso.ctrl_flag_set_i;
-	 assign monitor_flag_clear = espresso.mor1kx_cpu.mor1kx_ctrl_espresso.ctrl_flag_clear_i;
-	 assign monitor_flag_sr = espresso.mor1kx_cpu.mor1kx_ctrl_espresso.flag;
-	 assign monitor_spr_sr = {16'd0,espresso.mor1kx_cpu.mor1kx_ctrl_espresso.spr_sr[15:`OR1K_SPR_SR_F+1],
-				  // Use the locally calculated flag value
-				  monitor_flag,
-				  espresso.mor1kx_cpu.mor1kx_ctrl_espresso.spr_sr[`OR1K_SPR_SR_F-1:0]};
-	 assign monitor_execute_pc = espresso.mor1kx_cpu.mor1kx_ctrl_espresso.spr_ppc;
-	 assign monitor_rf_result_in = espresso.mor1kx_cpu.mor1kx_rf_espresso.result_i;
-	 assign monitor_spr_esr = {16'd0,espresso.mor1kx_cpu.mor1kx_ctrl_espresso.spr_esr};
-	 assign monitor_spr_epcr = espresso.mor1kx_cpu.mor1kx_ctrl_espresso.spr_epcr;
-	 assign monitor_spr_eear = espresso.mor1kx_cpu.mor1kx_ctrl_espresso.spr_eear;
-	 assign monitor_branch_mispredict = 0;
-`endif
-	 // synthesis translate_on
-
       end // block: espresso
       /* verilator lint_off WIDTH */
       if (OPTION_CPU=="PRONTO_ESPRESSO") begin : prontoespresso
@@ -584,30 +530,6 @@ module mor1kx_cpu
 	    .spr_bus_dat_fpu_i		(spr_bus_dat_fpu_i[OPTION_OPERAND_WIDTH-1:0]),
 	    .spr_bus_ack_fpu_i		(spr_bus_ack_fpu_i),
 	    .multicore_coreid_i		(multicore_coreid_i[OPTION_OPERAND_WIDTH-1:0]));
-
-	 // synthesis translate_off
-`ifndef SYNTHESIS
-	 assign monitor_flag =  monitor_flag_set ? 1 :
-			        monitor_flag_clear ? 0 :
-				monitor_flag_sr;
-	 assign monitor_clk = clk;
-	 assign monitor_execute_insn = prontoespresso.mor1kx_cpu.insn_fetch_to_decode;
-	 assign monitor_execute_advance = prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.execute_done;
-	 assign monitor_flag_set = prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.ctrl_flag_set_i;
-	 assign monitor_flag_clear = prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.ctrl_flag_clear_i;
-	 assign monitor_flag_sr = prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.flag;
-	 assign monitor_spr_sr = {16'd0,prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.spr_sr[15:`OR1K_SPR_SR_F+1],
-				  // Use the locally calculated flag value
-				  monitor_flag,
-				  prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.spr_sr[`OR1K_SPR_SR_F-1:0]};
-	 assign monitor_execute_pc = prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.spr_ppc;
-	 assign monitor_rf_result_in = prontoespresso.mor1kx_cpu.mor1kx_rf_espresso.result_i;
-	 assign monitor_spr_esr = {16'd0,prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.spr_esr};
-	 assign monitor_spr_epcr = prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.spr_epcr;
-	 assign monitor_spr_eear = prontoespresso.mor1kx_cpu.mor1kx_ctrl_prontoespresso.spr_eear;
-	 assign monitor_branch_mispredict = 0;
-`endif
-	 // synthesis translate_on
 
       end
       /* verilator lint_off WIDTH */
