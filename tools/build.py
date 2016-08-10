@@ -515,7 +515,12 @@ def build_externals_fusesoc(options):
     info(" + Copy sources")
     srcdir = os.path.join(src, "external", "fusesoc", "fusesoc")
     distdir = os.path.join(dist, "tools", "fusesoc")
+    file_copytree(srcdir, distdir)
 
+
+    info(" + Copy ipyxact module as dependency into fusesoc")
+    srcdir = os.path.join(src, "external", "fusesoc-ipyxact", "ipyxact")
+    distdir = os.path.join(dist, "tools", "fusesoc", "ipyxact")
     file_copytree(srcdir, distdir)
 
     info(" + Create optimsoc-fusesoc wrapper script")
