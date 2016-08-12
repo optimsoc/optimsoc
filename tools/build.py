@@ -315,7 +315,7 @@ def build_examples(options, env):
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "optimsoc-fusesoc --cores-root {} sim --build-only optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        cmd = "optimsoc-fusesoc --verbose --cores-root {} sim --build-only optimsoc:examples:{}".format(buildsrcdir, ex["name"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Install build artifacts")

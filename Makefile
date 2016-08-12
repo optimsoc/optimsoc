@@ -47,7 +47,7 @@ ifneq ($(BUILD_EXAMPLES),yes)
 	BUILD_ARGS += '--no-examples'
 endif
 ifneq ($(BUILD_DOCS),yes)
-	BUILD_ARGS += '--no-docs'
+	BUILD_ARGS += '--no-doc'
 endif
 
 build:

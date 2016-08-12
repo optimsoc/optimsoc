@@ -1,4 +1,4 @@
-# We do not support Ubuntu < 14.04 any more.
+# We do not support Ubuntu < 14.04 in OpTiMSoC
 # Unfortunately, travis does not support containerized builds in trusty
 sudo: required
 dist: trusty
@@ -9,34 +9,42 @@ addons:
     packages:
     - build-essential
     - tcl
-    # for fusesoc
-    - python3
-    - python3-yaml
     # for GLIP
     - libusb-1.0-0-dev
+    # for GLIP TCP ("logic side")
+    - libboost-dev
     # for the OSD software
     - libelf-dev
 
+language: python
+python:
+  # Python 3.4 is part of Ubuntu trusty, our lowest supported version
+  - "3.4"
+
 # Environment
 env:
- global:
+  global:
     # Installation target
-  - TARGET_BASE=$HOME/optimsoc
-  - PREBUILT_DEPLOY=optimsoc-prebuilt-deploy.py
-  - PREBUILT_DEPLOY_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_DEPLOY}
+    - TARGET_BASE=$HOME/optimsoc
+    - PREBUILT_DEPLOY=optimsoc-prebuilt-deploy.py
+    - PREBUILT_DEPLOY_URL=https://raw.githubusercontent.com/optimsoc/prebuilts/master/${PREBUILT_DEPLOY}
 
+# Install dependencies
 before_install:
- # Create folder for target
- - mkdir -p ${TARGET_BASE}
- # Get prebuilts
- - curl ${PREBUILT_DEPLOY_URL} -o /tmp/${PREBUILT_DEPLOY}
- - chmod a+x /tmp/${PREBUILT_DEPLOY}
- - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} all
+  # dependency for fusesoc
+  - pip install pyyaml
+
+  # Create folder for target
+  - mkdir -p ${TARGET_BASE}
+  # Get prebuilts
+  - curl ${PREBUILT_DEPLOY_URL} -o /tmp/${PREBUILT_DEPLOY}
+  - chmod a+x /tmp/${PREBUILT_DEPLOY}
+  - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} all
 
 # Execute the build
 install:
- - source ${TARGET_BASE}/setup_prebuilt.sh
- - ./tools/build.py --no-doc
+  - source ${TARGET_BASE}/setup_prebuilt.sh
+  - make BUILD_DOCS=no
 
 script:
- -
+  -
