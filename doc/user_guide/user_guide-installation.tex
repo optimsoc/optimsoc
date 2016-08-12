@@ -23,7 +23,8 @@ Independent of the OpTiMSoC components you plan to use, you will need some
 packages to be installed:
 
 \begin{lstlisting}
-sudo apt-get -y install git python build-essential automake autoconf
+sudo apt-get -y install git build-essential tcl libusb-1.0-0-dev \
+  libboost-dev libelf-dev python3 python3-yaml
 \end{lstlisting}
 
 \section{Option 1: Install the OpTiMSoC binary distribution (recommended)}
@@ -81,6 +82,8 @@ environment for the prebuilt tools:
 \begin{lstlisting}
 source /opt/optimsoc/setup_prebuilt.sh
 \end{lstlisting}
+
+We recommend to put this line into your \verb|~/.bashrc| file as well.
 
 You are now ready to go to the tutorials.
 

@@ -11,7 +11,7 @@ Some of the tutorials (especially the first ones) build on top of each
 other, so it's recommended to do them in order. Simply stop if you
 think you know enough to implement your own ideas!
 
-\section{Starting Small: Compute Tile and Software (Simulated)}
+\section{Starting Small: Compute Tile and Embedded Software (Simulated)}
 
 It is a good starting point to simulate a single compute tile of a
 distributed memory system. Therefore a simple example is included and
@@ -24,23 +24,11 @@ adapter is not functional in this test case. It can therefore only be
 used to simulate local software.
 
 You can find this example in
-\path{$OPTIMSC/examples/dm/compute_tile}.
+\path{$OPTIMSC/examples/compute_tile_simonly}.
 
 In default mode they start a server to connect the host software to,
 but you can use the parameter \verb|--standalone| to run them in
-standalone. If you start the simulation now
-
-\begin{lstlisting}
-$OPTIMSOC/examples/dm/compute_tile/tb_compute_tile --standalone
-\end{lstlisting}
-
-you will get this output
-
-\begin{lstlisting}
-%Error: ct.vmem:0: $readmem file not found
-Aborting...
-Aborted (core dumped)
-\end{lstlisting}
+standalone.
 
 The simulations always expect vmem files that initialize the memories.
 This needs to be generated from the compiled source code.
@@ -60,7 +48,7 @@ make
 \end{lstlisting}
 
 You will then find the executable elf file as \path{hello/hello.elf}.
-Furthermore some other files are build:
+Furthermore some other files are built:
 
 \begin{itemize}
 \item \verb|hello.dis| is the disassembly of the file
@@ -72,7 +60,7 @@ You can now run the example again, this time with a different memory
 initialization file:
 
 \begin{lstlisting}
-$OPTIMSOC/examples/dm/compute_tile/tb_compute_tile --standalone --meminit=hello.vmem
+$OPTIMSOC/examples/compute_tile_simonly/compute_tile_simonly --standalone --meminit=hello.vmem
 \end{lstlisting}
 
 the simulation should terminate with:
@@ -121,7 +109,7 @@ This function is called from printf as write function. The trace
 monitor captures theses characters and puts them to the stdout file.
 
 You can easily add your own ``traces'' using a macro defined in
-\path{baremetal-libs/src/libbaremetal/include/optimsoc-baremetal.h}:
+\path{$OPTIMSOC/soc/sw/include/baremetal/optimsoc-baremetal.h}:
 
 \begin{lstlisting}[language=C]
 #define OPTIMSOC_TRACE(id,v)                \
