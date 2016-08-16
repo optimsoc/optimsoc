@@ -147,7 +147,12 @@ int osd_get_memory_descriptor(struct osd_context *ctx, uint16_t addr,
         return OSD_E_GENERIC;
     }
 
-    size_t sz = sizeof(struct osd_memory_descriptor);
+    unsigned num_mem_regions =
+        ctx->system_info->modules[addr].descriptor.memory->num_regions;
+
+    size_t sz = sizeof(struct osd_memory_descriptor)
+        + num_mem_regions * sizeof(uint64_t) * 2;
+
     *desc = malloc(sz);
 
     memcpy(*desc, ctx->system_info->modules[addr].descriptor.memory, sz);
