@@ -61,6 +61,8 @@ module compute_tile_dm_nexys4
    output                ddr2_we_n
    );
 
+   parameter USE_DEBUG = 1;
+
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 28;
    localparam DDR_DATA_WIDTH = 32;
@@ -69,6 +71,29 @@ module compute_tile_dm_nexys4
    localparam NOC_FLIT_TYPE_WIDTH = 2;
    localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH+NOC_FLIT_TYPE_WIDTH;
    localparam VCHANNELS = `VCHANNELS;
+
+   dii_flit ring_2_him_in;
+   logic ring_2_him_in_ready;
+   dii_flit ring_2_him_out;
+   logic ring_2_him_out_ready;
+
+   dii_flit ring_2_scm_in;
+   logic ring_2_scm_in_ready;
+   dii_flit ring_2_scm_out;
+   logic ring_2_scm_out_ready;
+
+   dii_flit ring_2_mam_in;
+   logic ring_2_mam_in_ready;
+   dii_flit ring_2_mam_out;
+   logic ring_2_mam_out_ready;
+
+   localparam NUM_PORTS = 3;
+   localparam NUM_MODS = 1;
+   logic [2:0][9:0]    id_map = {{10'h2}, {10'h1}, {10'h0}};
+   dii_flit [2:0]      ring_in = {ring_2_mam_out, ring_2_scm_out, ring_2_him_out};
+   logic [2:0]         ring_in_ready = {ring_2_mam_out_ready, ring_2_scm_out_ready, ring_2_him_out_ready};
+   dii_flit [2:0]      ring_out = {ring_2_mam_in, ring_2_scm_in, ring_2_him_in};
+   logic [2:0]         ring_out_ready = {ring_2_mam_in_ready, ring_2_scm_in_ready, ring_2_him_in_ready};
 
    nasti_channel
      #(.ID_WIDTH   (AXI_ID_WIDTH),
@@ -146,24 +171,48 @@ module compute_tile_dm_nexys4
          .uart_cts_n(uart_cts_n)
       );
 
-   // Debug interface
-   debug_interface
-     #(.SYSTEMID    (1),
-       .NUM_MODULES (0))
-     u_debuginterface
-       (.clk             (sys_clk),
-        .rst             (sys_rst),
-        .sys_rst         (),
-        .cpu_rst         (),
-        .glip_in         (c_glip_in),
-        .glip_out        (c_glip_out),
-        .debug_out       (debug_ring_in),
-        .debug_out_ready (debug_ring_in_ready),
-        .debug_in        (debug_ring_out),
-        .debug_in_ready  (debug_ring_out_ready));
-
-   assign debug_ring_out = debug_ring_in;
-   assign debug_ring_in_ready = debug_ring_out_ready;
+   if (USE_DEBUG == 1) begin
+      // Debug Ring
+      // Port 0 connects to HIM
+      // Port 1 connects to SCM
+      // Port 2 connects to MAM
+      debug_ring
+         #(
+            .PORTS(NUM_PORTS)
+         )
+         u_dbg_ring(
+         .clk(sys_clk),
+         .rst(sys_rst),
+         .dii_in(ring_in),
+         .dii_in_ready(ring_in_ready),
+         .dii_out(ring_out),
+         .dii_out_ready(ring_out_ready),
+         .id_map(id_map)
+         );
+   
+      debug_interface
+         #(
+            .SYSTEMID    (1),
+            .NUM_MODULES (NUM_MODS)
+         )
+         u_debuginterface(
+            .*,
+            .clk           (sys_clk),
+            .rst           (sys_rst),
+            .sys_rst       (),
+            .cpu_rst       (),
+            .glip_in       (c_glip_in),
+            .glip_out      (c_glip_out),
+            .him_out       (ring_in[0]),
+            .him_out_ready (ring_in_ready[0]),
+            .him_in        (ring_out[0]),
+            .him_in_ready  (ring_out_ready[0]),
+            .scm_out       (ring_in[1]),
+            .scm_out_ready (ring_in_ready[1]),
+            .scm_in        (ring_out[1]),
+            .scm_in_ready  (ring_out_ready[1])
+         );
+   end // if(USE_DEBUG == 1)
 
    // XXX: Add system trace and other debug modules to compute tile
 
@@ -185,20 +234,11 @@ module compute_tile_dm_nexys4
          .noc_out_flit  (noc_out_flit),
          .noc_out_ready (noc_out_ready),
          .noc_out_valid (noc_out_valid),
-
-         .wb_mem_adr_i  (c_wb_ddr.adr_o),
-         .wb_mem_cyc_i  (c_wb_ddr.cyc_o),
-         .wb_mem_dat_i  (c_wb_ddr.dat_o),
-         .wb_mem_sel_i  (c_wb_ddr.sel_o),
-         .wb_mem_stb_i  (c_wb_ddr.stb_o),
-         .wb_mem_we_i   (c_wb_ddr.we_o),
-         .wb_mem_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
-         .wb_mem_cti_i  (c_wb_ddr.cti_o),
-         .wb_mem_bte_i  (c_wb_ddr.bte_o),
-         .wb_mem_ack_o  (c_wb_ddr.ack_i),
-         .wb_mem_rty_o  (c_wb_ddr.rty_i),
-         .wb_mem_err_o  (c_wb_ddr.err_i),
-         .wb_mem_dat_o  (c_wb_ddr.dat_i)
+         //MAM Ports
+         .debug_in(ring_out[2]),
+         .debug_in_ready(ring_out_ready[2]),
+         .debug_out(ring_in[2]),
+         .debug_out_ready(ring_in_ready[2]),
       );
 
    // Nexys 4 board wrapper
