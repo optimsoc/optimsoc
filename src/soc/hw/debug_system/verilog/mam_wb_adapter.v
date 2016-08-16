@@ -44,11 +44,9 @@
 `include "optimsoc_def.vh"
 
 module mam_wb_adapter(
-`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    wb_mam_ack_i, wb_mam_rty_i, wb_mam_err_i, wb_mam_dat_i, wb_mam_bte_o,
    wb_mam_adr_o, wb_mam_cyc_o, wb_mam_dat_o, wb_mam_sel_o, wb_mam_stb_o,
    wb_mam_we_o, wb_mam_cab_o, wb_mam_cti_o,
-`endif
    /*AUTOARG*/
    // Outputs
    wb_in_ack_o, wb_in_err_o, wb_in_rty_o, wb_in_dat_o, wb_out_adr_i,
@@ -66,6 +64,8 @@ module mam_wb_adapter(
 
    // data width
    parameter DW = 32;
+   
+   parameter USE_DEBUG = 1;
 
    // byte select width
    localparam SW = (DW == 32) ? 4 :
@@ -122,7 +122,6 @@ module mam_wb_adapter(
    assign wb_out_rst_i = wb_in_rst_i;
 
    // MAM Wishbone MASTER interface (incoming)
-`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
    input [AW-1:0]  wb_mam_adr_o;
    input           wb_mam_cyc_o;
    input [DW-1:0]  wb_mam_dat_o;
@@ -136,111 +135,113 @@ module mam_wb_adapter(
    output          wb_mam_rty_i;
    output          wb_mam_err_i;
    output [DW-1:0] wb_mam_dat_i;
-`endif
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
-   localparam STATE_ARB_WIDTH = 2;
-   localparam STATE_ARB_IDLE = 0;
-   localparam STATE_ARB_ACCESS_MAM = 1;
-   localparam STATE_ARB_ACCESS_CPU = 2;
+   if (USE_DEBUG == 1) begin
 
-   reg [STATE_ARB_WIDTH-1:0] fsm_arb_state;
-   reg [STATE_ARB_WIDTH-1:0] fsm_arb_state_next;
+      localparam STATE_ARB_WIDTH = 2;
+      localparam STATE_ARB_IDLE = 0;
+      localparam STATE_ARB_ACCESS_MAM = 1;
+      localparam STATE_ARB_ACCESS_CPU = 2;
 
-   reg grant_access_cpu;
-   reg grant_access_mam;
-   reg access_cpu;
+      reg [STATE_ARB_WIDTH-1:0] fsm_arb_state;
+      reg [STATE_ARB_WIDTH-1:0] fsm_arb_state_next;
 
-   // arbiter FSM: MAM has higher priority than CPU
-   always @(posedge wb_in_clk_i) begin
-      if (wb_in_rst_i) begin
-         fsm_arb_state <= STATE_ARB_IDLE;
-      end else begin
-         fsm_arb_state <= fsm_arb_state_next;
+      reg grant_access_cpu;
+      reg grant_access_mam;
+      reg access_cpu;
 
-         if (grant_access_cpu) begin
-            access_cpu <= 1'b1;
-         end else if (grant_access_mam) begin
-            access_cpu <= 1'b0;
+      // arbiter FSM: MAM has higher priority than CPU
+      always @(posedge wb_in_clk_i) begin
+         if (wb_in_rst_i) begin
+            fsm_arb_state <= STATE_ARB_IDLE;
+         end else begin
+            fsm_arb_state <= fsm_arb_state_next;
+   
+            if (grant_access_cpu) begin
+               access_cpu <= 1'b1;
+            end else if (grant_access_mam) begin
+               access_cpu <= 1'b0;
+            end
          end
       end
-   end
-
-   always @(*) begin
-      grant_access_cpu = 1'b0;
-      grant_access_mam = 1'b0;
-      fsm_arb_state_next = STATE_ARB_IDLE;
-
-      case (fsm_arb_state)
-         STATE_ARB_IDLE: begin
-            if (wb_mam_cyc_o == 1'b1) begin
-               fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
-            end else if (wb_in_cyc_i == 1'b1) begin
-               fsm_arb_state_next = STATE_ARB_ACCESS_CPU;
-            end else begin
-               fsm_arb_state_next = STATE_ARB_IDLE;
+   
+      always @(*) begin
+         grant_access_cpu = 1'b0;
+         grant_access_mam = 1'b0;
+         fsm_arb_state_next = STATE_ARB_IDLE;
+   
+         case (fsm_arb_state)
+            STATE_ARB_IDLE: begin
+               if (wb_mam_cyc_o == 1'b1) begin
+                  fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
+               end else if (wb_in_cyc_i == 1'b1) begin
+                  fsm_arb_state_next = STATE_ARB_ACCESS_CPU;
+               end else begin
+                  fsm_arb_state_next = STATE_ARB_IDLE;
+               end
             end
-         end
-
-         STATE_ARB_ACCESS_MAM: begin
-            grant_access_mam = 1'b1;
-
-            if (wb_mam_cyc_o == 1'b1) begin
-               fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
-            end else begin
-               fsm_arb_state_next = STATE_ARB_IDLE;
+   
+            STATE_ARB_ACCESS_MAM: begin
+               grant_access_mam = 1'b1;
+   
+               if (wb_mam_cyc_o == 1'b1) begin
+                  fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
+               end else begin
+                  fsm_arb_state_next = STATE_ARB_IDLE;
+               end
             end
-         end
-
-         STATE_ARB_ACCESS_CPU: begin
-            grant_access_cpu = 1'b1;
-
-            if (wb_mam_cyc_o == 1'b1) begin
-               fsm_arb_state_next = STATE_ARB_ACCESS_CPU;
-            end else begin
-               fsm_arb_state_next = STATE_ARB_IDLE;
+   
+            STATE_ARB_ACCESS_CPU: begin
+               grant_access_cpu = 1'b1;
+   
+               if (wb_mam_cyc_o == 1'b1) begin
+                  fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
+               end else if (wb_in_cyc_i == 1'b1) begin
+                  fsm_arb_state_next = STATE_ARB_ACCESS_CPU;
+               end else begin
+                  fsm_arb_state_next = STATE_ARB_IDLE;
+               end
             end
-         end
-      endcase
-   end
-
-   // MUX of signals TO the memory
-   assign wb_out_adr_i = access_cpu ? wb_in_adr_i : wb_mam_adr_o;
-   assign wb_out_bte_i = access_cpu ? wb_in_bte_i : wb_mam_bte_o;
-   assign wb_out_cti_i = access_cpu ? wb_in_cti_i : wb_mam_cti_o;
-   assign wb_out_cyc_i = access_cpu ? wb_in_cyc_i : wb_mam_cyc_o;
-   assign wb_out_dat_i = access_cpu ? wb_in_dat_i : wb_mam_dat_o;
-   assign wb_out_sel_i = access_cpu ? wb_in_sel_i : wb_mam_sel_o;
-   assign wb_out_stb_i = access_cpu ? wb_in_stb_i : wb_mam_stb_o;
-   assign wb_out_we_i = access_cpu ? wb_in_we_i : wb_mam_we_o;
-
-
-   // MUX of signals FROM the memory
-   assign wb_in_ack_o = access_cpu ? wb_out_ack_o : 1'b0;
-   assign wb_in_err_o = access_cpu ? wb_out_err_o : 1'b0;
-   assign wb_in_rty_o = access_cpu ? wb_out_rty_o : 1'b0;
-   assign wb_in_dat_o = access_cpu ? wb_out_dat_o : {DW{1'b0}};
-
-   assign wb_mam_ack_i = ~access_cpu ? wb_out_ack_o : 1'b0;
-   assign wb_mam_err_i = ~access_cpu ? wb_out_err_o : 1'b0;
-   assign wb_mam_rty_i = ~access_cpu ? wb_out_rty_o : 1'b0;
-   assign wb_mam_dat_i = ~access_cpu ? wb_out_dat_o : {DW{1'b0}};
-
-`else /* !OPTIMSOC_DEBUG_ENABLE_MAM */
-   assign wb_out_adr_i = wb_in_adr_i;
-   assign wb_out_bte_i = wb_in_bte_i;
-   assign wb_out_cti_i = wb_in_cti_i;
-   assign wb_out_cyc_i = wb_in_cyc_i;
-   assign wb_out_dat_i = wb_in_dat_i;
-   assign wb_out_sel_i = wb_in_sel_i;
-   assign wb_out_stb_i = wb_in_stb_i;
-   assign wb_out_we_i = wb_in_we_i;
-
-   assign wb_in_ack_o = wb_out_ack_o;
-   assign wb_in_err_o = wb_out_err_o;
-   assign wb_in_rty_o = wb_out_rty_o;
-   assign wb_in_dat_o = wb_out_dat_o;
-`endif /* OPTIMSOC_DEBUG_ENABLE_MAM */
+         endcase
+      end
+   
+      // MUX of signals TO the memory
+      assign wb_out_adr_i = access_cpu ? wb_in_adr_i : wb_mam_adr_o;
+      assign wb_out_bte_i = access_cpu ? wb_in_bte_i : wb_mam_bte_o;
+      assign wb_out_cti_i = access_cpu ? wb_in_cti_i : wb_mam_cti_o;
+      assign wb_out_cyc_i = access_cpu ? wb_in_cyc_i : wb_mam_cyc_o;
+      assign wb_out_dat_i = access_cpu ? wb_in_dat_i : wb_mam_dat_o;
+      assign wb_out_sel_i = access_cpu ? wb_in_sel_i : wb_mam_sel_o;
+      assign wb_out_stb_i = access_cpu ? wb_in_stb_i : wb_mam_stb_o;
+      assign wb_out_we_i = access_cpu ? wb_in_we_i : wb_mam_we_o;
+   
+   
+      // MUX of signals FROM the memory
+      assign wb_in_ack_o = access_cpu ? wb_out_ack_o : 1'b0;
+      assign wb_in_err_o = access_cpu ? wb_out_err_o : 1'b0;
+      assign wb_in_rty_o = access_cpu ? wb_out_rty_o : 1'b0;
+      assign wb_in_dat_o = access_cpu ? wb_out_dat_o : {DW{1'b0}};
+   
+      assign wb_mam_ack_i = ~access_cpu ? wb_out_ack_o : 1'b0;
+      assign wb_mam_err_i = ~access_cpu ? wb_out_err_o : 1'b0;
+      assign wb_mam_rty_i = ~access_cpu ? wb_out_rty_o : 1'b0;
+      assign wb_mam_dat_i = ~access_cpu ? wb_out_dat_o : {DW{1'b0}};
+   end else begin // USE_DEBUG == 0
+      assign wb_out_adr_i = wb_in_adr_i;
+      assign wb_out_bte_i = wb_in_bte_i;
+      assign wb_out_cti_i = wb_in_cti_i;
+      assign wb_out_cyc_i = wb_in_cyc_i;
+      assign wb_out_dat_i = wb_in_dat_i;
+      assign wb_out_sel_i = wb_in_sel_i;
+      assign wb_out_stb_i = wb_in_stb_i;
+      assign wb_out_we_i = wb_in_we_i;
+   
+      assign wb_in_ack_o = wb_out_ack_o;
+      assign wb_in_err_o = wb_out_err_o;
+      assign wb_in_rty_o = wb_out_rty_o;
+      assign wb_in_dat_o = wb_out_dat_o;
+   
+   end // if(USE_DEBUG == 1)
 
    `include "optimsoc_functions.vh"
 

@@ -30,23 +30,39 @@
 `include "optimsoc_def.vh"
 `include "dbg_config.vh"
 
+//`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
+import dii_package::dii_flit;
+//`endif
+
 module compute_tile_dm(
-`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
-   wb_mam_adr_o, wb_mam_cyc_o, wb_mam_dat_o, wb_mam_sel_o, wb_mam_stb_o,
-   wb_mam_we_o, wb_mam_cab_o, wb_mam_cti_o, wb_mam_bte_o, wb_mam_ack_i,
-   wb_mam_rty_i, wb_mam_err_i, wb_mam_dat_i,
-`endif
+   input dii_flit debug_in,
+   output debug_in_ready,
+   output dii_flit debug_out,
+   input debug_out_ready,
 `ifdef OPTIMSOC_CTRAM_WIRES
-   wb_mem_adr_i, wb_mem_cyc_i, wb_mem_dat_i, wb_mem_sel_i,
-   wb_mem_stb_i, wb_mem_we_i, wb_mem_cab_i, wb_mem_cti_i,
-   wb_mem_bte_i, wb_mem_ack_o, wb_mem_rty_o, wb_mem_err_o,
-   wb_mem_dat_o,
+   output [31:0] wb_mem_adr_i,
+   output        wb_mem_cyc_i,
+   output [31:0] wb_mem_dat_i,
+   output [3:0]  wb_mem_sel_i,
+   output        wb_mem_stb_i,
+   output        wb_mem_we_i,
+   output        wb_mem_cab_i,
+   output [2:0]  wb_mem_cti_i,
+   output [1:0]  wb_mem_bte_i,
+   input         wb_mem_ack_o,
+   input         wb_mem_rty_o,
+   input         wb_mem_err_o,
+   input [31:0]  wb_mem_dat_o,
 `endif
-   /*AUTOARG*/
-   // Outputs
-   noc_in_ready, noc_out_flit, noc_out_valid,
-   // Inputs
-   clk, rst_cpu, rst_sys, noc_in_flit, noc_in_valid, noc_out_ready
+   input clk,
+   input rst_cpu, rst_sys,
+
+   input [NOC_FLIT_WIDTH-1:0] noc_in_flit,
+   input [VCHANNELS-1:0] noc_in_valid,
+   output [VCHANNELS-1:0] noc_in_ready,
+   output [NOC_FLIT_WIDTH-1:0] noc_out_flit,
+   output [VCHANNELS-1:0] noc_out_valid,
+   input [VCHANNELS-1:0] noc_out_ready
    );
 
    parameter NOC_FLIT_DATA_WIDTH = 32;
@@ -78,15 +94,7 @@ module compute_tile_dm(
    parameter NA_ENABLE_DMA = 1;
    parameter DMA_ENTRIES = 4;
 
-   input clk;
-   input rst_cpu, rst_sys;
 
-   input [NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   input [VCHANNELS-1:0] noc_in_valid;
-   output [VCHANNELS-1:0] noc_in_ready;
-   output [NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   output [VCHANNELS-1:0] noc_out_valid;
-   input [VCHANNELS-1:0] noc_out_ready;
 
    wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace [0:CORES-1];
 
@@ -94,37 +102,9 @@ module compute_tile_dm(
    assign wb_mem_clk_i = clk;
    assign wb_mem_rst_i = rst_sys;
 
-`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
-   input [31:0]  wb_mam_adr_o;
-   input         wb_mam_cyc_o;
-   input [31:0]  wb_mam_dat_o;
-   input [3:0]   wb_mam_sel_o;
-   input         wb_mam_stb_o;
-   input         wb_mam_we_o;
-   input         wb_mam_cab_o;
-   input [2:0]   wb_mam_cti_o;
-   input [1:0]   wb_mam_bte_o;
-   output        wb_mam_ack_i;
-   output        wb_mam_rty_i;
-   output        wb_mam_err_i;
-   output [31:0] wb_mam_dat_i;
-`endif
 
-`ifdef OPTIMSOC_CTRAM_WIRES
-   output [31:0] wb_mem_adr_i;
-   output        wb_mem_cyc_i;
-   output [31:0] wb_mem_dat_i;
-   output [3:0]  wb_mem_sel_i;
-   output        wb_mem_stb_i;
-   output        wb_mem_we_i;
-   output        wb_mem_cab_i;
-   output [2:0]  wb_mem_cti_i;
-   output [1:0]  wb_mem_bte_i;
-   input         wb_mem_ack_o;
-   input         wb_mem_rty_o;
-   input         wb_mem_err_o;
-   input [31:0]  wb_mem_dat_o;
-`else // !`ifdef OPTIMSOC_CTRAM_WIRES
+
+`ifndef OPTIMSOC_CTRAM_WIRES // !`ifdef OPTIMSOC_CTRAM_WIRES
    wire [32-1:0] wb_mem_adr_i;
    wire [1:0]    wb_mem_bte_i;
    wire [2:0]    wb_mem_cti_i;
@@ -353,6 +333,46 @@ module compute_tile_dm(
    endgenerate
 
 
+   //MAM - WB adapter signals
+   logic          mam_stb_o;
+   logic          mam_cyc_o;
+   logic          mam_ack_i;
+   logic          mam_we_o;
+   logic [31:0]   mam_addr_o;
+   logic [31:0]   mam_dat_o;
+   logic [31:0]   mam_dat_i;
+   logic [2:0]    mam_cti_o;
+   logic [1:0]    mam_bte_o;
+   logic [3:0]    mam_sel_o;
+   
+   if (USE_DEBUG == 1) begin
+      //MAM
+      mam_wb #(
+           .DATA_WIDTH(32),
+           .MAX_PKT_LEN(8),
+           .MEM_SIZE0(8 * 1024 * 1024),
+           .BASE_ADDR0(0))
+      u_mam_wb(
+           .clk_i(clk),
+           .rst_i(rst_sys),
+           .debug_in(debug_in),
+           .debug_in_ready(debug_in_ready),
+           .debug_out(debug_out),
+           .debug_out_ready(debug_out_ready),
+           .id(2),
+           .stb_o(mam_stb_o),
+           .cyc_o(mam_cyc_o),
+           .ack_i(mam_ack_i),
+           .we_o(mam_we_o),
+           .addr_o(mam_addr_o),
+           .dat_o(mam_dat_o),
+           .dat_i(mam_dat_i),
+           .cti_o(mam_cti_o),
+           .bte_o(mam_bte_o),
+           .sel_o(mam_sel_o));
+
+   end //if (USE_DEBUG == 1)
+
    /* mam_wb_adapter AUTO_TEMPLATE(
     .wb_in_clk_i  (clk),
     .wb_in_rst_i  (rst_sys),
@@ -364,21 +384,17 @@ module compute_tile_dm(
       #(.DW(32),
         .AW(32))
       u_mam_wb_adapter(
-`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
-                       .wb_mam_adr_o    (wb_mam_adr_o),
-                       .wb_mam_cyc_o    (wb_mam_cyc_o),
-                       .wb_mam_dat_o    (wb_mam_dat_o),
-                       .wb_mam_sel_o    (wb_mam_sel_o),
-                       .wb_mam_stb_o    (wb_mam_stb_o),
-                       .wb_mam_we_o     (wb_mam_we_o),
-                       .wb_mam_cab_o    (wb_mam_cab_o),
-                       .wb_mam_cti_o    (wb_mam_cti_o),
-                       .wb_mam_bte_o    (wb_mam_bte_o),
-                       .wb_mam_ack_i    (wb_mam_ack_i),
-                       .wb_mam_rty_i    (wb_mam_rty_i),
-                       .wb_mam_err_i    (wb_mam_err_i),
-                       .wb_mam_dat_i    (wb_mam_dat_i),
-`endif
+                       .wb_mam_adr_o    (mam_addr_o),
+                       .wb_mam_cyc_o    (mam_cyc_o),
+                       .wb_mam_dat_o    (mam_dat_o),
+                       .wb_mam_sel_o    (mam_sel_o),
+                       .wb_mam_stb_o    (mam_stb_o),
+                       .wb_mam_we_o     (mam_we_o),
+                       .wb_mam_cab_o    (1'b0),
+                       .wb_mam_cti_o    (mam_cti_o),
+                       .wb_mam_bte_o    (mam_bte_o),
+                       .wb_mam_ack_i    (mam_ack_i),
+                       .wb_mam_dat_i    (mam_dat_i),
                        /*AUTOINST*/
                        // Outputs
                        .wb_in_ack_o     (bussl_ack_o[0]),        // Templated
