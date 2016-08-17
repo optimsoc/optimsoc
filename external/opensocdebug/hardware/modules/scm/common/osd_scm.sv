@@ -4,7 +4,7 @@ import dii_package::dii_flit;
 module osd_scm
   #(parameter SYSTEMID='x,
     parameter NUM_MOD='x,
-    parameter MAX_PKT_LEN=0)
+    parameter MAX_PKT_LEN=8)
    (input clk, rst,
 
     input [9:0] id,
@@ -48,11 +48,14 @@ module osd_scm
       endcase // case (reg_addr)
    end // always @ (*)
 
-   always_ff @(posedge clk)
-     if (rst)
-       rst_vector <= 2'b00;
-     else
-       if (reg_request & reg_write & (reg_addr == 16'h203))
-         rst_vector <= reg_wdata[1:0];
-
+   always @(posedge clk) begin
+      if (rst) begin
+         // hold the full system in reset until we explicitly start it after
+         // loading the memories
+         rst_vector <= 2'b10;
+      end else begin
+         if (reg_request & reg_write & (reg_addr == 16'h203))
+            rst_vector <= reg_wdata[1:0];
+      end
+   end
 endmodule
