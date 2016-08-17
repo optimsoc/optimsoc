@@ -234,11 +234,11 @@ module compute_tile_dm_nexys4
          .noc_out_flit  (noc_out_flit),
          .noc_out_ready (noc_out_ready),
          .noc_out_valid (noc_out_valid),
-         //MAM Ports
+
          .debug_in(ring_out[2]),
          .debug_in_ready(ring_out_ready[2]),
          .debug_out(ring_in[2]),
-         .debug_out_ready(ring_in_ready[2]),
+         .debug_out_ready(ring_in_ready[2])
       );
 
    // Nexys 4 board wrapper
