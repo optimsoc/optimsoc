@@ -1,47 +1,5 @@
 import dii_package::dii_flit;
 
-/**
- * Math function: enhanced clog2 function
- *
- *                        0        for value == 0
- * clog2_width =          1        for value == 1
- *               ceil(log2(value)) for value > 1
- *
- *
- * This function is a variant of the clog2() function, which returns 1 if the
- * input value is 1. In all other cases it behaves exactly like clog2().
- * This is useful to define registers which are wide enough to contain
- * "value" values.
- *
- * Example 1:
- *   parameter ITEMS = 1;
- *   localparam ITEMS_WIDTH = clog2_width(ITEMS); // 1
- *   reg [ITEMS_WIDTH-1:0] item_register; // items_register is now [0:0]
- *
- * Example 2:
- *   parameter ITEMS = 64;
- *   localparam ITEMS_WIDTH = clog2_width(ITEMS); // 6
- *   reg [ITEMS_WIDTH-1:0] item_register; // items_register is now [5:0]
- *
- * Note: I if you want to store the number "value" inside a register, you
- * need a register with size clog2(value + 1), since you also need to store the
- * number 0.
- *
- * Example 3:
- *   reg [clog2_width(64) - 1 : 0]     store_64_items;  // width is [5:0]
- *   reg [clog2_width(64 + 1) - 1 : 0] store_number_64; // width is [6:0]
- */
-function integer clog2_width;
-   input integer value;
-   begin
-      if (value == 1) begin
-         clog2_width = 1;
-      end else begin
-         clog2_width = $clog2(value);
-      end
-   end
-endfunction
-
 module osd_mam
   #(parameter DATA_WIDTH  = 16, // in bits, must be multiple of 16
     parameter ADDR_WIDTH  = 32,
@@ -83,7 +41,7 @@ module osd_mam
     output reg [DATA_WIDTH-1:0]   write_data, // Write data
     output reg [DATA_WIDTH/8-1:0] write_strb, // Byte strobe if req_burst==0
     input                         write_ready, // Acknowledge this data item
-   
+
     input                         read_valid, // Next read data is valid
     input [DATA_WIDTH-1:0]        read_data, // Read data
     output reg                    read_ready // Acknowledge this data item
@@ -102,7 +60,7 @@ module osd_mam
 
    dii_flit dp_out, dp_in;
    logic        dp_out_ready, dp_in_ready;
-   
+
    osd_regaccess_layer
      #(.MODID(16'h3), .MODVERSION(16'h0),
        .MAX_REG_SIZE(16), .CAN_STALL(0))
@@ -132,7 +90,7 @@ module osd_mam
    assign mem_size[5] = 64'(MEM_SIZE5);
    assign mem_size[6] = 64'(MEM_SIZE6);
    assign mem_size[7] = 64'(MEM_SIZE7);
-   
+
    always_comb begin
       reg_err = 0;
       reg_rdata = 16'hx;
@@ -173,22 +131,23 @@ module osd_mam
          } state, nxt_state;
 
    // The counter is used to count flits
-   reg [(clog2_width(MAX_PKT_LEN))-1:0] counter;
-   logic [(clog2_width(MAX_PKT_LEN))-1:0] nxt_counter;
+   reg [$clog2(MAX_PKT_LEN)-1:0] counter;
+   logic [$clog2(MAX_PKT_LEN)-1:0] nxt_counter;
 
    // This counter is used to count words (that can span packets)
-   reg [(clog2_width(DATA_WIDTH/16))-1:0] wcounter;
-   logic [(clog2_width(DATA_WIDTH/16))-1:0] nxt_wcounter;
+   localparam WCOUNTER_WIDTH = (DATA_WIDTH == 16) ? 1 : $clog2(DATA_WIDTH);
+   reg [WCOUNTER_WIDTH-1:0] wcounter;
+   logic [WCOUNTER_WIDTH-1:0] nxt_wcounter;
 
    // Stores whether we are inside a packet
    reg                               in_packet;
    logic                             nxt_in_packet;
-   
+
    // Stores whether the last address flit is the last flit in a packet
    // Decides whether to go to STATE_WRITE or STATE_WRITE_PACKET
    reg                               is_last_flit;
    logic                             nxt_is_last_flit;
-   
+
    // Combinational part of interface
    logic [13:0]                      nxt_req_beats;
    logic                             nxt_req_rw;
@@ -201,7 +160,7 @@ module osd_mam
 
    // This is the number of (16 bit) words needed to form an address
    localparam ADDR_WORDS = ADDR_WIDTH >> 4;
-   
+
    always_ff @(posedge clk) begin
       if (rst) begin
          state <= STATE_INACTIVE;
@@ -233,9 +192,9 @@ module osd_mam
       nxt_write_strb = write_strb;
       nxt_req_rw = req_rw;
       nxt_req_burst = req_burst;
-      
+
       nxt_req_addr = req_addr;
-      
+
       dp_in_ready = 0;
       dp_out.valid = 0;
       dp_out.data = 16'hx;
@@ -435,6 +394,6 @@ module osd_mam
         end
       endcase
    end
-   
-   
+
+
 endmodule // osd_dem_uart
