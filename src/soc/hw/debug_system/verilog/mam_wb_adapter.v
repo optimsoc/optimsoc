@@ -190,14 +190,13 @@ module mam_wb_adapter(
                   fsm_arb_state_next = STATE_ARB_IDLE;
                end
             end
-   
+            //CPU may finish cycle before switching to MAM. May need changes if instant MAM access required
             STATE_ARB_ACCESS_CPU: begin
                grant_access_cpu = 1'b1;
-   
-               if (wb_mam_cyc_o == 1'b1) begin
-                  fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
-               end else if (wb_in_cyc_i == 1'b1) begin
+               if (wb_in_cyc_i == 1'b1) begin
                   fsm_arb_state_next = STATE_ARB_ACCESS_CPU;
+               end else if (wb_mam_cyc_o == 1'b1) begin
+                  fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
                end else begin
                   fsm_arb_state_next = STATE_ARB_IDLE;
                end
