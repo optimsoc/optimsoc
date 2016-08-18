@@ -326,13 +326,6 @@ module compute_tile_dm(
          .s_rty_i                       ({bussl_rty_o[2],bussl_rty_o[1],bussl_rty_o[0]}), // Templated
          .bus_hold                      (1'b0));                         // Templated
 
-   generate
-      if (USE_DEBUG) begin
-
-      end
-   endgenerate
-
-
    //MAM - WB adapter signals
    logic          mam_stb_o;
    logic          mam_cyc_o;
@@ -350,7 +343,7 @@ module compute_tile_dm(
       mam_wb #(
            .DATA_WIDTH(32),
            .MAX_PKT_LEN(8),
-           .MEM_SIZE0(8 * 1024 * 1024),
+           .MEM_SIZE0(MEM_SIZE),
            .BASE_ADDR0(0))
       u_mam_wb(
            .clk_i(clk),
