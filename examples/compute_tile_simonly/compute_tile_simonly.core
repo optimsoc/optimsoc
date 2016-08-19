@@ -6,6 +6,7 @@ depend =
   optimsoc:trace_monitor:trace_monitor
   glip:backend:tcp
   optimsoc:debug:debug_interface
+  opensocdebug:interconnect:debug_ring
 
 simulators = verilator xsim
 

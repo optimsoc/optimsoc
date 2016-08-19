@@ -215,7 +215,7 @@ module glip_uart_toplevel
       end else if (WIDTH == 16) begin
          glip_upscale
            #(.IN_SIZE(8))
-         u_upscale(.clk       (clk_io),
+         u_upscale(.clk       (clk),
                    .rst       (com_rst),
                    .in_data   (fifo_in_data_scale),
                    .in_valid  (fifo_in_valid_scale),
@@ -226,7 +226,7 @@ module glip_uart_toplevel
 
          glip_downscale
            #(.OUT_SIZE(8))
-         u_downscale(.clk       (clk_io),
+         u_downscale(.clk       (clk),
                      .rst       (com_rst),
                      .in_data   (fifo_out_data),
                      .in_valid  (fifo_out_valid),

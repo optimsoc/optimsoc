@@ -39,26 +39,17 @@
 #include <fcntl.h>
 
 #include <errno.h>
-#include <termios.h>
 #include <unistd.h>
 #include <assert.h>
+
+#include <sys/ioctl.h>
+#include <asm/termbits.h>
+#include <asm/ioctls.h>
 
 #include <sys/time.h>
 #include <stdio.h>
 
-
 /* Forward declarations of local helpers */
-/**
- * Lookup speed (map to termios defines)
- *
- * @private
- * Looks up a speed as integer and maps it to termios defines.
- *
- * @param speed Speed as integer
- * @return Baud rate as termios value
- */
-static int speed_lookup(int speed);
-
 /**
  * Check if time is reached
  *
@@ -283,33 +274,27 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
     }
     dbg(ctx, "Connecting to device %s using %d baud\n", bctx->device, bctx->speed);
 
-    /* Open the device, the best source for serial terminal handling is:
-     * http://www.cmrr.umn.edu/~strupp/serial.html */
+    /* Open the device, we use the "new" (2006) style of handling the serial
+     * interface.
+     */
     bctx->fd = open(bctx->device, O_RDWR | O_NOCTTY | O_NDELAY);
     if (bctx->fd < 0) {
         err(ctx, "Cannot open device %s\n", bctx->device);
         return -1;
     }
 
-    /* Translate the integer speed to the proper define value for termios */
-    int baud = speed_lookup(bctx->speed);
-    if (baud == -1) {
-        err(ctx, "Speed not known: %d."
-            "Custom baud rates are not supported currently\n", baud);
-        return -1;
-    }
-
     /* Get the attributes of the terminal to manipulate them */
-    struct termios tty;
-    memset(&tty, 0, sizeof tty);
-    if (tcgetattr(bctx->fd, &tty) != 0) {
+    struct termios2 tty;
+    if (ioctl(bctx->fd, TCGETS2, &tty) != 0) {
         err(ctx, "Cannot get device attributes\n");
         return -1;
     }
 
-    /* Set line speed */
-    cfsetospeed(&tty, baud);
-    cfsetispeed(&tty, baud);
+    /* We always set a custom baud rate */
+    tty.c_cflag &= ~CBAUD;
+    tty.c_cflag |= BOTHER;
+    tty.c_ispeed = bctx->speed;
+    tty.c_ospeed = bctx->speed;
 
     /* 8N1 */
     tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
@@ -333,7 +318,7 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
     tty.c_oflag = 0;
 
     /* Write the changed attributes */
-    if (tcsetattr(bctx->fd, TCSANOW, &tty) != 0) {
+    if (ioctl(bctx->fd, TCSETS2, &tty) != 0) {
         err(ctx, "Cannot set attributes\n");
         return -1;
     }
@@ -360,19 +345,17 @@ int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels)
             /* If we are in autodetecting, adopt speed */
             dbg(ctx, "Try speed: %d\n", *autodetect_try);
 
-            memset(&tty, 0, sizeof tty);
-            if (tcgetattr(bctx->fd, &tty) != 0) {
+            if (ioctl(bctx->fd, TCGETS2, &tty) != 0) {
                 err(ctx, "Cannot get device attributes\n");
                 return -1;
             }
 
             bctx->speed = *autodetect_try;
 
-            baud = speed_lookup(bctx->speed);
-            cfsetospeed(&tty, baud);
-            cfsetispeed(&tty, baud);
+            tty.c_ispeed = bctx->speed;
+            tty.c_ospeed = bctx->speed;
 
-            if (tcsetattr(bctx->fd, TCSANOW, &tty) != 0) {
+            if (ioctl(bctx->fd, TCSETS2, &tty) != 0) {
                 err(ctx, "Cannot set attributes\n");
                 return -1;
             }
@@ -580,11 +563,6 @@ int gb_uart_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         return -1;
     }
 
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
-    }
-
     /*
      * Wait until sufficient data is available to be read.
      */
@@ -592,16 +570,21 @@ int gb_uart_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         clock_gettime(CLOCK_REALTIME, &ts);
         timespec_add_ns(&ts, timeout * 1000 * 1000);
     }
-    while (cbuf_fill_level(bctx->input_buffer) < size) {
+
+    size_t level = cbuf_fill_level(bctx->input_buffer);
+
+    while (level < size) {
         if (timeout == 0) {
-            rv = cbuf_wait_for_level_change(bctx->input_buffer);
+            rv = cbuf_wait_for_level_change(bctx->input_buffer, level);
         } else {
-            rv = cbuf_timedwait_for_level_change(bctx->input_buffer, &ts);
+            rv = cbuf_timedwait_for_level_change(bctx->input_buffer, level, &ts);
         }
 
         if (rv != 0) {
             break;
         }
+
+        level = cbuf_fill_level(bctx->input_buffer);
     }
 
     /*
@@ -691,9 +674,9 @@ int gb_uart_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 
         if (cbuf_free_level(bctx->output_buffer) == 0) {
             if (timeout == 0) {
-                cbuf_wait_for_level_change(bctx->output_buffer);
+                cbuf_wait_for_level_change(bctx->output_buffer, 0);
             } else {
-                cbuf_timedwait_for_level_change(bctx->output_buffer, &ts);
+                cbuf_timedwait_for_level_change(bctx->output_buffer, 0, &ts);
             }
         }
     }
@@ -730,46 +713,6 @@ unsigned int gb_uart_get_channel_count(struct glip_ctx *ctx)
 unsigned int gb_uart_get_fifo_width(struct glip_ctx *ctx)
 {
     return 1;
-}
-
-/* Translate an integer to the macro */
-#define KNOWN(x) case x: return B##x
-
-static int speed_lookup(int speed)
-{
-    switch(speed) {
-        KNOWN(50);
-        KNOWN(75);
-        KNOWN(110);
-        KNOWN(134);
-        KNOWN(150);
-        KNOWN(200);
-        KNOWN(300);
-        KNOWN(600);
-        KNOWN(1200);
-        KNOWN(1800);
-        KNOWN(2400);
-        KNOWN(4800);
-        KNOWN(9600);
-        KNOWN(19200);
-        KNOWN(38400);
-        KNOWN(57600);
-        KNOWN(115200);
-        KNOWN(230400);
-        KNOWN(460800);
-        KNOWN(500000);
-        KNOWN(576000);
-        KNOWN(921600);
-        KNOWN(1000000);
-        KNOWN(1152000);
-        KNOWN(1500000);
-        KNOWN(2000000);
-        KNOWN(2500000);
-        KNOWN(3000000);
-        KNOWN(3500000);
-        KNOWN(4000000);
-        default: return -1;
-    }
 }
 
 static int reset_logic(struct glip_ctx *ctx, uint8_t state)

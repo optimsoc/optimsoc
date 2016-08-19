@@ -105,7 +105,7 @@ module glip_uart_control_egress
         STATE_PASSTHROUGH: begin
            // Pass-through data and start transfer
            out_data = in_data;
-           out_enable = 1'b1;
+           out_enable = can_send;
            if (out_done) begin
               // In this cycle the transfer completed
               // Acknowledge

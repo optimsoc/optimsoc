@@ -70,6 +70,19 @@ module compute_tile_dm_nexys4
    localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH+NOC_FLIT_TYPE_WIDTH;
    localparam VCHANNELS = `VCHANNELS;
 
+   localparam N_OSD = 3;
+
+   // Debug system ID map
+   logic [N_OSD-1:0][9:0] id_map;
+   assign id_map[0] = 0;        // HIM
+   assign id_map[1] = 1;        // SCM
+   assign id_map[2] = 2;        // MAM
+
+   dii_flit [N_OSD-1:0] dii_out;
+   logic [N_OSD-1:0] dii_out_ready;
+   dii_flit [N_OSD-1:0] dii_in;
+   logic [N_OSD-1:0] dii_in_ready;
+
    nasti_channel
      #(.ID_WIDTH   (AXI_ID_WIDTH),
        .ADDR_WIDTH (DDR_ADDR_WIDTH),
@@ -109,11 +122,6 @@ module compute_tile_dm_nexys4
    glip_channel c_glip_in(.clk(sys_clk));
    glip_channel c_glip_out(.clk(sys_clk));
 
-   dii_flit debug_ring_in;
-   logic debug_ring_in_ready;
-   dii_flit debug_ring_out;
-   logic debug_ring_out_ready;
-
    // XXX: does the HIM support hot-attach by now?
    // See discussion in system_2x2_cccc_ztex
    logic glip_com_rst, glip_ctrl_logic_rst;
@@ -146,24 +154,41 @@ module compute_tile_dm_nexys4
          .uart_cts_n(uart_cts_n)
       );
 
-   // Debug interface
-   debug_interface
-     #(.SYSTEMID    (1),
-       .NUM_MODULES (0))
-     u_debuginterface
-       (.clk             (sys_clk),
-        .rst             (sys_rst),
-        .sys_rst         (),
-        .cpu_rst         (),
-        .glip_in         (c_glip_in),
-        .glip_out        (c_glip_out),
-        .debug_out       (debug_ring_in),
-        .debug_out_ready (debug_ring_in_ready),
-        .debug_in        (debug_ring_out),
-        .debug_in_ready  (debug_ring_out_ready));
+   debug_ring
+     #(.PORTS(N_OSD))
+   u_ring(.clk(sys_clk),
+          .rst(sys_rst),
+          .id_map(id_map),
+          .dii_in        ( dii_out        ),
+          .dii_in_ready  ( dii_out_ready  ),
+          .dii_out       ( dii_in         ),
+          .dii_out_ready ( dii_in_ready   )
+       );
 
-   assign debug_ring_out = debug_ring_in;
-   assign debug_ring_in_ready = debug_ring_out_ready;
+
+   logic dbg_sys_rst, dbg_cpu_rst;
+
+   debug_interface
+      #(
+         .SYSTEMID    (1),
+         .NUM_MODULES (N_OSD - 2 /* SCM and HIM don't count */)
+      )
+      u_debuginterface(
+         .clk           (sys_clk),
+         .rst           (sys_rst),
+         .sys_rst       (dbg_sys_rst),
+         .cpu_rst       (dbg_cpu_rst),
+         .glip_in       (c_glip_in),
+         .glip_out      (c_glip_out),
+         .him_out       (dii_out[0]),
+         .him_out_ready (dii_out_ready[0]),
+         .him_in        (dii_in[0]),
+         .him_in_ready  (dii_in_ready[0]),
+         .scm_out       (dii_out[1]),
+         .scm_out_ready (dii_out_ready[1]),
+         .scm_in        (dii_in[1]),
+         .scm_in_ready  (dii_in_ready[1])
+      );
 
    // XXX: Add system trace and other debug modules to compute tile
 
@@ -172,12 +197,14 @@ module compute_tile_dm_nexys4
       #(
          .VCHANNELS(VCHANNELS),
          .NOC_FLIT_DATA_WIDTH(NOC_FLIT_DATA_WIDTH),
-         .NOC_FLIT_TYPE_WIDTH(NOC_FLIT_TYPE_WIDTH)
+         .NOC_FLIT_TYPE_WIDTH(NOC_FLIT_TYPE_WIDTH),
+         .USE_DEBUG(1),
+         .MEM_SIZE(128 * 1024 * 1024) // Nexys 4 DDR has 128 MiB DRAM
       )
       u_compute_tile(
          .clk           (sys_clk),
-         .rst_cpu       (sys_rst),
-         .rst_sys       (sys_rst),
+         .rst_cpu       (dbg_cpu_rst | sys_rst),
+         .rst_sys       (dbg_sys_rst | sys_rst),
 
          .noc_in_flit   (noc_in_flit),
          .noc_in_ready  (noc_in_ready),
@@ -185,6 +212,11 @@ module compute_tile_dm_nexys4
          .noc_out_flit  (noc_out_flit),
          .noc_out_ready (noc_out_ready),
          .noc_out_valid (noc_out_valid),
+
+         .debug_in(dii_in[2]),
+         .debug_in_ready(dii_in_ready[2]),
+         .debug_out(dii_out[2]),
+         .debug_out_ready(dii_out_ready[2]),
 
          .wb_mem_adr_i  (c_wb_ddr.adr_o),
          .wb_mem_cyc_i  (c_wb_ddr.cyc_o),

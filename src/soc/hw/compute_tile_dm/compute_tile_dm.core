@@ -8,9 +8,10 @@ depend =
   optimsoc:sram:plain
   optimsoc:debug_system:mam_wb_adapter
   optimsoc:wb_interconnect:bus
+  opensocdebug:modules:mam_wb
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/compute_tile_dm.v
+  verilog/compute_tile_dm.sv
