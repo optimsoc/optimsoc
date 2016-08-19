@@ -685,18 +685,29 @@ size_t cbuf_free_level(struct cbuf *buf)
 /**
  * Wait until the buffer fill level changes
  *
+ * This function is called with the last known level. The functions returns
+ * immediately if the level has changed. Otherwise it waits for another
+ * thread to write to the buffer (which triggers a level change).
+ *
  * @param buf the buffer
+ * @param level known level
  * @return 0 on success
  * @return any other value indicates an error
  *
  * @see cbuf_timedwait_for_level_change()
  */
-int cbuf_wait_for_level_change(struct cbuf *buf)
+int cbuf_wait_for_level_change(struct cbuf *buf, size_t level)
 {
     int rv = 0;
 
     rv = pthread_mutex_lock(&buf->level_mutex);
+
     if (rv != 0) {
+        goto unlock_return;
+    }
+
+    if (cbuf_fill_level(buf) != level) {
+        rv = 0;
         goto unlock_return;
     }
 
@@ -710,25 +721,35 @@ unlock_return:
 /**
  * Wait until the buffer fill level changes with a timeout
  *
+ * This function is called with the last known level. The functions returns
+ * immediately if the level has changed. Otherwise it waits for another
+ * thread to write to the buffer (which triggers a level change).
+ *
  * The timeout expires when the absolute time in @p abs_timeout passes, or
  * if the absolute time specified in @p abs_timeout has already passed. This
  * behavior is identical to the timed pthread functions
  * (pthread_mutex_timedlock(), etc.).
  *
  * @param buf the buffer
+ * @param level last known level
  * @param abs_timeout if this absolute time passes, the timeout expires
  * @return 0 on success
  * @return any other value indicates an error
  *
  * @see cbuf_wait_for_level_change()
  */
-int cbuf_timedwait_for_level_change(struct cbuf *buf,
+int cbuf_timedwait_for_level_change(struct cbuf *buf, size_t level,
                                     const struct timespec *abs_timeout)
 {
     int rv = 0;
 
     rv = pthread_mutex_timedlock(&buf->level_mutex, abs_timeout);
     if (rv != 0) {
+        goto unlock_return;
+    }
+
+    if (cbuf_fill_level(buf) != level) {
+        rv = 0;
         goto unlock_return;
     }
 
