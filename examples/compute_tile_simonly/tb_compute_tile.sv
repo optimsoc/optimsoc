@@ -77,7 +77,7 @@ module tb_compute_tile(
    wire [VCHANNELS-1:0] noc_out_valid;
    reg [VCHANNELS-1:0] noc_out_ready;
 
-   localparam NUM_MODS = 1 + (NUM_CORES * 1);
+   localparam NUM_MODS = 1 + (NUM_CORES * 2);
 
    // Monitor system behavior in simulation
    mor1kx_trace_exec [NUM_CORES-1:0] trace;

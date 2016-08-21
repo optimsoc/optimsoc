@@ -103,8 +103,9 @@ module compute_tile_dm(
    assign wb_mem_rst_i = rst_sys;
 
 
-   // n*STM + MAM
-   localparam DEBUG_NUM_MODS = USE_DEBUG * (CORES * 1 + 1);
+   // n*(STM + CTM) + MAM
+   localparam DEBUG_MODS_PER_CORE = 2;
+   localparam DEBUG_NUM_MODS = USE_DEBUG * (CORES * DEBUG_MODS_PER_CORE + 1);
 
    dii_flit [DEBUG_NUM_MODS-1:0] dii_in;
    logic [DEBUG_NUM_MODS-1:0] dii_in_ready;
@@ -312,6 +313,17 @@ module compute_tile_dm(
                  .debug_in_ready (dii_out_ready[1 + c*DEBUG_MODS_PER_CORE]),
                  .debug_out (dii_in[1+c*DEBUG_MODS_PER_CORE]),
                  .debug_out_ready (dii_in_ready[1 + c*DEBUG_MODS_PER_CORE]),
+                 .trace_port (trace[c*DEBUG_MODS_PER_CORE]));
+
+            osd_ctm_mor1kx
+              u_ctm
+                (.clk  (clk),
+                 .rst  (rst_dbg),
+                 .id   (DEBUG_BASEID + 1 + c*DEBUG_MODS_PER_CORE + 1),
+                 .debug_in (dii_out[1 + c*DEBUG_MODS_PER_CORE + 1]),
+                 .debug_in_ready (dii_out_ready[1 + c*DEBUG_MODS_PER_CORE + 1]),
+                 .debug_out (dii_in[1 + c*DEBUG_MODS_PER_CORE + 1]),
+                 .debug_out_ready (dii_in_ready[1 + c*DEBUG_MODS_PER_CORE + 1]),
                  .trace_port (trace[c*DEBUG_MODS_PER_CORE]));
          end
       end
