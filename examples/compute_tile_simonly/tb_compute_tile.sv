@@ -38,6 +38,7 @@
 `include "optimsoc_def.vh"
 
 import dii_package::dii_flit;
+import opensocdebug::mor1kx_trace_exec;
 
 module tb_compute_tile(
 `ifdef verilator
@@ -79,36 +80,23 @@ module tb_compute_tile(
    localparam NUM_MODS = 1 + (NUM_CORES * 1);
 
    // Monitor system behavior in simulation
-   wire [`DEBUG_TRACE_EXEC_WIDTH*NUM_CORES-1:0] trace_array [0:NUM_CORES-1];
-   assign trace_array = u_compute_tile.trace;
+   mor1kx_trace_exec [NUM_CORES-1:0] trace;
+   assign trace = u_compute_tile.trace;
 
-   wire                                        trace_enable   [0:NUM_CORES-1] /*verilator public_flat_rd*/;
-   wire [31:0]                                 trace_insn     [0:NUM_CORES-1] /*verilator public_flat_rd*/;
-   wire [31:0]                                 trace_pc       [0:NUM_CORES-1] /*verilator public_flat_rd*/;
-   wire                                        trace_wben     [0:NUM_CORES-1];
-   wire [4:0]                                  trace_wbreg    [0:NUM_CORES-1];
-   wire [31:0]                                 trace_wbdata   [0:NUM_CORES-1];
-   wire [31:0]                                 trace_r3       [0:NUM_CORES-1] /*verilator public_flat_rd*/;
+   logic [31:0]        trace_r3 [0:NUM_CORES-1];
 
    wire [NUM_CORES-1:0]                         termination;
 
    genvar i;
    generate
       for (i = 0; i < NUM_CORES; i = i + 1) begin
-         assign trace_enable[i] = trace_array[i][`DEBUG_TRACE_EXEC_ENABLE_MSB:`DEBUG_TRACE_EXEC_ENABLE_LSB];
-         assign trace_insn[i] = trace_array[i][`DEBUG_TRACE_EXEC_INSN_MSB:`DEBUG_TRACE_EXEC_INSN_LSB];
-         assign trace_pc[i] = trace_array[i][`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB];
-         assign trace_wben[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBEN_MSB:`DEBUG_TRACE_EXEC_WBEN_LSB];
-         assign trace_wbreg[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBREG_MSB:`DEBUG_TRACE_EXEC_WBREG_LSB];
-         assign trace_wbdata[i] = trace_array[i][`DEBUG_TRACE_EXEC_WBDATA_MSB:`DEBUG_TRACE_EXEC_WBDATA_LSB];
-
          r3_checker
             u_r3_checker(
                .clk(clk),
-               .valid(trace_enable[i]),
-               .we (trace_wben[i]),
-               .addr (trace_wbreg[i]),
-               .data (trace_wbdata[i]),
+               .valid(trace[i].valid),
+               .we (trace[i].wben),
+               .addr (trace[i].wbreg),
+               .data (trace[i].wbdata),
                .r3 (trace_r3[i])
             );
 
@@ -123,9 +111,9 @@ module tb_compute_tile(
             u_mon0(
                .termination            (termination[i]),
                .clk                    (clk),
-               .enable                 (trace_enable[i]),
-               .wb_pc                  (trace_pc[i]),
-               .wb_insn                (trace_insn[i]),
+               .enable                 (trace[i].valid),
+               .wb_pc                  (trace[i].pc),
+               .wb_insn                (trace[i].insn),
                .r3                     (trace_r3[i]),
                .termination_all        (termination)
            );
