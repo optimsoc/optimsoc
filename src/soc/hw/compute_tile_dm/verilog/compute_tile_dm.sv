@@ -303,17 +303,16 @@ module compute_tile_dm(
          assign busms_cab_o[c*2+1] = 1'b0;
 
          if (USE_DEBUG == 1) begin
-            integer x = 1 + (c * 1);
             osd_stm_mor1kx
               u_stm
                 (.clk  (clk),
                  .rst  (rst_dbg),
-                 .id   (DEBUG_BASEID + x),
-                 .debug_in (dii_out[x]),
-                 .debug_in_ready (dii_out_ready[x]),
-                 .debug_out (dii_in[x]),
-                 .debug_out_ready (dii_in_ready[x]),
-                 .trace_port (trace[c]));
+                 .id   (DEBUG_BASEID + 1 + c*DEBUG_MODS_PER_CORE),
+                 .debug_in (dii_out[1+c*DEBUG_MODS_PER_CORE]),
+                 .debug_in_ready (dii_out_ready[1 + c*DEBUG_MODS_PER_CORE]),
+                 .debug_out (dii_in[1+c*DEBUG_MODS_PER_CORE]),
+                 .debug_out_ready (dii_in_ready[1 + c*DEBUG_MODS_PER_CORE]),
+                 .trace_port (trace[c*DEBUG_MODS_PER_CORE]));
          end
       end
    endgenerate
