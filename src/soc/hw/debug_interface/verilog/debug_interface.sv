@@ -44,7 +44,8 @@ import dii_package::dii_flit;
 module debug_interface
   #(
     parameter SYSTEMID = 'x,
-    parameter NUM_MODULES = 0
+    parameter NUM_MODULES = 0,
+    parameter MAX_PKT_LEN = 16
     )
   (
    input  clk,
@@ -88,15 +89,17 @@ module debug_interface
       .ext_out_ready (ring_out_ready));
 
    osd_him
-      u_him(
-         .clk           (clk),
-         .rst           (rst),
-         .glip_in       (glip_in),
-         .glip_out      (glip_out),
-         .dii_out       (dii_in[0]),
-         .dii_out_ready (dii_in_ready[0]),
-         .dii_in        (dii_out[0]),
-         .dii_in_ready  (dii_out_ready[0])
+     #(.MAX_PKT_LEN(MAX_PKT_LEN))
+   u_him
+     (
+      .clk           (clk),
+      .rst           (rst),
+      .glip_in       (glip_in),
+      .glip_out      (glip_out),
+      .dii_out       (dii_in[0]),
+      .dii_out_ready (dii_in_ready[0]),
+      .dii_in        (dii_out[0]),
+      .dii_in_ready  (dii_out_ready[0])
       );
 
    osd_scm
