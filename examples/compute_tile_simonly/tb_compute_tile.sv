@@ -187,10 +187,6 @@ module tb_compute_tile(
       if (USE_DEBUG == 0) begin
          assign rst_sys = rst;
          assign rst_cpu = rst;
-      end else begin
-         initial begin
-            assign rst_cpu = 1'b1;
-         end
       end
    endgenerate
 
