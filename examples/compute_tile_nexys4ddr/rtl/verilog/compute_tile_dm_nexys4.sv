@@ -116,7 +116,7 @@ module compute_tile_dm_nexys4
    // Off-chip UART communication interface for debug
    glip_uart_toplevel
       #(.FREQ_CLK_IO(50000000),
-        .BAUD(115200),
+        .BAUD(2000000),
         .WIDTH(16),
         .XILINX_TARGET_DEVICE("7SERIES"))
       u_glip(
