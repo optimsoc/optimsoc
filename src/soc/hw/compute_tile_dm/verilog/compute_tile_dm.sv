@@ -302,7 +302,7 @@ module compute_tile_dm(
          assign busms_cab_o[c*2+1] = 1'b0;
 
          if (USE_DEBUG == 1) begin
-            integer x = 1 + (i * CORES * 1);
+            integer x = 1 + (c * 1);
             osd_stm_mor1kx
               u_stm
                 (.clk  (clk),
@@ -371,6 +371,8 @@ module compute_tile_dm(
    logic          mam_stb_o;
    logic          mam_cyc_o;
    logic          mam_ack_i;
+   logic          mam_err_i;
+   logic          mam_rty_i;
    logic          mam_we_o;
    logic [31:0]   mam_addr_o;
    logic [31:0]   mam_dat_o;
@@ -427,6 +429,8 @@ module compute_tile_dm(
                        .wb_mam_cti_o    (mam_cti_o),
                        .wb_mam_bte_o    (mam_bte_o),
                        .wb_mam_ack_i    (mam_ack_i),
+                       .wb_mam_rty_i    (mam_rty_i),
+                       .wb_mam_err_i    (mam_err_i),
                        .wb_mam_dat_i    (mam_dat_i),
                        /*AUTOINST*/
                        // Outputs
