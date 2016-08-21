@@ -35,10 +35,10 @@ import dii_package::dii_flit;
 //`endif
 
 module compute_tile_dm(
-   input dii_flit debug_in,
-   output debug_in_ready,
-   output dii_flit debug_out,
-   input debug_out_ready,
+   input dii_flit [1:0] debug_ring_in,
+   output [1:0] debug_ring_in_ready,
+   output dii_flit [1:0] debug_ring_out,
+   input [1:0] debug_ring_out_ready,
 `ifdef OPTIMSOC_CTRAM_WIRES
    output [31:0] wb_mem_adr_i,
    output        wb_mem_cyc_i,
@@ -103,6 +103,34 @@ module compute_tile_dm(
    assign wb_mem_rst_i = rst_sys;
 
 
+   // n*STM + MAM
+   localparam DEBUG_NUM_MODS = USE_DEBUG * (CORES * 1 + 1);
+
+   dii_flit [DEBUG_NUM_MODS-1:0] dii_in;
+   logic [DEBUG_NUM_MODS-1:0] dii_in_ready;
+   dii_flit [DEBUG_NUM_MODS-1:0] dii_out;
+   logic [DEBUG_NUM_MODS-1:0] dii_out_ready;
+
+   generate
+      if (USE_DEBUG == 1) begin
+
+         genvar i;
+         logic [DEBUG_NUM_MODS-1:0][9:0] id_map;
+         for (i = 0; i < DEBUG_NUM_MODS; i = i+1) begin
+            assign id_map[i][9:0] = 10'(DEBUG_BASEID+i);
+         end
+
+         debug_ring_expand
+           #(.PORTS(DEBUG_NUM_MODS))
+         u_debug_ring_segment
+           (.*,
+            .rst           (rst_sys),
+            .ext_in        (debug_ring_in),
+            .ext_in_ready  (debug_ring_in_ready),
+            .ext_out       (debug_ring_out),
+            .ext_out_ready (debug_ring_out_ready));
+      end // if (USE_DEBUG)
+   endgenerate
 
 `ifndef OPTIMSOC_CTRAM_WIRES // !`ifdef OPTIMSOC_CTRAM_WIRES
    wire [32-1:0] wb_mem_adr_i;
@@ -272,6 +300,19 @@ module compute_tile_dm(
 
          assign busms_cab_o[c*2] = 1'b0;
          assign busms_cab_o[c*2+1] = 1'b0;
+
+         if (USE_DEBUG == 1) begin
+            integer x = 1 + (i * CORES * 1);
+            osd_stm_mor1kx
+              u_stm
+                (.clk  (clk),
+                 .rst  (rst_sys),
+                 .id   (DEBUG_BASEID + x),
+                 .debug_in (dii_out[x]),
+                 .debug_in_ready (dii_out_ready[x]),
+                 .debug_out (dii_in[x]),
+                 .debug_out_ready (dii_in_ready[x]));
+         end
       end
    endgenerate
 
@@ -337,10 +378,10 @@ module compute_tile_dm(
    logic [2:0]    mam_cti_o;
    logic [1:0]    mam_bte_o;
    logic [3:0]    mam_sel_o;
-   
+
    if (USE_DEBUG == 1) begin
       //MAM
-      mam_wb #(
+      osd_mam_wb #(
            .DATA_WIDTH(32),
            .MAX_PKT_LEN(8),
            .MEM_SIZE0(MEM_SIZE),
@@ -348,11 +389,11 @@ module compute_tile_dm(
       u_mam_wb(
            .clk_i(clk),
            .rst_i(rst_sys),
-           .debug_in(debug_in),
-           .debug_in_ready(debug_in_ready),
-           .debug_out(debug_out),
-           .debug_out_ready(debug_out_ready),
-           .id(2),
+           .debug_in(dii_out[0]),
+           .debug_in_ready(dii_out_ready[0]),
+           .debug_out(dii_in[0]),
+           .debug_out_ready(dii_in_ready[0]),
+           .id (DEBUG_BASEID),
            .stb_o(mam_stb_o),
            .cyc_o(mam_cyc_o),
            .ack_i(mam_ack_i),
@@ -363,7 +404,6 @@ module compute_tile_dm(
            .cti_o(mam_cti_o),
            .bte_o(mam_bte_o),
            .sel_o(mam_sel_o));
-
    end //if (USE_DEBUG == 1)
 
    /* mam_wb_adapter AUTO_TEMPLATE(

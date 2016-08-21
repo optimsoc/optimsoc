@@ -9,6 +9,7 @@ depend =
   optimsoc:debug_system:mam_wb_adapter
   optimsoc:wb_interconnect:bus
   opensocdebug:modules:mam_wb
+  opensocdebug:modules:stm_mor1kx
 
 [fileset src_files]
 file_type = systemVerilogSource

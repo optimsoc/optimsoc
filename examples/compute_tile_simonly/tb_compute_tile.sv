@@ -76,30 +76,7 @@ module tb_compute_tile(
    wire [VCHANNELS-1:0] noc_out_valid;
    reg [VCHANNELS-1:0] noc_out_ready;
 
-   dii_flit ring_2_him_in;
-   logic ring_2_him_in_ready;
-   dii_flit ring_2_him_out;
-   logic ring_2_him_out_ready;
-
-   dii_flit ring_2_scm_in;
-   logic ring_2_scm_in_ready;
-   dii_flit ring_2_scm_out;
-   logic ring_2_scm_out_ready;
-
-
-   dii_flit ring_2_mam_in;
-   logic ring_2_mam_in_ready;
-   dii_flit ring_2_mam_out;
-   logic ring_2_mam_out_ready;
-
-   localparam NUM_PORTS = 3;
-   localparam NUM_MODS = 1;
-   logic [2:0][9:0]    id_map = {{10'h2}, {10'h1}, {10'h0}};
-   dii_flit [2:0]      ring_in = {ring_2_mam_out, ring_2_scm_out, ring_2_him_out};
-   logic [2:0]         ring_in_ready = {ring_2_mam_out_ready, ring_2_scm_out_ready, ring_2_him_out_ready};
-   dii_flit [2:0]      ring_out = {ring_2_mam_in, ring_2_scm_in, ring_2_him_in};
-   logic [2:0]         ring_out_ready = {ring_2_mam_in_ready, ring_2_scm_in_ready, ring_2_him_in_ready};
-
+   localparam NUM_MODS = 1 + (NUM_CORES * 1);
 
    // Monitor system behavior in simulation
    wire [`DEBUG_TRACE_EXEC_WIDTH*NUM_CORES-1:0] trace_array [0:NUM_CORES-1];
@@ -155,8 +132,12 @@ module tb_compute_tile(
       end
    endgenerate
 
-
    // OSD-based debug system
+   dii_flit [1:0] debug_ring_in;
+   dii_flit [1:0] debug_ring_out;
+   logic [1:0] debug_ring_in_ready;
+   logic [1:0] debug_ring_out_ready;
+
    generate
       if (USE_DEBUG == 1) begin
          glip_channel c_glip_in(.*);
@@ -174,22 +155,6 @@ module tb_compute_tile(
                .fifo_out  (c_glip_out)
             );
 
-         // Debug Ring
-         // Port 0 connects to HIM
-         // Port 1 connects to SCM
-         // Port 2 connects to MAM
-         debug_ring
-            #(
-               .PORTS(NUM_PORTS)
-            )
-            u_dbg_ring(
-               .dii_in(ring_in),
-               .dii_in_ready(ring_in_ready),
-               .dii_out(ring_out),
-               .dii_out_ready(ring_out_ready),
-               .id_map(id_map),
-               .*);
-
          // System Interface
          debug_interface
             #(
@@ -206,15 +171,10 @@ module tb_compute_tile(
                .glip_in       (c_glip_in),
                .glip_out      (c_glip_out),
 
-               .him_out       (ring_in[0]),
-               .him_out_ready (ring_in_ready[0]),
-               .him_in        (ring_out[0]),
-               .him_in_ready  (ring_out_ready[0]),
-
-               .scm_out       (ring_in[1]),
-               .scm_out_ready (ring_in_ready[1]),
-               .scm_in        (ring_out[1]),
-               .scm_in_ready  (ring_out_ready[1])
+               .ring_out       (debug_ring_in),
+               .ring_out_ready (debug_ring_in_ready),
+               .ring_in        (debug_ring_out),
+               .ring_in_ready  (debug_ring_out_ready)
             );
       end
    endgenerate
@@ -241,13 +201,14 @@ module tb_compute_tile(
         .CORES(NUM_CORES),
         .MEM_SIZE(128*1024*1024), // 128 MB
         .MEM_FILE("ct.vmem"),
-        .USE_DEBUG(USE_DEBUG))
+        .USE_DEBUG(USE_DEBUG),
+        .DEBUG_BASEID(2))
       u_compute_tile(
-                     //MAM Ports
-                     .debug_in(ring_out[2]),
-                     .debug_in_ready(ring_out_ready[2]),
-                     .debug_out(ring_in[2]),
-                     .debug_out_ready(ring_in_ready[2]),
+                     // Debug ring ports
+                     .debug_ring_in(debug_ring_in),
+                     .debug_ring_in_ready(debug_ring_in_ready),
+                     .debug_ring_out(debug_ring_out),
+                     .debug_ring_out_ready(debug_ring_out_ready),
                      // Outputs
                      .noc_in_ready      (noc_in_ready[VCHANNELS-1:0]),
                      .noc_out_flit      (noc_out_flit[NOC_FLIT_WIDTH-1:0]),

@@ -54,17 +54,11 @@ module debug_interface
    glip_channel.slave glip_in,
    glip_channel.master glip_out,
 
-   // HIM DII connection
-   output dii_flit him_out,
-   input  him_out_ready,
-   input  dii_flit him_in,
-   output him_in_ready,
-
-   // SCM DII connection
-   output dii_flit scm_out,
-   input  scm_out_ready,
-   input  dii_flit scm_in,
-   output scm_in_ready,
+   // ring connection
+   output dii_flit [1:0] ring_out,
+   input [1:0] ring_out_ready,
+   input dii_flit [1:0] ring_in,
+   output [1:0] ring_in_ready,
 
    // system reset request
    output sys_rst,
@@ -73,8 +67,25 @@ module debug_interface
    output cpu_rst
    );
 
-   dii_flit him_to_scm;
-   logic  him_to_scm_ready;
+   dii_flit ring_tie;
+   assign ring_tie.valid = 0;
+   logic  ring_tie_ready;
+
+   dii_flit [1:0] dii_in;
+   logic [1:0] dii_in_ready;
+   dii_flit [1:0] dii_out;
+   logic [1:0] dii_out_ready;
+
+   debug_ring_expand
+     #(.PORTS(2))
+   u_debug_ring_segment
+     (.*,
+      .id_map        ({10'd1,10'd0}),
+      .rst           (rst_sys),
+      .ext_in        ({ring_in[0],ring_tie}),
+      .ext_in_ready  ({ring_in_ready[0],ring_tie_ready}),
+      .ext_out       (ring_out),
+      .ext_out_ready (ring_out_ready));
 
    osd_him
       u_him(
@@ -82,10 +93,10 @@ module debug_interface
          .rst           (rst),
          .glip_in       (glip_in),
          .glip_out      (glip_out),
-         .dii_out       (him_out),
-         .dii_out_ready (him_out_ready),
-         .dii_in        (him_in),
-         .dii_in_ready  (him_in_ready)
+         .dii_out       (dii_in[0]),
+         .dii_out_ready (dii_in_ready[0]),
+         .dii_in        (dii_out[0]),
+         .dii_in_ready  (dii_out_ready[0])
       );
 
    osd_scm
@@ -98,10 +109,10 @@ module debug_interface
          .rst(rst),
 
          .id  (1), // SCM must be ID 1 for discovery to work
-         .debug_in   (scm_in),
-         .debug_in_ready (scm_in_ready),
-         .debug_out (scm_out),
-         .debug_out_ready (scm_out_ready),
+         .debug_in   (dii_out[1]),
+         .debug_in_ready (dii_out_ready[1]),
+         .debug_out (dii_in[1]),
+         .debug_out_ready (dii_in_ready[1]),
 
          .sys_rst(sys_rst),
          .cpu_rst(cpu_rst)
