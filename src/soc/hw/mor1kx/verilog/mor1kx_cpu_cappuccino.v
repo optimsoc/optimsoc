@@ -137,6 +137,7 @@ module mor1kx_cpu_cappuccino
 
     output reg	                      traceport_exec_valid_o,
     output reg [31:0]                 traceport_exec_pc_o,
+    output reg [31:0]                 traceport_exec_npc_o,
     output reg [`OR1K_INSN_WIDTH-1:0] traceport_exec_insn_o,
     output [OPTION_OPERAND_WIDTH-1:0] traceport_exec_wbdata_o,
     output [OPTION_RF_ADDR_WIDTH-1:0] traceport_exec_wbreg_o,
@@ -1495,29 +1496,30 @@ module mor1kx_cpu_cappuccino
 	       traceport_exec_insn_o <= traceport_stage_exec_insn;
 	    end
 
-	    traceport_exec_pc_o <= pc_execute_to_ctrl;
-	    if (!traceport_waitexec) begin
-	       if (padv_ctrl_o & !ctrl_bubble_o) begin
-		  if (execute_valid_o) begin
-		     traceport_exec_valid_o <= 1'b1;
-		  end else begin
-		     traceport_exec_valid_o <= 1'b0;
-		     traceport_waitexec <= 1'b1;
-		  end
-	       end else if (ctrl_op_rfe_o) begin
-		  traceport_exec_valid_o <= 1'b1;
-	       end else begin
-		  traceport_exec_valid_o <= 1'b0;
-	       end
-	    end else begin
-	       if (execute_valid_o) begin
-		  traceport_exec_valid_o <= 1'b1;
-		  traceport_waitexec <= 1'b0;
-	       end else begin
-		  traceport_exec_valid_o <= 1'b0;
-	       end
-	    end // else: !if(!traceport_waitexec)
-	 end // else: !if(rst)
+            traceport_exec_pc_o <= pc_execute_to_ctrl;
+            traceport_exec_npc_o <= pc_decode_to_execute;
+            if (!traceport_waitexec) begin
+               if (padv_ctrl_o & !ctrl_bubble_o) begin
+                  if (execute_valid_o) begin
+                     traceport_exec_valid_o <= 1'b1;
+                  end else begin
+                     traceport_exec_valid_o <= 1'b0;
+                     traceport_waitexec <= 1'b1;
+                  end
+               end else if (ctrl_op_rfe_o) begin
+                  traceport_exec_valid_o <= 1'b1;
+               end else begin
+                  traceport_exec_valid_o <= 1'b0;
+               end
+            end else begin
+               if (execute_valid_o) begin
+                  traceport_exec_valid_o <= 1'b1;
+                  traceport_waitexec <= 1'b0;
+               end else begin
+                  traceport_exec_valid_o <= 1'b0;
+               end
+            end // else: !if(!traceport_waitexec)
+         end // else: !if(rst)
       end else begin // if (FEATURE_TRACEPORT_EXEC != "NONE")
 	 traceport_stage_decode_insn <= {`OR1K_INSN_WIDTH{1'b0}};
 	 traceport_stage_exec_insn <= {`OR1K_INSN_WIDTH{1'b0}};
