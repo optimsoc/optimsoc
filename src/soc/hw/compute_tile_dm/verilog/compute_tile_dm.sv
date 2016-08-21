@@ -34,6 +34,8 @@
 import dii_package::dii_flit;
 //`endif
 
+import opensocdebug::mor1kx_trace_exec;
+
 module compute_tile_dm(
    input dii_flit [1:0] debug_ring_in,
    output [1:0] debug_ring_in_ready,
@@ -94,9 +96,7 @@ module compute_tile_dm(
    parameter NA_ENABLE_DMA = 1;
    parameter DMA_ENTRIES = 4;
 
-
-
-   wire [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace [0:CORES-1];
+   mor1kx_trace_exec [CORES-1:0] trace;
 
    wire wb_mem_clk_i, wb_mem_rst_i;
    assign wb_mem_clk_i = clk;
@@ -243,13 +243,15 @@ module compute_tile_dm(
           .pic_ints_i     (pic_ints_i[c]),
           .snoop_enable_i (snoop_enable),
           .snoop_adr_i    (snoop_adr),
-          .trace          (trace[c]),
+          .trace_exec     (trace[c]),
           ); */
          mor1kx_module
                #(.ID(c),
                  .NUMCORES(CORES))
          u_core (
                  /*AUTOINST*/
+                 // Interfaces
+                 .trace_exec            (trace[c]),              // Templated
                  // Outputs
                  .dbg_lss_o             (),                      // Templated
                  .dbg_is_o              (),                      // Templated
@@ -273,7 +275,6 @@ module compute_tile_dm(
                  .dwb_dat_o             (busms_dat_o[c*2+1][31:0]), // Templated
                  .dwb_bte_o             (busms_bte_o[c*2+1][1:0]), // Templated
                  .dwb_cti_o             (busms_cti_o[c*2+1][2:0]), // Templated
-                 .trace                 (trace[c]), // Templated
                  // Inputs
                  .clk_i                 (clk),                   // Templated
                  .bus_clk_i             (clk),                   // Templated
@@ -311,7 +312,8 @@ module compute_tile_dm(
                  .debug_in (dii_out[x]),
                  .debug_in_ready (dii_out_ready[x]),
                  .debug_out (dii_in[x]),
-                 .debug_out_ready (dii_in_ready[x]));
+                 .debug_out_ready (dii_in_ready[x]),
+                 .trace_port (trace[c]));
          end
       end
    endgenerate

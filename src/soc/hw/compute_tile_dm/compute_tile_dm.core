@@ -10,6 +10,7 @@ depend =
   optimsoc:wb_interconnect:bus
   opensocdebug:modules:mam_wb
   opensocdebug:modules:stm_mor1kx
+  opensocdebug:interfaces:mor1kx_trace_exec
 
 [fileset src_files]
 file_type = systemVerilogSource
