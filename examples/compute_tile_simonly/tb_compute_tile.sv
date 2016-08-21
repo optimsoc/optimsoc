@@ -213,6 +213,7 @@ module tb_compute_tile(
                      .clk               (clk),
                      .rst_cpu           (rst_cpu),
                      .rst_sys           (rst_sys),
+                     .rst_dbg           (rst),
                      .noc_in_flit       (noc_in_flit[NOC_FLIT_WIDTH-1:0]),
                      .noc_in_valid      (noc_in_valid[VCHANNELS-1:0]),
                      .noc_out_ready     (noc_out_ready[VCHANNELS-1:0]));

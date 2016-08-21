@@ -55,7 +55,7 @@ module compute_tile_dm(
    input [31:0]  wb_mem_dat_o,
 `endif
    input clk,
-   input rst_cpu, rst_sys,
+   input rst_cpu, rst_sys, rst_dbg,
 
    input [NOC_FLIT_WIDTH-1:0] noc_in_flit,
    input [VCHANNELS-1:0] noc_in_valid,
@@ -124,7 +124,7 @@ module compute_tile_dm(
            #(.PORTS(DEBUG_NUM_MODS))
          u_debug_ring_segment
            (.*,
-            .rst           (rst_sys),
+            .rst           (rst_dbg),
             .ext_in        (debug_ring_in),
             .ext_in_ready  (debug_ring_in_ready),
             .ext_out       (debug_ring_out),
@@ -306,7 +306,7 @@ module compute_tile_dm(
             osd_stm_mor1kx
               u_stm
                 (.clk  (clk),
-                 .rst  (rst_sys),
+                 .rst  (rst_dbg),
                  .id   (DEBUG_BASEID + x),
                  .debug_in (dii_out[x]),
                  .debug_in_ready (dii_out_ready[x]),
@@ -388,7 +388,7 @@ module compute_tile_dm(
            .BASE_ADDR0(0))
       u_mam_wb(
            .clk_i(clk),
-           .rst_i(rst_sys),
+           .rst_i(rst_dbg),
            .debug_in(dii_out[0]),
            .debug_in_ready(dii_out_ready[0]),
            .debug_out(dii_in[0]),

@@ -81,7 +81,7 @@ module debug_interface
    u_debug_ring_segment
      (.*,
       .id_map        ({10'd1,10'd0}),
-      .rst           (rst_sys),
+      .rst           (rst),
       .ext_in        ({ring_in[0],ring_tie}),
       .ext_in_ready  ({ring_in_ready[0],ring_tie_ready}),
       .ext_out       (ring_out),
