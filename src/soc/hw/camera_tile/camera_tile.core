@@ -1,0 +1,32 @@
+CAPI=1
+[main]
+name = optimsoc:tile:camera_tile
+description = "Camera tile"
+depend =
+  optimsoc:wb_interconnect:bus
+  optimsoc:lisnoc:dma
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/camera_tile.v
+  verilog/camera_module.v
+  verilog/capture_FSM.v
+  verilog/function_set_format.v
+  verilog/function_set_rez.v
+  verilog/SCCB_FSM.v
+  verilog/mp_to_wb_bridge.v
+  verilog/lisnoc_dma_target_cam.v
+  verilog/control_module.v
+  verilog/data_module.v
+  verilog/cmd_table.v
+  verilog/lisnoc_fifo_cam.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  verilog/function_set_rez.v
+  verilog/function_set_format.v
