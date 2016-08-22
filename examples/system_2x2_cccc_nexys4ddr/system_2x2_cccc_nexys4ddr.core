@@ -1,0 +1,36 @@
+CAPI=1
+[main]
+name = optimsoc:examples:system_2x2_cccc_nexys4ddr
+description = "Xilinx/Digilent Nexys4 DDR board with 2x2 system"
+depend =
+  wallento:boards:nexys4ddr
+  wallento:svchannels:nasti
+  wallento:svchannels:wishbone
+  wallento:wb2axi:wb2axi
+  optimsoc:system:2x2_cccc_dm
+  glip:backend:uart
+
+simulators = xsim
+
+[fileset rtl_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  rtl/verilog/system_2x2_cccc_nexys4.sv
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  optimsoc_def.vh
+
+[fileset testbench]
+file_type = systemVerilogSource
+usage = sim
+files =
+  tbench/verilog/tb_system_2x2_cccc_nexys4ddr.sv
+
+[xsim]
+top_module = tb_system_2x2_cccc_nexys4ddr
+part = xc7a100tcsg324-1
