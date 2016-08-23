@@ -5,6 +5,7 @@ description = "Camera tile"
 depend =
   optimsoc:wb_interconnect:bus
   optimsoc:lisnoc:dma
+  optimsoc:cdc:cdc
 
 [fileset src_files]
 file_type = verilogSource
