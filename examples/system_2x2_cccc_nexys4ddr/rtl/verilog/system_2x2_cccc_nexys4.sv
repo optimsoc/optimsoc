@@ -164,19 +164,19 @@ module system_2x2_cccc_nexys4
          .c_glip_in (c_glip_in),
          .c_glip_out (c_glip_out),
 
-         .wb_mem_adr_i  ({c_wb_ddr0.adr_o, c_wb_ddr1.adr_o, c_wb_ddr2.adr_o, c_wb_ddr3.adr_o}),
-         .wb_mem_cyc_i  ({c_wb_ddr0.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr3.cyc_o}),
-         .wb_mem_dat_i  ({c_wb_ddr0.dat_o, c_wb_ddr1.dat_o, c_wb_ddr2.dat_o, c_wb_ddr3.dat_o}),
-         .wb_mem_sel_i  ({c_wb_ddr0.sel_o, c_wb_ddr1.sel_o, c_wb_ddr2.sel_o, c_wb_ddr3.sel_o}),
-         .wb_mem_stb_i  ({c_wb_ddr0.stb_o, c_wb_ddr1.stb_o, c_wb_ddr2.stb_o, c_wb_ddr3.stb_o}),
-         .wb_mem_we_i  ({c_wb_ddr0.we_o, c_wb_ddr1.we_o, c_wb_ddr2.we_o, c_wb_ddr3.we_o}),
+         .wb_mem_adr_i  ({c_wb_ddr3.adr_o, c_wb_ddr2.adr_o, c_wb_ddr1.adr_o, c_wb_ddr0.adr_o}),
+         .wb_mem_cyc_i  ({c_wb_ddr3.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr0.cyc_o}),
+         .wb_mem_dat_i  ({c_wb_ddr3.dat_o, c_wb_ddr2.dat_o, c_wb_ddr1.dat_o, c_wb_ddr0.dat_o}),
+         .wb_mem_sel_i  ({c_wb_ddr3.sel_o, c_wb_ddr2.sel_o, c_wb_ddr1.sel_o, c_wb_ddr0.sel_o}),
+         .wb_mem_stb_i  ({c_wb_ddr3.stb_o, c_wb_ddr2.stb_o, c_wb_ddr1.stb_o, c_wb_ddr0.stb_o}),
+         .wb_mem_we_i  ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
          .wb_mem_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
-         .wb_mem_cti_i  ({c_wb_ddr0.cti_o, c_wb_ddr1.cti_o, c_wb_ddr2.cti_o, c_wb_ddr3.cti_o}),
-         .wb_mem_bte_i  ({c_wb_ddr0.bte_o, c_wb_ddr1.bte_o, c_wb_ddr2.bte_o, c_wb_ddr3.bte_o}),
-         .wb_mem_ack_o  ({c_wb_ddr0.ack_i, c_wb_ddr1.ack_i, c_wb_ddr2.ack_i, c_wb_ddr3.ack_i}),
-         .wb_mem_rty_o  ({c_wb_ddr0.rty_i, c_wb_ddr1.rty_i, c_wb_ddr2.rty_i, c_wb_ddr3.rty_i}),
-         .wb_mem_err_o  ({c_wb_ddr0.err_i, c_wb_ddr1.err_i, c_wb_ddr2.err_i, c_wb_ddr3.err_i}),
-         .wb_mem_dat_o  ({c_wb_ddr0.dat_i, c_wb_ddr1.dat_i, c_wb_ddr2.dat_i, c_wb_ddr3.dat_i})
+         .wb_mem_cti_i  ({c_wb_ddr3.cti_o, c_wb_ddr2.cti_o, c_wb_ddr1.cti_o, c_wb_ddr0.cti_o}),
+         .wb_mem_bte_i  ({c_wb_ddr3.bte_o, c_wb_ddr2.bte_o, c_wb_ddr1.bte_o, c_wb_ddr0.bte_o}),
+         .wb_mem_ack_o  ({c_wb_ddr3.ack_i, c_wb_ddr2.ack_i, c_wb_ddr1.ack_i, c_wb_ddr0.ack_i}),
+         .wb_mem_rty_o  ({c_wb_ddr3.rty_i, c_wb_ddr2.rty_i, c_wb_ddr1.rty_i, c_wb_ddr0.rty_i}),
+         .wb_mem_err_o  ({c_wb_ddr3.err_i, c_wb_ddr2.err_i, c_wb_ddr1.err_i, c_wb_ddr0.err_i}),
+         .wb_mem_dat_o  ({c_wb_ddr3.dat_i, c_wb_ddr2.dat_i, c_wb_ddr1.dat_i, c_wb_ddr0.dat_i})
       );
 
    // Nexys 4 board wrapper
