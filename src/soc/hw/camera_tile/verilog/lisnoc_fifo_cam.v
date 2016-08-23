@@ -72,8 +72,8 @@ module lisnoc_fifo_cam(/*AUTOARG*/
    input irq_new_frame;
    parameter IDLE = 1'b0, WAIT_FOR_FIRST_FRAME_WORD = 1'b1;
    reg state = 0;
-   wire nxt_state;
-   wire [1:0] first_word;
+   reg nxt_state;
+   reg [1:0] first_word;
 
    // output logic
    always @(*) begin
