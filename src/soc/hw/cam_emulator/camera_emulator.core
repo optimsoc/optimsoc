@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = optimsoc:tile:camera_emulator
+description = "Camera emulator"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/cam_emulator.v
+
+
+

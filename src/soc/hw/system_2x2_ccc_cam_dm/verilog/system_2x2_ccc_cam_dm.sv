@@ -30,7 +30,7 @@
 `include "optimsoc_def.vh"
 `include "dbg_config.vh"
 
-module system_2x2_cccc_dm
+module system_2x2_ccc_cam_dm
   #(// NoC parameters
     parameter NOC_DATA_WIDTH = 32,
     parameter NOC_TYPE_WIDTH = 2,
@@ -46,6 +46,17 @@ module system_2x2_cccc_dm
     )
    (
 	input clk, rst,
+
+	// external inputs for camera module
+	input PCLK, HREF, VSYNC,
+	input [7:0] D,
+
+    // external outputs to camera module
+	output SIOC,
+	output SIOD,
+	output RESET,
+	output PWDN,
+	output XVCLK,
 
     glip_channel c_glip_in,
     glip_channel c_glip_out
@@ -66,16 +77,7 @@ module system_2x2_cccc_dm
     input [4*32-1:0]  wb_mem_dat_o
 `endif
 
-	// external inputs from camera module
-	input PCLK, HREF, VSYNC;
-	input [7:0] D;
-
-    // external outputs to camera module
-	output SIOC;
-	output SIOD;
-	output RESET;
-	output PWDN;
-	output XVCLK;
+	
 
 
     );
@@ -84,15 +86,15 @@ module system_2x2_cccc_dm
 
    localparam DEBUG_MODS_PER_CORE = 2;
    localparam DEBUG_MODS_PER_TILE = CORES * DEBUG_MODS_PER_CORE + 1;
-   localparam DEBUG_MODS = 4 * DEBUG_MODS_PER_TILE;
+   localparam DEBUG_MODS = 3 * DEBUG_MODS_PER_TILE;
 
-   localparam NUMCTS = 32'h4;
-   localparam [NUMCTS*16-1:0] CTLIST = {16'h0, 16'h1, 16'h2, 16'h3};
+   localparam NUMCTS = 32'h3;
+   localparam [NUMCTS*16-1:0] CTLIST = {16'h0, 16'h1, 16'h2};
 
-   dii_flit [1:0] debug_ring_in [0:3];
-   dii_flit [1:0] debug_ring_out [0:3];
-   logic [1:0] debug_ring_in_ready [0:3];
-   logic [1:0] debug_ring_out_ready [0:3];
+   dii_flit [1:0] debug_ring_in [0:2];
+   dii_flit [1:0] debug_ring_out [0:2];
+   logic [1:0] debug_ring_in_ready [0:2];
+   logic [1:0] debug_ring_out_ready [0:2];
 
    logic       rst_sys, rst_cpu;
 
@@ -118,10 +120,8 @@ module system_2x2_cccc_dm
    // We are routing the debug in a meander
    assign debug_ring_in[1] = debug_ring_out[0];
    assign debug_ring_out_ready[0] = debug_ring_in_ready[1];
-   assign debug_ring_in[3] = debug_ring_out[1];
-   assign debug_ring_out_ready[1] = debug_ring_in_ready[3];
-   assign debug_ring_in[2] = debug_ring_out[3];
-   assign debug_ring_out_ready[3] = debug_ring_in_ready[2];
+   assign debug_ring_in[2] = debug_ring_out[1];
+   assign debug_ring_out_ready[1] = debug_ring_in_ready[2];
 
    // Flits from NoC->tiles
    wire [NOC_FLIT_WIDTH-1:0] link_in_flit[0:3];
