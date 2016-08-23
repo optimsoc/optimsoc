@@ -9,6 +9,8 @@ depend =
   wallento:wb2axi:wb2axi
   optimsoc:system:2x2_cccc_dm
   glip:backend:uart
+  optimsoc:ip:xilinx_axi_interconnect_4to1
+  optimsoc:ip:xilinx_axi_register_slice
 
 simulators = xsim
 
