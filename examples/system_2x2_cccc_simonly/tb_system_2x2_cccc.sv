@@ -99,8 +99,58 @@ module tb_system_2x2_cccc(
            );
    end // if (USE_DEBUG == 1)
 
+   // Monitor system behavior in simulation
+   localparam NUM_TILES = 4;
+
+   genvar t;
+   genvar i;
+
+   wire [NUM_CORES*NUM_TILES-1:0] termination;
+
+   generate
+      for (t = 0; t < NUM_TILES; t = t + 1) begin
+
+         logic [31:0] trace_r3 [0:NUM_CORES-1];
+         mor1kx_trace_exec [NUM_CORES-1:0] trace;
+         assign trace = u_system.gen_ct[t].u_ct.trace;
+
+         for (i = 0; i < NUM_CORES; i = i + 1) begin
+            r3_checker
+               u_r3_checker(
+                  .clk(clk),
+                  .valid(trace[i].valid),
+                  .we (trace[i].wben),
+                  .addr (trace[i].wbreg),
+                  .data (trace[i].wbdata),
+                  .r3 (trace_r3[i])
+               );
+
+            trace_monitor
+               #(
+                  .STDOUT_FILENAME({"stdout.",index2string((t*NUM_CORES)+i)}),
+                  .TRACEFILE_FILENAME({"trace.",index2string((t*NUM_CORES)+i)}),
+                  .ENABLE_TRACE(0),
+                  .ID((t*NUM_CORES)+i),
+                  .TERM_CROSS_NUM(NUM_TILES*NUM_CORES)
+               )
+               u_mon0(
+                  .termination            (termination[(t*NUM_CORES)+i]),
+                  .clk                    (clk),
+                  .enable                 (trace[i].valid),
+                  .wb_pc                  (trace[i].pc),
+                  .wb_insn                (trace[i].insn),
+                  .r3                     (trace_r3[i]),
+                  .termination_all        (termination)
+              );
+         end
+
+      end
+   endgenerate
+
    system_2x2_cccc_dm
-     #(.USE_DEBUG(USE_DEBUG), .CORES(NUM_CORES))
+     #(.USE_DEBUG(USE_DEBUG),
+       .CORES(NUM_CORES),
+       .MEM_SIZE(32 * 1024 * 1024 /* 32 MB per tile = 128 MB total */))
    u_system
      (.clk (clk),
       .rst (rst | logic_rst),
