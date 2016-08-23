@@ -62,9 +62,9 @@ module system_2x2_cccc_nexys4
    );
 
    localparam AXI_ID_WIDTH = 4;
-   localparam DDR_ADDR_WIDTH = 28;
+   localparam DDR_ADDR_WIDTH = 27;
    localparam DDR_DATA_WIDTH = 32;
-   localparam TILE_ADDR_WIDTH = 26;
+   localparam TILE_ADDR_WIDTH = 25;
 
    localparam NOC_FLIT_DATA_WIDTH = 32;
    localparam NOC_FLIT_TYPE_WIDTH = 2;
