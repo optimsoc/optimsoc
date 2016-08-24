@@ -642,13 +642,13 @@ if __name__ == '__main__':
     parser.add_option("--no-examples", dest="noexamples", action="store_true",
                       help="Skip building of examples [default: %default]",
                       default=False)
-    parser.add_option("-d", "--debug", dest="debug", action="store_true",
-                      help="Enable verbose debug logging output [default: %default]",
+    parser.add_option("--verbose", dest="verbose", action="store_true",
+                      help="Enable verbose logging output [default: %default]",
                       default=False)
 
     (options, args) = parser.parse_args()
 
-    logging_debug = options.debug
+    logging_verbose = options.verbose
 
     if not options.version:
         options.version = get_version(mysrcdir)
@@ -706,7 +706,7 @@ if __name__ == '__main__':
 
             build_examples(options, env)
     except Exception as e:
-        if logging_debug:
+        if logging_verbose:
             raise
         else:
             fatal(e)
