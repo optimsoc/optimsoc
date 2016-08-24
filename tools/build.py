@@ -14,6 +14,7 @@
 # the autotools-generated scripts, mostly the configure script.
 #
 
+import errno
 from optparse import OptionParser
 import os
 import subprocess
@@ -104,22 +105,36 @@ def check_autotools():
 ###############################################################################
 # Helper functions
 
-"""Copy a file tree
-"""
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 def file_copy(src, dest):
     dbg("Copying {} -> {}".format(src, dest))
     try:
-      shutil.copy(src, dest)
+        shutil.copy(src, dest)
     except IOError as e:
-      fatal("Copying file {} to {} failed: {}".format(src, dest, e))
-
+        fatal("Copying file {} to {} failed: {}".format(src, dest, e))
 
 def file_copytree(srcdir, destdir):
     dbg("Copying file tree {} -> {}".format(srcdir, destdir))
     try:
         shutil.copytree(srcdir, destdir)
     except IOError as e:
-      fatal("Copying file tree {} to {} failed: {}".format(srcdir, destdir, e))
+        fatal("Copying file tree {} to {} failed: {}".format(srcdir, destdir, e))
+
+
+def file_linktree(srcdir, destdir):
+    dbg("Linking file tree {} -> {}".format(srcdir, destdir))
+    # recursively create parents to match behavior of shutil.copytree()
+    mkdir_p(os.path.dirname(destdir))
+    os.symlink(srcdir, destdir)
 
 
 """Run a command
@@ -287,7 +302,10 @@ def build_hw_modules(options):
     modsrcdir = os.path.join(src, "src", "soc", "hw")
     moddistdir = os.path.join(dist, "soc", "hw")
 
-    file_copytree(modsrcdir, moddistdir)
+    if (options.link_hw):
+        file_linktree(modsrcdir, moddistdir)
+    else:
+        file_copytree(modsrcdir, moddistdir)
 
 """Build and install the examples
 """
@@ -368,11 +386,14 @@ def build_externals_lisnoc(options):
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
 
-    info("Copy lisnoc")
+    info("Build lisnoc")
     srcdir = os.path.join(src, "external", "lisnoc")
     distdir = os.path.join(dist, "external", "lisnoc")
 
-    file_copytree(srcdir, distdir)
+    if (options.link_hw):
+        file_linktree(srcdir, distdir)
+    else:
+        file_copytree(srcdir, distdir)
 
 """ Copy extra_cores
 """
@@ -385,7 +406,10 @@ def build_externals_extra_cores(options):
     srcdir = os.path.join(src, "external", "extra_cores")
     distdir = os.path.join(dist, "external", "extra_cores")
 
-    file_copytree(srcdir, distdir)
+    if (options.link_hw):
+        file_linktree(srcdir, distdir)
+    else:
+        file_copytree(srcdir, distdir)
 
 """ Copy GLIP hardware modules
 """
@@ -394,12 +418,15 @@ def build_externals_glip(options):
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
 
-    info("Copy GLIP hardware modules")
+    info("Copy/link GLIP hardware modules")
     # XXX: Only copy hardware, not the full tree.
     srcdir = os.path.join(src, "external", "glip")
     distdir = os.path.join(dist, "external", "glip")
 
-    file_copytree(srcdir, distdir)
+    if (options.link_hw):
+        file_linktree(srcdir, distdir)
+    else:
+        file_copytree(srcdir, distdir)
 
 """ Build and install our private copy of the Open SoC Debug host software
 """
@@ -447,7 +474,10 @@ def build_externals_opensocdebug_hardware(options):
     srcdir = os.path.join(src, "external", "opensocdebug", "hardware")
     distdir = os.path.join(dist, "external", "opensocdebug", "hardware")
 
-    file_copytree(srcdir, distdir)
+    if (options.link_hw):
+        file_linktree(srcdir, distdir)
+    else:
+        file_copytree(srcdir, distdir)
 
 """ Build and install our private copy of the Open SoC Debug host software
 """
@@ -641,6 +671,10 @@ if __name__ == '__main__':
                       default=False)
     parser.add_option("--no-examples", dest="noexamples", action="store_true",
                       help="Skip building of examples [default: %default]",
+                      default=False)
+    parser.add_option("--link-hw", dest="link_hw", action="store_true",
+                      help="Symlink hardware files to output directory instead "
+                           "of copying [default: %default]",
                       default=False)
     parser.add_option("--verbose", dest="verbose", action="store_true",
                       help="Enable verbose logging output [default: %default]",
