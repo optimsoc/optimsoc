@@ -15,6 +15,7 @@ addons:
     - libboost-dev
     # for the OSD software
     - libelf-dev
+    - swig
 
 language: python
 python:
