@@ -124,7 +124,7 @@ module system_2x2_cccc_nexys4
    // Off-chip UART communication interface for debug
    glip_uart_toplevel
       #(.FREQ_CLK_IO(50000000),
-        .BAUD(2000000),
+        .BAUD(12000000),
         .WIDTH(16),
         .XILINX_TARGET_DEVICE("7SERIES"))
       u_glip(
