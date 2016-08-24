@@ -1,0 +1,10 @@
+SAPI=1
+[main]
+name = optimsoc:examples:system_2x2_ccc_cam_nexys4ddr
+description = "Xilinx/Digilent Nexys4 DDR board with 3 compute tiles and camera tile"
+
+backend = vivado
+
+[vivado]
+part = "xc7a100tcsg324-1"
+hw_device = xc7a100t_0

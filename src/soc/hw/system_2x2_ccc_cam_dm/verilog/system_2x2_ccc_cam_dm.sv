@@ -30,6 +30,8 @@
 `include "optimsoc_def.vh"
 `include "dbg_config.vh"
 
+import dii_package::dii_flit;
+
 module system_2x2_ccc_cam_dm
   #(// NoC parameters
     parameter NOC_DATA_WIDTH = 32,
@@ -58,23 +60,23 @@ module system_2x2_ccc_cam_dm
 	output PWDN,
 	output XVCLK,
 
-    glip_channel c_glip_in,
-    glip_channel c_glip_out
+   glip_channel c_glip_in,
+   glip_channel c_glip_out
 
 `ifdef OPTIMSOC_CTRAM_WIRES
-    , output [4*32-1:0] wb_mem_adr_i,
-    output [4*1-1:0]  wb_mem_cyc_i,
-    output [4*32-1:0] wb_mem_dat_i,
-    output [4*4-1:0]  wb_mem_sel_i,
-    output [4*1-1:0]  wb_mem_stb_i,
-    output [4*1-1:0]  wb_mem_we_i,
-    output [4*1-1:0]  wb_mem_cab_i,
-    output [4*3-1:0]  wb_mem_cti_i,
-    output [4*2-1:0]  wb_mem_bte_i,
-    input [4*1-1:0]   wb_mem_ack_o,
-    input [4*1-1:0]   wb_mem_rty_o,
-    input [4*1-1:0]   wb_mem_err_o,
-    input [4*32-1:0]  wb_mem_dat_o
+   , output [4*32-1:0] wb_mem_adr_i,
+   output [4*1-1:0]  wb_mem_cyc_i,
+   output [4*32-1:0] wb_mem_dat_i,
+   output [4*4-1:0]  wb_mem_sel_i,
+   output [4*1-1:0]  wb_mem_stb_i,
+   output [4*1-1:0]  wb_mem_we_i,
+   output [4*1-1:0]  wb_mem_cab_i,
+   output [4*3-1:0]  wb_mem_cti_i,
+   output [4*2-1:0]  wb_mem_bte_i,
+   input [4*1-1:0]   wb_mem_ack_o,
+   input [4*1-1:0]   wb_mem_rty_o,
+   input [4*1-1:0]   wb_mem_err_o,
+   input [4*32-1:0]  wb_mem_dat_o
 `endif
 
 	
