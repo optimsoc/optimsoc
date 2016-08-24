@@ -1,6 +1,6 @@
 SAPI=1
 [main]
-name = optimsoc:examples:compute_tile_nexys4ddr
+name = optimsoc:examples:system_2x2_cccc_nexys4ddr
 description = "Xilinx/Digilent Nexys4 DDR board with compute tile"
 
 backend = vivado

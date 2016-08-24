@@ -20,7 +20,7 @@
  *
  * =============================================================================
  *
- * System-level testbench for the compute_tile_nexys4ddr system
+ * System-level testbench for the system_2x2_cccc_nexys4ddr system
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
