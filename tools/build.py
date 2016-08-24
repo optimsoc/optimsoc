@@ -28,7 +28,7 @@ If verbose logging is enabled, prints an debug message prepended by (D)
 on the command line. Otherwise nothing is done.
 """
 def dbg(msg):
-    if logging_debug:
+    if logging_verbose:
         print("(D) {}".format(msg))
 
 """Print info message
