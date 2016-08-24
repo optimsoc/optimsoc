@@ -30,7 +30,7 @@
 module tb_compute_tile_nexys4ddr;
 
    logic clk, cpu_resetn;
-   logic uart_rxd_out, uart_txd_in, uart_ctsn, uart_rtsn;
+   logic uart_rxd_out, uart_txd_in, uart_cts, uart_rts;
 
    wire [12:0] ddr2_addr;
    wire [2:0]  ddr2_ba;
