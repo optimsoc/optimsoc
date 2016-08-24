@@ -508,7 +508,7 @@ def build_externals_opensocdebug_software(options, env):
     info(" + Configure")
     ensure_directory(objdir)
 
-    cmd = "{}/configure --prefix={}".format(src, prefix)
+    cmd = "{}/configure --prefix={} --enable-python-bindings".format(src, prefix)
     run_command(cmd, cwd=objdir, env=env)
 
     info(" + Build")
