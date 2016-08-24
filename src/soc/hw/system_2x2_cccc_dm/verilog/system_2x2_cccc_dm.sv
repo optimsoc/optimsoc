@@ -30,41 +30,44 @@
 `include "optimsoc_def.vh"
 `include "dbg_config.vh"
 
-module system_2x2_cccc_dm
-  #(// NoC parameters
-    parameter NOC_DATA_WIDTH = 32,
-    parameter NOC_TYPE_WIDTH = 2,
-    parameter VCHANNELS = `VCHANNELS,
+import dii_package::dii_flit;
 
-    // compute tile parameters
-    parameter MEM_FILE = "ct.vmem",
-    parameter MEM_SIZE = 1*1024*1024, // 1 MByte
+module system_2x2_cccc_dm(
+   input clk, rst,
 
-    parameter CORES = 1,
-
-    parameter USE_DEBUG = 1
-    )
-   (input clk, rst,
-
-    glip_channel c_glip_in,
-    glip_channel c_glip_out
+   glip_channel c_glip_in,
+   glip_channel c_glip_out
 
 `ifdef OPTIMSOC_CTRAM_WIRES
-    , output [4*32-1:0] wb_mem_adr_i,
-    output [4*1-1:0]  wb_mem_cyc_i,
-    output [4*32-1:0] wb_mem_dat_i,
-    output [4*4-1:0]  wb_mem_sel_i,
-    output [4*1-1:0]  wb_mem_stb_i,
-    output [4*1-1:0]  wb_mem_we_i,
-    output [4*1-1:0]  wb_mem_cab_i,
-    output [4*3-1:0]  wb_mem_cti_i,
-    output [4*2-1:0]  wb_mem_bte_i,
-    input [4*1-1:0]   wb_mem_ack_o,
-    input [4*1-1:0]   wb_mem_rty_o,
-    input [4*1-1:0]   wb_mem_err_o,
-    input [4*32-1:0]  wb_mem_dat_o
+   , output [4*32-1:0] wb_mem_adr_i,
+   output [4*1-1:0]  wb_mem_cyc_i,
+   output [4*32-1:0] wb_mem_dat_i,
+   output [4*4-1:0]  wb_mem_sel_i,
+   output [4*1-1:0]  wb_mem_stb_i,
+   output [4*1-1:0]  wb_mem_we_i,
+   output [4*1-1:0]  wb_mem_cab_i,
+   output [4*3-1:0]  wb_mem_cti_i,
+   output [4*2-1:0]  wb_mem_bte_i,
+   input [4*1-1:0]   wb_mem_ack_o,
+   input [4*1-1:0]   wb_mem_rty_o,
+   input [4*1-1:0]   wb_mem_err_o,
+   input [4*32-1:0]  wb_mem_dat_o
 `endif
-    );
+   );
+
+   // NoC parameters
+   parameter NOC_DATA_WIDTH = 32;
+   parameter NOC_TYPE_WIDTH = 2;
+   parameter VCHANNELS = `VCHANNELS;
+
+   // compute tile parameters
+   parameter MEM_FILE = "ct.vmem";
+   parameter MEM_SIZE = 1*1024*1024; // 1 MByte
+
+   parameter CORES = 1;
+
+   parameter USE_DEBUG = 1;
+
 
    localparam NOC_FLIT_WIDTH = NOC_DATA_WIDTH + NOC_TYPE_WIDTH;
 
