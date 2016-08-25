@@ -110,7 +110,7 @@ module camera_module(
         .wb_rty_o(data_rty_o),
         .irq_new_frame(irq_new_frame),
         .buffer_fifo_full(),
-        .out_first_word
+        .out_first_word(out_first_word)
         );
 
     /*    
