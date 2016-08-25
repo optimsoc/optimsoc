@@ -6,7 +6,10 @@
 
 #include <assert.h>
 
-uint32_t data[256];
+// 640x480 pixels (VGA) = 307200 pixels, with RGB565 = 2 byte/pixel = 0.5 words/pixel
+#define FRAME_SIZE_WORDS 153600
+
+uint32_t data[FRAME_SIZE_WORDS];
 
 // This function is called by the driver on receival of a message
 void recv(unsigned int *buffer,int len) {
@@ -47,16 +50,18 @@ void main() {
     if (rank == 1) {
 
 
-        // The message is a one flit packet
+        /*// The message is a one flit packet
         uint32_t buffer[2];
         buffer[0] = 0x00000000;
         buffer[1] = 0;
-        buffer[1] |= 1 << 0; /* update bit*/
-        buffer[1] |= 1 << 1; /* IMAGE_MODE = RGB */
-        buffer[1] |= 0 << 3; /* RESOLUTION = QCIF */
-        buffer[1] |= 1 << 6; /* TEST_PATTERN = ON */
-        buffer[1] |= 1 << 7; /* CLKRC = ??? */
-        buffer[1] |= 0 << 13; /* clock doublers OFF */
+        buffer[1] |= 1 << 0; // update bit
+        buffer[1] |= 1 << 1; // IMAGE_MODE = RGB
+        buffer[1] |= 0 << 3; // RESOLUTION = QCIF
+        buffer[1] |= 1 << 6; // TEST_PATTERN = ON
+        buffer[1] |= 1 << 7; // CLKRC = 1
+        buffer[1] |= 0 << 13; // clock doublers OFF
+
+        printf("sending configuration: %x\n", buffer[1]);
 
         // Set destination (tile 3)
         set_bits(&buffer[0],3,OPTIMSOC_DEST_MSB,OPTIMSOC_DEST_LSB);
@@ -80,11 +85,20 @@ void main() {
         optimsoc_mp_simple_send(1,(uint32_t*) buffer);
 
 
+        // SLEEP 50 Million instructions
+        printf("sleep, pt 1\n");
+        for (unsigned int i = 0; i < 5000000; i++) {
+           __asm__ volatile("l.nop");
+        }
+        printf("sleep done, continue with DMA\n");*/
+
+
+
 
         printf("DMA transfer\n");
         printf("Initialize data\n");
 
-        for(unsigned i=0; i<256; i++) {
+        for(unsigned i=0; i<FRAME_SIZE_WORDS; i++) {
             data[i] = i | i<<24 | i<<16 | i<<8;
         }
 
@@ -96,7 +110,7 @@ void main() {
 
         printf("DMA remote to local\n");
 
-        dma_transfer(&data, 3, &data, 15, REMOTE2LOCAL, dma);
+        dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
 
         printf("waiting for response\n");
 
@@ -107,8 +121,13 @@ void main() {
 
         //dma_wait(dma);
 
-        for (unsigned i = 0; i < 30; i++) {
-            printf("data[%d]: %.8x \n", i, data[i]);
+        // output pixel data to host
+        for (unsigned i = 0; i < FRAME_SIZE_WORDS; i++) {
+            OPTIMSOC_TRACE(0x200, data[i]);
+            // we need to slow down a bit to prevent debug system overflows
+            for (int s = 0; s < 3; s++) {
+                __asm__ volatile("l.nop");
+            }
         }
 
     }
