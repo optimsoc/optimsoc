@@ -8,6 +8,7 @@
 
 // 640x480 pixels (VGA) = 307200 pixels, with RGB565 = 2 byte/pixel = 0.5 words/pixel
 #define FRAME_SIZE_WORDS 153600
+//#define FRAME_SIZE_WORDS 50688
 
 uint32_t data[FRAME_SIZE_WORDS];
 
@@ -55,8 +56,8 @@ void main() {
         buffer[0] = 0x00000000;
         buffer[1] = 0;
         buffer[1] |= 1 << 0; // update bit
-        buffer[1] |= 1 << 1; // IMAGE_MODE = RGB
-        buffer[1] |= 0 << 3; // RESOLUTION = QCIF
+        buffer[1] |= 0 << 1; // IMAGE_MODE = RGB
+        buffer[1] |= 3 << 3; // RESOLUTION = VGA
         buffer[1] |= 1 << 6; // TEST_PATTERN = ON
         buffer[1] |= 1 << 7; // CLKRC = 1
         buffer[1] |= 0 << 13; // clock doublers OFF
@@ -94,12 +95,12 @@ void main() {
 
 
 
+        //printf("DMA transfer\n");
+        //printf("Initialize data\n");
 
-        printf("DMA transfer\n");
-        printf("Initialize data\n");
-
-        for(unsigned i=0; i<FRAME_SIZE_WORDS; i++) {
-            data[i] = i | i<<24 | i<<16 | i<<8;
+        for (unsigned i=0; i<256; i++) {
+            //data[i] = i | i<<24 | i<<16 | i<<8;
+           data[i] = 0;
         }
 
         dma_init();
@@ -108,18 +109,49 @@ void main() {
 
         dma_alloc(&dma);
 
-        printf("DMA remote to local\n");
+        uint8_t already_detected = 0;
+        while (1) {
+            //printf("DMA remote to local\n");
 
-        dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
+            dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
 
-        printf("waiting for response\n");
+            //printf("waiting for response\n");
 
-        dma_wait(dma);
-        printf("done waiting\n");
+            dma_wait(dma);
+            //printf("done waiting\n");
 
-        //dma_transfer(&data, 3, &data, 5, REMOTE2LOCAL, dma);
+            /*dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
 
-        //dma_wait(dma);
+            dma_wait(dma);*/
+
+            unsigned int red_cnt = 0;
+            for (unsigned i = 0; i < FRAME_SIZE_WORDS/4; i++) {
+                uint8_t r5 = (data[i] >> 11);
+                uint8_t r8 = r5 << 3;
+                uint8_t g6 = (data[i] >> 5) & 0x3f;
+                uint8_t g8 = g6 << 2;
+                uint8_t b5 = data[i] & 0x1f;
+                uint8_t b8 = b5 << 3;
+                if (r8 > 150 && g8 < 150 && b8 < 150) {
+                    red_cnt++;
+                }
+            }
+
+            //printf("red_cnt: %d\n", red_cnt);
+
+            if (red_cnt > 500) {
+                if (!already_detected) {
+                    printf("RED OBJECT DETECTED.\n");
+                    already_detected = 1;
+                }
+            } else {
+                if (already_detected) {
+                    printf("RED OBJECT LOST.\n");
+                }
+                already_detected = 0;
+            }
+        }
+        return;
 
         // output pixel data to host
         for (unsigned i = 0; i < FRAME_SIZE_WORDS; i++) {
