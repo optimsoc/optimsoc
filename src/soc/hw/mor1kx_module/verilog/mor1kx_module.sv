@@ -170,7 +170,10 @@ module mor1kx_module
            .du_stall_o                  (dbg_stall_o),           // Templated
            .traceport_exec_valid_o      (trace_exec.valid),      // Templated
            .traceport_exec_pc_o         (trace_exec.pc),         // Templated
-           .traceport_exec_npc_o        (trace_exec.npc),        // Templated
+           .traceport_exec_jb_o         (trace_exec.jb),         // Templated
+           .traceport_exec_jal_o        (trace_exec.jal),        // Templated
+           .traceport_exec_jr_o         (trace_exec.jr),         // Templated
+           .traceport_exec_jbtarget_o   (trace_exec.jbtarget),   // Templated
            .traceport_exec_insn_o       (trace_exec.insn),       // Templated
            .traceport_exec_wbdata_o     (trace_exec.wbdata),     // Templated
            .traceport_exec_wbreg_o      (trace_exec.wbreg),      // Templated
