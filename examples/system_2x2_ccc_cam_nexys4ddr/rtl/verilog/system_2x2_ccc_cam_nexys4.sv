@@ -20,7 +20,7 @@
  *
  * =============================================================================
  *
- * Toplevel: 2x2 system with 3 compute tiles and a camera tile on the 
+ * Toplevel: 2x2 system with 3 compute tiles and a camera tile on the
  * Nexys 4 DDR board
  *
  * Author(s):
@@ -60,14 +60,14 @@ module system_2x2_ccc_cam_nexys4
    output                ddr2_odt,
    output                ddr2_ras_n,
    output                ddr2_we_n,
-   
+
    // PMOD JA
    input [7:0]           ja,
-   
+
    // PMOD JB
    inout [7:0]         jb
    );
-   
+
    // camera PMOD
    logic PCLK, HREF, VSYNC;
    logic SIOC, SIOD, RESET, PWDN, XVCLK;
@@ -76,7 +76,7 @@ module system_2x2_ccc_cam_nexys4
    assign PCLK = ja[0];
    assign HREF = ja[1];
    assign VSYNC = ja[2];
-   
+
    assign jb[2] = SIOC;
    assign SIOD = jb[3];
    assign jb[4] = RESET;
@@ -144,7 +144,7 @@ module system_2x2_ccc_cam_nexys4
    assign noc_in_valid = 0;
    assign noc_out_ready = 0;
 
-   
+
    // Generate 24 MHz clock for camera out of 50 MHZ sys_clk
    wire clk_gen_camera_fb;
    PLLE2_BASE
@@ -208,7 +208,18 @@ module system_2x2_ccc_cam_nexys4
       )
       u_system
         (
-         .*,
+         // camera I/O
+         .PCLK(PCLK),
+         .HREF(HREF),
+         .VSYNC(VSYNC),
+         .D(D),
+
+         .SIOC(SIOC),
+         .SIOD(SIOD),
+         .RESET(RESET),
+         .PWDN(PWDN),
+         .XVCLK(), // not connected here, using PLL in this file instead
+
          .clk           (sys_clk),
          .rst           (sys_rst),
 
