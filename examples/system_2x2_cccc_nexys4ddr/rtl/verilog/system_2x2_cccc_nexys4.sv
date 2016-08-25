@@ -126,6 +126,7 @@ module system_2x2_cccc_nexys4
       #(.FREQ_CLK_IO(50000000),
         .BAUD(12000000),
         .WIDTH(16),
+        .BUFFER_OUT_DEPTH(256*1024),
         .XILINX_TARGET_DEVICE("7SERIES"))
       u_glip(
          .clk_io(sys_clk),
