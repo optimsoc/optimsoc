@@ -105,7 +105,7 @@ module debug_interface
    osd_scm
       #(
          .SYSTEMID (SYSTEMID),
-         .NUM_MOD  (NUM_MODULES+1)
+         .NUM_MOD  (NUM_MODULES)
       )
       u_scm (
          .clk(clk),

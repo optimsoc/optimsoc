@@ -66,10 +66,23 @@ module system_2x2_cccc_nexys4
    localparam DDR_DATA_WIDTH = 32;
    localparam TILE_ADDR_WIDTH = 25;
 
-   localparam NOC_FLIT_DATA_WIDTH = 32;
-   localparam NOC_FLIT_TYPE_WIDTH = 2;
-   localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH+NOC_FLIT_TYPE_WIDTH;
-   localparam VCHANNELS = `VCHANNELS;
+   localparam base_config_t
+     BASE_CONFIG = '{ NUMCTS: 4,
+                      CTLIST: {{60{16'hx}}, 16'h3, 16'h2, 16'h1, 16'h0},
+                      CORES_PER_TILE: 1,
+                      GMEM_SIZE: 0,
+                      GMEM_TILE: 'x,
+                      NOC_DATA_WIDTH: 32,
+                      NOC_TYPE_WIDTH: 2,
+                      NOC_VCHANNELS: 3,
+                      MEMORY_ACCESS: DISTRIBUTED,
+                      LMEM_SIZE: 32*1024*1024,
+                      USE_DEBUG: 1,
+                      DEBUG_STM: 1,
+                      DEBUG_CTM: 1
+                      };
+
+   localparam config_t CONFIG = derive_config(BASE_CONFIG);
 
    nasti_channel
      #(.ID_WIDTH   (0),
@@ -101,17 +114,6 @@ module system_2x2_cccc_nexys4
 
    // UART signals (naming from our point of view, i.e. from the DCE)
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
-
-   // terminate NoC connection
-   logic [NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   logic [VCHANNELS-1:0] noc_in_valid;
-   logic [VCHANNELS-1:0] noc_in_ready;
-   logic [NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   logic [VCHANNELS-1:0] noc_out_valid;
-   logic [VCHANNELS-1:0] noc_out_ready;
-
-   assign noc_in_valid = 0;
-   assign noc_out_ready = 0;
 
    // Debug system
    glip_channel c_glip_in(.clk(sys_clk));
@@ -152,33 +154,28 @@ module system_2x2_cccc_nexys4
 
    // Single compute tile with all memory mapped to the DRAM
    system_2x2_cccc_dm
-      #(
-         .VCHANNELS(VCHANNELS),
-         .USE_DEBUG(1),
-         .CORES(1),
-         .MEM_SIZE(32 * 1024 * 1024) // Nexys 4 DDR has 128 MiB DRAM, each tile 32
-      )
-      u_system
-        (
-         .clk           (sys_clk),
-         .rst           (sys_rst),
+      #(.CONFIG(CONFIG))
+   u_system
+     (
+      .clk           (sys_clk),
+      .rst           (sys_rst),
 
-         .c_glip_in (c_glip_in),
-         .c_glip_out (c_glip_out),
+      .c_glip_in (c_glip_in),
+      .c_glip_out (c_glip_out),
 
-         .wb_mem_adr_i  ({c_wb_ddr3.adr_o, c_wb_ddr2.adr_o, c_wb_ddr1.adr_o, c_wb_ddr0.adr_o}),
-         .wb_mem_cyc_i  ({c_wb_ddr3.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr0.cyc_o}),
-         .wb_mem_dat_i  ({c_wb_ddr3.dat_o, c_wb_ddr2.dat_o, c_wb_ddr1.dat_o, c_wb_ddr0.dat_o}),
-         .wb_mem_sel_i  ({c_wb_ddr3.sel_o, c_wb_ddr2.sel_o, c_wb_ddr1.sel_o, c_wb_ddr0.sel_o}),
-         .wb_mem_stb_i  ({c_wb_ddr3.stb_o, c_wb_ddr2.stb_o, c_wb_ddr1.stb_o, c_wb_ddr0.stb_o}),
-         .wb_mem_we_i  ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
-         .wb_mem_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
-         .wb_mem_cti_i  ({c_wb_ddr3.cti_o, c_wb_ddr2.cti_o, c_wb_ddr1.cti_o, c_wb_ddr0.cti_o}),
-         .wb_mem_bte_i  ({c_wb_ddr3.bte_o, c_wb_ddr2.bte_o, c_wb_ddr1.bte_o, c_wb_ddr0.bte_o}),
-         .wb_mem_ack_o  ({c_wb_ddr3.ack_i, c_wb_ddr2.ack_i, c_wb_ddr1.ack_i, c_wb_ddr0.ack_i}),
-         .wb_mem_rty_o  ({c_wb_ddr3.rty_i, c_wb_ddr2.rty_i, c_wb_ddr1.rty_i, c_wb_ddr0.rty_i}),
-         .wb_mem_err_o  ({c_wb_ddr3.err_i, c_wb_ddr2.err_i, c_wb_ddr1.err_i, c_wb_ddr0.err_i}),
-         .wb_mem_dat_o  ({c_wb_ddr3.dat_i, c_wb_ddr2.dat_i, c_wb_ddr1.dat_i, c_wb_ddr0.dat_i})
+      .wb_mem_adr_i  ({c_wb_ddr3.adr_o, c_wb_ddr2.adr_o, c_wb_ddr1.adr_o, c_wb_ddr0.adr_o}),
+      .wb_mem_cyc_i  ({c_wb_ddr3.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr0.cyc_o}),
+      .wb_mem_dat_i  ({c_wb_ddr3.dat_o, c_wb_ddr2.dat_o, c_wb_ddr1.dat_o, c_wb_ddr0.dat_o}),
+      .wb_mem_sel_i  ({c_wb_ddr3.sel_o, c_wb_ddr2.sel_o, c_wb_ddr1.sel_o, c_wb_ddr0.sel_o}),
+      .wb_mem_stb_i  ({c_wb_ddr3.stb_o, c_wb_ddr2.stb_o, c_wb_ddr1.stb_o, c_wb_ddr0.stb_o}),
+      .wb_mem_we_i  ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
+      .wb_mem_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
+      .wb_mem_cti_i  ({c_wb_ddr3.cti_o, c_wb_ddr2.cti_o, c_wb_ddr1.cti_o, c_wb_ddr0.cti_o}),
+      .wb_mem_bte_i  ({c_wb_ddr3.bte_o, c_wb_ddr2.bte_o, c_wb_ddr1.bte_o, c_wb_ddr0.bte_o}),
+      .wb_mem_ack_o  ({c_wb_ddr3.ack_i, c_wb_ddr2.ack_i, c_wb_ddr1.ack_i, c_wb_ddr0.ack_i}),
+      .wb_mem_rty_o  ({c_wb_ddr3.rty_i, c_wb_ddr2.rty_i, c_wb_ddr1.rty_i, c_wb_ddr0.rty_i}),
+      .wb_mem_err_o  ({c_wb_ddr3.err_i, c_wb_ddr2.err_i, c_wb_ddr1.err_i, c_wb_ddr0.err_i}),
+      .wb_mem_dat_o  ({c_wb_ddr3.dat_i, c_wb_ddr2.dat_i, c_wb_ddr1.dat_i, c_wb_ddr0.dat_i})
       );
 
    // Nexys 4 board wrapper

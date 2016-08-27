@@ -11,6 +11,7 @@ depend =
   optimsoc:debug:debug_interface
   opensocdebug:interconnect:debug_ring
   glip:backend:uart
+  optimsoc:base:config
 
 simulators = xsim
 

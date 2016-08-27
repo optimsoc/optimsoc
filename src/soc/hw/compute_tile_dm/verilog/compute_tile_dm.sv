@@ -35,8 +35,20 @@ import dii_package::dii_flit;
 //`endif
 
 import opensocdebug::mor1kx_trace_exec;
+import optimsoc::config_t;
 
-module compute_tile_dm(
+module compute_tile_dm
+  #(
+    parameter config_t CONFIG = 'x,
+
+    parameter ID       = 'x,
+    parameter COREBASE = 'x,
+
+    parameter DEBUG_BASEID = 'x,
+
+    parameter MEM_FILE = 'x
+    )
+   (
    input dii_flit [1:0] debug_ring_in,
    output [1:0] debug_ring_in_ready,
    output dii_flit [1:0] debug_ring_out,
@@ -59,70 +71,43 @@ module compute_tile_dm(
    input clk,
    input rst_cpu, rst_sys, rst_dbg,
 
-   input [NOC_FLIT_WIDTH-1:0] noc_in_flit,
-   input [VCHANNELS-1:0] noc_in_valid,
-   output [VCHANNELS-1:0] noc_in_ready,
-   output [NOC_FLIT_WIDTH-1:0] noc_out_flit,
-   output [VCHANNELS-1:0] noc_out_valid,
-   input [VCHANNELS-1:0] noc_out_ready
+   input [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit,
+   input [CONFIG.NOC_VCHANNELS-1:0] noc_in_valid,
+   output [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready,
+   output [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit,
+   output [CONFIG.NOC_VCHANNELS-1:0] noc_out_valid,
+   input [CONFIG.NOC_VCHANNELS-1:0] noc_out_ready
    );
 
-   parameter NOC_FLIT_DATA_WIDTH = 32;
-   parameter NOC_FLIT_TYPE_WIDTH = 2;
-   localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH+NOC_FLIT_TYPE_WIDTH;
-   parameter VCHANNELS = `VCHANNELS;
+   localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
+   localparam NR_SLAVES = 3;
 
-   parameter ID       = 0;
-   parameter CORES    = 1;
-   parameter COREBASE = 0;
-   parameter DOMAIN_NUMCORES = CORES;
+   localparam NA_ENABLE_DMA = 1;
+   localparam DMA_ENTRIES = 4;
 
-   parameter NUMCTS = 32'h1;
-   parameter [NUMCTS*16-1:0] CTLIST = {NUMCTS{16'b0}};
-
-   parameter NR_MASTERS = CORES * 2 + 1;
-   parameter NR_SLAVES = 3;
-
-   parameter USE_DEBUG = 1;
-   parameter DEBUG_BASEID = 0;
-
-   /* memory size in bytes */
-   parameter MEM_SIZE = 30*1024; // 30 kByte
-   parameter MEM_FILE = "ct.vmem";
-
-   parameter GLOBAL_MEMORY_SIZE = 32'h0;
-   parameter GLOBAL_MEMORY_TILE = 32'hx;
-
-   parameter NA_ENABLE_DMA = 1;
-   parameter DMA_ENTRIES = 4;
-
-   mor1kx_trace_exec [CORES-1:0] trace;
+   mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
    wire wb_mem_clk_i, wb_mem_rst_i;
    assign wb_mem_clk_i = clk;
    assign wb_mem_rst_i = rst_sys;
 
 
-   // n*(STM + CTM) + MAM
-   localparam DEBUG_MODS_PER_CORE = 2;
-   localparam DEBUG_NUM_MODS = USE_DEBUG * (CORES * DEBUG_MODS_PER_CORE + 1);
-
-   dii_flit [DEBUG_NUM_MODS-1:0] dii_in;
-   logic [DEBUG_NUM_MODS-1:0] dii_in_ready;
-   dii_flit [DEBUG_NUM_MODS-1:0] dii_out;
-   logic [DEBUG_NUM_MODS-1:0] dii_out_ready;
+   dii_flit [CONFIG.DEBUG_NUM_MODS-1:0] dii_in;
+   logic [CONFIG.DEBUG_NUM_MODS-1:0]    dii_in_ready;
+   dii_flit [CONFIG.DEBUG_NUM_MODS-1:0] dii_out;
+   logic [CONFIG.DEBUG_NUM_MODS-1:0]    dii_out_ready;
 
    generate
-      if (USE_DEBUG == 1) begin
+      if (CONFIG.USE_DEBUG == 1) begin
 
          genvar i;
-         logic [DEBUG_NUM_MODS-1:0][9:0] id_map;
-         for (i = 0; i < DEBUG_NUM_MODS; i = i+1) begin
+         logic [CONFIG.DEBUG_NUM_MODS-1:0][9:0] id_map;
+         for (i = 0; i < CONFIG.DEBUG_NUM_MODS; i = i+1) begin
             assign id_map[i][9:0] = 10'(DEBUG_BASEID+i);
          end
 
          debug_ring_expand
-           #(.PORTS(DEBUG_NUM_MODS))
+           #(.PORTS(CONFIG.DEBUG_MODS_PER_TILE))
          u_debug_ring_segment
            (.*,
             .rst           (rst_dbg),
@@ -180,7 +165,7 @@ module compute_tile_dm(
    wire          snoop_enable;
    wire [31:0]   snoop_adr;
 
-   wire [31:0]   pic_ints_i [0:CORES-1];
+   wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
    assign pic_ints_i[0][31:4] = 17'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
 
@@ -219,14 +204,14 @@ module compute_tile_dm(
    endgenerate
 
    generate
-      for (c = 1; c < CORES; c = c + 1) begin
+      for (c = 1; c < CONFIG.CORES_PER_TILE; c = c + 1) begin
          assign pic_ints_i[c] = 31'h0;
       end
    endgenerate
 
 
    generate
-      for (c = 0; c < CORES; c = c + 1) begin : gen_cores
+      for (c = 0; c < CONFIG.CORES_PER_TILE; c = c + 1) begin : gen_cores
          /* mor1kx_module AUTO_TEMPLATE(
           .clk_i          (clk),
           .rst_i          (rst_cpu),
@@ -248,7 +233,7 @@ module compute_tile_dm(
           ); */
          mor1kx_module
                #(.ID(c),
-                 .NUMCORES(CORES))
+                 .NUMCORES(CONFIG.CORES_PER_TILE))
          u_core (
                  /*AUTOINST*/
                  // Interfaces
@@ -303,28 +288,28 @@ module compute_tile_dm(
          assign busms_cab_o[c*2] = 1'b0;
          assign busms_cab_o[c*2+1] = 1'b0;
 
-         if (USE_DEBUG == 1) begin
+         if (CONFIG.USE_DEBUG == 1) begin
             osd_stm_mor1kx
               u_stm
                 (.clk  (clk),
                  .rst  (rst_dbg),
-                 .id   (DEBUG_BASEID + 1 + c*DEBUG_MODS_PER_CORE),
-                 .debug_in (dii_out[1+c*DEBUG_MODS_PER_CORE]),
-                 .debug_in_ready (dii_out_ready[1 + c*DEBUG_MODS_PER_CORE]),
-                 .debug_out (dii_in[1+c*DEBUG_MODS_PER_CORE]),
-                 .debug_out_ready (dii_in_ready[1 + c*DEBUG_MODS_PER_CORE]),
-                 .trace_port (trace[c*DEBUG_MODS_PER_CORE]));
+                 .id   (DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE),
+                 .debug_in (dii_out[1+c*CONFIG.DEBUG_MODS_PER_CORE]),
+                 .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE]),
+                 .debug_out (dii_in[1+c*CONFIG.DEBUG_MODS_PER_CORE]),
+                 .debug_out_ready (dii_in_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE]),
+                 .trace_port (trace[c*CONFIG.DEBUG_MODS_PER_CORE]));
 
             osd_ctm_mor1kx
               u_ctm
                 (.clk  (clk),
                  .rst  (rst_dbg),
-                 .id   (DEBUG_BASEID + 1 + c*DEBUG_MODS_PER_CORE + 1),
-                 .debug_in (dii_out[1 + c*DEBUG_MODS_PER_CORE + 1]),
-                 .debug_in_ready (dii_out_ready[1 + c*DEBUG_MODS_PER_CORE + 1]),
-                 .debug_out (dii_in[1 + c*DEBUG_MODS_PER_CORE + 1]),
-                 .debug_out_ready (dii_in_ready[1 + c*DEBUG_MODS_PER_CORE + 1]),
-                 .trace_port (trace[c*DEBUG_MODS_PER_CORE]));
+                 .id   (DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1),
+                 .debug_in (dii_out[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
+                 .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
+                 .debug_out (dii_in[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
+                 .debug_out_ready (dii_in_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
+                 .trace_port (trace[c*CONFIG.DEBUG_MODS_PER_CORE]));
          end
       end
    endgenerate
@@ -394,12 +379,12 @@ module compute_tile_dm(
    logic [1:0]    mam_bte_o;
    logic [3:0]    mam_sel_o;
 
-   if (USE_DEBUG == 1) begin
+   if (CONFIG.USE_DEBUG == 1) begin
       //MAM
       osd_mam_wb #(
            .DATA_WIDTH(32),
            .MAX_PKT_LEN(8),
-           .MEM_SIZE0(MEM_SIZE),
+           .MEM_SIZE0(CONFIG.LMEM_SIZE),
            .BASE_ADDR0(0))
       u_mam_wb(
            .clk_i(clk),
@@ -484,7 +469,7 @@ module compute_tile_dm(
    wb_sram_sp
       #(.DW(32),
         .AW(32),
-        .MEM_SIZE(MEM_SIZE),
+        .MEM_SIZE(CONFIG.LMEM_SIZE),
         .MEM_FILE(MEM_FILE))
       u_ram(/*AUTOINST*/
             // Outputs
@@ -522,6 +507,7 @@ module compute_tile_dm(
     */
    assign pic_ints_i[0][3:2] = {na_irq[0],|na_irq[DMA_ENTRIES:1]};
 
+
    /* networkadapter_ct AUTO_TEMPLATE(
     .clk(clk),
     .rst(rst_sys),
@@ -534,15 +520,16 @@ module compute_tile_dm(
         .ENABLE_MPSIMPLE(1),
         .ENABLE_DMA(NA_ENABLE_DMA),
         .dma_entries(DMA_ENTRIES),
-        .vchannels(VCHANNELS),
-        .noc_flit_width(NOC_FLIT_WIDTH),
-        .NUMCORES(CORES), .COREBASE(COREBASE),
-        .DOMAIN_NUMCORES(DOMAIN_NUMCORES),
-        .GLOBAL_MEMORY_SIZE(GLOBAL_MEMORY_SIZE),
-        .GLOBAL_MEMORY_TILE(GLOBAL_MEMORY_TILE),
-        .LOCAL_MEMORY_SIZE(MEM_SIZE),
-        .NUMCTS(NUMCTS),
-        .CTLIST(CTLIST))
+        .vchannels(CONFIG.NOC_VCHANNELS),
+        .noc_flit_width(CONFIG.NOC_FLIT_WIDTH),
+        .NUMCORES(CONFIG.CORES_PER_TILE),
+        .COREBASE(COREBASE),
+        .DOMAIN_NUMCORES(CONFIG.TOTAL_NUM_CORES),
+        .GLOBAL_MEMORY_SIZE(CONFIG.GMEM_SIZE),
+        .GLOBAL_MEMORY_TILE(CONFIG.GMEM_TILE),
+        .LOCAL_MEMORY_SIZE(CONFIG.LMEM_SIZE),
+        .NUMCTS(CONFIG.NUMCTS),
+        .CTLIST(CONFIG.CTLIST[CONFIG.NUMCTS-1:0]))
       u_na(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC
@@ -552,9 +539,9 @@ module compute_tile_dm(
 `endif
            /*AUTOINST*/
            // Outputs
-           .noc_in_ready                (noc_in_ready[VCHANNELS-1:0]),
-           .noc_out_flit                (noc_out_flit[NOC_FLIT_WIDTH-1:0]),
-           .noc_out_valid               (noc_out_valid[VCHANNELS-1:0]),
+           .noc_in_ready                (noc_in_ready[(CONFIG.NOC_VCHANNELS)-1:0]),
+           .noc_out_flit                (noc_out_flit[(CONFIG.NOC_FLIT_WIDTH)-1:0]),
+           .noc_out_valid               (noc_out_valid[(CONFIG.NOC_VCHANNELS)-1:0]),
            .wbm_adr_o                   (busms_adr_o[NR_MASTERS-1]), // Templated
            .wbm_cyc_o                   (busms_cyc_o[NR_MASTERS-1]), // Templated
            .wbm_dat_o                   (busms_dat_o[NR_MASTERS-1]), // Templated
@@ -572,9 +559,9 @@ module compute_tile_dm(
            // Inputs
            .clk                         (clk),                   // Templated
            .rst                         (rst_sys),               // Templated
-           .noc_in_flit                 (noc_in_flit[NOC_FLIT_WIDTH-1:0]),
-           .noc_in_valid                (noc_in_valid[VCHANNELS-1:0]),
-           .noc_out_ready               (noc_out_ready[VCHANNELS-1:0]),
+           .noc_in_flit                 (noc_in_flit[(CONFIG.NOC_FLIT_WIDTH)-1:0]),
+           .noc_in_valid                (noc_in_valid[(CONFIG.NOC_VCHANNELS)-1:0]),
+           .noc_out_ready               (noc_out_ready[(CONFIG.NOC_VCHANNELS)-1:0]),
            .wbm_ack_i                   (busms_ack_i[NR_MASTERS-1]), // Templated
            .wbm_rty_i                   (busms_rty_i[NR_MASTERS-1]), // Templated
            .wbm_err_i                   (busms_err_i[NR_MASTERS-1]), // Templated

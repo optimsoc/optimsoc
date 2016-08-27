@@ -39,6 +39,7 @@
 
 import dii_package::dii_flit;
 import opensocdebug::mor1kx_trace_exec;
+import optimsoc::*;
 
 module tb_compute_tile(
 `ifdef verilator
@@ -47,16 +48,27 @@ module tb_compute_tile(
 `endif
    );
 
+   // Simulation parameters
    parameter USE_DEBUG = 0;
-
    parameter NUM_CORES = 1;
 
-   // NoC parameters
-   parameter NOC_FLIT_DATA_WIDTH = 32;
-   parameter NOC_FLIT_TYPE_WIDTH = 2;
-   localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH + NOC_FLIT_TYPE_WIDTH;
+   localparam base_config_t
+     BASE_CONFIG = '{ NUMCTS: 1,
+                      CTLIST: {{63{16'hx}}, 16'h0},
+                      CORES_PER_TILE: NUM_CORES,
+                      GMEM_SIZE: 0,
+                      GMEM_TILE: 'x,
+                      NOC_DATA_WIDTH: 32,
+                      NOC_TYPE_WIDTH: 2,
+                      NOC_VCHANNELS: 3,
+                      MEMORY_ACCESS: DISTRIBUTED,
+                      LMEM_SIZE: 128*1024*1024,
+                      USE_DEBUG: 1'(USE_DEBUG),
+                      DEBUG_STM: 1,
+                      DEBUG_CTM: 1
+                      };
 
-   parameter VCHANNELS = 3;
+   localparam config_t CONFIG = derive_config(BASE_CONFIG);
 
    logic rst_sys, rst_cpu;
 
@@ -70,14 +82,12 @@ module tb_compute_tile(
    reg rst;
 `endif
 
-   reg [NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   reg [VCHANNELS-1:0] noc_in_valid;
-   wire [VCHANNELS-1:0] noc_in_ready;
-   wire [NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   wire [VCHANNELS-1:0] noc_out_valid;
-   reg [VCHANNELS-1:0] noc_out_ready;
-
-   localparam NUM_MODS = 1 + (NUM_CORES * 2);
+   reg [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit;
+   reg [CONFIG.NOC_VCHANNELS-1:0]  noc_in_valid;
+   wire [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready;
+   wire [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit;
+   wire [CONFIG.NOC_VCHANNELS-1:0]  noc_out_valid;
+   reg [CONFIG.NOC_VCHANNELS-1:0]   noc_out_ready;
 
    // Monitor system behavior in simulation
    mor1kx_trace_exec [NUM_CORES-1:0] trace;
@@ -127,7 +137,7 @@ module tb_compute_tile(
    logic [1:0] debug_ring_out_ready;
 
    generate
-      if (USE_DEBUG == 1) begin
+      if (CONFIG.USE_DEBUG == 1) begin
          glip_channel c_glip_in(.*);
          glip_channel c_glip_out(.*);
 
@@ -147,7 +157,7 @@ module tb_compute_tile(
          debug_interface
             #(
                .SYSTEMID    (1),
-               .NUM_MODULES (NUM_MODS)
+               .NUM_MODULES (CONFIG.DEBUG_NUM_MODS) // This number contains the SCM
             )
             u_debuginterface(
                .clk           (clk),
@@ -181,11 +191,9 @@ module tb_compute_tile(
 
    // The actual system: a single compute tile
    compute_tile_dm
-      #(.ID(0),
-        .CORES(NUM_CORES),
-        .MEM_SIZE(128*1024*1024), // 128 MB
+      #(.CONFIG(CONFIG),
+        .ID(0),
         .MEM_FILE("ct.vmem"),
-        .USE_DEBUG(USE_DEBUG),
         .DEBUG_BASEID(2))
       u_compute_tile(
                      // Debug ring ports
@@ -194,17 +202,17 @@ module tb_compute_tile(
                      .debug_ring_out(debug_ring_out),
                      .debug_ring_out_ready(debug_ring_out_ready),
                      // Outputs
-                     .noc_in_ready      (noc_in_ready[VCHANNELS-1:0]),
-                     .noc_out_flit      (noc_out_flit[NOC_FLIT_WIDTH-1:0]),
-                     .noc_out_valid     (noc_out_valid[VCHANNELS-1:0]),
+                     .noc_in_ready      (noc_in_ready[CONFIG.NOC_VCHANNELS-1:0]),
+                     .noc_out_flit      (noc_out_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
+                     .noc_out_valid     (noc_out_valid[CONFIG.NOC_VCHANNELS-1:0]),
                      // Inputs
                      .clk               (clk),
                      .rst_cpu           (rst_cpu),
                      .rst_sys           (rst_sys),
                      .rst_dbg           (rst),
-                     .noc_in_flit       (noc_in_flit[NOC_FLIT_WIDTH-1:0]),
-                     .noc_in_valid      (noc_in_valid[VCHANNELS-1:0]),
-                     .noc_out_ready     (noc_out_ready[VCHANNELS-1:0]));
+                     .noc_in_flit       (noc_in_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
+                     .noc_in_valid      (noc_in_valid[CONFIG.NOC_VCHANNELS-1:0]),
+                     .noc_out_ready     (noc_out_ready[CONFIG.NOC_VCHANNELS-1:0]));
 
 // Generate testbench signals.
 // In Verilator, these signals are generated in the C++ toplevel testbench

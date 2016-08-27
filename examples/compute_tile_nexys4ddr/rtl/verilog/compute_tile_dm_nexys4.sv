@@ -30,6 +30,7 @@
 `include "optimsoc_def.vh"
 
 import dii_package::dii_flit;
+import optimsoc::*;
 
 module compute_tile_dm_nexys4
   (
@@ -65,10 +66,23 @@ module compute_tile_dm_nexys4
    localparam DDR_ADDR_WIDTH = 28;
    localparam DDR_DATA_WIDTH = 32;
 
-   localparam NOC_FLIT_DATA_WIDTH = 32;
-   localparam NOC_FLIT_TYPE_WIDTH = 2;
-   localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH+NOC_FLIT_TYPE_WIDTH;
-   localparam VCHANNELS = `VCHANNELS;
+   localparam base_config_t
+     BASE_CONFIG = '{ NUMCTS: 1,
+                      CTLIST: {{63{16'hx}}, 16'h0},
+                      CORES_PER_TILE: 1,
+                      GMEM_SIZE: 0,
+                      GMEM_TILE: 'x,
+                      NOC_DATA_WIDTH: 32,
+                      NOC_TYPE_WIDTH: 2,
+                      NOC_VCHANNELS: 3,
+                      MEMORY_ACCESS: DISTRIBUTED,
+                      LMEM_SIZE: 128*1024*1024,
+                      USE_DEBUG: 1,
+                      DEBUG_STM: 1,
+                      DEBUG_CTM: 1
+                      };
+
+   localparam config_t CONFIG = derive_config(BASE_CONFIG);
 
    nasti_channel
      #(.ID_WIDTH   (AXI_ID_WIDTH),
@@ -95,12 +109,12 @@ module compute_tile_dm_nexys4
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
 
    // terminate NoC connection
-   logic [NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   logic [VCHANNELS-1:0] noc_in_valid;
-   logic [VCHANNELS-1:0] noc_in_ready;
-   logic [NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   logic [VCHANNELS-1:0] noc_out_valid;
-   logic [VCHANNELS-1:0] noc_out_ready;
+   logic [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_in_valid;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready;
+   logic [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_out_valid;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_out_ready;
 
    assign noc_in_valid = 0;
    assign noc_out_ready = 0;
@@ -152,7 +166,7 @@ module compute_tile_dm_nexys4
    debug_interface
       #(
          .SYSTEMID    (1),
-         .NUM_MODULES (3)
+         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS)
       )
       u_debuginterface
         (
@@ -168,17 +182,10 @@ module compute_tile_dm_nexys4
          .ring_in_ready  (debug_ring_out_ready)
       );
 
-   // XXX: Add system trace and other debug modules to compute tile
-
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
-      #(
-         .VCHANNELS(VCHANNELS),
-         .NOC_FLIT_DATA_WIDTH(NOC_FLIT_DATA_WIDTH),
-         .NOC_FLIT_TYPE_WIDTH(NOC_FLIT_TYPE_WIDTH),
-         .USE_DEBUG(1),
-         .DEBUG_BASEID(2),
-         .MEM_SIZE(128 * 1024 * 1024) // Nexys 4 DDR has 128 MiB DRAM
+      #(.CONFIG(CONFIG),
+        .DEBUG_BASEID(2)
       )
       u_compute_tile
         (
