@@ -298,7 +298,7 @@ module compute_tile_dm
                  .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE]),
                  .debug_out (dii_in[1+c*CONFIG.DEBUG_MODS_PER_CORE]),
                  .debug_out_ready (dii_in_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE]),
-                 .trace_port (trace[c*CONFIG.DEBUG_MODS_PER_CORE]));
+                 .trace_port (trace[c]));
 
             osd_ctm_mor1kx
               u_ctm
@@ -309,7 +309,7 @@ module compute_tile_dm
                  .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
                  .debug_out (dii_in[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
                  .debug_out_ready (dii_in_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
-                 .trace_port (trace[c*CONFIG.DEBUG_MODS_PER_CORE]));
+                 .trace_port (trace[c]));
          end
       end
    endgenerate
