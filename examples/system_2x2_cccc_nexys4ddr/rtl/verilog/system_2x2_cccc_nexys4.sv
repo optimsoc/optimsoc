@@ -61,6 +61,8 @@ module system_2x2_cccc_nexys4
    output                ddr2_we_n
    );
 
+   parameter NUM_CORES = 1;
+
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 27;
    localparam DDR_DATA_WIDTH = 32;
@@ -69,7 +71,7 @@ module system_2x2_cccc_nexys4
    localparam base_config_t
      BASE_CONFIG = '{ NUMCTS: 4,
                       CTLIST: {{60{16'hx}}, 16'h3, 16'h2, 16'h1, 16'h0},
-                      CORES_PER_TILE: 1,
+                      CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
                       NOC_DATA_WIDTH: 32,

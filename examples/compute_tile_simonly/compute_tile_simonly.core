@@ -40,6 +40,11 @@ datatype = int
 paramtype = vlogparam
 scope = public
 
+[parameter NUM_CORES]
+datatype = int
+paramtype = vlogparam
+scope = public
+
 [parameter vcd]
 datatype = bool
 paramtype = cmdlinearg

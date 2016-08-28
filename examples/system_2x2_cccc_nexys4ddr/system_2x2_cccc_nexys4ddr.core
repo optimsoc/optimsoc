@@ -36,3 +36,8 @@ files =
 [xsim]
 top_module = tb_system_2x2_cccc_nexys4ddr
 part = xc7a100tcsg324-1
+
+[parameter NUM_CORES]
+datatype = int
+paramtype = vlogparam
+scope = public
