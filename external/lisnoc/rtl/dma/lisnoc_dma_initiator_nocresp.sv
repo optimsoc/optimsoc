@@ -52,6 +52,7 @@ module lisnoc_dma_initiator_nocresp(/*AUTOARG*/
    localparam STATE_IDLE = 2'b00;
    localparam STATE_GET_ADDR = 2'b01;
    localparam STATE_DATA = 2'b10;
+   localparam STATE_GET_SIZE = 2'b11;
 
    input clk, rst;
 
@@ -139,7 +140,7 @@ module lisnoc_dma_initiator_nocresp(/*AUTOARG*/
       ctrl_done_en = 1'b0;
       ctrl_done_pos = 0;
 
-    // Default values are old values
+      // Default values are old values
       nxt_resp_id = resp_id;
       nxt_resp_address = resp_address;
       nxt_last_packet_of_response = last_packet_of_response;
@@ -159,7 +160,7 @@ module lisnoc_dma_initiator_nocresp(/*AUTOARG*/
                  ctrl_done_en = 1'b1;
                  ctrl_done_pos = nxt_resp_id;
               end  else if(buf_flit[`PACKET_TYPE_MSB:`PACKET_TYPE_LSB] == `PACKET_TYPE_R2L_RESP) begin
-                 nxt_state = STATE_GET_ADDR;
+                 nxt_state = STATE_GET_SIZE;
               end else begin
                  // now we have a problem...
                  // must not happen
@@ -168,6 +169,11 @@ module lisnoc_dma_initiator_nocresp(/*AUTOARG*/
            end else begin // if (buf_valid)
               nxt_state = STATE_IDLE;
            end
+        end
+
+        STATE_GET_SIZE: begin
+           buf_ready = 1'b1;
+           nxt_state = STATE_GET_ADDR;
         end
 
         STATE_GET_ADDR: begin
@@ -219,12 +225,12 @@ module lisnoc_dma_initiator_nocresp(/*AUTOARG*/
 
    always @(posedge clk) begin
       if (rst) begin
-         state <=STATE_IDLE;
+         state <= STATE_IDLE;
          resp_address <= 0;
          last_packet_of_response <= 0;
          resp_id <= 0;
       end else begin
-         state <=nxt_state;
+         state <= nxt_state;
          resp_address <= nxt_resp_address;
          last_packet_of_response <= nxt_last_packet_of_response;
          resp_id <= nxt_resp_id;

@@ -22,8 +22,6 @@
  *
  * This modules generates the requests for DMA transfers.
  *
- * (c) 2011-2013 by the author(s)
- *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  *
@@ -42,8 +40,7 @@ module lisnoc_dma_initiator_nocreq (/*AUTOARG*/
    );
 
    parameter table_entries = 4;
-//   parameter table_entries_ptrwidth = $clog2(table_entries);
-   parameter table_entries_ptrwidth = 2;
+   localparam table_entries_ptrwidth = $clog2(table_entries);
 
    parameter tileid = 0;
 
@@ -79,15 +76,17 @@ module lisnoc_dma_initiator_nocreq (/*AUTOARG*/
    //
    //  NOC request
    //
-   localparam NOC_REQ_WIDTH = 3;
-   localparam NOC_REQ_IDLE         = 3'b000;
-   localparam NOC_REQ_L2R_GENHDR   = 3'b001;
-   localparam NOC_REQ_L2R_GENADDR  = 3'b010;
-   localparam NOC_REQ_L2R_DATA     = 3'b011;
-   localparam NOC_REQ_L2R_WAITDATA = 3'b100;
-   localparam NOC_REQ_R2L_GENHDR   = 3'b101;
-   localparam NOC_REQ_R2L_GENRADDR = 3'b110;
-   localparam NOC_REQ_R2L_GENLADDR = 3'b111;
+   localparam NOC_REQ_WIDTH = 4;
+   localparam NOC_REQ_IDLE         = 4'b0000;
+   localparam NOC_REQ_L2R_GENHDR   = 4'b0001;
+   localparam NOC_REQ_L2R_GENADDR  = 4'b0010;
+   localparam NOC_REQ_L2R_DATA     = 4'b0011;
+   localparam NOC_REQ_L2R_WAITDATA = 4'b0100;
+   localparam NOC_REQ_R2L_GENHDR   = 4'b0101;
+   localparam NOC_REQ_R2L_GENSIZE  = 4'b1000;
+
+   localparam NOC_REQ_R2L_GENRADDR = 4'b0110;
+   localparam NOC_REQ_R2L_GENLADDR = 4'b0111;
 
    // State logic
    reg [NOC_REQ_WIDTH-1:0]                 noc_req_state;
@@ -328,18 +327,29 @@ module lisnoc_dma_initiator_nocreq (/*AUTOARG*/
            noc_out_flit[`SOURCE_MSB:`SOURCE_LSB]             = tileid;
            noc_out_flit[`PACKET_TYPE_MSB:`PACKET_TYPE_LSB]   = `PACKET_TYPE_R2L_REQ;
 
-           noc_out_flit[`SIZE_MSB:`SIZE_LSB] = req_size;
+           noc_out_flit[11:0] = 0;
 
            // There's only one packet needed for the request
            noc_out_flit[`PACKET_REQ_LAST] = 1'b1;
 
            // change to next state if successful
            if (noc_out_ready)
-             nxt_noc_req_state = NOC_REQ_R2L_GENRADDR;
+              nxt_noc_req_state = NOC_REQ_R2L_GENSIZE;
            else
-             nxt_noc_req_state = NOC_REQ_R2L_GENHDR;
+              nxt_noc_req_state = NOC_REQ_R2L_GENHDR;
 
         end // case: NOC_REQ_GENHDR
+
+        NOC_REQ_R2L_GENSIZE: begin
+           noc_out_valid = 1'b1;
+           noc_out_flit[`SIZE_MSB:`SIZE_LSB] = req_size;
+
+           // change to next state if successful
+           if (noc_out_ready)
+              nxt_noc_req_state = NOC_REQ_R2L_GENRADDR;
+           else
+              nxt_noc_req_state = NOC_REQ_R2L_GENSIZE;
+        end // case: NOC_REQ_R2L_GENSIZE
 
         NOC_REQ_R2L_GENRADDR: begin
            noc_out_valid = 1'b1;
