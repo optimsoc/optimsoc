@@ -1,3 +1,18 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
@@ -8,7 +23,7 @@ module osd_trace_packetization
     input             rst,
 
     input [9:0]       id,
-    
+
     input [WIDTH-1:0] trace_data,
     input             trace_overflow,
     input             trace_valid,
@@ -18,11 +33,11 @@ module osd_trace_packetization
     input             debug_out_ready
     );
 
-   localparam NUM_FLITS = ((WIDTH + 15) >> 4);  
+   localparam NUM_FLITS = ((WIDTH + 15) >> 4);
    localparam COUNTER_WIDTH = $clog2(NUM_FLITS);
 
    localparam FILL_LAST = NUM_FLITS*16 - WIDTH;
-   
+
    reg [COUNTER_WIDTH-1:0] counter;
    logic [COUNTER_WIDTH-1:0] nxt_counter;
 
@@ -95,11 +110,8 @@ module osd_trace_packetization
                  nxt_state = IDLE;
               end
            end // else: !if(counter < NUM_FLITS - 1)
-        end           
+        end
       endcase
    end
 
 endmodule // osd_trace_packetization
-
-
-   

@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = opensocdebug:modules:mam_wb
+depend =
+  opensocdebug:interfaces:dii_channel
+  opensocdebug:modules:mam
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  wishbone/osd_mam_wb.sv
+  wishbone/osd_mam_wb_if.sv

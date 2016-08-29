@@ -1,7 +1,18 @@
-
-// To replace the Xilinx AXI UART:
-// Connect addresses with [4:2]
-// Connect data with [8:0]
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
@@ -10,15 +21,15 @@ module osd_dem_uart_nasti
     parameter ADDR_WIDTH=3,
     parameter DATA_WIDTH=8)
    (input clk, rst,
-    
+
     input [9:0]                 id,
 
     output                      irq,
-    
+
     input [ADDR_WIDTH-1:0]      ar_addr,
     input                       ar_valid,
     output                      ar_ready,
-    
+
     output [1:0]                r_resp,
     output reg [DATA_WIDTH-1:0] r_data,
     output                      r_valid,
@@ -35,7 +46,7 @@ module osd_dem_uart_nasti
     output [1:0]                b_resp,
     output                      b_valid,
     input                       b_ready,
-                                
+
     input                       dii_flit debug_in,
     output                      debug_in_ready,
     output                      dii_flit debug_out,
@@ -56,24 +67,24 @@ module osd_dem_uart_nasti
    logic                    out_ready;
    logic                    in_valid;
    logic [7:0]              in_char;
-   logic                    in_ready;   
-   
+   logic                    in_ready;
+
    osd_dem_uart_16550
      u_16550(.*);
-   
+
    osd_dem_uart
      u_uart_emul(.*);
 
    assign irq = in_valid;
 
    reg                      resp;
-   
+
    assign aw_ready = !bus_req & !resp & aw_valid & w_valid;
    assign w_ready = !bus_req & !resp & aw_valid & w_valid;
    assign ar_ready = !bus_req & !resp & ar_valid & !aw_ready;
    assign b_valid = resp & bus_write;
    assign r_valid = resp & !bus_write;
-   
+
    assign r_resp = 2'b00;
    assign b_resp = 2'b00;
 

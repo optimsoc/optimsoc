@@ -1,11 +1,10 @@
 CAPI=1
 [main]
-name = opensocdebug:modules:him
+name = opensocdebug:blocks:tracesample
 depend =
-  opensocdebug:blocks:buffer
 
 [fileset src_files]
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  common/osd_him.sv
+  common/osd_tracesample.sv

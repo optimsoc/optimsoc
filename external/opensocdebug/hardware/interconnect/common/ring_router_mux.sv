@@ -1,3 +1,18 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
@@ -10,7 +25,7 @@ module ring_router_mux
    );
 
    enum         { NOWORM, WORM_LOCAL, WORM_RING } state, nxt_state;
-   
+
    always_ff @(posedge clk) begin
       if (rst) begin
          state <= NOWORM;
@@ -26,7 +41,7 @@ module ring_router_mux
       out_mux.last = 'x;
       in_ring_ready = 0;
       in_local_ready = 0;
-      
+
       case (state)
         NOWORM: begin
            if (in_ring.valid) begin
@@ -66,8 +81,8 @@ module ring_router_mux
            if (out_mux.last & out_mux.valid & out_mux_ready) begin
               nxt_state = NOWORM;
            end
-        end          
+        end
       endcase // case (state)
    end
-   
+
 endmodule // ring_router_mux

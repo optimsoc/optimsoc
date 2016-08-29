@@ -1,3 +1,18 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
@@ -44,12 +59,12 @@ module osd_ctm
    logic                   reg_ack;
    logic                   reg_err;
    logic [15:0]            reg_rdata;
-   
+
    logic                   stall;
-   
+
    dii_flit dp_out, dp_in;
    logic                   dp_out_ready, dp_in_ready;
-   
+
    osd_regaccess_layer
      #(.MODID(16'h5), .MODVERSION(16'h0),
        .MAX_REG_SIZE(16), .CAN_STALL(1))
@@ -58,11 +73,21 @@ module osd_ctm
                .module_in_ready (dp_out_ready),
                .module_out (dp_in),
                .module_out_ready (dp_in_ready));
-   
-   assign reg_ack = 1;
-   assign reg_err = 1;
 
-   localparam EW = 3 + 32 + 2 + 64 + 64;
+
+   always @(*) begin
+      reg_ack = 1;
+      reg_rdata = 'x;
+      reg_err = 0;
+
+      case (reg_addr)
+        16'h200: reg_rdata = 16'(ADDR_WIDTH);
+        16'h201: reg_rdata = 16'(DATA_WIDTH);
+        default: reg_err = reg_request;
+      endcase // case (reg_addr)
+   end // always @ (*)
+
+   localparam EW = 3 + 32 + 2 + ADDR_WIDTH + ADDR_WIDTH;
 
    reg [1:0]               prv_reg;
    always_ff @(posedge clk)
@@ -93,7 +118,7 @@ module osd_ctm
                .rst  (rst),
                .enable (1),
                .timestamp (timestamp));
-   
+
    osd_tracesample
      #(.WIDTH(EW))
    u_sample(.clk            (clk),
@@ -115,7 +140,7 @@ module osd_ctm
             .out_data ({packet_overflow, packet_data}),
             .out_valid (packet_valid),
             .out_ready (packet_ready));
-   
+
    osd_trace_packetization
      #(.WIDTH(EW))
    u_packetization(.clk  (clk),
@@ -127,6 +152,6 @@ module osd_ctm
                    .trace_ready (packet_ready),
                    .debug_out (dp_out),
                    .debug_out_ready (dp_out_ready));
-    
-   
+
+
 endmodule // osd_ctm

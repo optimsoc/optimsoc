@@ -1,0 +1,16 @@
+CAPI=1
+[main]
+name = opensocdebug:modules:ctm_mor1kx
+depend =
+  opensocdebug:interfaces:dii_channel
+  opensocdebug:interfaces:mor1kx_trace_exec
+  opensocdebug:blocks:timestamp
+  opensocdebug:blocks:tracesample
+  opensocdebug:blocks:tracepacket
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  or1k/mor1kx/osd_ctm_mor1kx.sv
+  common/osd_ctm.sv

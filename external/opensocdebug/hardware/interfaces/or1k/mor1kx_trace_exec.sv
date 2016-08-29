@@ -12,24 +12,21 @@
 // License.
 //
 // Authors:
-//    Wei Song <ws327@cam.ac.uk>
 //    Stefan Wallentowitz <stefan@wallentowitz.de>
 
-package dii_package;
+package opensocdebug;
 
-   typedef struct packed unsigned {
-      logic       valid;
-      logic       last;
-      logic [15:0] data;
-   } dii_flit;
+   typedef struct packed {
+      logic [31:0] insn;
+      logic [31:0] pc;
+      logic        jb;
+      logic        jal;
+      logic        jr;
+      logic [31:0] jbtarget;
+      logic        valid;
+      logic [31:0] wbdata;
+      logic [4:0]  wbreg;
+      logic        wben;
+   } mor1kx_trace_exec;
 
-   function dii_flit
-     dii_flit_assemble(
-                       input logic        m_valid,
-                       input logic        m_last,
-                       input logic [15:0] m_data
-                       );
-      return dii_flit'{m_valid, m_last, m_data};
-   endfunction
-
-endpackage // dii_package
+endpackage // opensocdebug
