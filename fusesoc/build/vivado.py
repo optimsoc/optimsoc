@@ -78,7 +78,7 @@ class Vivado(Backend):
 
         parameters = ""
         for key, value in self.vlogparam.items():
-            parameters += "set_property generic {{{key}={value}}} [current_fileset -simset]".format(key=key, value=value)
+            parameters += "set_property generic {{{key}={value}}} [current_fileset]".format(key=key, value=value)
 
         # Write the formatted string to the tcl file
         tcl_file.write(PROJECT_TCL_TEMPLATE.format(
@@ -116,7 +116,7 @@ class Vivado(Backend):
     executed in Vivado's batch mode.
     """
     def pgm(self, remaining):
-        tcl_file_name = os.path.join(self.work_root, self.system.name+"_pgm.tcl")
+        tcl_file_name = os.path.join(self.work_root, self.system.sanitized_name+"_pgm.tcl")
         self._write_program_tcl_file(tcl_file_name)
         utils.Launcher('vivado', ['-mode', 'batch', '-source', tcl_file_name ],
                        cwd = self.work_root,
