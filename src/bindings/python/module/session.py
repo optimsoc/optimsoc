@@ -24,7 +24,7 @@
 #   Stefan Wallentowitz <stefan@wallentowitz.de>
 #
 
-from .interface import * 
+from .interface import *
 
 class Module(object):
 	modid = None
@@ -52,8 +52,8 @@ class Memory(Module):
 	def __init__(self, id):
 		super(Memory, self).__init__(id, "MAM")
 
-	def loadelf(self, filename):
-		return python_osd_mem_loadelf(self.modid, filename)
+	def loadelf(self, filename, verify = False):
+		return python_osd_mem_loadelf(self.modid, filename, verify)
 
 class STM(Module):
 	def __init__(self, id):
@@ -69,7 +69,7 @@ class CTM(Module):
 			python_osd_ctm_log_symbols(self.modid, filename, elffile)
 		else:
 			python_osd_ctm_log(self.modid, filename)
-    
+
 class Session(object):
 	memories = []
 	modules = []
@@ -81,7 +81,7 @@ class Session(object):
 
 	def reset(self, halt=False):
 		python_osd_reset(halt)
-	
+
 	def get_memories(self):
 		return self.memories
 
@@ -97,6 +97,6 @@ class Session(object):
 
 	def start(self):
 		python_osd_start()
-		
+
 	def wait(self, secs):
 		python_osd_wait(secs)

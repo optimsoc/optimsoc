@@ -114,7 +114,16 @@ static int interpret(struct osd_context *ctx, char *line) {
                 PRINT_HELP(mem_loadelf);
                 return 0;
             }
-            osd_memory_loadelf(ctx, mem, file, 0);
+
+            int verify = 0;
+            char *option = strtok(NULL, " ");
+            if (CHECK_MATCH(option, "-verify")) {
+                verify = 1;
+            }
+
+            printf("Verify: %d\n", verify);
+
+            osd_memory_loadelf(ctx, mem, file, verify);
         }
     } else if (CHECK_MATCH(cmd, "stm")) {
         char *subcmd = strtok(NULL, " ");

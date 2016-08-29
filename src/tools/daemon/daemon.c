@@ -36,7 +36,10 @@ int main(int argc, char* argv[]) {
 
     osd_new(&ctx, OSD_MODE_STANDALONE, argc-1, options);
 
-    osd_connect(ctx);
+    int rv = osd_connect(ctx);
+    if (rv != OSD_SUCCESS) {
+      ERR("Cannot connect");
+    }
 
     uint16_t systemid, num_modules;
     osd_get_system_identifier(ctx, &systemid);

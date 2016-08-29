@@ -104,6 +104,19 @@ int osd_system_enumerate(struct osd_context *ctx) {
                 osd_reg_read16(ctx, mod->addr, regbase+7, &tmp);
                 mem->regions[j].size |= ((uint64_t) tmp << 48);
             }
+        } else if (mod->type == OSD_MOD_STM) {
+            struct osd_stm_descriptor *stm;
+            stm = calloc(1, sizeof(struct osd_stm_descriptor));
+            mod->descriptor.stm = stm;
+
+            osd_reg_read16(ctx, mod->addr, 0x200, &stm->xlen);
+        } else if (mod->type == OSD_MOD_CTM) {
+            struct osd_ctm_descriptor *ctm;
+            ctm = calloc(1, sizeof(struct osd_ctm_descriptor));
+            mod->descriptor.ctm = ctm;
+
+            osd_reg_read16(ctx, mod->addr, 0x200, &ctm->addr_width);
+            osd_reg_read16(ctx, mod->addr, 0x200, &ctm->data_width);
         }
 
         osd_reg_read16(ctx, mod->addr, 1, &mod->version);
@@ -121,21 +134,39 @@ int osd_get_scm(struct osd_context *ctx, uint16_t *addr) {
     return OSD_SUCCESS;
 }
 
+/**
+ * Get all MAM elements that are available in the system
+ *
+ * @param[in] ctx the context
+ * @param[out] memories an array of memory addresses
+ *                      The memory for this array is initialized in this
+ *                      function and the caller is responsible for freeing it!
+ * @param[out] size number of elements in the @p memories array
+ * @return OSD_SUCCESS on success
+ * @return one of the OSD_E_* constants in case of an error
+ */
 OSD_EXPORT
 int osd_get_memories(struct osd_context *ctx,
-                            uint16_t **memories, size_t *num) {
+                     uint16_t **memories, size_t *num) {
 
-    *num = ctx->system_info->num_memories;
+    uint16_t* memories_i;
+    size_t num_memories_i;
 
-    *memories = malloc(sizeof(uint16_t) * ctx->system_info->num_memories);
+    num_memories_i = ctx->system_info->num_memories;
+    printf("found %d memories in the system\n", num_memories_i);
+
+    memories_i = malloc(sizeof(uint16_t) * num_memories_i);
 
     uint16_t num_mod = ctx->system_info->num_modules;
 
-    for (uint16_t i = 0, m = 0; (i < num_mod) && (m < *num); i++) {
+    for (uint16_t i = 0, m = 0; (i < num_mod) && (m < num_memories_i); i++) {
         if (ctx->system_info->modules[i].type == OSD_MOD_MAM) {
-            *memories[m++] = i;
+            memories_i[m++] = i;
         }
     }
+
+    *memories = memories_i;
+    *num = num_memories_i;
 
     return OSD_SUCCESS;
 }
@@ -147,7 +178,12 @@ int osd_get_memory_descriptor(struct osd_context *ctx, uint16_t addr,
         return OSD_E_GENERIC;
     }
 
-    size_t sz = sizeof(struct osd_memory_descriptor);
+    unsigned num_mem_regions =
+        ctx->system_info->modules[addr].descriptor.memory->num_regions;
+
+    size_t sz = sizeof(struct osd_memory_descriptor)
+        + num_mem_regions * sizeof(uint64_t) * 2;
+
     *desc = malloc(sz);
 
     memcpy(*desc, ctx->system_info->modules[addr].descriptor.memory, sz);
@@ -200,7 +236,18 @@ int osd_print_module_info(struct osd_context *ctx, uint16_t id,
     fprintf(fh, "%sversion: %04x\n", indentstring, mod->version);
 
     struct osd_memory_descriptor *mem;
+    struct osd_stm_descriptor *stm;
+    struct osd_ctm_descriptor *ctm;
     switch (mod->type) {
+        case OSD_MOD_STM:
+            stm = mod->descriptor.stm;
+            fprintf(fh, "%sxlen: %d\n", indentstring, stm->xlen);
+            break;
+        case OSD_MOD_CTM:
+            ctm = mod->descriptor.ctm;
+            fprintf(fh, "%saddr_width: %d\n", indentstring, ctm->addr_width);
+            fprintf(fh, "%sdata_width: %d\n", indentstring, ctm->data_width);
+            break;
         case OSD_MOD_MAM:
             mem = mod->descriptor.memory;
             fprintf(fh, "%sdata width: %d, ", indentstring,

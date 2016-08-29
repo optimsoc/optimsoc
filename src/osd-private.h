@@ -45,6 +45,8 @@ struct osd_module_info {
 
     union {
         struct osd_memory_descriptor *memory;
+        struct osd_stm_descriptor *stm;
+        struct osd_ctm_descriptor *ctm;
     } descriptor;
 };
 

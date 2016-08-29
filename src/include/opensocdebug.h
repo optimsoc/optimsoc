@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-/*
+/**
  * Opaque context object
  *
  * This object contains all state information. Create and initialize a new
@@ -78,6 +78,15 @@ struct osd_memory_descriptor {
         uint64_t base_addr;
         uint64_t size;
     } regions[];
+};
+
+struct osd_stm_descriptor {
+    uint16_t xlen;
+};
+
+struct osd_ctm_descriptor {
+  uint16_t addr_width;
+  uint16_t data_width;
 };
 
 static const int OSD_SUCCESS = 0;

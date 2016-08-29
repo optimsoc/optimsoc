@@ -63,9 +63,10 @@ static const char* help_mem =
         "  loadelf     Load an elf to memory\n";
 
 static const char* help_mem_loadelf =
-        "Usage: mem loadelf <file> <memid>\n"
-        "  file   Filename to load\n"
-        "  memid  Module identifier of memory\n";
+        "Usage: mem loadelf <file> <memid> [-verify]\n"
+        "  file     Filename to load\n"
+        "  memid    Module identifier of memory\n"
+        "  -verify  Verify memory content by reading it back\n";
 
 static const char* help_stm =
         "Available subcommands:\n"
