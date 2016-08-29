@@ -1,10 +1,25 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
 module osd_scm
   #(parameter SYSTEMID='x,
     parameter NUM_MOD='x,
-    parameter MAX_PKT_LEN=0)
+    parameter MAX_PKT_LEN=8)
    (input clk, rst,
 
     input [9:0] id,
@@ -27,13 +42,13 @@ module osd_scm
    logic [1:0]  rst_vector;
    assign sys_rst = rst_vector[0] | rst;
    assign cpu_rst = rst_vector[1] | rst;
-   
+
    osd_regaccess
      #(.MODID(16'h1), .MODVERSION(16'h0),
        .MAX_REG_SIZE(16))
    u_regaccess(.*,
                .stall ());
-   
+
    always @(*) begin
       reg_ack = 1;
       reg_rdata = 'x;
@@ -48,11 +63,12 @@ module osd_scm
       endcase // case (reg_addr)
    end // always @ (*)
 
-   always_ff @(posedge clk)
-     if (rst)
-       rst_vector <= 2'b00;
-     else
-       if (reg_request & reg_write & (reg_addr == 16'h203))
-         rst_vector <= reg_wdata[1:0];
-
+   always @(posedge clk) begin
+      if (rst) begin
+         rst_vector <= 2'b00;
+      end else begin
+         if (reg_request & reg_write & (reg_addr == 16'h203))
+            rst_vector <= reg_wdata[1:0];
+      end
+   end
 endmodule

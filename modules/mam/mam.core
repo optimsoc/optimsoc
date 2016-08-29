@@ -1,11 +1,11 @@
 CAPI=1
 [main]
-name = opensocdebug:modules:him
+name = opensocdebug:modules:mam
 depend =
-  opensocdebug:blocks:buffer
+  opensocdebug:interfaces:dii_channel
 
 [fileset src_files]
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  common/osd_him.sv
+  common/osd_mam.sv

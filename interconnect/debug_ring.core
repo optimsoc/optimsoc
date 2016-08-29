@@ -2,11 +2,11 @@ CAPI=1
 [main]
 name = opensocdebug:interconnect:debug_ring
 
-depend = 
+depend =
   opensocdebug:interfaces:dii_channel
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
   common/debug_ring.sv
@@ -15,4 +15,3 @@ files =
   common/ring_router.sv
   common/ring_router_mux.sv
   common/ring_router_mux_rr.sv
-  

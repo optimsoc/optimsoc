@@ -1,3 +1,19 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
+
 import dii_package::dii_flit;
 
 module osd_regaccess_demux
@@ -7,7 +23,7 @@ module osd_regaccess_demux
 
    output dii_flit out_reg, input out_reg_ready,
    output dii_flit out_bypass, input out_bypass_ready);
-   
+
    reg [16:0] buf_reg;
 
    logic      buf_last;
@@ -20,12 +36,12 @@ module osd_regaccess_demux
 
    logic      in_is_regaccess;
    assign in_is_regaccess = ~|in.data[15:14];
-   
+
    logic      in_transfer, out_transfer;
    assign in_transfer = in.valid & in_ready;
    assign out_transfer = (out_reg.valid & out_reg_ready) |
                          (out_bypass.valid & out_bypass_ready);
-   
+
    // The flit in the register is part of a worm
    reg        worm;
    logic      nxt_worm;
@@ -35,7 +51,7 @@ module osd_regaccess_demux
    // The current worm is a register access
    reg        regaccess;
    logic      nxt_regaccess;
-   
+
    always_ff @(posedge clk) begin
       if (rst) begin
          worm <= 0;
@@ -78,9 +94,8 @@ module osd_regaccess_demux
    assign out_ready = (first & out_ready_first) |
                       (worm & out_ready_worm);
    assign out_ready_first = in_is_regaccess ? out_reg_ready : out_bypass_ready;
-   assign out_ready_worm = regaccess ? out_reg_ready : out_bypass_ready;   
+   assign out_ready_worm = regaccess ? out_reg_ready : out_bypass_ready;
 
    assign in_ready = !active | out_ready;
-   
-endmodule // osd_regaccess_demux
 
+endmodule // osd_regaccess_demux

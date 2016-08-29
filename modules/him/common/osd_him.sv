@@ -1,3 +1,18 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
@@ -86,14 +101,14 @@ module osd_him
             if (dii_egress.valid & glip_out.ready) begin
                egress_active <= 1;
             end
-         end else begin 
-            if (dii_egress_ready & dii_egress.last) begin
+         end else begin
+            if (dii_egress.valid & dii_egress_ready & dii_egress.last) begin
                egress_active <= 0;
             end
          end
       end
    end
-   
+
    dii_buffer
      #(.BUF_SIZE(BUF_SIZE), .FULLPACKET(1))
    u_egress_buffer(.*,
@@ -102,7 +117,6 @@ module osd_him
                    .flit_in_ready (dii_in_ready),
                    .flit_out (dii_egress),
                    .flit_out_ready (dii_egress_ready));
-   
-   
-endmodule // osd_him
 
+
+endmodule // osd_him

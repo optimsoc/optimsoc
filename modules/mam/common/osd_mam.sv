@@ -1,3 +1,19 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
+
 import dii_package::dii_flit;
 
 module osd_mam
@@ -41,7 +57,7 @@ module osd_mam
     output reg [DATA_WIDTH-1:0]   write_data, // Write data
     output reg [DATA_WIDTH/8-1:0] write_strb, // Byte strobe if req_burst==0
     input                         write_ready, // Acknowledge this data item
-   
+
     input                         read_valid, // Next read data is valid
     input [DATA_WIDTH-1:0]        read_data, // Read data
     output reg                    read_ready // Acknowledge this data item
@@ -60,7 +76,7 @@ module osd_mam
 
    dii_flit dp_out, dp_in;
    logic        dp_out_ready, dp_in_ready;
-   
+
    osd_regaccess_layer
      #(.MODID(16'h3), .MODVERSION(16'h0),
        .MAX_REG_SIZE(16), .CAN_STALL(0))
@@ -90,7 +106,7 @@ module osd_mam
    assign mem_size[5] = 64'(MEM_SIZE5);
    assign mem_size[6] = 64'(MEM_SIZE6);
    assign mem_size[7] = 64'(MEM_SIZE7);
-   
+
    always_comb begin
       reg_err = 0;
       reg_rdata = 16'hx;
@@ -135,18 +151,19 @@ module osd_mam
    logic [$clog2(MAX_PKT_LEN)-1:0] nxt_counter;
 
    // This counter is used to count words (that can span packets)
-   reg [$clog2(DATA_WIDTH/16)-1:0] wcounter;
-   logic [$clog2(DATA_WIDTH/16)-1:0] nxt_wcounter;
+   localparam WCOUNTER_WIDTH = (DATA_WIDTH == 16) ? 1 : $clog2(DATA_WIDTH);
+   reg [WCOUNTER_WIDTH-1:0] wcounter;
+   logic [WCOUNTER_WIDTH-1:0] nxt_wcounter;
 
    // Stores whether we are inside a packet
    reg                               in_packet;
    logic                             nxt_in_packet;
-   
+
    // Stores whether the last address flit is the last flit in a packet
    // Decides whether to go to STATE_WRITE or STATE_WRITE_PACKET
    reg                               is_last_flit;
    logic                             nxt_is_last_flit;
-   
+
    // Combinational part of interface
    logic [13:0]                      nxt_req_beats;
    logic                             nxt_req_rw;
@@ -159,7 +176,7 @@ module osd_mam
 
    // This is the number of (16 bit) words needed to form an address
    localparam ADDR_WORDS = ADDR_WIDTH >> 4;
-   
+
    always_ff @(posedge clk) begin
       if (rst) begin
          state <= STATE_INACTIVE;
@@ -191,9 +208,9 @@ module osd_mam
       nxt_write_strb = write_strb;
       nxt_req_rw = req_rw;
       nxt_req_burst = req_burst;
-      
+
       nxt_req_addr = req_addr;
-      
+
       dp_in_ready = 0;
       dp_out.valid = 0;
       dp_out.data = 16'hx;
@@ -277,6 +294,8 @@ module osd_mam
         STATE_WRITE: begin
            nxt_write_data_reg[(DATA_WIDTH/16-wcounter)*16-1 -: 16] = dp_in.data;
            write_data[(DATA_WIDTH/16-wcounter)*16-1 -: 16] = dp_in.data;
+           //nxt_write_data_reg[(wcounter+1)*16-1 -: 16] = dp_in.data;
+           //write_data[(wcounter+1)*16-1 -: 16] = dp_in.data;
            dp_in_ready = 1;
            if (dp_in.valid) begin
               nxt_wcounter = wcounter + 1;
@@ -360,11 +379,12 @@ module osd_mam
               dp_out.valid = 1;
               dp_out.last = (counter == MAX_PKT_LEN-1) ||
                             ((wcounter == DATA_WIDTH/16 - 1) && (req_beats == 1));
-              dp_out.data = read_data[DATA_WIDTH-wcounter*16-1 -: 16];
+              dp_out.data = read_data[(DATA_WIDTH/16-wcounter)*16-1 -: 16];
               if (dp_out_ready) begin
+                 nxt_wcounter = wcounter + 1;
                  if (wcounter == DATA_WIDTH/16-1) begin
                     nxt_req_beats = req_beats - 1;
-
+                    nxt_wcounter = 0;
                     read_ready = 1;
 
                     if (req_beats == 1) begin
@@ -390,6 +410,6 @@ module osd_mam
         end
       endcase
    end
-   
-   
+
+
 endmodule // osd_dem_uart

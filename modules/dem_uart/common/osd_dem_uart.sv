@@ -1,3 +1,18 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
@@ -31,13 +46,13 @@ module osd_dem_uart
    assign reg_ack = 0;
    assign reg_err = 0;
    assign reg_rdata = 0;
-   
+
    logic        stall;
    assign drop = stall;
 
    dii_flit c_uart_out, c_uart_in;
    logic        c_uart_out_ready, c_uart_in_ready;
-   
+
    osd_regaccess_layer
      #(.MODID(16'h2), .MODVERSION(16'h0),
        .MAX_REG_SIZE(16), .CAN_STALL(1))
@@ -47,7 +62,7 @@ module osd_dem_uart
                .module_out (c_uart_in),
                .module_out_ready (c_uart_in_ready));
 
-   enum         { STATE_IDLE, STATE_HEADER, STATE_XFER } stateTx, stateRx;   
+   enum         { STATE_IDLE, STATE_HEADER, STATE_XFER } stateTx, stateRx;
    always @(posedge clk) begin
       if (rst) begin
          stateTx <= STATE_IDLE;
@@ -96,7 +111,7 @@ module osd_dem_uart
       c_uart_out.last = 0;
       c_uart_out.data = 'x;
       out_ready = 0;
-                  
+
       case (stateTx)
         STATE_IDLE: begin
            c_uart_out.valid = out_valid & !stall;
@@ -132,7 +147,5 @@ module osd_dem_uart
         end
       endcase
    end
-   
-endmodule // osd_dem_uart
 
-   
+endmodule // osd_dem_uart

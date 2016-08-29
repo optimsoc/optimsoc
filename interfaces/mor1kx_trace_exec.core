@@ -1,11 +1,9 @@
 CAPI=1
 [main]
-name = opensocdebug:modules:him
-depend =
-  opensocdebug:blocks:buffer
+name = opensocdebug:interfaces:mor1kx_trace_exec
 
 [fileset src_files]
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  common/osd_him.sv
+  or1k/mor1kx_trace_exec.sv

@@ -1,3 +1,18 @@
+// Copyright 2016 by the authors
+//
+// Copyright and related rights are licensed under the Solderpad
+// Hardware License, Version 0.51 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a
+// copy of the License at http://solderpad.org/licenses/SHL-0.51.
+// Unless required by applicable law or agreed to in writing,
+// software, hardware and materials distributed under this License is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+//
+// Authors:
+//    Stefan Wallentowitz <stefan@wallentowitz.de>
 
 import dii_package::dii_flit;
 
@@ -40,14 +55,14 @@ module osd_regaccess
    logic        nxt_mod_cs_stall;
 
    assign stall = CAN_STALL ? mod_cs_stall : 0;
-   
+
    // State machine
    enum {
          STATE_IDLE, STATE_START, STATE_ADDR, STATE_WRITE,
          STATE_RESP_START, STATE_RESP_SRC, STATE_RESP_VALUE,
          STATE_DROP, STATE_EXT_START, STATE_EXT_WAIT
          } state, nxt_state;
-        
+
    // Local request/response data
    reg                      req_write;
    reg [1:0]                req_size;
@@ -71,7 +86,7 @@ module osd_regaccess
    assign reg_addr = req_addr;
    assign reg_size = req_size;
    assign reg_wdata = reqresp_value;
-   
+
    always @(posedge clk) begin
       if (rst) begin
          state <= STATE_IDLE;
@@ -87,7 +102,7 @@ module osd_regaccess
       req_size <= nxt_req_size;
       req_addr <= nxt_req_addr;
    end
-   
+
    always @(*) begin
       nxt_state = state;
 
@@ -99,12 +114,12 @@ module osd_regaccess
       nxt_resp_error = resp_error;
 
       nxt_mod_cs_stall = mod_cs_stall;
-      
+
       debug_in_ready = 0;
       debug_out = 0;
 
       reg_request = 0;
-      
+
       case (state)
         STATE_IDLE: begin
            debug_in_ready = 1;
@@ -118,7 +133,7 @@ module osd_regaccess
            nxt_req_size = debug_in.data[11:10];
            nxt_resp_dest = debug_in.data[9:0];
            nxt_resp_error = 0;
-           
+
            if (debug_in.valid) begin
               if (|debug_in.data[15:14]) begin
                  nxt_state = STATE_DROP;
@@ -181,7 +196,7 @@ module osd_regaccess
         end // case: STATE_ADDR
         STATE_WRITE: begin
            debug_in_ready = 1;
-          
+
            if (debug_in.valid) begin
               nxt_reqresp_value = debug_in.data;
               if (req_addr[15:9] != 0) begin
@@ -203,7 +218,7 @@ module osd_regaccess
                       end
                    end
                  endcase // case (req_addr)
-                 
+
                  if (debug_in.last) begin
                     nxt_state = STATE_RESP_START;
                  end else begin

@@ -1,6 +1,6 @@
 CAPI=1
 [main]
-name = opensocdebug:blocks:buffer
+name = opensocdebug:blocks:tracepacket
 
 depend =
    opensocdebug:interfaces:dii_channel
@@ -9,5 +9,4 @@ depend =
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  common/dii_buffer.sv
-  common/osd_fifo.sv
+  common/osd_trace_packetization.sv
