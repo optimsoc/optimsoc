@@ -39,6 +39,7 @@
 
 import dii_package::dii_flit;
 import opensocdebug::mor1kx_trace_exec;
+import optimsoc::*;
 
 module tb_system_2x2_ccc_cam(
 `ifdef verilator
@@ -48,15 +49,25 @@ module tb_system_2x2_ccc_cam(
    );
 
    parameter USE_DEBUG = 0;
-
    parameter NUM_CORES = 1;
+   
+   localparam base_config_t
+      BASE_CONFIG = '{ NUMCTS: 3,
+                       CTLIST: {{60{16'hx}}, 16'h2, 16'h1, 16'h0},
+                       CORES_PER_TILE: NUM_CORES,
+                       GMEM_SIZE: 0,
+                       GMEM_TILE: 'x,
+                       NOC_DATA_WIDTH: 32,
+                       NOC_TYPE_WIDTH: 2,
+                       NOC_VCHANNELS: 3,
+                       MEMORY_ACCESS: DISTRIBUTED,
+                       LMEM_SIZE: 32*1024*1024,
+                       USE_DEBUG: 1'(USE_DEBUG),
+                       DEBUG_STM: 1,
+                       DEBUG_CTM: 1
+      };
 
-   // NoC parameters
-   parameter NOC_FLIT_DATA_WIDTH = 32;
-   parameter NOC_FLIT_TYPE_WIDTH = 2;
-   localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH + NOC_FLIT_TYPE_WIDTH;
-
-   parameter VCHANNELS = 3;
+   localparam config_t CONFIG = derive_config(BASE_CONFIG);
 
    logic rst_sys, rst_cpu;
 
@@ -149,9 +160,7 @@ module tb_system_2x2_ccc_cam(
 
 
    system_2x2_ccc_cam_dm
-      #(.USE_DEBUG(USE_DEBUG),
-        .CORES(NUM_CORES),
-        .MEM_SIZE(32 * 1024 * 1024 /* 32 MB = 128 MB/4; 32 MB are unused at the moment */))
+      #(.CONFIG(CONFIG))
       u_system(
          .clk (clk),
          .rst (rst | logic_rst),
@@ -186,8 +195,6 @@ module tb_system_2x2_ccc_cam(
    initial begin
       clk = 1'b1;
       rst = 1'b1;
-      noc_out_ready = {VCHANNELS{1'b1}};
-      noc_in_valid = '0;
       #15;
       rst = 1'b0;
    end

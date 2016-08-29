@@ -31,22 +31,9 @@
 `include "dbg_config.vh"
 
 import dii_package::dii_flit;
+import optimsoc::*;
 
-module system_2x2_ccc_cam_dm
-  #(// NoC parameters
-    parameter NOC_DATA_WIDTH = 32,
-    parameter NOC_TYPE_WIDTH = 2,
-    parameter VCHANNELS = `VCHANNELS,
-
-    // compute tile parameters
-    parameter MEM_FILE = "ct.vmem",
-    parameter MEM_SIZE = 1*1024*1024, // 1 MByte
-
-    parameter CORES = 1,
-
-    parameter USE_DEBUG = 1
-    )
-   (
+module system_2x2_ccc_cam_dm(
 	input clk, rst,
 
 	// external inputs for camera module
@@ -78,20 +65,9 @@ module system_2x2_ccc_cam_dm
    input [4*1-1:0]   wb_mem_err_o,
    input [4*32-1:0]  wb_mem_dat_o
 `endif
-
-	
-
-
     );
 
-   localparam NOC_FLIT_WIDTH = NOC_DATA_WIDTH + NOC_TYPE_WIDTH;
-
-   localparam DEBUG_MODS_PER_CORE = 2;
-   localparam DEBUG_MODS_PER_TILE = CORES * DEBUG_MODS_PER_CORE + 1;
-   localparam DEBUG_MODS = 3 * DEBUG_MODS_PER_TILE;
-
-   localparam NUMCTS = 32'h3;
-   localparam [NUMCTS*16-1:0] CTLIST = {16'h0, 16'h1, 16'h2};
+   parameter config_t CONFIG = 'x;
 
    dii_flit [1:0] debug_ring_in [0:2];
    dii_flit [1:0] debug_ring_out [0:2];
@@ -103,7 +79,7 @@ module system_2x2_ccc_cam_dm
    debug_interface
       #(
          .SYSTEMID    (1),
-         .NUM_MODULES (DEBUG_MODS)
+         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS)
       )
       u_debuginterface
         (
@@ -126,14 +102,14 @@ module system_2x2_ccc_cam_dm
    assign debug_ring_out_ready[1] = debug_ring_in_ready[2];
 
    // Flits from NoC->tiles
-   wire [NOC_FLIT_WIDTH-1:0] link_in_flit[0:3];
-   wire [VCHANNELS-1:0]      link_in_valid[0:3];
-   wire [VCHANNELS-1:0]      link_in_ready[0:3];
+   wire [CONFIG.NOC_FLIT_WIDTH-1:0] link_in_flit[0:3];
+   wire [CONFIG.NOC_VCHANNELS-1:0] link_in_valid[0:3];
+   wire [CONFIG.NOC_VCHANNELS-1:0] link_in_ready[0:3];
 
    // Flits from tiles->NoC
-   wire [NOC_FLIT_WIDTH-1:0] link_out_flit[0:3];
-   wire [VCHANNELS-1:0]      link_out_valid[0:3];
-   wire [VCHANNELS-1:0]      link_out_ready[0:3];
+   wire [CONFIG.NOC_FLIT_WIDTH-1:0]   link_out_flit[0:3];
+   wire [CONFIG.NOC_VCHANNELS-1:0] link_out_valid[0:3];
+   wire [CONFIG.NOC_VCHANNELS-1:0] link_out_ready[0:3];
 
    /* lisnoc_mesh2x2 AUTO_TEMPLATE(
     .link\(.*\)_in_\(.*\)_.* (link_out_\2[\1]),
@@ -142,7 +118,7 @@ module system_2x2_ccc_cam_dm
     .rst(rst_sys),
     ); */
    lisnoc_mesh2x2
-      #(.vchannels(VCHANNELS),.in_fifo_length(2),.out_fifo_length(2))
+      #(.vchannels(CONFIG.NOC_VCHANNELS),.in_fifo_length(2),.out_fifo_length(2))
       u_mesh(/*AUTOINST*/
              // Outputs
              .link0_in_ready_o          (link_out_ready[0]),     // Templated
@@ -177,15 +153,9 @@ module system_2x2_ccc_cam_dm
    generate
       for (i=0; i<3; i=i+1) begin : gen_ct
          compute_tile_dm
-            #(.ID(i),
-              .CORES(CORES),
-              .COREBASE(i*CORES),
-              .MEM_SIZE(MEM_SIZE),
-              .MEM_FILE(MEM_FILE),
-              .USE_DEBUG(USE_DEBUG),
-              .DEBUG_BASEID(2+i*DEBUG_MODS_PER_TILE),
-              .NUMCTS(NUMCTS),
-              .CTLIST(CTLIST))
+            #(.CONFIG(CONFIG),
+              .ID(i),
+              .DEBUG_BASEID(2+i*CONFIG.DEBUG_MODS_PER_TILE))
          u_ct(.clk                        (clk),
               .rst_cpu                    (rst_cpu),
               .rst_sys                    (rst_sys),
@@ -211,13 +181,13 @@ module system_2x2_ccc_cam_dm
               .wb_mem_bte_i               (wb_mem_bte_i[(i+1)*2-1:i*2]),
 `endif //  `ifdef OPTIMSOC_CTRAM_WIRES
 
-              .noc_in_ready               (link_in_ready[i][VCHANNELS-1:0]),
-              .noc_out_flit               (link_out_flit[i][NOC_FLIT_WIDTH-1:0]),
-              .noc_out_valid              (link_out_valid[i][VCHANNELS-1:0]),
+              .noc_in_ready               (link_in_ready[i][CONFIG.NOC_VCHANNELS-1:0]),
+              .noc_out_flit               (link_out_flit[i][CONFIG.NOC_FLIT_WIDTH-1:0]),
+              .noc_out_valid              (link_out_valid[i][CONFIG.NOC_VCHANNELS-1:0]),
 
-              .noc_in_flit                (link_in_flit[i][NOC_FLIT_WIDTH-1:0]),
-              .noc_in_valid               (link_in_valid[i][VCHANNELS-1:0]),
-              .noc_out_ready              (link_out_ready[i][VCHANNELS-1:0]));
+              .noc_in_flit                (link_in_flit[i][CONFIG.NOC_FLIT_WIDTH-1:0]),
+              .noc_in_valid               (link_in_valid[i][CONFIG.NOC_VCHANNELS-1:0]),
+              .noc_out_ready              (link_out_ready[i][CONFIG.NOC_VCHANNELS-1:0]));
       end
    endgenerate
 
@@ -227,18 +197,18 @@ module system_2x2_ccc_cam_dm
 			// Inputs
 			.clk(clk),
 			.rst(rst_sys),
-			.noc_in_flit(link_in_flit[3][NOC_FLIT_WIDTH-1:0]),
-			.noc_in_valid(link_in_valid[3][VCHANNELS-1:0]),
-			.noc_out_ready(link_out_ready[3][VCHANNELS-1:0]),
+			.noc_in_flit(link_in_flit[3][CONFIG.NOC_FLIT_WIDTH-1:0]),
+			.noc_in_valid(link_in_valid[3][CONFIG.NOC_VCHANNELS-1:0]),
+			.noc_out_ready(link_out_ready[3][CONFIG.NOC_VCHANNELS-1:0]),
 			// External Inputs
 			.PCLK(PCLK),
 			.VSYNC(VSYNC),
 			.HREF(HREF),
 			.D(D),
 			// Outputs
-			.noc_in_ready(link_in_ready[3][VCHANNELS-1:0]),
-			.noc_out_flit(link_out_flit[3][NOC_FLIT_WIDTH-1:0]),
-			.noc_out_valid(link_out_valid[3][VCHANNELS-1:0]),
+			.noc_in_ready(link_in_ready[3][CONFIG.NOC_VCHANNELS-1:0]),
+			.noc_out_flit(link_out_flit[3][CONFIG.NOC_FLIT_WIDTH-1:0]),
+			.noc_out_valid(link_out_valid[3][CONFIG.NOC_VCHANNELS-1:0]),
 			// External Outputs
 			.SIOC(SIOC),
 			.SIOD(SIOD),
@@ -252,6 +222,6 @@ endmodule
 `include "lisnoc_undef.vh"
 
 // Local Variables:
-// verilog-library-directories:("../../../../../lisnoc/rtl/meshs/" "../../*/verilog")
+// verilog-library-directories:("../../../../../external/lisnoc/rtl/meshs/" "../../*/verilog")
 // verilog-auto-inst-param-value: t
 // End:

@@ -6,6 +6,7 @@ depend =
   optimsoc:tile:camera_emulator
   optimsoc:trace_monitor:trace_monitor
   glip:backend:tcp
+  optimsoc:base:config
 
 simulators = verilator xsim
 

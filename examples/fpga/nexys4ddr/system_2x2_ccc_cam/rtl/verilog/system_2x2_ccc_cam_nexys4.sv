@@ -31,6 +31,7 @@
 `include "optimsoc_def.vh"
 
 import dii_package::dii_flit;
+import optimsoc::*;
 
 module system_2x2_ccc_cam_nexys4
   (
@@ -97,10 +98,24 @@ module system_2x2_ccc_cam_nexys4
    localparam DDR_DATA_WIDTH = 32;
    localparam TILE_ADDR_WIDTH = 25;
 
-   localparam NOC_FLIT_DATA_WIDTH = 32;
-   localparam NOC_FLIT_TYPE_WIDTH = 2;
-   localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH+NOC_FLIT_TYPE_WIDTH;
-   localparam VCHANNELS = `VCHANNELS;
+
+   localparam base_config_t
+      BASE_CONFIG = '{ NUMCTS: 3,
+                       CTLIST: {{60{16'hx}}, 16'h2, 16'h1, 16'h0},
+                       CORES_PER_TILE: 1,
+                       GMEM_SIZE: 0,
+                       GMEM_TILE: 'x,
+                       NOC_DATA_WIDTH: 32,
+                       NOC_TYPE_WIDTH: 2,
+                       NOC_VCHANNELS: 3,
+                       MEMORY_ACCESS: DISTRIBUTED,
+                       LMEM_SIZE: 32*1024*1024,
+                       USE_DEBUG: 1,
+                       DEBUG_STM: 1,
+                       DEBUG_CTM: 1
+      };
+
+   localparam config_t CONFIG = derive_config(BASE_CONFIG);
 
    nasti_channel
      #(.ID_WIDTH   (0),
@@ -132,17 +147,6 @@ module system_2x2_ccc_cam_nexys4
 
    // UART signals (naming from our point of view, i.e. from the DCE)
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
-
-   // terminate NoC connection
-   logic [NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   logic [VCHANNELS-1:0] noc_in_valid;
-   logic [VCHANNELS-1:0] noc_in_ready;
-   logic [NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   logic [VCHANNELS-1:0] noc_out_valid;
-   logic [VCHANNELS-1:0] noc_out_ready;
-
-   assign noc_in_valid = 0;
-   assign noc_out_ready = 0;
 
 
    // Generate 24 MHz clock for camera out of 50 MHZ sys_clk
@@ -201,10 +205,7 @@ module system_2x2_ccc_cam_nexys4
    // Single compute tile with all memory mapped to the DRAM
    system_2x2_ccc_cam_dm
       #(
-         .VCHANNELS(VCHANNELS),
-         .USE_DEBUG(1),
-         .CORES(1),
-         .MEM_SIZE(32 * 1024 * 1024) // Nexys 4 DDR has 128 MiB DRAM, each tile 32
+         .CONFIG(CONFIG)
       )
       u_system
         (
