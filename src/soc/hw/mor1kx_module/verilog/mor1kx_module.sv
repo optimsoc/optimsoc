@@ -28,95 +28,71 @@
 
 `include "dbg_config.vh"
 
-module mor1kx_module (
-   /*AUTOARG*/
-   // Outputs
-   dbg_lss_o, dbg_is_o, dbg_wp_o, dbg_bp_o, dbg_dat_o, dbg_ack_o,
-   iwb_cyc_o, iwb_adr_o, iwb_stb_o, iwb_we_o, iwb_sel_o, iwb_dat_o,
-   iwb_bte_o, iwb_cti_o, dwb_cyc_o, dwb_adr_o, dwb_stb_o, dwb_we_o,
-   dwb_sel_o, dwb_dat_o, dwb_bte_o, dwb_cti_o, trace,
-   // Inputs
-   clk_i, bus_clk_i, rst_i, bus_rst_i, dbg_stall_i, dbg_ewt_i,
-   dbg_stb_i, dbg_we_i, dbg_adr_i, dbg_dat_i, pic_ints_i, iwb_ack_i,
-   iwb_err_i, iwb_rty_i, iwb_dat_i, dwb_ack_i, dwb_err_i, dwb_rty_i,
-   dwb_dat_i, snoop_enable_i, snoop_adr_i
-   );
+import opensocdebug::mor1kx_trace_exec;
 
-   parameter ID = 0;
-   parameter NUMCORES = 1;
-   
-   parameter CPU_IMPLEMENTATION = "CAPPUCCINO";
+module mor1kx_module
+  #(parameter ID = 0,
+    parameter NUMCORES = 1,
+    parameter CPU_IMPLEMENTATION = "CAPPUCCINO"
+    )
+   (input          clk_i,
+    input         bus_clk_i,
+    input         rst_i,
+    input         bus_rst_i,
 
-   input          clk_i;
-   input          bus_clk_i;
-   input          rst_i;
-   input          bus_rst_i;
+    input         dbg_stall_i, // External Stall Input
+    input         dbg_ewt_i, // External Watchpoint Trigger Input
+    output [3:0]  dbg_lss_o, // External Load/Store Unit Status
+    output [1:0]  dbg_is_o, // External Insn Fetch Status
+    output [10:0] dbg_wp_o, // Watchpoints Outputs
+    output        dbg_bp_o, // Breakpoint Output
+    input         dbg_stb_i, // External Address/Data Strobe
+    input         dbg_we_i, // External Write Enable
+    input [31:0]  dbg_adr_i, // External Address Input
+    input [31:0]  dbg_dat_i, // External Data Input
+    output [31:0] dbg_dat_o, // External Data Output
+    output        dbg_ack_o, // External Data Acknowledge (not WB compatible)
 
-   input          dbg_stall_i;  // External Stall Input
-   input          dbg_ewt_i;    // External Watchpoint Trigger Input
-   output [3:0]   dbg_lss_o;    // External Load/Store Unit Status
-   output [1:0]   dbg_is_o;     // External Insn Fetch Status
-   output [10:0]  dbg_wp_o;     // Watchpoints Outputs
-   output         dbg_bp_o;     // Breakpoint Output
-   input          dbg_stb_i;     // External Address/Data Strobe
-   input          dbg_we_i;      // External Write Enable
-   input [31:0]   dbg_adr_i;    // External Address Input
-   input [31:0]   dbg_dat_i;    // External Data Input
-   output [31:0]  dbg_dat_o;    // External Data Output
-   output         dbg_ack_o;    // External Data Acknowledge (not WB compatible)
-
-   input [31:0]   pic_ints_i;
+    input [31:0]  pic_ints_i,
 
    //
    // Instruction WISHBONE interface
    //
-   input           iwb_ack_i;   // normal termination
-   input           iwb_err_i;   // termination w/ error
-   input           iwb_rty_i;   // termination w/ retry
-   input [31:0]    iwb_dat_i;   // input data bus
-   output          iwb_cyc_o;   // cycle valid output
-   output [31:0]   iwb_adr_o;   // address bus outputs
-   output          iwb_stb_o;   // strobe output
-   output          iwb_we_o;    // indicates write transfer
-   output [3:0]    iwb_sel_o;   // byte select outputs
-   output [31:0]   iwb_dat_o;   // output data bus
-   output [1:0]    iwb_bte_o;
-   output [2:0]    iwb_cti_o;
+    input         iwb_ack_i, // normal termination
+    input         iwb_err_i, // termination w/ error
+    input         iwb_rty_i, // termination w/ retry
+    input [31:0]  iwb_dat_i, // input data bus
+    output        iwb_cyc_o, // cycle valid output
+    output [31:0] iwb_adr_o, // address bus outputs
+    output        iwb_stb_o, // strobe output
+    output        iwb_we_o, // indicates write transfer
+    output [3:0]  iwb_sel_o, // byte select outputs
+    output [31:0] iwb_dat_o, // output data bus
+    output [1:0]  iwb_bte_o,
+    output [2:0]  iwb_cti_o,
 
    //
    // Data WISHBONE interface
    //
-   input           dwb_ack_i;   // normal termination
-   input           dwb_err_i;   // termination w/ error
-   input           dwb_rty_i;   // termination w/ retry
-   input [31:0]    dwb_dat_i;   // input data bus
-   output          dwb_cyc_o;   // cycle valid output
-   output [31:0]   dwb_adr_o;   // address bus outputs
-   output          dwb_stb_o;   // strobe output
-   output          dwb_we_o;    // indicates write transfer
-   output [3:0]    dwb_sel_o;   // byte select outputs
-   output [31:0]   dwb_dat_o;   // output data bus
-   output [1:0]    dwb_bte_o;
-   output [2:0]    dwb_cti_o;
+    input         dwb_ack_i, // normal termination
+    input         dwb_err_i, // termination w/ error
+    input         dwb_rty_i, // termination w/ retry
+    input [31:0]  dwb_dat_i, // input data bus
+    output        dwb_cyc_o, // cycle valid output
+    output [31:0] dwb_adr_o, // address bus outputs
+    output        dwb_stb_o, // strobe output
+    output        dwb_we_o, // indicates write transfer
+    output [3:0]  dwb_sel_o, // byte select outputs
+    output [31:0] dwb_dat_o, // output data bus
+    output [1:0]  dwb_bte_o,
+    output [2:0]  dwb_cti_o,
 
-   input           snoop_enable_i;
-   input [31:0]    snoop_adr_i;
+    input         snoop_enable_i,
+    input [31:0]  snoop_adr_i,
 
-   output [`DEBUG_TRACE_EXEC_WIDTH-1:0] trace;
+    output mor1kx_trace_exec trace_exec
+    );
 
-   wire [31:0]                          traceport_exec_insn_o;// From u_cpu of mor1kx.v
-   wire [31:0]                          traceport_exec_pc_o;    // From u_cpu of mor1kx.v
-   wire                                 traceport_exec_valid_o; // From u_cpu of mor1kx.v
-   wire [31:0]                          traceport_exec_wbdata_o;// From u_cpu of mor1kx.v
-   wire                                 traceport_exec_wben_o;  // From u_cpu of mor1kx.v
-   wire [4:0]                           traceport_exec_wbreg_o;// From u_cpu of mor1kx.v
-
-   assign trace[`DEBUG_TRACE_EXEC_ENABLE_MSB]                              = traceport_exec_valid_o;
-   assign trace[`DEBUG_TRACE_EXEC_PC_MSB:`DEBUG_TRACE_EXEC_PC_LSB]         = traceport_exec_pc_o;
-   assign trace[`DEBUG_TRACE_EXEC_INSN_MSB:`DEBUG_TRACE_EXEC_INSN_LSB]     = traceport_exec_insn_o;
-   assign trace[`DEBUG_TRACE_EXEC_WBEN_MSB]                                = traceport_exec_wben_o;
-   assign trace[`DEBUG_TRACE_EXEC_WBREG_MSB:`DEBUG_TRACE_EXEC_WBREG_LSB]   = traceport_exec_wbreg_o;
-   assign trace[`DEBUG_TRACE_EXEC_WBDATA_MSB:`DEBUG_TRACE_EXEC_WBDATA_LSB] = traceport_exec_wbdata_o;
 
    /* mor1kx AUTO_TEMPLATE(
     .clk (clk_i),
@@ -128,16 +104,16 @@ module mor1kx_module (
     .du_\(.*\) (dbg_\1[]),
 
     .irq_i                      (pic_ints_i),
-    
+
     .avm_.*_o (),
     .avm_d_readdata_i (32'h0),
     .avm_i_readdata_i (32'h0),
     .avm_.*_i (1'h0),
-    
+
     .multicore_coreid_i (ID),
     .multicore_numcores_i (NUMCORES),
-    .traceport_\(.*\) (traceport_\1),
-    
+    .traceport_exec_\(.*\)_o (trace_exec.\1),
+
     .snoop_en_i (snoop_enable_i),
 
     ); */
@@ -192,12 +168,16 @@ module mor1kx_module (
            .du_dat_o                    (dbg_dat_o[31:0]),       // Templated
            .du_ack_o                    (dbg_ack_o),             // Templated
            .du_stall_o                  (dbg_stall_o),           // Templated
-           .traceport_exec_valid_o      (traceport_exec_valid_o), // Templated
-           .traceport_exec_pc_o         (traceport_exec_pc_o),   // Templated
-           .traceport_exec_insn_o       (traceport_exec_insn_o), // Templated
-           .traceport_exec_wbdata_o     (traceport_exec_wbdata_o), // Templated
-           .traceport_exec_wbreg_o      (traceport_exec_wbreg_o), // Templated
-           .traceport_exec_wben_o       (traceport_exec_wben_o), // Templated
+           .traceport_exec_valid_o      (trace_exec.valid),      // Templated
+           .traceport_exec_pc_o         (trace_exec.pc),         // Templated
+           .traceport_exec_jb_o         (trace_exec.jb),         // Templated
+           .traceport_exec_jal_o        (trace_exec.jal),        // Templated
+           .traceport_exec_jr_o         (trace_exec.jr),         // Templated
+           .traceport_exec_jbtarget_o   (trace_exec.jbtarget),   // Templated
+           .traceport_exec_insn_o       (trace_exec.insn),       // Templated
+           .traceport_exec_wbdata_o     (trace_exec.wbdata),     // Templated
+           .traceport_exec_wbreg_o      (trace_exec.wbreg),      // Templated
+           .traceport_exec_wben_o       (trace_exec.wben),       // Templated
            // Inputs
            .clk                         (clk_i),                 // Templated
            .rst                         (rst_i),                 // Templated

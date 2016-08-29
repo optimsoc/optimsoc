@@ -1,10 +1,12 @@
 CAPI=1
 [main]
 name = optimsoc:core:mor1kx_module
-depend = openrisc:mor1kx:cappuccino
+depend =
+  openrisc:mor1kx:cappuccino
+  opensocdebug:interfaces:mor1kx_trace_exec
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/mor1kx_module.v
+  verilog/mor1kx_module.sv

@@ -30,6 +30,7 @@
 `include "optimsoc_def.vh"
 
 import dii_package::dii_flit;
+import optimsoc::*;
 
 module compute_tile_dm_nexys4
   (
@@ -61,14 +62,29 @@ module compute_tile_dm_nexys4
    output                ddr2_we_n
    );
 
+   parameter NUM_CORES = 1;
+
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 28;
    localparam DDR_DATA_WIDTH = 32;
 
-   localparam NOC_FLIT_DATA_WIDTH = 32;
-   localparam NOC_FLIT_TYPE_WIDTH = 2;
-   localparam NOC_FLIT_WIDTH = NOC_FLIT_DATA_WIDTH+NOC_FLIT_TYPE_WIDTH;
-   localparam VCHANNELS = `VCHANNELS;
+   localparam base_config_t
+     BASE_CONFIG = '{ NUMCTS: 1,
+                      CTLIST: {{63{16'hx}}, 16'h0},
+                      CORES_PER_TILE: NUM_CORES,
+                      GMEM_SIZE: 0,
+                      GMEM_TILE: 'x,
+                      NOC_DATA_WIDTH: 32,
+                      NOC_TYPE_WIDTH: 2,
+                      NOC_VCHANNELS: 3,
+                      MEMORY_ACCESS: DISTRIBUTED,
+                      LMEM_SIZE: 128*1024*1024,
+                      USE_DEBUG: 1,
+                      DEBUG_STM: 1,
+                      DEBUG_CTM: 1
+                      };
+
+   localparam config_t CONFIG = derive_config(BASE_CONFIG);
 
    nasti_channel
      #(.ID_WIDTH   (AXI_ID_WIDTH),
@@ -95,12 +111,12 @@ module compute_tile_dm_nexys4
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
 
    // terminate NoC connection
-   logic [NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   logic [VCHANNELS-1:0] noc_in_valid;
-   logic [VCHANNELS-1:0] noc_in_ready;
-   logic [NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   logic [VCHANNELS-1:0] noc_out_valid;
-   logic [VCHANNELS-1:0] noc_out_ready;
+   logic [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_in_valid;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready;
+   logic [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_out_valid;
+   logic [CONFIG.NOC_VCHANNELS-1:0] noc_out_ready;
 
    assign noc_in_valid = 0;
    assign noc_out_ready = 0;
@@ -109,11 +125,6 @@ module compute_tile_dm_nexys4
    glip_channel c_glip_in(.clk(sys_clk));
    glip_channel c_glip_out(.clk(sys_clk));
 
-   dii_flit debug_ring_in;
-   logic debug_ring_in_ready;
-   dii_flit debug_ring_out;
-   logic debug_ring_out_ready;
-
    // XXX: does the HIM support hot-attach by now?
    // See discussion in system_2x2_cccc_ztex
    logic glip_com_rst, glip_ctrl_logic_rst;
@@ -121,8 +132,9 @@ module compute_tile_dm_nexys4
    // Off-chip UART communication interface for debug
    glip_uart_toplevel
       #(.FREQ_CLK_IO(50000000),
-        .BAUD(115200),
+        .BAUD(12000000),
         .WIDTH(16),
+        .BUFFER_OUT_DEPTH(256*1024),
         .XILINX_TARGET_DEVICE("7SERIES"))
       u_glip(
          .clk_io(sys_clk),
@@ -146,38 +158,43 @@ module compute_tile_dm_nexys4
          .uart_cts_n(uart_cts_n)
       );
 
-   // Debug interface
+   logic dbg_sys_rst, dbg_cpu_rst;
+
+   dii_flit [1:0] debug_ring_in;
+   dii_flit [1:0] debug_ring_out;
+   logic [1:0] debug_ring_in_ready;
+   logic [1:0] debug_ring_out_ready;
+
    debug_interface
-     #(.SYSTEMID    (1),
-       .NUM_MODULES (0))
-     u_debuginterface
-       (.clk             (sys_clk),
-        .rst             (sys_rst),
-        .sys_rst         (),
-        .cpu_rst         (),
-        .glip_in         (c_glip_in),
-        .glip_out        (c_glip_out),
-        .debug_out       (debug_ring_in),
-        .debug_out_ready (debug_ring_in_ready),
-        .debug_in        (debug_ring_out),
-        .debug_in_ready  (debug_ring_out_ready));
-
-   assign debug_ring_out = debug_ring_in;
-   assign debug_ring_in_ready = debug_ring_out_ready;
-
-   // XXX: Add system trace and other debug modules to compute tile
+      #(
+         .SYSTEMID    (1),
+         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS)
+      )
+      u_debuginterface
+        (
+         .clk            (sys_clk),
+         .rst            (sys_rst),
+         .sys_rst        (dbg_sys_rst),
+         .cpu_rst        (dbg_cpu_rst),
+         .glip_in        (c_glip_in),
+         .glip_out       (c_glip_out),
+         .ring_out       (debug_ring_in),
+         .ring_out_ready (debug_ring_in_ready),
+         .ring_in        (debug_ring_out),
+         .ring_in_ready  (debug_ring_out_ready)
+      );
 
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
-      #(
-         .VCHANNELS(VCHANNELS),
-         .NOC_FLIT_DATA_WIDTH(NOC_FLIT_DATA_WIDTH),
-         .NOC_FLIT_TYPE_WIDTH(NOC_FLIT_TYPE_WIDTH)
+      #(.CONFIG(CONFIG),
+        .DEBUG_BASEID(2)
       )
-      u_compute_tile(
+      u_compute_tile
+        (
          .clk           (sys_clk),
-         .rst_cpu       (sys_rst),
-         .rst_sys       (sys_rst),
+         .rst_cpu       (dbg_cpu_rst | sys_rst),
+         .rst_sys       (dbg_sys_rst | sys_rst),
+         .rst_dbg       (sys_rst),
 
          .noc_in_flit   (noc_in_flit),
          .noc_in_ready  (noc_in_ready),
@@ -185,6 +202,11 @@ module compute_tile_dm_nexys4
          .noc_out_flit  (noc_out_flit),
          .noc_out_ready (noc_out_ready),
          .noc_out_valid (noc_out_valid),
+
+         .debug_ring_in(debug_ring_in),
+         .debug_ring_in_ready(debug_ring_in_ready),
+         .debug_ring_out(debug_ring_out),
+         .debug_ring_out_ready(debug_ring_out_ready),
 
          .wb_mem_adr_i  (c_wb_ddr.adr_o),
          .wb_mem_cyc_i  (c_wb_ddr.cyc_o),

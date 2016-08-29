@@ -1,0 +1,9 @@
+CAPI=1
+[main]
+name = optimsoc:base:config
+
+[fileset include_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  optimsoc-config.sv
