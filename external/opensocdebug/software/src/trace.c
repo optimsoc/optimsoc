@@ -30,26 +30,113 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <assert.h>
 
-static void stm_log_handler (struct osd_context *ctx, void* arg, uint16_t* packet) {
-    FILE *fh = (FILE*) arg;
+#define STM_PRINT_CHARS 256
+
+struct stm_log_desc {
+    FILE *fh;
+    uint16_t id;
+    uint16_t xlen;
+    char printf_buf[STM_PRINT_CHARS];
+};
+
+static void stm_simprint(struct osd_context *ctx, struct stm_log_desc* desc,
+                         uint32_t timestamp, char value) {
+    FILE *fh = desc->fh;
+
+    int do_print = 0;
+
+    /* simprint */
+    if (value == '\n') {
+        // Do the actual printf on newline
+        do_print = 1;
+    } else {
+        // Find the actual position of the character by iterating
+        for (unsigned int i = 0; i < (STM_PRINT_CHARS); i++) {
+            // If this is the current end of string..
+            if (desc->printf_buf[i] == '\0') {
+                // .. put the character on it
+                desc->printf_buf[i] = value;
+                // If we approach the end of the text width, we signal this
+                // with three dots and force printing
+                if (i == (STM_PRINT_CHARS)-4) {
+                    desc->printf_buf[STM_PRINT_CHARS-3] = '.';
+                    desc->printf_buf[STM_PRINT_CHARS-2] = '.';
+                    desc->printf_buf[STM_PRINT_CHARS-1] = '.';
+                    desc->printf_buf[STM_PRINT_CHARS] = '\0';
+                    do_print = 1;
+                } else {
+                    // otherwise simply mark new end
+                    desc->printf_buf[i+1] = '\0';
+                }
+                break;
+            }
+        }
+    }
+
+    if (do_print) {
+        // DEBUG: Also send to STDOUT
+        printf("[STM %03d] %08x %s\n", desc->id, timestamp, desc->printf_buf);
+
+        fprintf(fh, "%08x %s\n", timestamp, desc->printf_buf);
+        fflush(fh);
+        desc->printf_buf[0] = '\0';
+    }
+}
+
+static void stm_log_handler(struct osd_context *ctx, void* arg, uint16_t* packet) {
+    struct stm_log_desc *desc = (struct stm_log_desc*) arg;
+    FILE *fh = desc->fh;
+
     uint32_t timestamp;
     uint16_t id;
-    uint64_t value;
 
     timestamp = (packet[4] << 16) | packet[3];
     id = packet[5];
-    value = ((uint64_t)packet[9] << 48) | ((uint64_t)packet[8] << 32) | ((uint64_t)packet[7] << 16) | packet[6];
+    uint64_t value;
 
-    fprintf(fh, "%08x %04x %016lx\n", timestamp, id, value);
+    if (desc->xlen == 32) {
+        if (packet[0] != 7) {
+            assert((packet[2] >> 11) & 0x1);
+
+            fprintf(fh, "Overflow, missed %d events\n", packet[3] & 0x3ff);
+            return;
+        }
+
+        value = ((uint32_t)packet[7] << 16) | packet[6];
+        fprintf(fh, "%08x %04x %08x\n", timestamp, id, (uint32_t)value);
+    } else {
+        if (packet[0] != 9) {
+            assert((packet[2] >> 11) & 0x1);
+
+            fprintf(fh, "Overflow, missed %d events\n", packet[3] & 0x3ff);
+            return;
+        }
+        value = ((uint64_t)packet[9] << 48) | ((uint64_t)packet[8] << 32) | ((uint64_t)packet[7] << 16) | packet[6];
+        fprintf(fh, "%08x %04x %016lx\n", timestamp, id, value);
+    }
+
+    // Additionally convert printf() into character strings inside the log
+    if (id == 4) {
+        stm_simprint(ctx, desc, timestamp, value);
+    }
+
     return;
 }
 
+
 OSD_EXPORT
 int osd_stm_log(struct osd_context *ctx, uint16_t modid, char *filename) {
-    FILE *fh = fopen(filename, "w");
+    struct osd_stm_descriptor *stm = ctx->system_info->modules[modid].descriptor.stm;
+    struct stm_log_desc *d = calloc(sizeof(struct stm_log_desc), 1);
+
+    d->xlen = stm->xlen;
+    d->fh = fopen(filename, "w");
+    d->id = modid;
     osd_module_claim(ctx, modid);
-    osd_module_register_handler(ctx, modid, OSD_EVENT_TRACE, (void*) fh,
+
+    osd_module_register_handler(ctx, modid, OSD_EVENT_TRACE, (void*) d,
                                 stm_log_handler);
     osd_module_unstall(ctx, modid);
     return 0;
@@ -62,6 +149,7 @@ struct elf_function_table {
 
 struct ctm_log_handle {
     FILE    *fh;
+    uint16_t addr_width;
     size_t num_funcs;
     struct elf_function_table *funcs;
 };
@@ -81,12 +169,21 @@ static void ctm_log_handler (struct osd_context *ctx, void* arg, uint16_t* packe
     }
 
     timestamp = (packet[4] << 16) | packet[3];
-    npc = ((uint64_t)packet[8] << 48) | ((uint64_t)packet[7] << 32) | ((uint64_t)packet[6] << 16) | packet[5];
-    pc = ((uint64_t)packet[12] << 48) | ((uint64_t)packet[11] << 32) | ((uint64_t)packet[10] << 16) | packet[9];
-    modechange = (packet[13] >> 4) & 0x1;
-    call = (packet[13] >> 3) & 0x1;
-    ret = (packet[13] >> 2) & 0x1;
-    mode = packet[13] & 0x3;
+    size_t index;
+    if (log->addr_width == 64) {
+      npc = ((uint64_t)packet[8] << 48) | ((uint64_t)packet[7] << 32) | ((uint64_t)packet[6] << 16) | packet[5];
+      pc = ((uint64_t)packet[12] << 48) | ((uint64_t)packet[11] << 32) | ((uint64_t)packet[10] << 16) | packet[9];
+      index = 13;
+    } else {
+      assert(log->addr_width == 32);
+      npc = ((uint64_t)packet[6] << 16) | packet[5];
+      pc = ((uint64_t)packet[8] << 16) | packet[7];
+      index = 9;
+    }
+    modechange = (packet[index] >> 4) & 0x1;
+    call = (packet[index] >> 3) & 0x1;
+    ret = (packet[index] >> 2) & 0x1;
+    mode = packet[index] & 0x3;
 
     if (!log->funcs) {
         fprintf(log->fh, "%08x %d %d %d %d %016lx %016lx\n", timestamp, modechange, call, ret, mode, pc, npc);
@@ -139,7 +236,8 @@ OSD_EXPORT
 int osd_ctm_log(struct osd_context *ctx, uint16_t modid, char *filename, char *elffile) {
     struct ctm_log_handle *log = malloc(sizeof(struct ctm_log_handle));
     log->fh = fopen(filename, "w");
-
+    struct osd_ctm_descriptor *ctm = ctx->system_info->modules[modid].descriptor.ctm;
+    log->addr_width = ctm->addr_width;
     log->num_funcs = 0;
     log->funcs = 0;
     // Load the symbols from ELF
