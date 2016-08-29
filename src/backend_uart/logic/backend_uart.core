@@ -6,6 +6,7 @@ depend =
   glip:common:channel
   glip:common:scaler
   glip:common:credit
+  glip:common:fifo_sync
 
 [fileset src_files]
 file_type = verilogSource

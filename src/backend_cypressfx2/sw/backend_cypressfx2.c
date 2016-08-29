@@ -621,16 +621,21 @@ int gb_cypressfx2_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         clock_gettime(CLOCK_REALTIME, &ts);
         timespec_add_ns(&ts, timeout * 1000 * 1000);
     }
-    while (cbuf_fill_level(bctx->read_buf) < size) {
+
+    size_t level = cbuf_fill_level(bctx->read_buf);
+
+    while (level < size) {
         if (timeout == 0) {
-            rv = cbuf_wait_for_level_change(bctx->read_buf);
+            rv = cbuf_wait_for_level_change(bctx->read_buf, level);
         } else {
-            rv = cbuf_timedwait_for_level_change(bctx->read_buf, &ts);
+            rv = cbuf_timedwait_for_level_change(bctx->read_buf, level, &ts);
         }
 
         if (rv != 0) {
             break;
         }
+
+        level = cbuf_fill_level(bctx->read_buf);
     }
 
     /*
@@ -734,9 +739,9 @@ int gb_cypressfx2_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 
         if (cbuf_free_level(bctx->write_buf) == 0) {
             if (timeout == 0) {
-                cbuf_wait_for_level_change(bctx->write_buf);
+                cbuf_wait_for_level_change(bctx->write_buf, 0);
             } else {
-                cbuf_timedwait_for_level_change(bctx->write_buf, &ts);
+                cbuf_timedwait_for_level_change(bctx->write_buf, 0, &ts);
             }
         }
     }

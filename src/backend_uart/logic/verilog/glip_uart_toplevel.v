@@ -50,6 +50,7 @@ module glip_uart_toplevel
   #(parameter FREQ_CLK_IO = 32'hx,
     parameter BAUD = 115200,
     parameter WIDTH = 8,
+    parameter BUFFER_OUT_DEPTH = 4*1024,
     parameter XILINX_TARGET_DEVICE = "7SERIES")
    (
     // Clock & Reset
@@ -121,6 +122,9 @@ module glip_uart_toplevel
    wire [7:0]    egress_in_data;
    wire          egress_in_valid;
    wire          egress_in_ready;
+   wire [7:0]    egress_in_buffered_data;
+   wire          egress_in_buffered_valid;
+   wire          egress_in_buffered_ready;
    wire [7:0]    egress_out_data;
    wire          egress_out_enable;
    wire          egress_out_done;
@@ -135,12 +139,16 @@ module glip_uart_toplevel
    wire          in_buffer_empty;
    wire          out_fifo_full;
    wire          out_fifo_empty;
+   wire          out_buffer_full;
+   wire          out_buffer_empty;
    assign ingress_out_ready = ~in_buffer_almost_full;
    assign ingress_buffer_valid = ~in_buffer_empty;
    assign ingress_buffer_ready = ~in_fifo_full;
    assign fifo_in_valid_scale = ~in_fifo_empty;
    assign egress_in_valid = ~out_fifo_empty;
    assign fifo_out_ready_scale = ~out_fifo_full;
+   assign egress_in_buffered_valid = ~out_buffer_empty;
+   assign egress_in_ready = ~out_buffer_full;
 
    // We are always ready to send
    assign uart_rts_n = 1'b0;
@@ -215,7 +223,7 @@ module glip_uart_toplevel
       end else if (WIDTH == 16) begin
          glip_upscale
            #(.IN_SIZE(8))
-         u_upscale(.clk       (clk_io),
+         u_upscale(.clk       (clk),
                    .rst       (com_rst),
                    .in_data   (fifo_in_data_scale),
                    .in_valid  (fifo_in_valid_scale),
@@ -226,7 +234,7 @@ module glip_uart_toplevel
 
          glip_downscale
            #(.OUT_SIZE(8))
-         u_downscale(.clk       (clk_io),
+         u_downscale(.clk       (clk),
                      .rst       (com_rst),
                      .in_data   (fifo_out_data),
                      .in_valid  (fifo_out_valid),
@@ -250,7 +258,7 @@ module glip_uart_toplevel
              .ingress_in_ready          (ingress_in_ready),
              .ingress_out_data          (ingress_out_data[7:0]),
              .ingress_out_valid         (ingress_out_valid),
-             .egress_in_ready           (egress_in_ready),
+             .egress_in_ready           (egress_in_buffered_ready),
              .egress_out_data           (egress_out_data[7:0]),
              .egress_out_enable         (egress_out_enable),
              .ctrl_logic_rst            (ctrl_logic_rst),
@@ -262,8 +270,8 @@ module glip_uart_toplevel
              .ingress_in_data           (ingress_in_data[7:0]),
              .ingress_in_valid          (ingress_in_valid),
              .ingress_out_ready         (ingress_out_ready),
-             .egress_in_data            (egress_in_data[7:0]),
-             .egress_in_valid           (egress_in_valid),
+             .egress_in_data            (egress_in_buffered_data[7:0]),
+             .egress_in_valid           (egress_in_buffered_valid),
              .egress_out_done           (egress_out_done),
              .transfer_in               (transfer_in));
 
@@ -386,5 +394,19 @@ module glip_uart_toplevel
       .WRCLK       (clk),
       .WREN        (out_fifo_wren)
       );
+
+   oh_fifo_sync
+     #(.DW(8),.DEPTH(BUFFER_OUT_DEPTH))
+   u_out_buffer
+     (.clk       (clk_io),
+      .nreset    (!rst),
+      .din       (egress_in_data),
+      .wr_en     (egress_in_valid),
+      .rd_en     (egress_in_buffered_ready),
+      .dout      (egress_in_buffered_data),
+      .full      (out_buffer_full),
+      .prog_full (),
+      .empty     (out_buffer_empty),
+      .rd_count  ());
 
 endmodule // glip_uart_toplevel
