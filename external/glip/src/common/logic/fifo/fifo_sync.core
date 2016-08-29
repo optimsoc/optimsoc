@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = glip:common:fifo_sync
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/oh_fifo_sync.v
+  verilog/oh_memory_dp.v
+  verilog/oh_memory_ram.v
