@@ -316,20 +316,24 @@ def build_examples(options, env):
 
     info("Build examples (verilator based)")
 
-    exsrc = os.path.join(src, "examples")
-    exobjdir = os.path.join(objdir, "examples")
-    exdist = os.path.join(dist, "examples")
+    exsrc = os.path.join(src, "examples", "sim")
+    exobjdir = os.path.join(objdir, "examples", "sim")
+    exdist = os.path.join(dist, "examples", "sim")
 
     examples = [
-      { "name": "compute_tile_simonly",
-        "files": [ "build/optimsoc_examples_compute_tile_simonly/sim-verilator/obj_dir/Vtb_compute_tile" ] },
+      { "name": "compute_tile_sim",
+        "path": "compute_tile",
+        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ] },
+      { "name": "system_2x2_cccc_sim",
+        "path": "system_2x2_cccc",
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ] },
     ]
 
     for ex in examples:
         info(" + {}".format(ex["name"]))
-        buildsrcdir = os.path.join(exsrc, ex["name"])
-        buildobjdir = os.path.join(exobjdir, ex["name"])
-        builddist = os.path.join(exdist, ex["name"])
+        buildsrcdir = os.path.join(exsrc, ex["path"])
+        buildobjdir = os.path.join(exobjdir, ex["path"])
+        builddist = os.path.join(exdist, ex["path"])
 
         info("  + Build")
         ensure_directory(buildobjdir)
