@@ -61,7 +61,7 @@ module tb_system_2x2_cccc(
                       NOC_TYPE_WIDTH: 2,
                       NOC_VCHANNELS: 3,
                       MEMORY_ACCESS: DISTRIBUTED,
-                      LMEM_SIZE: 128*1024*1024,
+                      LMEM_SIZE: 32*1024*1024,
                       USE_DEBUG: 1'(USE_DEBUG),
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1
