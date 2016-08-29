@@ -55,7 +55,7 @@ module system_2x2_ccc_cam_dm
 
     // external outputs to camera module
 	output SIOC,
-	output SIOD,
+	inout SIOD,
 	output RESET,
 	output PWDN,
 	output XVCLK,
