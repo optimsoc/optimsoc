@@ -51,12 +51,12 @@ void main() {
     if (rank == 1) {
 
 
-        /*// The message is a one flit packet
+        // The message is a one flit packet
         uint32_t buffer[2];
         buffer[0] = 0x00000000;
         buffer[1] = 0;
         buffer[1] |= 1 << 0; // update bit
-        buffer[1] |= 0 << 1; // IMAGE_MODE = RGB
+        buffer[1] |= 1 << 1; // IMAGE_MODE = RGB
         buffer[1] |= 3 << 3; // RESOLUTION = VGA
         buffer[1] |= 1 << 6; // TEST_PATTERN = ON
         buffer[1] |= 1 << 7; // CLKRC = 1
@@ -91,12 +91,12 @@ void main() {
         for (unsigned int i = 0; i < 5000000; i++) {
            __asm__ volatile("l.nop");
         }
-        printf("sleep done, continue with DMA\n");*/
+        printf("sleep done, continue with DMA\n");
 
 
 
-        //printf("DMA transfer\n");
-        //printf("Initialize data\n");
+        printf("DMA transfer\n");
+        printf("Initialize data\n");
 
         for (unsigned i=0; i<256; i++) {
             //data[i] = i | i<<24 | i<<16 | i<<8;
@@ -109,20 +109,19 @@ void main() {
 
         dma_alloc(&dma);
 
-        uint8_t already_detected = 0;
+        /*uint8_t already_detected = 0;
         while (1) {
             //printf("DMA remote to local\n");
 
             dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
 
-            //printf("waiting for response\n");
+            printf("waiting for response\n");
 
             dma_wait(dma);
-            //printf("done waiting\n");
+            printf("done waiting\n");
 
-            /*dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
-
-            dma_wait(dma);*/
+            //dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
+            //dma_wait(dma);
 
             unsigned int red_cnt = 0;
             for (unsigned i = 0; i < FRAME_SIZE_WORDS/4; i++) {
@@ -151,7 +150,14 @@ void main() {
                 already_detected = 0;
             }
         }
-        return;
+        return;*/
+
+        dma_transfer(&data, 3, &data, FRAME_SIZE_WORDS, REMOTE2LOCAL, dma);
+
+        printf("waiting for response\n");
+
+        dma_wait(dma);
+        printf("done waiting\n");
 
         // output pixel data to host
         for (unsigned i = 0; i < FRAME_SIZE_WORDS; i++) {
