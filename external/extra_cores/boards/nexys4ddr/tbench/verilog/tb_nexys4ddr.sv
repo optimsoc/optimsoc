@@ -40,7 +40,9 @@
 // Keep this timescale to match DRAM model
 `timescale 1ps / 1ps
 
-module tb_nexys4ddr (
+module tb_nexys4ddr
+  #(parameter UART_BAUD = 2000000)
+   (
    // 100 MHz system clock
    output reg   clk,
 
@@ -106,7 +108,7 @@ module tb_nexys4ddr (
    // UART model
    uartdpi
       #(
-         .BAUD(115200),
+         .BAUD(UART_BAUD),
          .FREQ(100000000))
       u_uartdpi(
          .clk (clk),
@@ -114,6 +116,6 @@ module tb_nexys4ddr (
          .rx  (uart_rxd_out),
          .rst (glbl.GSR));
 
-   assign uart_rtsn = 1'b0;
+   assign uart_rts = 1'b0;
 
 endmodule // tb_nexys4
