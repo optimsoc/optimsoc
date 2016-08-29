@@ -27,7 +27,6 @@
  */
 
 `include "lisnoc_def.vh"
-`include "optimsoc_def.vh"
 
 module system_2x2_ccmc_pgas(/*AUTOARG*/
    // Outputs
@@ -45,7 +44,7 @@ module system_2x2_ccmc_pgas(/*AUTOARG*/
    localparam noc_flit_width = noc_data_width+noc_type_width;
 
    localparam flit_width = noc_flit_width;
-      
+
    localparam vchannels = `VCHANNELS;
 
    output [31:0] wb_mt2_adr_o;
@@ -60,17 +59,17 @@ module system_2x2_ccmc_pgas(/*AUTOARG*/
    input         wb_mt2_rty_i;
    input         wb_mt2_err_i;
    input [31:0]  wb_mt2_dat_i;
-      
+
    // Flits from NoC->tiles
    wire [noc_flit_width-1:0] link_in_flit[0:3];
    wire [vchannels-1:0]      link_in_valid[0:3];
    wire [vchannels-1:0]      link_in_ready[0:3];
-   
+
    // Flits from tiles->NoC
    wire [noc_flit_width-1:0] link_out_flit[0:3];
    wire [vchannels-1:0]      link_out_valid[0:3];
    wire [vchannels-1:0]      link_out_ready[0:3];
-   
+
    /* lisnoc_mesh2x2 AUTO_TEMPLATE(
     .link\(.*\)_in_\(.*\)_.* (link_out_\2[\1][]),
     .link\(.*\)_out_\(.*\)_.* (link_in_\2[\1][]),
@@ -119,7 +118,7 @@ module system_2x2_ccmc_pgas(/*AUTOARG*/
     .rst(rst_sys),
     .wb_\(.*\)  (wb_mt@_\1[]),
     );*/
-   
+
    compute_tile_pgas
      #(.vchannels(vchannels),.id(0),.pgas_base(0),.pgas_addrw(pgas_addrw),.memoryid(2))
    u_ct0(/*AUTOINST*/
@@ -135,7 +134,7 @@ module system_2x2_ccmc_pgas(/*AUTOARG*/
          .noc_in_valid                  (link_in_valid[0][(vchannels)-1:0]), // Templated
          .noc_out_ready                 (link_out_ready[0][(vchannels)-1:0]), // Templated
          .cpu_stall                     (1'b0));                         // Templated
-   
+
    compute_tile_pgas
      #(.vchannels(vchannels),.id(1),.pgas_base(1),.pgas_addrw(pgas_addrw),.memoryid(2))
    u_ct1(/*AUTOINST*/
@@ -177,7 +176,7 @@ module system_2x2_ccmc_pgas(/*AUTOARG*/
          .wb_rty_i                      (wb_mt2_rty_i),          // Templated
          .wb_err_i                      (wb_mt2_err_i),          // Templated
          .wb_dat_i                      (wb_mt2_dat_i[31:0]));   // Templated
-   
+
    compute_tile_pgas
      #(.vchannels(vchannels),.id(3),.pgas_base(2),.pgas_addrw(pgas_addrw),.memoryid(2))
    u_ct3(/*AUTOINST*/
@@ -193,7 +192,7 @@ module system_2x2_ccmc_pgas(/*AUTOARG*/
          .noc_in_valid                  (link_in_valid[3][(vchannels)-1:0]), // Templated
          .noc_out_ready                 (link_out_ready[3][(vchannels)-1:0]), // Templated
          .cpu_stall                     (1'b0));                         // Templated
-   
+
 endmodule // system_2x2_ccmc
 
 `include "lisnoc_undef.vh"

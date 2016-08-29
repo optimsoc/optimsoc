@@ -32,7 +32,6 @@
  */
 
 `include "lisnoc_def.vh"
-`include "optimsoc_def.vh"
 `include "dbg_config.vh"
 
 module system_simpledemo_pgas(

@@ -93,31 +93,6 @@ module mor1kx_module
     output mor1kx_trace_exec trace_exec
     );
 
-
-   /* mor1kx AUTO_TEMPLATE(
-    .clk (clk_i),
-    .rst (rst_i),
-    .dwbm_\(.*\)      (dwb_\1[]),
-    .iwbm_\(.*\)      (iwb_\1[]),
-
-    .du_addr_i (dbg_adr_i[15:0]),
-    .du_\(.*\) (dbg_\1[]),
-
-    .irq_i                      (pic_ints_i),
-
-    .avm_.*_o (),
-    .avm_d_readdata_i (32'h0),
-    .avm_i_readdata_i (32'h0),
-    .avm_.*_i (1'h0),
-
-    .multicore_coreid_i (ID),
-    .multicore_numcores_i (NUMCORES),
-    .traceport_exec_\(.*\)_o (trace_exec.\1),
-
-    .snoop_en_i (snoop_enable_i),
-
-    ); */
-
    wire dbg_stall_o;
 
    mor1kx
@@ -139,72 +114,56 @@ module mor1kx_module
        .OPTION_RF_NUM_SHADOW_GPR        (1))
      u_cpu(/*AUTOINST*/
            // Outputs
-           .iwbm_adr_o                  (iwb_adr_o[31:0]),       // Templated
-           .iwbm_stb_o                  (iwb_stb_o),             // Templated
-           .iwbm_cyc_o                  (iwb_cyc_o),             // Templated
-           .iwbm_sel_o                  (iwb_sel_o[3:0]),        // Templated
-           .iwbm_we_o                   (iwb_we_o),              // Templated
-           .iwbm_cti_o                  (iwb_cti_o[2:0]),        // Templated
-           .iwbm_bte_o                  (iwb_bte_o[1:0]),        // Templated
-           .iwbm_dat_o                  (iwb_dat_o[31:0]),       // Templated
-           .dwbm_adr_o                  (dwb_adr_o[31:0]),       // Templated
-           .dwbm_stb_o                  (dwb_stb_o),             // Templated
-           .dwbm_cyc_o                  (dwb_cyc_o),             // Templated
-           .dwbm_sel_o                  (dwb_sel_o[3:0]),        // Templated
-           .dwbm_we_o                   (dwb_we_o),              // Templated
-           .dwbm_cti_o                  (dwb_cti_o[2:0]),        // Templated
-           .dwbm_bte_o                  (dwb_bte_o[1:0]),        // Templated
-           .dwbm_dat_o                  (dwb_dat_o[31:0]),       // Templated
-           .avm_d_address_o             (),                      // Templated
-           .avm_d_byteenable_o          (),                      // Templated
-           .avm_d_read_o                (),                      // Templated
-           .avm_d_burstcount_o          (),                      // Templated
-           .avm_d_write_o               (),                      // Templated
-           .avm_d_writedata_o           (),                      // Templated
-           .avm_i_address_o             (),                      // Templated
-           .avm_i_byteenable_o          (),                      // Templated
-           .avm_i_read_o                (),                      // Templated
-           .avm_i_burstcount_o          (),                      // Templated
-           .du_dat_o                    (dbg_dat_o[31:0]),       // Templated
-           .du_ack_o                    (dbg_ack_o),             // Templated
-           .du_stall_o                  (dbg_stall_o),           // Templated
-           .traceport_exec_valid_o      (trace_exec.valid),      // Templated
-           .traceport_exec_pc_o         (trace_exec.pc),         // Templated
-           .traceport_exec_jb_o         (trace_exec.jb),         // Templated
-           .traceport_exec_jal_o        (trace_exec.jal),        // Templated
-           .traceport_exec_jr_o         (trace_exec.jr),         // Templated
-           .traceport_exec_jbtarget_o   (trace_exec.jbtarget),   // Templated
-           .traceport_exec_insn_o       (trace_exec.insn),       // Templated
-           .traceport_exec_wbdata_o     (trace_exec.wbdata),     // Templated
-           .traceport_exec_wbreg_o      (trace_exec.wbreg),      // Templated
-           .traceport_exec_wben_o       (trace_exec.wben),       // Templated
+           .iwbm_adr_o                  (iwb_adr_o[31:0]),
+           .iwbm_stb_o                  (iwb_stb_o),
+           .iwbm_cyc_o                  (iwb_cyc_o),
+           .iwbm_sel_o                  (iwb_sel_o[3:0]),
+           .iwbm_we_o                   (iwb_we_o),
+           .iwbm_cti_o                  (iwb_cti_o[2:0]),
+           .iwbm_bte_o                  (iwb_bte_o[1:0]),
+           .iwbm_dat_o                  (iwb_dat_o[31:0]),
+           .dwbm_adr_o                  (dwb_adr_o[31:0]),
+           .dwbm_stb_o                  (dwb_stb_o),
+           .dwbm_cyc_o                  (dwb_cyc_o),
+           .dwbm_sel_o                  (dwb_sel_o[3:0]),
+           .dwbm_we_o                   (dwb_we_o),
+           .dwbm_cti_o                  (dwb_cti_o[2:0]),
+           .dwbm_bte_o                  (dwb_bte_o[1:0]),
+           .dwbm_dat_o                  (dwb_dat_o[31:0]),
+           .du_dat_o                    (dbg_dat_o[31:0]),
+           .du_ack_o                    (dbg_ack_o),
+           .du_stall_o                  (dbg_stall_o),
+           .traceport_exec_valid_o      (trace_exec.valid),
+           .traceport_exec_pc_o         (trace_exec.pc),
+           .traceport_exec_jb_o         (trace_exec.jb),
+           .traceport_exec_jal_o        (trace_exec.jal),
+           .traceport_exec_jr_o         (trace_exec.jr),
+           .traceport_exec_jbtarget_o   (trace_exec.jbtarget),
+           .traceport_exec_insn_o       (trace_exec.insn),
+           .traceport_exec_wbdata_o     (trace_exec.wbdata),
+           .traceport_exec_wbreg_o      (trace_exec.wbreg),
+           .traceport_exec_wben_o       (trace_exec.wben),
            // Inputs
-           .clk                         (clk_i),                 // Templated
-           .rst                         (rst_i),                 // Templated
-           .iwbm_err_i                  (iwb_err_i),             // Templated
-           .iwbm_ack_i                  (iwb_ack_i),             // Templated
-           .iwbm_dat_i                  (iwb_dat_i[31:0]),       // Templated
-           .iwbm_rty_i                  (iwb_rty_i),             // Templated
-           .dwbm_err_i                  (dwb_err_i),             // Templated
-           .dwbm_ack_i                  (dwb_ack_i),             // Templated
-           .dwbm_dat_i                  (dwb_dat_i[31:0]),       // Templated
-           .dwbm_rty_i                  (dwb_rty_i),             // Templated
-           .avm_d_readdata_i            (32'h0),                 // Templated
-           .avm_d_waitrequest_i         (1'h0),                  // Templated
-           .avm_d_readdatavalid_i       (1'h0),                  // Templated
-           .avm_i_readdata_i            (32'h0),                 // Templated
-           .avm_i_waitrequest_i         (1'h0),                  // Templated
-           .avm_i_readdatavalid_i       (1'h0),                  // Templated
-           .irq_i                       (pic_ints_i),            // Templated
-           .du_addr_i                   (dbg_adr_i[15:0]),       // Templated
-           .du_stb_i                    (dbg_stb_i),             // Templated
-           .du_dat_i                    (dbg_dat_i[31:0]),       // Templated
-           .du_we_i                     (dbg_we_i),              // Templated
-           .du_stall_i                  (dbg_stall_i),           // Templated
-           .multicore_coreid_i          (ID),                    // Templated
-           .multicore_numcores_i        (NUMCORES),              // Templated
+           .clk                         (clk_i),
+           .rst                         (rst_i),
+           .iwbm_err_i                  (iwb_err_i),
+           .iwbm_ack_i                  (iwb_ack_i),
+           .iwbm_dat_i                  (iwb_dat_i[31:0]),
+           .iwbm_rty_i                  (iwb_rty_i),
+           .dwbm_err_i                  (dwb_err_i),
+           .dwbm_ack_i                  (dwb_ack_i),
+           .dwbm_dat_i                  (dwb_dat_i[31:0]),
+           .dwbm_rty_i                  (dwb_rty_i),
+           .irq_i                       (pic_ints_i),
+           .du_addr_i                   (dbg_adr_i[15:0]),
+           .du_stb_i                    (dbg_stb_i),
+           .du_dat_i                    (dbg_dat_i[31:0]),
+           .du_we_i                     (dbg_we_i),
+           .du_stall_i                  (dbg_stall_i),
+           .multicore_coreid_i          (ID),
+           .multicore_numcores_i        (NUMCORES),
            .snoop_adr_i                 (snoop_adr_i[31:0]),
-           .snoop_en_i                  (snoop_enable_i));       // Templated
+           .snoop_en_i                  (snoop_enable_i));
 
 endmodule // mor1kx_module
 

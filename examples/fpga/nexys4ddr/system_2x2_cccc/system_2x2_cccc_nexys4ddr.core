@@ -20,13 +20,6 @@ usage = sim synth
 files =
   rtl/verilog/system_2x2_cccc_nexys4.sv
 
-[fileset include_files]
-file_type = verilogSource
-is_include_file = true
-usage = sim synth
-files =
-  optimsoc_def.vh
-
 [fileset testbench]
 file_type = systemVerilogSource
 usage = sim

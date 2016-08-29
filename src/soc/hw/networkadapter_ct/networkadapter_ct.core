@@ -6,14 +6,14 @@ depend =
   optimsoc:lisnoc:dma
   optimsoc:lisnoc:mp_simple
   optimsoc:lisnoc:router
+  optimsoc:base:config
 
 # XXX. Fix import from lisnoc optimsoc:lisnoc:router should be only
 # lisnoc_add_file router/lisnoc_router_output_arbiter.v
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/networkadapter_ct.v
-  verilog/networkadapter_conf.v
-
+  verilog/networkadapter_ct.sv
+  verilog/networkadapter_conf.sv

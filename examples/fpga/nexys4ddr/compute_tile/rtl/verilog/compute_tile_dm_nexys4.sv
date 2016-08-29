@@ -27,8 +27,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-`include "optimsoc_def.vh"
-
 import dii_package::dii_flit;
 import optimsoc::*;
 
@@ -62,14 +60,16 @@ module compute_tile_dm_nexys4
    output                ddr2_we_n
    );
 
-   parameter NUM_CORES = 1;
+   parameter integer NUM_CORES = 1;
+   localparam integer LMEM_SIZE = 128*1024*1024;
 
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 28;
    localparam DDR_DATA_WIDTH = 32;
 
    localparam base_config_t
-     BASE_CONFIG = '{ NUMCTS: 1,
+     BASE_CONFIG = '{ NUMTILES: 1,
+                      NUMCTS: 1,
                       CTLIST: {{63{16'hx}}, 16'h0},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
@@ -77,8 +77,12 @@ module compute_tile_dm_nexys4
                       NOC_DATA_WIDTH: 32,
                       NOC_TYPE_WIDTH: 2,
                       NOC_VCHANNELS: 3,
+                      NOC_VC_MPSIMPLE: 0,
+                      NOC_VC_DMA_REQ: 1,
+                      NOC_VC_DMA_RESP: 2,
                       MEMORY_ACCESS: DISTRIBUTED,
-                      LMEM_SIZE: 128*1024*1024,
+                      LMEM_SIZE: LMEM_SIZE,
+                      LMEM_STYLE: EXTERNAL,
                       USE_DEBUG: 1,
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1
@@ -208,19 +212,19 @@ module compute_tile_dm_nexys4
          .debug_ring_out(debug_ring_out),
          .debug_ring_out_ready(debug_ring_out_ready),
 
-         .wb_mem_adr_i  (c_wb_ddr.adr_o),
-         .wb_mem_cyc_i  (c_wb_ddr.cyc_o),
-         .wb_mem_dat_i  (c_wb_ddr.dat_o),
-         .wb_mem_sel_i  (c_wb_ddr.sel_o),
-         .wb_mem_stb_i  (c_wb_ddr.stb_o),
-         .wb_mem_we_i   (c_wb_ddr.we_o),
-         .wb_mem_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
-         .wb_mem_cti_i  (c_wb_ddr.cti_o),
-         .wb_mem_bte_i  (c_wb_ddr.bte_o),
-         .wb_mem_ack_o  (c_wb_ddr.ack_i),
-         .wb_mem_rty_o  (c_wb_ddr.rty_i),
-         .wb_mem_err_o  (c_wb_ddr.err_i),
-         .wb_mem_dat_o  (c_wb_ddr.dat_i)
+         .wb_ext_adr_i  (c_wb_ddr.adr_o),
+         .wb_ext_cyc_i  (c_wb_ddr.cyc_o),
+         .wb_ext_dat_i  (c_wb_ddr.dat_o),
+         .wb_ext_sel_i  (c_wb_ddr.sel_o),
+         .wb_ext_stb_i  (c_wb_ddr.stb_o),
+         .wb_ext_we_i   (c_wb_ddr.we_o),
+         .wb_ext_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
+         .wb_ext_cti_i  (c_wb_ddr.cti_o),
+         .wb_ext_bte_i  (c_wb_ddr.bte_o),
+         .wb_ext_ack_o  (c_wb_ddr.ack_i),
+         .wb_ext_rty_o  (c_wb_ddr.rty_i),
+         .wb_ext_err_o  (c_wb_ddr.err_i),
+         .wb_ext_dat_o  (c_wb_ddr.dat_i)
       );
 
    // Nexys 4 board wrapper

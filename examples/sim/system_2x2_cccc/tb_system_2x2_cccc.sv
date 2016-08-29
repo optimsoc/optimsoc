@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2015 by the author(s)
+/* Copyright (c) 2012-2016 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,6 @@
  */
 
 `include "dbg_config.vh"
-`include "optimsoc_def.vh"
 
 import dii_package::dii_flit;
 import opensocdebug::mor1kx_trace_exec;
@@ -49,10 +48,12 @@ module tb_system_2x2_cccc(
    );
 
    parameter USE_DEBUG = 0;
-   parameter NUM_CORES = 1;
+   parameter integer NUM_CORES = 1;
+   parameter integer LMEM_SIZE = 32*1024*1024;
 
    localparam base_config_t
-     BASE_CONFIG = '{ NUMCTS: 4,
+     BASE_CONFIG = '{ NUMTILES: 1,
+                      NUMCTS: 4,
                       CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
@@ -60,8 +61,12 @@ module tb_system_2x2_cccc(
                       NOC_DATA_WIDTH: 32,
                       NOC_TYPE_WIDTH: 2,
                       NOC_VCHANNELS: 3,
+                      NOC_VC_MPSIMPLE: 0,
+                      NOC_VC_DMA_REQ: 1,
+                      NOC_VC_DMA_RESP: 2,
                       MEMORY_ACCESS: DISTRIBUTED,
-                      LMEM_SIZE: 32*1024*1024,
+                      LMEM_SIZE: LMEM_SIZE,
+                      LMEM_STYLE: PLAIN,
                       USE_DEBUG: 1'(USE_DEBUG),
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1

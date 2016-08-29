@@ -26,8 +26,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "optimsoc_def.vh"
-
 module memory_tile_pgas(/*AUTOARG*/
    // Outputs
    noc_in_ready, noc_out_flit, noc_out_valid, wb_adr_o, wb_cyc_o,

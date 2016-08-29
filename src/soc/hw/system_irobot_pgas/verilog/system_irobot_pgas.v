@@ -27,7 +27,6 @@
  */
 
 `include "lisnoc_def.vh"
-`include "optimsoc_def.vh"
 
 module system_irobot_pgas(
 `ifdef OPTIMSOC_CLOCKDOMAINS

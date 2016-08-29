@@ -134,7 +134,7 @@
                    .we                  (we),
                    .ce                  (ce),
                    .din                 (din[31:0]));
-      end else begin : gen_sram_sp_impl
+      end else begin : gen_sram_sp_impl // block: gen_sram_sp_impl
 //         $display("Unsupported memory type: ", MEM_IMPL_TYPE);
 //         $stop;
       end

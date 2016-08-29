@@ -26,8 +26,6 @@
 
 `include "uart_defines.v"
 
-`include "optimsoc_def.vh"
-
 //`define IN_CLK  48000000
 //`define UART_BAUD_RATE  115200 // TODO: Make this a parameter!
 `define UART_BASE  32'h90000000
@@ -66,11 +64,11 @@ module char2uart(/*AUTOARG*/
    input            out_char_ready;
 
    reg [7:0]   in_character;
-   reg [7:0]   nxt_in_character; 
+   reg [7:0]   nxt_in_character;
    reg [7:0]   out_character;
-   reg [7:0]   nxt_out_character; 
+   reg [7:0]   nxt_out_character;
 
-   // WISHBONE interface   
+   // WISHBONE interface
    input [uart_data_width-1:0]      wb_dat_o;
    input                            wb_ack_o;
    output reg                       wb_we_i;
@@ -84,15 +82,15 @@ module char2uart(/*AUTOARG*/
    parameter UART_BAUD_RATE = 115200;
    parameter divisor = (`OPTIMSOC_CLOCK/(16*UART_BAUD_RATE));
 //   parameter divisor = 14;
-   
-  
+
+
    //UART FSM
    reg [3:0]     uart_state;
    reg [3:0]     nxt_uart_state;
-   
+
    reg uart_waitstate; // Insert extra wait state as UART waits for cyc&stb posedge
    reg nxt_uart_waitstate;
- 
+
    always @(posedge clk) begin
       if (rst) begin
          uart_state <= 0;
@@ -104,16 +102,16 @@ module char2uart(/*AUTOARG*/
          out_character <= nxt_out_character;
          uart_state  <= nxt_uart_state;
          uart_waitstate <= nxt_uart_waitstate;
-      end  
+      end
    end
-    
+
    always @(*) begin
       nxt_uart_state = uart_state;
       nxt_uart_waitstate = uart_waitstate;
       nxt_in_character = in_character;
       nxt_out_character = out_character;
       out_char_data = 'bx;
-      out_char_valid = 1'b0; 
+      out_char_valid = 1'b0;
       in_char_ready = 1'b0;
       wb_we_i = 'bx;
       wb_adr_i = 'bx;
@@ -121,16 +119,16 @@ module char2uart(/*AUTOARG*/
       wb_sel_i = 'bx;
       wb_cyc_i = 1'b0;
       wb_stb_i = 1'b0;
-      
+
       case (uart_state)
         `STATE_SETUP_RESET: begin //reset state
            nxt_uart_state = `STATE_SETUP_FC;
         end
-        
-        `STATE_SETUP_FC:   begin // UART Initialization 
+
+        `STATE_SETUP_FC:   begin // UART Initialization
            wb_we_i = 1'b1;
            wb_adr_i = `UART_BASE + `UART_REG_FC;
-           wb_dat_i = {16'b0, 8'b00000110,8'h0}; 
+           wb_dat_i = {16'b0, 8'b00000110,8'h0};
            wb_sel_i= 4'b0010;
            wb_cyc_i = 1'b1;
            wb_stb_i = 1'b1;
@@ -159,14 +157,14 @@ module char2uart(/*AUTOARG*/
                 end
            end
         end
-        
+
         `STATE_SETUP_LC1:  begin
            if (uart_waitstate) begin
               nxt_uart_waitstate = 0;
               wb_cyc_i = 1'b0;
               wb_stb_i = 1'b0;
-           end else begin 
-              wb_we_i = 1'b1;               
+           end else begin
+              wb_we_i = 1'b1;
               wb_adr_i = `UART_BASE + `UART_REG_LC;
               wb_dat_i = {24'b0, 8'b10000011};
               wb_sel_i= 4'b0001;
@@ -178,8 +176,8 @@ module char2uart(/*AUTOARG*/
                    nxt_uart_waitstate = 1;
                 end
            end
-        end           
-        
+        end
+
         `STATE_SETUP_DL2:   begin
            if (uart_waitstate) begin
               nxt_uart_waitstate = 0;
@@ -198,8 +196,8 @@ module char2uart(/*AUTOARG*/
                    nxt_uart_waitstate = 1;
                 end
            end
-        end           
-        
+        end
+
         `STATE_SETUP_DL1:   begin
            if (uart_waitstate) begin
               nxt_uart_waitstate = 0;
@@ -218,14 +216,14 @@ module char2uart(/*AUTOARG*/
                    nxt_uart_waitstate = 1;
                 end
            end
-        end             
-        
+        end
+
         `STATE_SETUP_LC2:   begin
            if (uart_waitstate) begin
               nxt_uart_waitstate = 0;
               wb_cyc_i = 1'b0;
               wb_stb_i = 1'b0;
-           end else begin                        
+           end else begin
               wb_we_i = 1'b1;
               wb_adr_i = `UART_BASE + `UART_REG_LC;
               wb_dat_i = {24'b0, 8'b00000011};
@@ -239,28 +237,28 @@ module char2uart(/*AUTOARG*/
                 end
            end
         end
-        
+
         `STATE_SETUP_WAIT:    begin // UART Wait for NOC
            if (uart_waitstate) begin
               nxt_uart_waitstate = 0;
               wb_cyc_i = 1'b0;
               wb_stb_i = 1'b0;
            end else begin
-              
-              in_char_ready = 1'b1;  
+
+              in_char_ready = 1'b1;
               nxt_in_character = in_char_data;
-              
+
         if (wb_int_o) begin
                  nxt_uart_state = `STATE_RECEIVE_READ;
                  nxt_uart_waitstate = 1;
-              end else if(in_char_valid)    begin                                
+              end else if(in_char_valid)    begin
                  nxt_uart_state = `STATE_WAIT_THRE;
                  nxt_uart_waitstate = 1;
               end else begin
                  nxt_uart_state = `STATE_SETUP_WAIT;
                  nxt_uart_waitstate = 0;
               end
-        
+
            end
         end // case: `STATE_SETUP_WAIT
 
@@ -285,28 +283,28 @@ module char2uart(/*AUTOARG*/
                     // that the FSM will return here after receiving and
                     // continue the operation
 //                  if (wb_int_o) begin
- //                      nxt_uart_state = `STATE_RECEIVE_READ;                 
+ //                      nxt_uart_state = `STATE_RECEIVE_READ;
 //                  end else begin
                        nxt_uart_state = `STATE_WAIT_THRE;
 //                  end
                  end
               end
            end
-        end 
-        
+        end
+
         `STATE_SETUP_TRANSMIT: begin // UART Tramsmitting
            if (uart_waitstate) begin
               nxt_uart_waitstate = 0;
               wb_cyc_i = 1'b0;
               wb_stb_i = 1'b0;
-              
+
            end else begin
               wb_we_i = 1'b1;
               wb_adr_i =`UART_BASE + `UART_REG_TR;
               wb_dat_i = {in_character, 24'h0};
               wb_sel_i= 4'b1000;
               wb_cyc_i = 1'b1;
-              wb_stb_i = 1'b1;             
+              wb_stb_i = 1'b1;
               if(wb_ack_o) begin
                  nxt_uart_state = `STATE_SETUP_WAIT;
                  nxt_uart_waitstate = 1;
@@ -318,7 +316,7 @@ module char2uart(/*AUTOARG*/
            if (uart_waitstate) begin
               nxt_uart_waitstate = 0;
               wb_cyc_i = 1'b0;
-              wb_stb_i = 1'b0;   
+              wb_stb_i = 1'b0;
            end else begin
               wb_we_i = 1'b0;
               wb_adr_i =`UART_BASE + `UART_REG_RB;
@@ -331,16 +329,15 @@ module char2uart(/*AUTOARG*/
               end
            end // else: !if(uart_waitstate)
          end // case: `STATE_SETUP_RECEIVE_READ
-         
+
         `STATE_SETUP_RECEIVE: begin // UART Receiving
            out_char_valid = 1'b1;
            out_char_data = out_character;
            if (out_char_ready) begin
               nxt_uart_state = `STATE_SETUP_WAIT;
-           end   
+           end
         end
       endcase
    end
-   
-endmodule
 
+endmodule

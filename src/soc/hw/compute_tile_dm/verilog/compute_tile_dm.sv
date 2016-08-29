@@ -27,12 +27,8 @@
  */
 
 `include "lisnoc_def.vh"
-`include "optimsoc_def.vh"
-`include "dbg_config.vh"
 
-//`ifdef OPTIMSOC_DEBUG_ENABLE_MAM
 import dii_package::dii_flit;
-//`endif
 
 import opensocdebug::mor1kx_trace_exec;
 import optimsoc::config_t;
@@ -53,21 +49,21 @@ module compute_tile_dm
    output [1:0] debug_ring_in_ready,
    output dii_flit [1:0] debug_ring_out,
    input [1:0] debug_ring_out_ready,
-`ifdef OPTIMSOC_CTRAM_WIRES
-   output [31:0] wb_mem_adr_i,
-   output        wb_mem_cyc_i,
-   output [31:0] wb_mem_dat_i,
-   output [3:0]  wb_mem_sel_i,
-   output        wb_mem_stb_i,
-   output        wb_mem_we_i,
-   output        wb_mem_cab_i,
-   output [2:0]  wb_mem_cti_i,
-   output [1:0]  wb_mem_bte_i,
-   input         wb_mem_ack_o,
-   input         wb_mem_rty_o,
-   input         wb_mem_err_o,
-   input [31:0]  wb_mem_dat_o,
-`endif
+
+   output [31:0] wb_ext_adr_i,
+   output        wb_ext_cyc_i,
+   output [31:0] wb_ext_dat_i,
+   output [3:0]  wb_ext_sel_i,
+   output        wb_ext_stb_i,
+   output        wb_ext_we_i,
+   output        wb_ext_cab_i,
+   output [2:0]  wb_ext_cti_i,
+   output [1:0]  wb_ext_bte_i,
+   input         wb_ext_ack_o,
+   input         wb_ext_rty_o,
+   input         wb_ext_err_o,
+   input [31:0]  wb_ext_dat_o,
+
    input clk,
    input rst_cpu, rst_sys, rst_dbg,
 
@@ -91,6 +87,19 @@ module compute_tile_dm
    assign wb_mem_clk_i = clk;
    assign wb_mem_rst_i = rst_sys;
 
+   logic [31:0] wb_mem_adr_i;
+   logic        wb_mem_cyc_i;
+   logic [31:0] wb_mem_dat_i;
+   logic [3:0]  wb_mem_sel_i;
+   logic        wb_mem_stb_i;
+   logic        wb_mem_we_i;
+   logic        wb_mem_cab_i;
+   logic [2:0]  wb_mem_cti_i;
+   logic [1:0]  wb_mem_bte_i;
+   logic         wb_mem_ack_o;
+   logic         wb_mem_rty_o;
+   logic         wb_mem_err_o;
+   logic [31:0]  wb_mem_dat_o;
 
    dii_flit [CONFIG.DEBUG_NUM_MODS-1:0] dii_in;
    logic [CONFIG.DEBUG_NUM_MODS-1:0]    dii_in_ready;
@@ -117,22 +126,6 @@ module compute_tile_dm
             .ext_out_ready (debug_ring_out_ready));
       end // if (USE_DEBUG)
    endgenerate
-
-`ifndef OPTIMSOC_CTRAM_WIRES // !`ifdef OPTIMSOC_CTRAM_WIRES
-   wire [32-1:0] wb_mem_adr_i;
-   wire [1:0]    wb_mem_bte_i;
-   wire [2:0]    wb_mem_cti_i;
-   wire          wb_mem_cyc_i;
-   wire [32-1:0] wb_mem_dat_i;
-   wire [4-1:0]  wb_mem_sel_i;
-   wire          wb_mem_stb_i;
-   wire          wb_mem_we_i;
-
-   wire          wb_mem_ack_o;
-   wire          wb_mem_err_o;
-   wire          wb_mem_rty_o;
-   wire [32-1:0] wb_mem_dat_o;
-`endif
 
    wire [31:0]   busms_adr_o[0:NR_MASTERS-1];
    wire          busms_cyc_o[0:NR_MASTERS-1];
@@ -462,33 +455,51 @@ module compute_tile_dm
                        .wb_out_rty_o    (wb_mem_rty_o),          // Templated
                        .wb_out_dat_o    (wb_mem_dat_o));                 // Templated
 
-`ifndef OPTIMSOC_CTRAM_WIRES
-   /* wb_sram_sp AUTO_TEMPLATE(
-    .wb_\(.*\) (wb_mem_\1),
-    ); */
-   wb_sram_sp
-      #(.DW(32),
-        .AW(32),
-        .MEM_SIZE(CONFIG.LMEM_SIZE),
-        .MEM_FILE(MEM_FILE))
-      u_ram(/*AUTOINST*/
-            // Outputs
-            .wb_ack_o                   (wb_mem_ack_o),          // Templated
-            .wb_err_o                   (wb_mem_err_o),          // Templated
-            .wb_rty_o                   (wb_mem_rty_o),          // Templated
-            .wb_dat_o                   (wb_mem_dat_o),          // Templated
-            // Inputs
-            .wb_adr_i                   (wb_mem_adr_i),          // Templated
-            .wb_bte_i                   (wb_mem_bte_i),          // Templated
-            .wb_cti_i                   (wb_mem_cti_i),          // Templated
-            .wb_cyc_i                   (wb_mem_cyc_i),          // Templated
-            .wb_dat_i                   (wb_mem_dat_i),          // Templated
-            .wb_sel_i                   (wb_mem_sel_i),          // Templated
-            .wb_stb_i                   (wb_mem_stb_i),          // Templated
-            .wb_we_i                    (wb_mem_we_i),           // Templated
-            .wb_clk_i                   (wb_mem_clk_i),          // Templated
-            .wb_rst_i                   (wb_mem_rst_i));                 // Templated
-`endif
+   generate
+      if ((CONFIG.MEMORY_ACCESS == DISTRIBUTED) &&
+       (CONFIG.LMEM_STYLE == PLAIN)) begin : gen_sram
+         /* wb_sram_sp AUTO_TEMPLATE(
+          .wb_\(.*\) (wb_mem_\1),
+          ); */
+         wb_sram_sp
+           #(.DW(32),
+             .AW(32),
+             .MEM_SIZE(CONFIG.LMEM_SIZE),
+             .MEM_FILE(MEM_FILE),
+             .MEM_IMPL_TYPE("PLAIN")
+             )
+         u_ram(/*AUTOINST*/
+               // Outputs
+               .wb_ack_o                   (wb_mem_ack_o),          // Templated
+               .wb_err_o                   (wb_mem_err_o),          // Templated
+               .wb_rty_o                   (wb_mem_rty_o),          // Templated
+               .wb_dat_o                   (wb_mem_dat_o),          // Templated
+               // Inputs
+               .wb_adr_i                   (wb_mem_adr_i),          // Templated
+               .wb_bte_i                   (wb_mem_bte_i),          // Templated
+               .wb_cti_i                   (wb_mem_cti_i),          // Templated
+               .wb_cyc_i                   (wb_mem_cyc_i),          // Templated
+               .wb_dat_i                   (wb_mem_dat_i),          // Templated
+               .wb_sel_i                   (wb_mem_sel_i),          // Templated
+               .wb_stb_i                   (wb_mem_stb_i),          // Templated
+               .wb_we_i                    (wb_mem_we_i),           // Templated
+               .wb_clk_i                   (wb_mem_clk_i),          // Templated
+               .wb_rst_i                   (wb_mem_rst_i));                 // Templated
+      end else begin // if ((CONFIG.MEMORY_ACCESS == DISTRIBUTED) &&...
+         assign wb_ext_adr_i = wb_mem_adr_i;
+         assign wb_ext_bte_i = wb_mem_bte_i;
+         assign wb_ext_cti_i = wb_mem_cti_i;
+         assign wb_ext_cyc_i = wb_mem_cyc_i;
+         assign wb_ext_dat_i = wb_mem_dat_i;
+         assign wb_ext_sel_i = wb_mem_sel_i;
+         assign wb_ext_stb_i = wb_mem_stb_i;
+         assign wb_ext_we_i = wb_mem_we_i;
+         assign wb_mem_ack_o = wb_ext_ack_o;
+         assign wb_mem_rty_o = wb_ext_rty_o;
+         assign wb_mem_err_o = wb_ext_err_o;
+         assign wb_mem_dat_o = wb_ext_dat_o;
+      end // else: !if((CONFIG.MEMORY_ACCESS == DISTRIBUTED) &&...
+   endgenerate
 
    wire [DMA_ENTRIES:0] na_irq;
 
@@ -516,20 +527,12 @@ module compute_tile_dm
     .irq    (na_irq),
     );*/
    networkadapter_ct
-      #(.TILEID(ID),
+      #(.CONFIG(CONFIG),
+        .TILEID(ID),
         .ENABLE_MPSIMPLE(1),
         .ENABLE_DMA(NA_ENABLE_DMA),
-        .dma_entries(DMA_ENTRIES),
-        .vchannels(CONFIG.NOC_VCHANNELS),
-        .noc_flit_width(CONFIG.NOC_FLIT_WIDTH),
-        .NUMCORES(CONFIG.CORES_PER_TILE),
-        .COREBASE(COREBASE),
-        .DOMAIN_NUMCORES(CONFIG.TOTAL_NUM_CORES),
-        .GLOBAL_MEMORY_SIZE(CONFIG.GMEM_SIZE),
-        .GLOBAL_MEMORY_TILE(CONFIG.GMEM_TILE),
-        .LOCAL_MEMORY_SIZE(CONFIG.LMEM_SIZE),
-        .NUMCTS(CONFIG.NUMCTS),
-        .CTLIST(CONFIG.CTLIST[CONFIG.NUMCTS-1:0]))
+        .DMA_ENTRIES(DMA_ENTRIES),
+        .COREBASE(COREBASE))
       u_na(
 `ifdef OPTIMSOC_CLOCKDOMAINS
  `ifdef OPTIMSOC_CDC_DYNAMIC

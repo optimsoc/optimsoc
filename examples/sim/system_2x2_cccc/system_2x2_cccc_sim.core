@@ -14,13 +14,6 @@ usage = sim synth
 files =
   tb_system_2x2_cccc.sv
 
-[fileset include_files]
-file_type = verilogSource
-is_include_file = true
-usage = sim synth
-files =
-  optimsoc_def.vh
-
 [verilator]
 verilator_options = --trace -Wno-fatal -CFLAGS "-std=c++11" -LDFLAGS "-pthread"
 tb_toplevel = tb_system_2x2_cccc.cpp

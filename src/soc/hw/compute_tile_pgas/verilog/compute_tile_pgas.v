@@ -27,7 +27,6 @@
  */
 
 `include "lisnoc_def.vh"
-`include "optimsoc_def.vh"
 `include "dbg_config.vh"
 
 module compute_tile_pgas(
@@ -154,7 +153,7 @@ module compute_tile_pgas(
    wire [19:0]   pic_ints_i;
    assign pic_ints_i[19:4] = 16'h0;
    assign pic_ints_i[1:0] = 2'b00;
-   
+
    /* or1200_module AUTO_TEMPLATE(
     .clk_i          (clk),
     .rst_i          (rst_cpu),

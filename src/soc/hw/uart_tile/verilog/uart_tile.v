@@ -1,5 +1,4 @@
 `include "uart_defines.v"
-`include "optimsoc_def.vh"
 
 // The ready signal is driven by the uart, although lcd is always ready
 
@@ -18,20 +17,20 @@ module uart_tile(
    parameter ID = 0;
    parameter VCHANNELS = 3;
    parameter USE_VCHANNEL = 0;
-  
+
    parameter ph_dest_width = 5;
    parameter ph_cls_width = 3;
    parameter ph_src_width = 5;
-   
+
    parameter destination = 0;
-   parameter pkt_class = 0; 
-   
+   parameter pkt_class = 0;
+
    parameter noc_data_width = 32;
    parameter noc_type_width = 2;
    localparam NOC_FLIT_WIDTH = noc_data_width+noc_type_width;
 
    parameter UART_BAUD_RATE = 115200;
-   
+
    localparam uart_data_width = `UART_DATA_WIDTH;
    localparam uart_addr_width = `UART_ADDR_WIDTH;
 
@@ -41,7 +40,7 @@ module uart_tile(
 
    output stx_pad_o;
    input  srx_pad_i;
-   
+
    input [NOC_FLIT_WIDTH-1:0] noc_in_flit;
    input [VCHANNELS-1:0]      noc_in_valid;
    output [VCHANNELS-1:0]     noc_in_ready;
@@ -102,7 +101,7 @@ module uart_tile(
     .rd_data (noc_out_flit),
     .rd_empty (fifo_out_empty),
     ) */
-   
+
    cdc_fifo
     #(.DW(NOC_FLIT_WIDTH))
    u_outcdc(/*AUTOINST*/
@@ -118,16 +117,16 @@ module uart_tile(
             .rd_en                      (|noc_out_ready),        // Templated
             .wr_en                      (noc_out_valid_cdc),     // Templated
             .wr_data                    (noc_out_flit_cdc));     // Templated
-   
-     
-   
+
+
+
 `ifdef OPTIMSOC_UART_LCD_ENABLE
    output [3:0]                lcd_data;
    output                      lcd_en;
    output                      lcd_rw;
    output                      lcd_rs;
 `endif
-   
+
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [7:0]           in_char_data;           // From u_noc2char of noc2char.v
@@ -148,7 +147,7 @@ module uart_tile(
    // End of automatics
 
    wire                 uart_in_valid;
-   
+
 `ifdef OPTIMSOC_UART_LCD_ENABLE
    wire                 lcd_in_valid;
 
@@ -157,7 +156,7 @@ module uart_tile(
     * .. | type | row | col | char |
     * ---+------+-----+-----+------+
     *      13      12   11-8   7-0
-    * 
+    *
     * UART packets: type=0, row, col unused
     * LCD packets: type=1, row, col of lcd
     */
@@ -168,18 +167,18 @@ module uart_tile(
 //   assign lcd_in_valid = noc_in_valid[use_vchannel] &
    assign lcd_in_valid = noc_in_valid_cdc &
                          noc_in_flit_cdc[13];
-`else // !`ifdef OPTIMSOC_UART_LCD_ENABLE  
+`else // !`ifdef OPTIMSOC_UART_LCD_ENABLE
 //   assign uart_in_valid = noc_in_valid[use_vchannel];
    assign uart_in_valid = noc_in_valid_cdc;
 `endif
-   
+
    /* noc2char AUTO_TEMPLATE(
     .noc_flit  (noc_in_flit_cdc[]),
     .noc_valid (uart_in_valid),
     .noc_ready (noc_in_ready_cdc),
     .char_\(.*\) (in_char_\1[]),
     ); */
-   
+
    noc2char
      u_noc2char(/*AUTOINST*/
                 // Outputs
@@ -192,7 +191,7 @@ module uart_tile(
                 .noc_flit               (noc_in_flit_cdc[33:0]), // Templated
                 .noc_valid              (uart_in_valid),         // Templated
                 .char_ready             (in_char_ready));        // Templated
-   
+
    char2uart
      #(.UART_BAUD_RATE(UART_BAUD_RATE))
    u_char2uart(/*AUTOINST*/
@@ -214,7 +213,7 @@ module uart_tile(
                .out_char_ready          (out_char_ready),
                .wb_dat_o                (wb_dat_o[uart_data_width-1:0]),
                .wb_ack_o                (wb_ack_o),
-               .wb_int_o                (wb_int_o));      
+               .wb_int_o                (wb_int_o));
 
    /* char2noc AUTO_TEMPLATE(
     .noc_flit  (noc_out_flit_cdc[]),
@@ -223,7 +222,7 @@ module uart_tile(
     .char_\(.*\) (out_char_\1[]),
     ); */
 
-   char2noc 
+   char2noc
    #(.ph_dest_width(ph_dest_width),.ph_cls_width(ph_cls_width),.ph_src_width(ph_src_width),.destination(destination),.pkt_class(pkt_class),.id(ID))
      u_char2noc(/*AUTOINST*/
                 // Outputs
@@ -236,8 +235,8 @@ module uart_tile(
                 .noc_ready              (noc_out_ready_cdc),     // Templated
                 .char_valid             (out_char_valid),        // Templated
                 .char_data              (out_char_data[7:0]));   // Templated
-   
-   
+
+
    /* uart_top AUTO_TEMPLATE(
     .srx_pad_i (srx_pad_i),
     .cts_pad_i (1'b1),
@@ -251,7 +250,7 @@ module uart_tile(
     .wb_clk_i  (clk),
     .wb_rst_i  (rst),
     ); */
-   
+
    uart_top
      #(/*AUTOINSTPARAM*/
        // Parameters
