@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# show bash commands and exit script on first error
+set -ex
 set -x 
 
 export PYTHONPATH=$OPTIMSOC/host/lib/python2.7/site-packages/ 
