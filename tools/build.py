@@ -758,6 +758,10 @@ export FUSESOC_CORES=$OPTIMSOC/soc/hw:$OPTIMSOC/external/lisnoc:$OPTIMSOC/extern
 export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/host/lib/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
 export PATH=$OPTIMSOC/host/bin:$PATH
 export LD_LIBRARY_PATH=$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
+
+# Adapting the PYTHONPATH is not so nice especially if Python 3 is involved.
+# But it works for us currently, and a real solution is rather tricky.
+export PYTHONPATH=$OPTIMSOC/host/lib/python2.7/site-packages:$PYTHONPATH
 """.format(options.version))
 
 """Get the version number from the source code
