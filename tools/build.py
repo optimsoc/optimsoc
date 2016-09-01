@@ -1,4 +1,28 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+#
+# Copyright (c) 2016 by the author(s)
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+# Author(s):
+#   Philipp Wagner <philipp.wagner@tum.de>
+#
 #
 # Build, package and install the OpTiMSoC distribution
 #
@@ -19,6 +43,7 @@ from optparse import OptionParser
 import os
 import subprocess
 import shutil
+import sys
 
 ###############################################################################
 # Logging
@@ -37,28 +62,38 @@ def dbg(msg):
 Prints an info message prepended by (I) on the command line
 """
 def info(msg):
-    print("(I) {}".format(msg))
+    # we only print bold in verbose mode to make our messages more visible
+    if console_colors and logging_verbose:
+        print("\033[1m(I) {}\033[0m".format(msg))
+    else:
+        print("(I) {}".format(msg))
 
 """Print warning message
 
 Prints a warning message prepended by (W) on the command line
 """
 def warn(msg):
-    print("(W) {}".format(msg))
+    if console_colors:
+        print("\033[93m(W) {}\033[0m".format(msg))
+    else:
+        print("(W) {}".format(msg))
 
 """Print error message
 
 Prints an error message prepended by (E) on the command line
 """
 def error(msg):
-    print("(E) {}".format(msg))
+    if console_colors:
+        print("\033[91m(E) {}\033[0m".format(msg))
+    else:
+        print("(E) {}".format(msg))
 
 """Print fatal message
 
 Cause a fatal error, print a message prepended by (E) and exit
 """
 def fatal(msg):
-    print("(E) {}".format(msg))
+    error(msg)
     exit(1)
 
 ###############################################################################
@@ -145,7 +180,26 @@ commands output and exits then.
 def run_command(cmd, **kwargs):
     try:
         dbg("Executing command:\n{}".format(cmd))
-        subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, **kwargs)
+
+        if not logging_verbose:
+            subprocess.check_output(cmd, stderr=subprocess.STDOUT,
+                                    universal_newlines=True,
+                                    shell=True, **kwargs)
+        else:
+            # In verbose mode, we forward all output of the executed command
+            # to the user directly to make debugging easier.
+            popen = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT,
+                                     universal_newlines=True,
+                                     shell=True, **kwargs)
+            stdout_lines = iter(popen.stdout.readline, "")
+            for stdout_line in stdout_lines:
+                print(stdout_line, end="")
+
+            popen.stdout.close()
+            return_code = popen.wait()
+            if return_code != 0:
+                raise subprocess.CalledProcessError(return_code, cmd)
     except subprocess.CalledProcessError as e:
         fatal("Error {}\n{}".format(e, e.output))
 
@@ -307,14 +361,14 @@ def build_hw_modules(options):
     else:
         file_copytree(modsrcdir, moddistdir)
 
-"""Build and install the examples
+"""Build and install the simulation examples
 """
-def build_examples(options, env):
+def build_examples_sim(options, env):
     src = options.src
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
 
-    info("Build examples (verilator based)")
+    info("Build examples (Verilator-based simulation)")
 
     exsrc = os.path.join(src, "examples", "sim")
     exobjdir = os.path.join(objdir, "examples", "sim")
@@ -337,14 +391,56 @@ def build_examples(options, env):
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "optimsoc-fusesoc --verbose --cores-root {} sim --build-only optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} sim --build-only optimsoc:examples:{}".format(buildsrcdir, ex["name"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
-        info("  + Install build artifacts")
+        info("  + Copy build artifacts")
         ensure_directory(builddist)
         for f in ex["files"]:
             srcf = os.path.join(buildobjdir, f)
             destf = os.path.join(builddist, ex["name"])
+            file_copy(srcf, destf)
+
+
+
+"""Build and install the FPGA examples
+"""
+def build_examples_fpga(options, env):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    info("Build FPGA examples")
+
+    exsrc = os.path.join(src, "examples", "fpga")
+    exobjdir = os.path.join(objdir, "examples", "fpga")
+    exdist = os.path.join(dist, "examples", "fpga")
+
+    examples = [
+      { "name": "compute_tile_nexys4ddr",
+        "path": "nexys4ddr/compute_tile",
+        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr.bit" ] },
+      { "name": "system_2x2_cccc_nexys4ddr",
+        "path": "nexys4ddr/system_2x2_cccc",
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_nexys4ddr/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr.bit" ] },
+    ]
+
+    for ex in examples:
+        info(" + {}".format(ex["name"]))
+        buildsrcdir = os.path.join(exsrc, ex["path"])
+        buildobjdir = os.path.join(exobjdir, ex["path"])
+        builddist = os.path.join(exdist, ex["path"])
+
+        info("  + Build")
+        ensure_directory(buildobjdir)
+        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        run_command(cmd, cwd=buildobjdir, env=env)
+
+        info("  + Copy build artifacts")
+        ensure_directory(builddist)
+        for f in ex["files"]:
+            srcf = os.path.join(buildobjdir, f)
+            destf = os.path.join(builddist, ex["name"]+".bit")
             file_copy(srcf, destf)
 
 """Build and install the documentation
@@ -558,7 +654,7 @@ def build_externals_fusesoc(options):
 test -z "$OPTIMSOC" && (echo 'The environment variable $OPTIMSOC must be set.' >&2; exit 1)
 exec python3 $OPTIMSOC/tools/fusesoc/main.py $@
 """)
-    os.chmod(fusesoc_wrapper_file, 0755)
+    os.chmod(fusesoc_wrapper_file, 0o755)
 
 
 """Setup the OpTiMSoC environment variables pointing towards the dist directory
@@ -651,10 +747,25 @@ def get_version(src):
 
     get_version_tool = os.path.join(srctools, "get-version.sh")
 
-    proc = subprocess.Popen(get_version_tool, stdout=subprocess.PIPE,
-                            shell=True, cwd=srctools)
-    return proc.stdout.read().split("\n", 1)[0]
+    output = subprocess.check_output(get_version_tool,
+                                     stderr=subprocess.STDOUT, shell=True)
+    return output.decode("utf-8").split("\n", 1)[0]
 
+"""Parse boolean yes/no command-line options
+"""
+def optparse_parse_boolean(option, opt_str, value, parser):
+    if value is None:
+        value = option.default
+
+    if value.lower() in [ 'yes', 'y', 'true' ]:
+        value_boolean = True
+    elif value.lower() in [ 'no', 'n', 'false' ]:
+        value_boolean = False
+    else:
+        raise OptionValueError("Invalid choice {} for option {}.",
+                               value, opt_str)
+
+    setattr(parser.values, option.dest, value_boolean)
 
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
@@ -670,12 +781,6 @@ if __name__ == '__main__':
     parser.add_option("-v", "--set-version", dest="version",
                       help="set the version number to the given value, "
                            "overriding the detected version.")
-    parser.add_option("--no-doc", dest="nodoc", action="store_true",
-                      help="Skip building of documentation [default: %default]",
-                      default=False)
-    parser.add_option("--no-examples", dest="noexamples", action="store_true",
-                      help="Skip building of examples [default: %default]",
-                      default=False)
     parser.add_option("--link-hw", dest="link_hw", action="store_true",
                       help="Symlink hardware files to output directory instead "
                            "of copying [default: %default]",
@@ -684,9 +789,40 @@ if __name__ == '__main__':
                       help="Enable verbose logging output [default: %default]",
                       default=False)
 
+    parser.add_option("--with-docs", dest="with_docs",
+                      action="store_true",
+                      help="Build the documentation [default: %default]",
+                      default=True)
+    parser.add_option("--without-docs", dest="with_docs",
+                      action="store_false",
+                      help="Build without the documentation")
+
+    parser.add_option("--with-examples-sim", dest="with_examples_sim",
+                      action="store_true",
+                      help="Build and include the simulation examples "
+                           "[default: %default]",
+                      default=True)
+    parser.add_option("--without-examples-sim", dest="with_examples_sim",
+                      action="store_false",
+                      help="Do not build and include the simulation examples ")
+
+    parser.add_option("--with-examples-fpga", dest="with_examples_fpga",
+                      action="store_true",
+                      help="Build and include bitstreams for the FPGA examples "
+                           "[default: %default]",
+                      default=False)
+    parser.add_option("--without-examples-fpga", dest="with_examples_fpga",
+                      action="store_false",
+                      help="Do not build and include bitstreams for the FPGA "
+                           "examples [default: %default]")
+
     (options, args) = parser.parse_args()
 
     logging_verbose = options.verbose
+
+    # only use escape sequences (colors/bold) if we're running on a real
+    # terminal
+    console_colors = sys.stdout.isatty()
 
     if not options.version:
         options.version = get_version(mysrcdir)
@@ -700,20 +836,19 @@ if __name__ == '__main__':
     info(" source: {}".format(options.src))
     info(" objdir: {}".format(options.objdir))
 
-
     try:
         # Prepare build output directory structure
         ensure_directory(options.objdir)
         prepare_distdir(options)
 
-        # Build an install into objdir/dist all parts of OpTiMSoC
+        # Build and install into objdir/dist all parts of OpTiMSoC
         build_tools(options)
 
         build_soc_software(options)
 
         build_hw_modules(options)
 
-        if not options.nodoc:
+        if options.with_docs:
             build_docs(options)
 
         # External dependencies
@@ -737,12 +872,16 @@ if __name__ == '__main__':
         write_environment_file(options)
 
         # Examples
-        if not options.noexamples:
-            # From here on we will need our new environment
+        if (options.with_examples_sim or options.with_examples_fpga):
             env = os.environ
             set_environment(options, env)
 
-            build_examples(options, env)
+        if options.with_examples_sim:
+            build_examples_sim(options, env)
+
+        if options.with_examples_fpga:
+            build_examples_fpga(options, env)
+
     except Exception as e:
         if logging_verbose:
             raise
