@@ -139,7 +139,7 @@ module capture_FSM (
                 word_valid <= 0;
                 pixel_buffer <= 0;
                 //addr <= 0;
-                if (vsync == 0 && empty == 0 && full == 0) begin
+                if (vsync == 0 && empty == 0) begin
                     state <= CAPTURE;
                     //irq_new_frame <= 1;
                 end 
@@ -150,7 +150,7 @@ module capture_FSM (
 //                if (word_valid == 1) begin
 //                    addr <= addr + 1;
 //                end
-                if (vsync == 1 && href == 1 && empty == 0 && full == 0) begin
+                if (vsync == 1 && href == 1 && empty == 0) begin
                     byte_cntr <= byte_cntr + 1;
                     reg0 <= reg1;
                     reg1 <= reg2;

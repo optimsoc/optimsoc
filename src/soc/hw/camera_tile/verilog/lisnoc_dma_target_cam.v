@@ -40,7 +40,7 @@ module lisnoc_dma_target_cam (/*AUTOARG*/
    wb_we_o, wb_dat_o, wb_adr_o, wb_sel_o, wb_cti_o, wb_bte_o,
    // Inputs
    clk, rst, noc_out_ready, noc_in_flit, noc_in_valid, wb_ack_i,
-   wb_dat_i, irq_new_frame, in_first_word
+   wb_dat_i, irq_new_frame, in_first_word, config_finished
    );
 
    parameter flit_width = `FLIT_WIDTH;
@@ -83,6 +83,7 @@ module lisnoc_dma_target_cam (/*AUTOARG*/
    // interrupt input which signals if new frame has started
    input irq_new_frame;
    input [1:0] in_first_word;
+   input config_finished;
 
    // NOC-Interface
    output reg [`FLIT_WIDTH-1:0] noc_out_flit;
@@ -394,7 +395,7 @@ module lisnoc_dma_target_cam (/*AUTOARG*/
 
            //if (buf_valid) begin
            // CHANGE NA_CAMERA
-           if ((buf_valid == 1) && (irq_new_frame == 1)) begin
+           if ((buf_valid == 1) && (irq_new_frame == 1) && (config_finished == 1)) begin
               if (buf_flit[`PACKET_TYPE_MSB:`PACKET_TYPE_LSB] == `PACKET_TYPE_L2R_REQ) begin
                 nxt_state = STATE_L2R_GETADDR;
               end  else if(buf_flit[`PACKET_TYPE_MSB:`PACKET_TYPE_LSB] == `PACKET_TYPE_R2L_REQ) begin

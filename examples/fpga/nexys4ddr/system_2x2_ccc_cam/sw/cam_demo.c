@@ -7,7 +7,10 @@
 #include <assert.h>
 
 // 640x480 pixels (VGA) = 307200 pixels, with RGB565 = 2 byte/pixel = 0.5 words/pixel
-#define FRAME_SIZE_WORDS 153600
+//#define FRAME_SIZE_WORDS 153600 // VGA
+//#define FRAME_SIZE_WORDS 240000 // SVGA
+//#define FRAME_SIZE_WORDS 12672 // QCIF
+#define FRAME_SIZE_WORDS 960000 // UXGA
 //#define FRAME_SIZE_WORDS 50688
 
 uint32_t data[FRAME_SIZE_WORDS];
@@ -57,9 +60,10 @@ void main() {
         buffer[1] = 0;
         buffer[1] |= 1 << 0; // update bit
         buffer[1] |= 1 << 1; // IMAGE_MODE = RGB
-        buffer[1] |= 3 << 3; // RESOLUTION = VGA
+        buffer[1] |= 6 << 3; // RESOLUTION = VGA
         buffer[1] |= 1 << 6; // TEST_PATTERN = ON
-        buffer[1] |= 1 << 7; // CLKRC = 1
+	// Only with values >= 4 the image is correct for VGA
+        buffer[1] |= 1 << 11; // CLKRC = 16 + 1 = 17
         buffer[1] |= 0 << 13; // clock doublers OFF
 
         printf("sending configuration: %x\n", buffer[1]);
@@ -85,18 +89,18 @@ void main() {
         // Send the message 2
         optimsoc_mp_simple_send(1,(uint32_t*) buffer);
 
-
+	/*
         // SLEEP 50 Million instructions
         printf("sleep, pt 1\n");
         for (unsigned int i = 0; i < 5000000; i++) {
            __asm__ volatile("l.nop");
         }
         printf("sleep done, continue with DMA\n");
-
+	*/
 
 
         printf("DMA transfer\n");
-        printf("Initialize data\n");
+        printf("Initialize data\n"); 
 
         for (unsigned i=0; i<256; i++) {
             //data[i] = i | i<<24 | i<<16 | i<<8;
@@ -157,6 +161,10 @@ void main() {
         printf("waiting for response\n");
 
         dma_wait(dma);
+
+	for (int s = 0; s < 5; s++) {
+                __asm__ volatile("l.nop");
+        }
         printf("done waiting\n");
 
         // output pixel data to host

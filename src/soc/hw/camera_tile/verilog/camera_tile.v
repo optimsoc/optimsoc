@@ -311,7 +311,8 @@ module camera_tile(
         .wb_sel_o(busms_sel_o[0][3:0]),
         .wb_cti_o(),
         .wb_bte_o(),
-        .in_first_word(w_out_first_word)
+        .in_first_word(w_out_first_word),
+        .config_finished(w_config_finished)
         );
         
             

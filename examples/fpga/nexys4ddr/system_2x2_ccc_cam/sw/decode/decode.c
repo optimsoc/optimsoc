@@ -3,8 +3,11 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define IMGSIZE (640*480)
-//#define IMGSIZE (352*288)
+//#define IMGSIZE (640*480) // VGA
+//#define IMGSIZE (800*600) // SVGA
+//#define IMGSIZE (176*144) // QCIF
+#define IMGSIZE (1600*1200) // UXGA
+//#define IMGSIZE (352*288) // CIF
 
 int main(int argc, char* argv[])
 {
@@ -24,8 +27,11 @@ int main(int argc, char* argv[])
     } rgb888_t;
 
 
-    uint16_t in_rgb565[IMGSIZE];
-    rgb888_t out_rgb888[IMGSIZE];
+//    uint16_t in_rgb565[IMGSIZE];
+//    rgb888_t out_rgb888[IMGSIZE];
+
+    uint16_t* in_rgb565 = calloc(sizeof(uint16_t), IMGSIZE);
+    rgb888_t* out_rgb888 = calloc(sizeof(rgb888_t), IMGSIZE);
 
     // read RGB565
     size_t size_read = fread(in_rgb565, sizeof(uint16_t), IMGSIZE, input_fh);
