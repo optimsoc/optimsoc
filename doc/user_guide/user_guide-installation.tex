@@ -24,7 +24,10 @@ packages to be installed:
 
 \begin{lstlisting}
 sudo apt-get -y install git build-essential tcl libusb-1.0-0-dev \
-  libboost-dev libelf-dev python3 python3-yaml
+  libboost-dev libelf-dev swig python3 python3-yaml
+
+# optional, but highly recommended: a waveform viewer
+sudo apt-get -y install gtkwave
 \end{lstlisting}
 
 \section{Option 1: Install the OpTiMSoC binary distribution (recommended)}
@@ -39,21 +42,21 @@ the \verb|base| package contains the programs, libraries and tools
 to get started. The \verb|examples| package contains prebuilt verilator
 simulations for the real quick start.
 
-For example take the 2015.1 release and download both \verb|base| and
+For example take the 2016.1 release and download both \verb|base| and
 \verb|examples|. Then create the base folder and extract the package:
 
 \begin{lstlisting}
 sudo mkdir /opt/optimsoc
 sudo chown $USER /opt/optimsoc
-tar -xzf optimsoc-2015.1-base.tgz -C /opt/optimsoc
-tar -xzf optimsoc-2015.1-examples.tgz -C /opt/optimsoc
+tar -xzf optimsoc-2016.1-base.tgz -C /opt/optimsoc
+tar -xzf optimsoc-2016.1-examples.tgz -C /opt/optimsoc
 \end{lstlisting}
 
 You can now use the installation after setting the environment with
 the pre-installed environment source script:
 
 \begin{lstlisting}
-cd /opt/optimsoc/2015.1
+cd /opt/optimsoc/2016.1
 source optimsoc-environment.sh
 \end{lstlisting}
 
@@ -85,7 +88,7 @@ source /opt/optimsoc/setup_prebuilt.sh
 
 We recommend to put this line into your \verb|~/.bashrc| file as well.
 
-You are now ready to go to the tutorials.
+You are now ready to go to the tutorials in Chapter~\ref{chap:tutorials}.
 
 \section{Option 2: Build OpTiMSoC from sources}
 
