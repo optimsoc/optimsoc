@@ -45,7 +45,7 @@ before_install:
 # Execute the build
 install:
   - source ${TARGET_BASE}/setup_prebuilt.sh
-  - make BUILD_DOCS=no
+  - ./tools/build.py --verbose --without-examples-fpga --with-examples-sim --without-docs
 
 script:
   -
