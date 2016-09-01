@@ -376,29 +376,49 @@ def build_examples_sim(options, env):
 
     examples = [
       { "name": "compute_tile_sim",
+        "outname": "compute_tile_sim_singlecore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ] },
+        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "options": "--NUM_CORES 1" },
+      { "name": "compute_tile_sim",
+        "outname": "compute_tile_sim_dualcore",
+        "path": "compute_tile",
+        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "options": "--NUM_CORES 2" },
+      { "name": "compute_tile_sim",
+        "outname": "compute_tile_sim_quadcore",
+        "path": "compute_tile",
+        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "options": "--NUM_CORES 4" },
+
       { "name": "system_2x2_cccc_sim",
+        "outname": "system_2x2_cccc_sim_dualcore",
         "path": "system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ] },
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ],
+        "options": "--NUM_CORES 2"},
+      { "name": "system_2x2_cccc_sim",
+        "outname": "system_2x2_cccc_sim_dualcore_debug",
+        "path": "system_2x2_cccc",
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ],
+        "options": "--NUM_CORES 2 --USE_DEBUG 1"},
     ]
 
     for ex in examples:
-        info(" + {}".format(ex["name"]))
+        info(" + {} ({} {})".format(ex["outname"], ex["name"], ex["options"]))
         buildsrcdir = os.path.join(exsrc, ex["path"])
         buildobjdir = os.path.join(exobjdir, ex["path"])
         builddist = os.path.join(exdist, ex["path"])
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} sim --build-only optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} sim --build-only optimsoc:examples:{} {}".format(buildsrcdir, ex["name"], ex["options"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Copy build artifacts")
         ensure_directory(builddist)
         for f in ex["files"]:
             srcf = os.path.join(buildobjdir, f)
-            destf = os.path.join(builddist, ex["name"])
+            destf = os.path.join(builddist, ex["outname"])
             file_copy(srcf, destf)
 
 
