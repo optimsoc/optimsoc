@@ -778,7 +778,7 @@ if __name__ == '__main__':
     parser.add_option("-s", "--source", dest="src",
                       help="source folder [default: %default]",
                       default=mysrcdir)
-    parser.add_option("-v", "--set-version", dest="version",
+    parser.add_option("--set-version", dest="version",
                       help="set the version number to the given value, "
                            "overriding the detected version.")
     parser.add_option("--link-hw", dest="link_hw", action="store_true",
