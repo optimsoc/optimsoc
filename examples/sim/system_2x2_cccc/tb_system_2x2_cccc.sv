@@ -53,7 +53,7 @@ module tb_system_2x2_cccc(
 
    localparam base_config_t
      BASE_CONFIG = '{ NUMCTS: 4,
-                      CTLIST: {{60{16'hx}}, 16'h3, 16'h2, 16'h1, 16'h0},
+                      CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
