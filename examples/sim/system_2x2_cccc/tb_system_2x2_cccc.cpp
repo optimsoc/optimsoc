@@ -9,7 +9,7 @@
 
 using namespace simutilVerilator;
 
-VERILATED_TOPLEVEL(tb_system_2x2_cccc,clk, rst)
+VERILATED_TOPLEVEL(tb_system_2x2_cccc, clk, rst)
 
 int main(int argc, char *argv[])
 {
@@ -18,8 +18,11 @@ int main(int argc, char *argv[])
     VerilatedControl &simctrl = VerilatedControl::instance();
     simctrl.init(ct, argc, argv);
 
-    //    simctrl.addMemory("TOP.tb_compute_tile.u_compute_tile.u_ram.sp_ram.gen_sram_sp_impl.u_impl");
-    //    simctrl.setMemoryFuncs(do_readmemh, do_readmemh_file);
+    simctrl.addMemory("TOP.tb_system_2x2_cccc.u_system.gen_ct[0].u_ct.u_ram.sp_ram.gen_sram_sp_impl.u_impl");
+    simctrl.addMemory("TOP.tb_system_2x2_cccc.u_system.gen_ct[1].u_ct.u_ram.sp_ram.gen_sram_sp_impl.u_impl");
+    simctrl.addMemory("TOP.tb_system_2x2_cccc.u_system.gen_ct[2].u_ct.u_ram.sp_ram.gen_sram_sp_impl.u_impl");
+    simctrl.addMemory("TOP.tb_system_2x2_cccc.u_system.gen_ct[3].u_ct.u_ram.sp_ram.gen_sram_sp_impl.u_impl");
+    simctrl.setMemoryFuncs(do_readmemh, do_readmemh_file);
     simctrl.run();
 
     return 0;
