@@ -1,4 +1,5 @@
 \chapter{Develop OpTiMSoC}
+\label{chap:develop-optimsoc}
 
 After you have worked through some, or even all, of the tutorials in the
 previous chapter, you're now ready to bring your own ideas to live using
@@ -9,6 +10,67 @@ to contribute back to the OpTiMSoC project.
 We assumed in this whole tutorial that you are working on Linux. While it is
 certainly possible to use Windows or OS~X for development, we cannot provide
 help for those systems and you're on your own.
+
+\section{Building Hardware}
+When building software, engineers have gotten used to tools like \verb|make|, CMake and similar build systems.
+Such build tools ensure that all dependencies of a software project are met, and then start the various tools (such as the compiler, linker, etc.) to produce the output files, e.g. the program binary.
+In the hardware world, no standard tool for this job exists.
+A new, but very promising contestent in this sector is is \emph{FuseSoC}.
+
+FuseSoC allows developers to write \emph{core files}: short declarative files in an INI-like format that describe which components are required to build a hardware design.
+When you look around in \path{$OPTIMSOC/soc/hw} you'll find such core files for all components that make up the SoC.
+But the core files not only describe the modules inside the SoC design, they are also used to describe the toplevel SoC.
+
+For example, let's have a look at the file \path{$OPTIMSOC_SOURCE/examples/sim/compute_tile/compute_tile_sim.core} inside the OpTiMSoC source tree (it's not installed!).
+In there you find all dependencies that are needed to build the system with only one compute tile.
+You also find the toplevel files that are used to simulate the system in Verilator and in XSIM (the Vivado built-in simulator).
+
+The great benefit of using FuseSoC is that you can now simply compile and run the system with one simple command.
+
+Before we start, two notes:
+\begin{itemize}
+ \item OpTiMSoC uses a slightly modified version of FuseSoC. You can call it by running \verb|optimsoc-fusesoc|.
+ \item We set an environment variable (\verb|$FUSESOC_CORES|) during the installation that makes FuseSoC find all OpTiMSoC hardware modules. You do not need to add a special configuration for this. However, the examples inside \verb|$OPTIMSOC_SOURCE| are not part of this search path.
+ \item You can call \verb|optimsoc-fusesoc| from any directory. We recommend \textbf{not} calling FuseSoC from inside your source directory. (This allows you to just delete the build folder and retain a clean source folder.)
+\end{itemize}
+
+So let's look at a couple of examples how to build a SoC hardware with fusesoc.
+
+\begin{docnote}
+All the examples require an OpTiMSoC source tree to be available at \verb|$OPTIMSOC_SOURCE|.
+\end{docnote}
+
+
+\begin{enumerate}
+\item Build and run a Verilator-based simulation of a single compute tile.
+\begin{lstlisting}
+cd some/directory
+optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim optimsoc:examples:compute_tile_sim
+\end{lstlisting}
+
+\item Only build a Verilator simulation of a single compute tile
+\begin{lstlisting}
+optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim
+\end{lstlisting}
+
+\item Set the parameter \verb|NUM_CORES| to 2 to create a system with two CPU cores inside the compute tile.
+  You can have a look inside the top-level source file \path{$OPTIMSOC_SOURCE/examples/sim/compute_tile/tb_compute_tile.sv} for other parameters that are available.
+\begin{lstlisting}
+optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim --NUM_CORES 2
+\end{lstlisting}
+
+\item Synthesize a 2x2 system with four compute tiles for the Nexys 4 DDR board using Xilinx Vivado.
+This step requires Vivado to be installed and working, and a lot of time (approx. 30 minutes, depending on your machine).
+\begin{lstlisting}
+optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples build optimsoc:examples:system_2x2_cccc_nexys4ddr
+\end{lstlisting}
+
+\item Now flash the bitstream that the previous step generated to the FPGA.
+\begin{lstlisting}
+optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
+\end{lstlisting}
+\end{enumerate}
+
 
 \section{Choosing an Editor/IDE}
 
