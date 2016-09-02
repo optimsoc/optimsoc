@@ -31,7 +31,7 @@ OBJDIR := objdir
 BUILD_EXAMPLES := yes
 # Include FPGA bitstreams in the examples (yes/no)
 # Requires Xilinx Vivado to be installed
-BUILD_EXAMPLES_FPGA := no
+BUILD_EXAMPLES_FPGA := yes
 # Build documentation (yes/no)
 BUILD_DOCS := yes
 
@@ -69,25 +69,25 @@ install: build
 	mkdir -p $(INSTALL_TARGET)
 	cp -rT $(OBJDIR)/dist $(INSTALL_TARGET)
 
-dist: build
+dist:
 	tar -cz --directory $(OBJDIR) --exclude examples \
 		--transform "s/dist/$(version)/" \
 		-f $(OBJDIR)/optimsoc-$(version)-base.tar.gz dist
 
-	ifeq ($(BUILD_EXAMPLES),yes)
-		tar -cz --directory $(OBJDIR) \
-			--transform "s/dist/$(version)/" \
-			-f $(OBJDIR)/optimsoc-$(version)-examples.tar.gz dist/examples
-	endif
+ifeq ($(BUILD_EXAMPLES),yes)
+	tar -cz --directory $(OBJDIR) \
+		--transform "s/dist/$(version)/" \
+		-f $(OBJDIR)/optimsoc-$(version)-examples.tar.gz dist/examples
+endif
 
 	@echo
 	@echo The binary distribution packages have been written to
 	@echo $(OBJDIR)/optimsoc-$(version)-base.tar.gz
 
-	ifeq ($(BUILD_EXAMPLES),yes)
-		@echo The examples have been written to
-		@echo $(OBJDIR)/optimsoc-$(version)-examples.tar.gz
-	endif
+ifeq ($(BUILD_EXAMPLES),yes)
+	@echo The examples have been written to
+	@echo $(OBJDIR)/optimsoc-$(version)-examples.tar.gz
+endif
 
 clean:
 	rm -rf $(OBJDIR)
