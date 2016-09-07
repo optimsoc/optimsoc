@@ -48,7 +48,7 @@ AC_PROG_CC_C99
 AC_SYS_LARGEFILE
 AC_CONFIG_MACRO_DIR([m4])
 AM_SILENT_RULES([yes])
-LT_INIT([disable-shared pic-only])
+LT_INIT([disable-shared])
 AC_PREFIX_DEFAULT([/opt/optimsoc/systemsw/])
 
 AM_CONDITIONAL([OR1KOBJDUMPSET],[test "x$OR1KOBJDUMP" != "x"])
