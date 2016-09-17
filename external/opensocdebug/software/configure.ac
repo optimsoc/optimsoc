@@ -98,6 +98,7 @@ AC_CONFIG_FILES([
         src/tools/daemon/Makefile
         src/tools/osd_term/Makefile
         src/tools/cli/Makefile
+        src/tools/gdbserver/Makefile
         src/bindings/Makefile
         src/bindings/python/Makefile
         src/bindings/python/setup.py

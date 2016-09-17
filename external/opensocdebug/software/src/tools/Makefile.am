@@ -1,1 +1,1 @@
-SUBDIRS = daemon osd_term cli
+SUBDIRS = daemon osd_term cli gdbserver
