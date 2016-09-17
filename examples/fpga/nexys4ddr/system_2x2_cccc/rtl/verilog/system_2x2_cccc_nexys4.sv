@@ -27,8 +27,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-`include "optimsoc_def.vh"
-
 import dii_package::dii_flit;
 
 module system_2x2_cccc_nexys4
@@ -61,15 +59,18 @@ module system_2x2_cccc_nexys4
    output                ddr2_we_n
    );
 
-   parameter NUM_CORES = 1;
+   parameter integer NUM_CORES = 1;
+   localparam integer LMEM_SIZE = 32*1024*1024;
 
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 27;
    localparam DDR_DATA_WIDTH = 32;
    localparam TILE_ADDR_WIDTH = 25;
 
+
    localparam base_config_t
-     BASE_CONFIG = '{ NUMCTS: 4,
+     BASE_CONFIG = '{ NUMTILES: 4,
+                      NUMCTS: 4,
                       CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
@@ -77,8 +78,12 @@ module system_2x2_cccc_nexys4
                       NOC_DATA_WIDTH: 32,
                       NOC_TYPE_WIDTH: 2,
                       NOC_VCHANNELS: 3,
+                      NOC_VC_MPSIMPLE: 0,
+                      NOC_VC_DMA_REQ: 1,
+                      NOC_VC_DMA_RESP: 2,
                       MEMORY_ACCESS: DISTRIBUTED,
-                      LMEM_SIZE: 32*1024*1024,
+                      LMEM_SIZE: LMEM_SIZE,
+                      LMEM_STYLE: EXTERNAL,
                       USE_DEBUG: 1,
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1
@@ -165,19 +170,19 @@ module system_2x2_cccc_nexys4
       .c_glip_in (c_glip_in),
       .c_glip_out (c_glip_out),
 
-      .wb_mem_adr_i  ({c_wb_ddr3.adr_o, c_wb_ddr2.adr_o, c_wb_ddr1.adr_o, c_wb_ddr0.adr_o}),
-      .wb_mem_cyc_i  ({c_wb_ddr3.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr0.cyc_o}),
-      .wb_mem_dat_i  ({c_wb_ddr3.dat_o, c_wb_ddr2.dat_o, c_wb_ddr1.dat_o, c_wb_ddr0.dat_o}),
-      .wb_mem_sel_i  ({c_wb_ddr3.sel_o, c_wb_ddr2.sel_o, c_wb_ddr1.sel_o, c_wb_ddr0.sel_o}),
-      .wb_mem_stb_i  ({c_wb_ddr3.stb_o, c_wb_ddr2.stb_o, c_wb_ddr1.stb_o, c_wb_ddr0.stb_o}),
-      .wb_mem_we_i  ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
-      .wb_mem_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
-      .wb_mem_cti_i  ({c_wb_ddr3.cti_o, c_wb_ddr2.cti_o, c_wb_ddr1.cti_o, c_wb_ddr0.cti_o}),
-      .wb_mem_bte_i  ({c_wb_ddr3.bte_o, c_wb_ddr2.bte_o, c_wb_ddr1.bte_o, c_wb_ddr0.bte_o}),
-      .wb_mem_ack_o  ({c_wb_ddr3.ack_i, c_wb_ddr2.ack_i, c_wb_ddr1.ack_i, c_wb_ddr0.ack_i}),
-      .wb_mem_rty_o  ({c_wb_ddr3.rty_i, c_wb_ddr2.rty_i, c_wb_ddr1.rty_i, c_wb_ddr0.rty_i}),
-      .wb_mem_err_o  ({c_wb_ddr3.err_i, c_wb_ddr2.err_i, c_wb_ddr1.err_i, c_wb_ddr0.err_i}),
-      .wb_mem_dat_o  ({c_wb_ddr3.dat_i, c_wb_ddr2.dat_i, c_wb_ddr1.dat_i, c_wb_ddr0.dat_i})
+      .wb_ext_adr_i  ({c_wb_ddr3.adr_o, c_wb_ddr2.adr_o, c_wb_ddr1.adr_o, c_wb_ddr0.adr_o}),
+      .wb_ext_cyc_i  ({c_wb_ddr3.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr0.cyc_o}),
+      .wb_ext_dat_i  ({c_wb_ddr3.dat_o, c_wb_ddr2.dat_o, c_wb_ddr1.dat_o, c_wb_ddr0.dat_o}),
+      .wb_ext_sel_i  ({c_wb_ddr3.sel_o, c_wb_ddr2.sel_o, c_wb_ddr1.sel_o, c_wb_ddr0.sel_o}),
+      .wb_ext_stb_i  ({c_wb_ddr3.stb_o, c_wb_ddr2.stb_o, c_wb_ddr1.stb_o, c_wb_ddr0.stb_o}),
+      .wb_ext_we_i  ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
+      .wb_ext_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
+      .wb_ext_cti_i  ({c_wb_ddr3.cti_o, c_wb_ddr2.cti_o, c_wb_ddr1.cti_o, c_wb_ddr0.cti_o}),
+      .wb_ext_bte_i  ({c_wb_ddr3.bte_o, c_wb_ddr2.bte_o, c_wb_ddr1.bte_o, c_wb_ddr0.bte_o}),
+      .wb_ext_ack_o  ({c_wb_ddr3.ack_i, c_wb_ddr2.ack_i, c_wb_ddr1.ack_i, c_wb_ddr0.ack_i}),
+      .wb_ext_rty_o  ({c_wb_ddr3.rty_i, c_wb_ddr2.rty_i, c_wb_ddr1.rty_i, c_wb_ddr0.rty_i}),
+      .wb_ext_err_o  ({c_wb_ddr3.err_i, c_wb_ddr2.err_i, c_wb_ddr1.err_i, c_wb_ddr0.err_i}),
+      .wb_ext_dat_o  ({c_wb_ddr3.dat_i, c_wb_ddr2.dat_i, c_wb_ddr1.dat_i, c_wb_ddr0.dat_i})
       );
 
    // Nexys 4 board wrapper

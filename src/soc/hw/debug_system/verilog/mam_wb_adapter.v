@@ -41,8 +41,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-`include "optimsoc_def.vh"
-
 module mam_wb_adapter(
    wb_mam_ack_i, wb_mam_rty_i, wb_mam_err_i, wb_mam_dat_i, wb_mam_bte_o,
    wb_mam_adr_o, wb_mam_cyc_o, wb_mam_dat_o, wb_mam_sel_o, wb_mam_stb_o,
@@ -64,7 +62,7 @@ module mam_wb_adapter(
 
    // data width
    parameter DW = 32;
-   
+
    parameter USE_DEBUG = 1;
 
    // byte select width
@@ -156,7 +154,7 @@ module mam_wb_adapter(
             fsm_arb_state <= STATE_ARB_IDLE;
          end else begin
             fsm_arb_state <= fsm_arb_state_next;
-   
+
             if (grant_access_cpu) begin
                access_cpu <= 1'b1;
             end else if (grant_access_mam) begin
@@ -164,12 +162,12 @@ module mam_wb_adapter(
             end
          end
       end
-   
+
       always @(*) begin
          grant_access_cpu = 1'b0;
          grant_access_mam = 1'b0;
          fsm_arb_state_next = STATE_ARB_IDLE;
-   
+
          case (fsm_arb_state)
             STATE_ARB_IDLE: begin
                if (wb_mam_cyc_o == 1'b1) begin
@@ -180,10 +178,10 @@ module mam_wb_adapter(
                   fsm_arb_state_next = STATE_ARB_IDLE;
                end
             end
-   
+
             STATE_ARB_ACCESS_MAM: begin
                grant_access_mam = 1'b1;
-   
+
                if (wb_mam_cyc_o == 1'b1) begin
                   fsm_arb_state_next = STATE_ARB_ACCESS_MAM;
                end else begin
@@ -203,7 +201,7 @@ module mam_wb_adapter(
             end
          endcase
       end
-   
+
       // MUX of signals TO the memory
       assign wb_out_adr_i = access_cpu ? wb_in_adr_i : wb_mam_adr_o;
       assign wb_out_bte_i = access_cpu ? wb_in_bte_i : wb_mam_bte_o;
@@ -213,14 +211,14 @@ module mam_wb_adapter(
       assign wb_out_sel_i = access_cpu ? wb_in_sel_i : wb_mam_sel_o;
       assign wb_out_stb_i = access_cpu ? wb_in_stb_i : wb_mam_stb_o;
       assign wb_out_we_i = access_cpu ? wb_in_we_i : wb_mam_we_o;
-   
-   
+
+
       // MUX of signals FROM the memory
       assign wb_in_ack_o = access_cpu ? wb_out_ack_o : 1'b0;
       assign wb_in_err_o = access_cpu ? wb_out_err_o : 1'b0;
       assign wb_in_rty_o = access_cpu ? wb_out_rty_o : 1'b0;
       assign wb_in_dat_o = access_cpu ? wb_out_dat_o : {DW{1'b0}};
-   
+
       assign wb_mam_ack_i = ~access_cpu ? wb_out_ack_o : 1'b0;
       assign wb_mam_err_i = ~access_cpu ? wb_out_err_o : 1'b0;
       assign wb_mam_rty_i = ~access_cpu ? wb_out_rty_o : 1'b0;
@@ -234,12 +232,12 @@ module mam_wb_adapter(
       assign wb_out_sel_i = wb_in_sel_i;
       assign wb_out_stb_i = wb_in_stb_i;
       assign wb_out_we_i = wb_in_we_i;
-   
+
       assign wb_in_ack_o = wb_out_ack_o;
       assign wb_in_err_o = wb_out_err_o;
       assign wb_in_rty_o = wb_out_rty_o;
       assign wb_in_dat_o = wb_out_dat_o;
-   
+
    end // if(USE_DEBUG == 1)
 
    `include "optimsoc_functions.vh"

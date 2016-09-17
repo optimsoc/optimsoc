@@ -28,8 +28,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-`include "optimsoc_def.vh"
-
 module wb_sram_sp(/*AUTOARG*/
    // Outputs
    wb_ack_o, wb_err_o, wb_rty_o, wb_dat_o,
@@ -59,7 +57,7 @@ module wb_sram_sp(/*AUTOARG*/
    // Allowed values:
    //   * PLAIN
    //   * XILINX_SPARTAN6
-   parameter MEM_IMPL_TYPE = `OPTIMSOC_SRAM_IMPLEMENTATION;
+   parameter MEM_IMPL_TYPE = "PLAIN";
 
    /*
     * +--------------+--------------+

@@ -32,8 +32,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "optimsoc_def.vh"
-
 module clk_opt_ctrl (/*AUTOARG*/
    // Outputs
    dcm_set, ddc_rst, freq_mode, multi, div,

@@ -39,8 +39,6 @@
 `include "lisnoc_def.vh"
 `include "lisnoc16_def.vh"
 
-`include "optimsoc_def.vh"
-
 module debug_system(
 `ifdef OPTIMSOC_DEBUG_ENABLE_NCM
                     noc32_in_ready, noc32_out_flit, noc32_out_valid,

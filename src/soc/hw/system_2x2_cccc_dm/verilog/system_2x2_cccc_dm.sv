@@ -27,7 +27,6 @@
  */
 
 `include "lisnoc_def.vh"
-`include "optimsoc_def.vh"
 `include "dbg_config.vh"
 
 import dii_package::dii_flit;
@@ -39,21 +38,19 @@ module system_2x2_cccc_dm(
    glip_channel c_glip_in,
    glip_channel c_glip_out
 
-`ifdef OPTIMSOC_CTRAM_WIRES
-   , output [4*32-1:0] wb_mem_adr_i,
-   output [4*1-1:0]  wb_mem_cyc_i,
-   output [4*32-1:0] wb_mem_dat_i,
-   output [4*4-1:0]  wb_mem_sel_i,
-   output [4*1-1:0]  wb_mem_stb_i,
-   output [4*1-1:0]  wb_mem_we_i,
-   output [4*1-1:0]  wb_mem_cab_i,
-   output [4*3-1:0]  wb_mem_cti_i,
-   output [4*2-1:0]  wb_mem_bte_i,
-   input [4*1-1:0]   wb_mem_ack_o,
-   input [4*1-1:0]   wb_mem_rty_o,
-   input [4*1-1:0]   wb_mem_err_o,
-   input [4*32-1:0]  wb_mem_dat_o
-`endif
+   , output [4*32-1:0] wb_ext_adr_i,
+   output [4*1-1:0]  wb_ext_cyc_i,
+   output [4*32-1:0] wb_ext_dat_i,
+   output [4*4-1:0]  wb_ext_sel_i,
+   output [4*1-1:0]  wb_ext_stb_i,
+   output [4*1-1:0]  wb_ext_we_i,
+   output [4*1-1:0]  wb_ext_cab_i,
+   output [4*3-1:0]  wb_ext_cti_i,
+   output [4*2-1:0]  wb_ext_bte_i,
+   input [4*1-1:0]   wb_ext_ack_o,
+   input [4*1-1:0]   wb_ext_rty_o,
+   input [4*1-1:0]   wb_ext_err_o,
+   input [4*32-1:0]  wb_ext_dat_o
    );
 
    parameter config_t CONFIG = 'x;
@@ -156,21 +153,19 @@ module system_2x2_cccc_dm(
               .debug_ring_out             (debug_ring_out[i]),
               .debug_ring_out_ready       (debug_ring_out_ready[i]),
 
-`ifdef OPTIMSOC_CTRAM_WIRES
-              .wb_mem_ack_o               (wb_mem_ack_o[i]),
-              .wb_mem_rty_o               (wb_mem_rty_o[i]),
-              .wb_mem_err_o               (wb_mem_err_o[i]),
-              .wb_mem_dat_o               (wb_mem_dat_o[(i+1)*32-1:i*32]),
-              .wb_mem_adr_i               (wb_mem_adr_i[(i+1)*32-1:i*32]),
-              .wb_mem_cyc_i               (wb_mem_cyc_i[i]),
-              .wb_mem_dat_i               (wb_mem_dat_i[(i+1)*32-1:i*32]),
-              .wb_mem_sel_i               (wb_mem_sel_i[(i+1)*4-1:i*4]),
-              .wb_mem_stb_i               (wb_mem_stb_i[i]),
-              .wb_mem_we_i                (wb_mem_we_i[i]),
-              .wb_mem_cab_i               (wb_mem_cab_i[i]),
-              .wb_mem_cti_i               (wb_mem_cti_i[(i+1)*3-1:i*3]),
-              .wb_mem_bte_i               (wb_mem_bte_i[(i+1)*2-1:i*2]),
-`endif //  `ifdef OPTIMSOC_CTRAM_WIRES
+              .wb_ext_ack_o               (wb_ext_ack_o[i]),
+              .wb_ext_rty_o               (wb_ext_rty_o[i]),
+              .wb_ext_err_o               (wb_ext_err_o[i]),
+              .wb_ext_dat_o               (wb_ext_dat_o[(i+1)*32-1:i*32]),
+              .wb_ext_adr_i               (wb_ext_adr_i[(i+1)*32-1:i*32]),
+              .wb_ext_cyc_i               (wb_ext_cyc_i[i]),
+              .wb_ext_dat_i               (wb_ext_dat_i[(i+1)*32-1:i*32]),
+              .wb_ext_sel_i               (wb_ext_sel_i[(i+1)*4-1:i*4]),
+              .wb_ext_stb_i               (wb_ext_stb_i[i]),
+              .wb_ext_we_i                (wb_ext_we_i[i]),
+              .wb_ext_cab_i               (wb_ext_cab_i[i]),
+              .wb_ext_cti_i               (wb_ext_cti_i[(i+1)*3-1:i*3]),
+              .wb_ext_bte_i               (wb_ext_bte_i[(i+1)*2-1:i*2]),
 
               .noc_in_ready               (link_in_ready[i][CONFIG.NOC_VCHANNELS-1:0]),
               .noc_out_flit               (link_out_flit[i][CONFIG.NOC_FLIT_WIDTH-1:0]),

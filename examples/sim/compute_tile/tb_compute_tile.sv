@@ -35,7 +35,6 @@
  */
 
 `include "dbg_config.vh"
-`include "optimsoc_def.vh"
 
 import dii_package::dii_flit;
 import opensocdebug::mor1kx_trace_exec;
@@ -50,19 +49,25 @@ module tb_compute_tile(
 
    // Simulation parameters
    parameter USE_DEBUG = 0;
-   parameter NUM_CORES = 1;
+   parameter integer NUM_CORES = 1;
+   parameter integer LMEM_SIZE = 128*1024*1024;
 
    localparam base_config_t
-     BASE_CONFIG = '{ NUMCTS: 1,
+     BASE_CONFIG = '{ NUMTILES: 1,
+                      NUMCTS: 1,
                       CTLIST: {{63{16'hx}}, 16'h0},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
-                      GMEM_TILE: 'x,
+                      GMEM_TILE: 0,
                       NOC_DATA_WIDTH: 32,
                       NOC_TYPE_WIDTH: 2,
                       NOC_VCHANNELS: 3,
+                      NOC_VC_MPSIMPLE: 0,
+                      NOC_VC_DMA_REQ: 1,
+                      NOC_VC_DMA_RESP: 2,
                       MEMORY_ACCESS: DISTRIBUTED,
-                      LMEM_SIZE: 128*1024*1024,
+                      LMEM_SIZE: LMEM_SIZE,
+                      LMEM_STYLE: PLAIN,
                       USE_DEBUG: 1'(USE_DEBUG),
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1
@@ -212,7 +217,23 @@ module tb_compute_tile(
                      .rst_dbg           (rst),
                      .noc_in_flit       (noc_in_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
                      .noc_in_valid      (noc_in_valid[CONFIG.NOC_VCHANNELS-1:0]),
-                     .noc_out_ready     (noc_out_ready[CONFIG.NOC_VCHANNELS-1:0]));
+                     .noc_out_ready     (noc_out_ready[CONFIG.NOC_VCHANNELS-1:0]),
+
+                     // Unused
+                     .wb_ext_adr_i (),
+                     .wb_ext_cyc_i (),
+                     .wb_ext_dat_i (),
+                     .wb_ext_sel_i (),
+                     .wb_ext_stb_i (),
+                     .wb_ext_we_i  (),
+                     .wb_ext_cab_i (),
+                     .wb_ext_cti_i (),
+                     .wb_ext_bte_i (),
+                     .wb_ext_ack_o ('0),
+                     .wb_ext_rty_o ('0),
+                     .wb_ext_err_o ('0),
+                     .wb_ext_dat_o ('0)
+                     );
 
 // Generate testbench signals.
 // In Verilator, these signals are generated in the C++ toplevel testbench

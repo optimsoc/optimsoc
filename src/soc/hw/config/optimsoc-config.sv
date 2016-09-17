@@ -45,11 +45,13 @@
 package optimsoc;
 
    typedef enum { DISTRIBUTED, PGAS } mem_access_t;
+   typedef enum { EXTERNAL, PLAIN } lmem_style_t;
 
    typedef struct packed {
       // System configuration
+      integer            NUMTILES;
       integer            NUMCTS;
-      logic [15:0][63:0] CTLIST;
+      logic [63:0][15:0] CTLIST;
       integer            CORES_PER_TILE;
       integer            GMEM_SIZE;
       integer            GMEM_TILE;
@@ -58,10 +60,14 @@ package optimsoc;
       integer            NOC_DATA_WIDTH;
       integer            NOC_TYPE_WIDTH;
       integer            NOC_VCHANNELS;
+      integer            NOC_VC_MPSIMPLE;
+      integer            NOC_VC_DMA_REQ;
+      integer            NOC_VC_DMA_RESP;
 
       // Tile configuration
       mem_access_t       MEMORY_ACCESS;
       integer            LMEM_SIZE;
+      lmem_style_t       LMEM_STYLE;
 
       // Debug configuration
       logic              USE_DEBUG;
@@ -71,8 +77,9 @@ package optimsoc;
 
    typedef struct packed {
       // System configuration
+      integer            NUMTILES;
       integer            NUMCTS;
-      logic [15:0][63:0] CTLIST;
+      logic [63:0][15:0] CTLIST;
       integer            CORES_PER_TILE;
       integer            GMEM_SIZE;
       integer            GMEM_TILE;
@@ -83,12 +90,16 @@ package optimsoc;
       integer            NOC_DATA_WIDTH;
       integer            NOC_TYPE_WIDTH;
       integer            NOC_VCHANNELS;
+      integer            NOC_VC_MPSIMPLE;
+      integer            NOC_VC_DMA_REQ;
+      integer            NOC_VC_DMA_RESP;
       // -> derived
       integer            NOC_FLIT_WIDTH; // Must be DATA_WIDTH+TYPE_WIDTH
 
       // Tile configuration
       mem_access_t       MEMORY_ACCESS;
       integer            LMEM_SIZE;
+      lmem_style_t       LMEM_STYLE;
 
       // Debug configuration
       logic              USE_DEBUG;
@@ -102,6 +113,7 @@ package optimsoc;
 
    function config_t derive_config(base_config_t conf);
       // Copy the basic parameters
+      derive_config.NUMTILES = conf.NUMTILES;
       derive_config.NUMCTS = conf.NUMCTS;
       derive_config.CTLIST = conf.CTLIST;
       derive_config.CORES_PER_TILE = conf.CORES_PER_TILE;
@@ -110,8 +122,12 @@ package optimsoc;
       derive_config.NOC_DATA_WIDTH = conf.NOC_DATA_WIDTH;
       derive_config.NOC_TYPE_WIDTH = conf.NOC_TYPE_WIDTH;
       derive_config.NOC_VCHANNELS = conf.NOC_VCHANNELS;
+      derive_config.NOC_VC_MPSIMPLE = conf.NOC_VC_MPSIMPLE;
+      derive_config.NOC_VC_DMA_REQ = conf.NOC_VC_DMA_REQ;
+      derive_config.NOC_VC_DMA_RESP = conf.NOC_VC_DMA_RESP;
       derive_config.MEMORY_ACCESS = conf.MEMORY_ACCESS;
       derive_config.LMEM_SIZE = conf.LMEM_SIZE;
+      derive_config.LMEM_STYLE = conf.LMEM_STYLE;
       derive_config.USE_DEBUG = conf.USE_DEBUG;
       derive_config.DEBUG_STM = conf.DEBUG_STM;
       derive_config.DEBUG_CTM = conf.DEBUG_CTM;
