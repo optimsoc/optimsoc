@@ -8,9 +8,9 @@ unmanagedSourceDirectories in Compile <++= baseDirectory { base =>
     base / "interconnect/rocket",
     base / "blocks/buffer/rocket",
     base / "blocks/arbiter/rocket",
-    base / "modules/rocket",
-    base / "modules/mam/rocket",
-    base / "modules/stm/rocket",
-    base / "modules/ctm/rocket"
+    base / "modules/ccm/riscv/rocket",
+    base / "modules/mam/tilelink",
+    base / "modules/stm/riscv/rocket",
+    base / "modules/ctm/riscv/rocket"
   )
 }
