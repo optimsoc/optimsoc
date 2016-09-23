@@ -47,19 +47,20 @@ INSTALL_TARGET := $(INSTALL_PREFIX)/$(version)
 # Assemble arguments passed to tools/build.py
 BUILD_ARGS = ''
 ifeq ($(BUILD_DOCS),yes)
-	BUILD_ARGS += '--with-docs'
+	BUILD_ARGS += --with-docs
 else
-	BUILD_ARGS += '--without-docs'
+	BUILD_ARGS += --without-docs
 endif
 ifeq ($(BUILD_EXAMPLES),yes)
-	BUILD_ARGS += '--with-examples-sim'
+	BUILD_ARGS += --with-examples-sim
+
+	ifeq ($(BUILD_EXAMPLES_FPGA),yes)
+		BUILD_ARGS += --with-examples-fpga
+	else
+		BUILD_ARGS += --without-examples-fpga
+	endif
 else
-	BUILD_ARGS += '--without-examples-sim'
-endif
-ifeq ($(BUILD_EXAMPLES_FPGA),yes)
-	BUILD_ARGS += '--with-examples-fpga'
-else
-	BUILD_ARGS += '--without-examples-fpga'
+	BUILD_ARGS += --without-examples-sim --without-examples-fpga
 endif
 
 build:
