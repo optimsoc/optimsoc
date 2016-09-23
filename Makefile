@@ -63,14 +63,17 @@ else
 	BUILD_ARGS += --without-examples-sim --without-examples-fpga
 endif
 
+
 build:
 	tools/build.py $(BUILD_ARGS) -o $(OBJDIR)
 
-install: build
+install:
+	@test -d "$(OBJDIR)/dist" || (echo "Run make build first."; exit 1)
 	mkdir -p $(INSTALL_TARGET)
 	cp -rT $(OBJDIR)/dist $(INSTALL_TARGET)
 
 dist:
+	@test -d "$(OBJDIR)/dist" || (echo "Run make build first."; exit 1)
 	tar -cz --directory $(OBJDIR) --exclude examples \
 		--transform "s/dist/$(version)/" \
 		-f $(OBJDIR)/optimsoc-$(version)-base.tar.gz dist
