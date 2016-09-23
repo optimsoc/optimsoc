@@ -1,96 +1,113 @@
 \chapter{Installation \& Configuration}
 \label{chap:installation}
 
-Before you get started with OpTiMSoC you should notice that external
-tools and libraries might be required that are in some cases
-proprietary and cost some money. Although OpTiMSoC is developed at an
-university with access to many EDA tools, we aim to always provide
-tool flows and support for open and free tools, but especially when it
-comes to synthesis such alternatives are even not available.
+Installing an OpTiMSoC release should not take more than 10~minutes (if you have a decent internet connection), so let's get started!
 
-\section{Prerequisites}
+\section{System Requirements}
+Please first check the system requirements.
 
-Throughout this document some packages are required in your Linux
-distribution. OpTiMSoC should principally work on all common Linux
-distributions. In case you encounter problems in your system we highly
-encourage you to contact the OpTiMSoC maintainers to fix these
-problems. Nevertheless, we recommend Ubuntu 14.04 LTS as development
-system and can ensure OpTiMSoC will work on it as we also work on
-it. In the following we will refer to Ubuntu/Debian commands to
-install packages, that will run under Ubuntu 14.04 LTS.
+\begin{itemize}
+ \item Supported Linux distribution: Ubuntu 14.04 or 16.04 LTS on x86\_64
+ \item 20 GB disk space (mostly for Xilinx Vivado and other tools)
+ \item 4~GB or more of RAM helps greatly (especially during FPGA synthesis)
+ \item We recommend not using a VM, but running directly on the hardware.
+   Using a VM is possible, but will result in significantly slower compilation and synthesis runs.
+ \item (optional, only if you want to do FPGA synthesis) Xilinx Vivado 2016.2 (the free WebPack edition is sufficient for most use cases)
+\end{itemize}
 
-Independent of the OpTiMSoC components you plan to use, you will need some
-packages to be installed:
+\begin{docnote}
+Some external tools, especially EDA tools for synthesis and simulators, might be required that are in some cases proprietary and cost some money. Although OpTiMSoC is developed at an university with access to many EDA tools, we aim to always provide tool flows and support for open and free tools, but especially when it comes to synthesis such alternatives are even not available.
+\end{docnote}
 
-\begin{lstlisting}
-sudo apt-get -y install git build-essential tcl libusb-1.0-0-dev \
+\section{Dependencies}
+In OpTiMSoC, we try to use only external dependencies which are known to be stable and readily available.
+Some can be installed as distribution packages, and others can be downloaded as binaries from us.
+
+First, install all required packages from Ubuntu.
+
+\begin{lstlisting}[language=sh]
+sudo apt-get -y install curl git build-essential tcl libusb-1.0-0-dev \
   libboost-dev libelf-dev swig python3 python3-yaml
 
 # optional, but highly recommended: a waveform viewer
 sudo apt-get -y install gtkwave
 \end{lstlisting}
 
-\section{Option 1: Install the OpTiMSoC binary distribution (recommended)}
+Additionally, we need two things which are not available as Ubuntu packages right now: a recent version of Verilator, and the or1k-elf-multicore toolchain (compiler, C library, debugger, etc.).
+Install them with our binary installation script:
 
+\begin{lstlisting}[language=sh]
+# if it does not exist yet: prepare the /opt/optimsoc directory
+sudo mkdir /opt/optimsoc
+sudo chown $USER /opt/optimsoc
+
+# download and install the prebuilt tools
+curl -O https://raw.githubusercontent.com/optimsoc/prebuilts/master/optimsoc-prebuilt-deploy.py
+sudo python optimsoc-prebuilt-deploy.py -d /opt/optimsoc verilator or1kelf
+\end{lstlisting}
+
+To use the prebuilt tools some environment variables need to be adjusted.
+This is done by running the following command \textbf{in every terminal session that you want to use OpTiMSoC in}:
+
+\begin{lstlisting}[language=sh]
+source /opt/optimsoc/setup_prebuilt.sh
+\end{lstlisting}
+
+\begin{docnote}
+Automatically load the prebuilts in every new terminal session by adding it to your \verb|~/.bashrc| file:
+
+\begin{lstlisting}[language=sh]
+echo 'source /opt/optimsoc/setup_prebuilt.sh' >> ~/.bashrc
+\end{lstlisting}
+\end{docnote}
+
+
+\section{Install OpTiMSoC}
+Now that all preparations are done, you are now ready to install the OpTiMSoC framework itself.
+There are two options: either, you can install a prebuilt release package, or you can build OpTiMSoC yourself from the sources.
+We recommend starting with a binary release installation, and move to a custom-built version only after you verified that everything works.
+
+\subsection{Recommended: OpTiMSoC binary releases}
 The most simple way to get started is with the release packages. You
 can find the OpTiMSoC releases here:
 \url{https://github.com/optimsoc/sources/releases}. With the release
-you can find the distribution packets that can be extracted into any
+you can find the distribution packages that can be extracted into any
 directory and used directly from there. The recommended default is to
 install OpTiMSoC into \verb|/opt/optimsoc|. There are two packages:
 the \verb|base| package contains the programs, libraries and tools
-to get started. The \verb|examples| package contains prebuilt verilator
-simulations for the real quick start.
+to get started. The \verb|examples| package contains prebuilt example systems (both in simulation and FPGA bitstreams) for the real quick start.
 
-For example take the 2016.1 release and download both \verb|base| and
-\verb|examples|. Then create the base folder and extract the package:
+To install the 2016.1 release into \verb|/opt/optimsoc|, run the following commands:
 
-\begin{lstlisting}
-sudo mkdir /opt/optimsoc
-sudo chown $USER /opt/optimsoc
-tar -xzf optimsoc-2016.1-base.tgz -C /opt/optimsoc
-tar -xzf optimsoc-2016.1-examples.tgz -C /opt/optimsoc
+\begin{lstlisting}[language=sh]
+wget https://github.com/optimsoc/sources/releases/download/v2016.1/optimsoc-2016.1-base.tar.gz
+wget https://github.com/optimsoc/sources/releases/download/v2016.1/optimsoc-2016.1-examples.tar.gz
+tar -xf optimsoc-2016.1-base.tar.gz -C /opt/optimsoc
+tar -xf optimsoc-2016.1-examples.tar.gz -C /opt/optimsoc
 \end{lstlisting}
 
-You can now use the installation after setting the environment with
-the pre-installed environment source script:
+To use OpTiMSoC multiple environment variables need to be set.
+This is done by running the following command \textbf{in every terminal session that you want to use OpTiMSoC in}:
 
-\begin{lstlisting}
+\begin{lstlisting}[language=sh]
 cd /opt/optimsoc/2016.1
 source optimsoc-environment.sh
 \end{lstlisting}
 
-We encourage you to put this code into your \verb|~/.bashrc|.
+\begin{docnote}
+Automatically load the OpTiMSoC environment in every new terminal session by adding it to your \verb|~/.bashrc| file:
 
-Now you are near to get started, but you need some programs to build
-software to run in OpTiMSoC and execute the verilator-based
-simulations. Those are: the \verb|or1k-elf-multicore| toolchain and
-\verb|Verilator|. All those tools are free, but are (except for an
-outdated \verb|Verilator| version) not part of the Linux package
-systems. Hence you need to built those tools as described in the
-Reference Manual, or you can simply download some prebuilt-versions.
-
-To do so simply run a script for your version:
-
-\begin{lstlisting}
-  wget https://raw.githubusercontent.com/optimsoc/prebuilts/master/optimsoc-prebuilt-deploy.py
-  chmod a+x optimsoc-prebuilt-deploy.py
-  ./optimsoc-prebuilt-deploy.py -d /opt/optimsoc verilator or1kelf
+\begin{lstlisting}[language=sh]
+echo 'cd /opt/optimsoc/2016.1; source optimsoc-environment.sh' >> ~/.bashrc
 \end{lstlisting}
+\end{docnote}
 
-You may of course leave out any of the tools if you already have it
-installed. Finally, you will get another source script to set up the
-environment for the prebuilt tools:
-
-\begin{lstlisting}
-source /opt/optimsoc/setup_prebuilt.sh
-\end{lstlisting}
-
-We recommend to put this line into your \verb|~/.bashrc| file as well.
-
+\medskip
+Installation complete!
 You are now ready to go to the tutorials in Chapter~\ref{chap:tutorials}.
 
-\section{Option 2: Build OpTiMSoC from sources}
+
+\subsection{Alternative: Build OpTiMSoC from sources}
 
 You can also build OpTiMSoC from the sources. This options usually
 becomes standard if you start developing for or around OpTiMSoC. The
@@ -102,80 +119,47 @@ plan to contribute to OpTiMSoC. Nevertheless, we will give a more
 detailed explanation of how to get your personal copies of OpTiMSoC
 and (potentially) update them.
 
-The start of a successful built is to install the tools
-\verb|Verilator| and the \verb|or1k-elf-multicore| toolchain. The most
-simple way is to start with the prebuilt tools as described above,
-then set the environment for the tools.
-
-\begin{docnote}
-During the installation, you'll frequently encounter three types of
-directories.
-
-\begin{itemize}
- \item \textbf{The source directory.} This is the place where the
-   uncompiled source code files are stored. Usually, that is the folder that
-   you cloned from the git repository.
-
-   The \verb|$OPTIMSOC_SOURCE| environment variable should point to
-   the root of the source directories.
- \item \textbf{The build or object directory.} For different
-   components such a directory is used to build the component. The
-   installer performs the build process in these directories and you
-   perform individual builds there if you develop for OpTiMSoC (for
-   example: if you develop the libraries).
-
-   Sometimes, this directory is equal to the source directory, but
-   most of the time, we create a new directory called \texttt{build}
-   inside the source directory. Doing so has a great benefit: if
-   something in the build process went wrong, you can simply delete
-   the build directory and start all over again.
-
- \item \textbf{The installation directory.} This is the target
-   directory where results of the build process are stored for further
-   use. It is used by the installer or you when running \texttt{make
-     install} to store the files generated by the build process. The
-   environment variable \verb|$OPTIMSOC| points to the root of the
-   installation directory.
-\end{itemize}
-
-\end{docnote}
-
-\subsection{Prerequisites}
-
-You will need some programs to build OpTiMSoC, e.g., on Ubuntu 14.04:
-
-\begin{lstlisting}
-sudo apt-get install autoconf automake libtool tcl texlive texlive-latex-extra texlive-fonts-extra
+First, you need some additional tools (the ``build dependencies''):
+\begin{lstlisting}[language=sh]
+sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra
 \end{lstlisting}
 
-\subsection{Get the sources}
-
-Start with checking out the repository:
-
-\begin{lstlisting}
+Then get the sources from git:
+\begin{lstlisting}[language=sh]
 git clone https://github.com/optimsoc/sources.git optimsoc-sources
 cd optimsoc-sources
+# optional: checkout a release version
+git checkout v2016.1
 \end{lstlisting}
 
-\subsection{Build the code}
+Now you're ready to build OpTiMSoC.
+OpTiMSoC contains a Makefile which controls the whole build process.
+Building is as simple as calling (inside the top-level source directory that you just got from git)
 
-OpTiMSoC contains a Makefile which controls the whole build process. Building is
-as simple as calling (inside the top-level source directory)
-
-\begin{lstlisting}
+\begin{lstlisting}[language=sh]
 make
 \end{lstlisting}
 
-\subsection{Install the code}
-To install OpTiMSoC to the default location in \verb|/opt/optimsoc/VERSION|
-it's sufficient to run
+By default this also builds the documentation, the Verilator examples and the FPGA bitstreams (which requires Xilinx Vivado to be working).
+You can disable some features by passing variables to the \verb|Makefile|:
 
-\begin{lstlisting}
-sudo make install
+\begin{lstlisting}[language=sh]
+# only build Verilator examples, but no bitstreams and no docs
+make BUILD_EXAMPLES=yes BUILD_EXAMPLES_FPGA=no BUILD_DOCS=no
+\end{lstlisting}
+
+If you need even more fine-grained control over the build process, call the build script \verb|tools/build.py| directly.
+Running \verb|tools/build.py --help| will give you a list of all available options.
+
+After the build process, all build artifacts are located in \verb|objdir/dist|.
+You can either use OpTiMSoC directly from there (good during development), or copy it to a more suitable installation location in \verb|/opt/optimsoc/VERSION| by running
+
+\begin{lstlisting}[language=sh]
+make install
 \end{lstlisting}
 
 You can also modify the target directory using environment variables passed to
-make. This is especially useful if you don't have enough permissions to
+\verb|make|. This is especially useful if you don't have enough permissions to
 write to \verb|/opt/optimsoc|.
 
 \begin{itemize}
@@ -186,10 +170,25 @@ write to \verb|/opt/optimsoc|.
     The installation will then go exactly into this directory.
 \end{itemize}
 
-\begin{lstlisting}
-# recommended option: use INSTALL_PREFIX
+\begin{lstlisting}[language=sh]
+# use INSTALL_PREFIX to install into ~/optimsoc/VERSION
 make install INSTALL_PREFIX=~/optimsoc
 
 # full control for special cases: use INSTALL_TARGET
+# to install into ~/optimsoc-testversion
 make install INSTALL_TARGET=~/optimsoc-testversion
 \end{lstlisting}
+
+
+Independent of which directory you chose, to use OpTiMSoC multiple environment variables need to be set.
+This is done by running the following command \textbf{in every terminal session that you want to use OpTiMSoC in}:
+
+\begin{lstlisting}[language=sh]
+cd YOUR_INSTALLATION_DIR
+source optimsoc-environment.sh
+\end{lstlisting}
+
+See the binary installation description above for information on how to make this change permanent.
+
+\medskip
+OpTiMSoC is now ready to be used and you can continue with the tutorials in Chapter~\ref{chap:tutorials}.
