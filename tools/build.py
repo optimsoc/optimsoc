@@ -700,6 +700,7 @@ def set_environment(options, env):
     pkgconfig = (
         "{dist}/host/share/pkgconfig:"
         "{dist}/host/lib/pkgconfig:"
+        "{dist}/host/lib64/pkgconfig:"
         "{dist}/soc/sw/share/pkgconfig".format(dist=dist))
     if 'PKG_CONFIG_PATH' in env:
         env['PKG_CONFIG_PATH'] = "{}:{}".format(pkgconfig, env['PKG_CONFIG_PATH'])
@@ -755,7 +756,7 @@ export LISNOC_RTL=$LISNOC/rtl
 
 export FUSESOC_CORES=$OPTIMSOC/soc/hw:$OPTIMSOC/external/lisnoc:$OPTIMSOC/external/opensocdebug/hardware:$OPTIMSOC/external/extra_cores:$OPTIMSOC/external/glip:$FUSESOC_CORES
 
-export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/host/lib/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/host/lib/pkgconfig:$OPTIMSOC/host/lib64/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
 export PATH=$OPTIMSOC/host/bin:$PATH
 export LD_LIBRARY_PATH=$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
 
