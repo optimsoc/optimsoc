@@ -35,7 +35,7 @@
 namespace simutilVerilator {
 
 typedef void (*readmemh_func)();
-typedef void (*readmemh_file_func)(const svBitVecVal* file);
+typedef void (*readmemh_file_func)(const char* file);
 
 class VerilatedControl {
 public:
