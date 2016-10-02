@@ -1,0 +1,8 @@
+# OpTiMSoC trace_monitor stdout file
+# [TIME, CORE] MESSAGE
+[               49078, 3] Hello World! Core 1 of 2 in tile 1, my absolute core id is: 1
+[               58706, 3] There are 4 compute tiles:
+[               67894, 3]  rank 0 is tile 0
+[               76482, 3]  rank 1 is tile 0
+[               84946, 3]  rank 2 is tile 0
+[               93410, 3]  rank 3 is tile 3
