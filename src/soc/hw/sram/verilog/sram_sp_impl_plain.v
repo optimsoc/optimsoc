@@ -119,7 +119,7 @@ module sram_sp_impl_plain(/*AUTOARG*/
    export "DPI-C" task do_readmemh_file;
 
    task do_readmemh_file;
-      input bit [64*8-1:0] file;
+      input string file;
       $readmemh(file, mem);
    endtask
 
