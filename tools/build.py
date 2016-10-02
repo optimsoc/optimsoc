@@ -715,6 +715,11 @@ def set_environment(options, env):
     else:
         env['LD_LIBRARY_PATH'] = ldlibrary
 
+    dbg("Set environment: ")
+    for varname, value in env.items():
+        dbg("{}={}".format(varname, value))
+
+
 """Write the OpTiMSoC environment setup file (optimsoc-environment.sh)
 """
 def write_environment_file(options):
