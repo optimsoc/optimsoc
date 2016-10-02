@@ -28,8 +28,6 @@
 
 #include <iostream>
 
-void _VL_STRING_TO_VINT(int obits, void* destp, int srclen, const char* srcp);
-
 namespace simutilVerilator {
 
 void VerilatedControl::init(VerilatedToplevel &top, int argc,
@@ -81,10 +79,8 @@ void VerilatedControl::run() {
         svSetScope (scope);
 
         if (m_opt->hasMemInit()) {
-            const char *filename = m_opt->getMemInit();
-            unsigned int filename_vl[16];
-            _VL_STRING_TO_VINT(16*sizeof(unsigned int)*8, filename_vl, strlen(filename), filename);
-            m_readmemh_file(filename_vl);
+            const char* filename = m_opt->getMemInit();
+            m_readmemh_file(filename);
         } else {
           //            m_readmemh();
         }
