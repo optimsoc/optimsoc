@@ -8,7 +8,7 @@
 
 #include "daemon-packets.h"
 
-#define INFO(format, ...) fprintf (stdout, format "\n", ##__VA_ARGS__)
+#define INFO(format, ...) do {fprintf (stdout, format "\n", ##__VA_ARGS__); fflush(stdout);} while (0)
 #define WARN(format, ...) warnx(format, ##__VA_ARGS__)
 #define ERR(format, ...) errx(1, format, ##__VA_ARGS__)
 

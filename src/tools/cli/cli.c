@@ -39,7 +39,7 @@
 #include "help_strings.h"
 
 #define PRINT_HELP(name) \
-    fputs(help_ ## name, stderr);
+    fputs(help_ ## name, stdout);
 
 #define CHECK_MATCH(input, string) \
         (input && !strncmp(input, string, strlen(string)+1))
