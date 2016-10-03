@@ -710,10 +710,11 @@ def set_environment(options, env):
     env['PATH'] =  "{dist}/host/bin:{existing_path}".format(dist=dist, existing_path=env['PATH'])
 
     ldlibrary = "{dist}/host/lib".format(dist=dist)
+    ldlibrary64 = "{dist}/host/lib64".format(dist=dist)
     if 'LD_LIBRARY_PATH' in env:
-        env['LD_LIBRARY_PATH'] = "{}:{}".format(ldlibrary, env['LD_LIBRARY_PATH'])
+        env['LD_LIBRARY_PATH'] = "{}:{}:{}".format(ldlibrary, ldlibrary64, env['LD_LIBRARY_PATH'])
     else:
-        env['LD_LIBRARY_PATH'] = ldlibrary
+        env['LD_LIBRARY_PATH'] = "{}:{}".format(ldlibrary, ldlibrary64)
 
     dbg("Set environment: ")
     for varname, value in env.items():
@@ -763,11 +764,11 @@ export FUSESOC_CORES=$OPTIMSOC/soc/hw:$OPTIMSOC/external/lisnoc:$OPTIMSOC/extern
 
 export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/host/lib/pkgconfig:$OPTIMSOC/host/lib64/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
 export PATH=$OPTIMSOC/host/bin:$PATH
-export LD_LIBRARY_PATH=$OPTIMSOC/host/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$OPTIMSOC/host/lib:$OPTIMSOC/host/lib64:$LD_LIBRARY_PATH
 
 # Adapting the PYTHONPATH is not so nice especially if Python 3 is involved.
 # But it works for us currently, and a real solution is rather tricky.
-export PYTHONPATH=$OPTIMSOC/host/lib/python2.7/site-packages:$PYTHONPATH
+export PYTHONPATH=$OPTIMSOC/host/lib/python2.7/site-packages:$OPTIMSOC/host/lib64/python2.7/site-packages:$PYTHONPATH
 """.format(options.version))
 
 """Get the version number from the source code
