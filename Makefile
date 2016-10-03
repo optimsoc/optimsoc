@@ -96,5 +96,8 @@ endif
 clean:
 	rm -rf $(OBJDIR)
 
-.PHONY: build
+test:
+	pytest -s -v test/systemtest/test_tutorial.py
+
+.PHONY: build test
 
