@@ -42,10 +42,13 @@ before_install:
   - chmod a+x /tmp/${PREBUILT_DEPLOY}
   - /tmp/${PREBUILT_DEPLOY} -d ${TARGET_BASE} all
 
-# Execute the build
+# Execute the build and install it
 install:
   - source ${TARGET_BASE}/setup_prebuilt.sh
   - ./tools/build.py --verbose --without-examples-fpga --with-examples-sim --without-docs
+  - make install INSTALL_TARGET=${TARGET_BASE}/latest
 
+# Test the build
 script:
-  -
+  - source ${TARGET_BASE}/latest/optimsoc-environment.sh
+  - pytest -s -v test/systemtest/test_tutorial.py
