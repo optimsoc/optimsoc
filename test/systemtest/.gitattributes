@@ -1,0 +1,4 @@
+# prevent changes to the golden reference files by git (e.g. changed 
+# line endings)
+*.data/** binary
+
