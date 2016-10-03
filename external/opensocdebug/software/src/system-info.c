@@ -264,6 +264,8 @@ int osd_print_module_info(struct osd_context *ctx, uint16_t id,
             break;
     }
 
+    fflush(fh);
+
     return OSD_SUCCESS;
 }
 
