@@ -1,0 +1,16 @@
+# OpTiMSoC test local configuration
+#
+# This file contains settings for the machine on which the tests are being 
+# executed.
+#
+# Adjust this file to your system and move it to a searched location.
+# We look for this config file in
+# - $OPTIMSOC_TEST_LOCALCONF
+# - ~/.config/optimsoc/test-localconf.yaml
+#
+
+# connected FPGA boards
+boards:
+  nexys4ddr:
+    device: /dev/ttyUSB1
+

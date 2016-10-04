@@ -97,7 +97,12 @@ clean:
 	rm -rf $(OBJDIR)
 
 test:
+ifneq ($(BUILD_EXAMPLES_FPGA),yes)
+	# only run verilator-based system tests, not the FPGA ones
+	pytest -s -v test/systemtest/test_tutorial.py::TestTutorial
+else
 	pytest -s -v test/systemtest/test_tutorial.py
+endif
 
 .PHONY: build test
 

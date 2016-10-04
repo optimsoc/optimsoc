@@ -194,46 +194,31 @@ class TestTutorial:
                                 this_test_name, testfile)
         return filecmp.cmp(path_ref, path_test)
 
-    @pytest.fixture(scope="module")
-    def baremetal_apps(self, tmpdir_factory):
-        """
-        Get baremetal-apps from git
-        """
-        src_baremetal_apps = tmpdir_factory.mktemp('baremetal-apps')
 
-        cmd = ['/usr/bin/git',
-               'clone',
-               'https://github.com/optimsoc/baremetal-apps',
-               str(src_baremetal_apps)]
-        subprocess.check_output(cmd)
+    @pytest.fixture
+    def sim_system_2x2_cccc_sim_dualcore_debug(self, tmpdir):
+        cmd_sim = '{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug'.format(os.environ['OPTIMSOC'])
+        p_sim = Process(cmd_sim, logdir=str(tmpdir), cwd=str(tmpdir),
+                        startup_done_expect='Glip TCP DPI listening',
+                        startup_timeout=10)
+        p_sim.run()
 
-        return src_baremetal_apps
+        yield p_sim
 
-    @pytest.fixture(scope="module")
-    def baremetal_apps_hello(self, baremetal_apps):
-        """
-        Module-scoped fixture: download and build the hello world example
-        from baremetal-apps
-        """
+        p_sim.terminate()
 
-        src_baremetal_apps_hello = baremetal_apps.join('hello')
-        cmd = ['make', '-C', str(src_baremetal_apps_hello)]
-        subprocess.check_output(cmd)
+    @pytest.fixture
+    def opensocdebugd_tcp(self, tmpdir):
+        cmd_opensocdebugd = ['opensocdebugd', 'tcp']
+        p_opensocdebugd = Process(cmd_opensocdebugd, logdir=str(tmpdir),
+                                  cwd=str(tmpdir),
+                                  startup_done_expect="Wait for connection",
+                                  startup_timeout=30)
+        p_opensocdebugd.run()
 
-        return src_baremetal_apps_hello
+        yield p_opensocdebugd
 
-    @pytest.fixture(scope="module")
-    def baremetal_apps_hello_mpsimple(self, baremetal_apps):
-        """
-        Module-scoped fixture: download and build the hello world example
-        from baremetal-apps
-        """
-
-        src_baremetal_apps_hello_mpsimple = baremetal_apps.join('hello_mpsimple')
-        cmd = ['make', '-C', str(src_baremetal_apps_hello_mpsimple)]
-        subprocess.check_output(cmd)
-
-        return src_baremetal_apps_hello_mpsimple
+        p_opensocdebugd.terminate()
 
     def test_baremetal_hello(self, baremetal_apps_hello):
         """
@@ -330,32 +315,6 @@ class TestTutorial:
             assert tmpdir.join(f).isfile()
             assert self.matches_golden_reference(str(tmpdir), f)
 
-    @pytest.fixture
-    def sim_system_2x2_cccc_sim_dualcore_debug(self, tmpdir):
-        cmd_sim = '{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug'.format(os.environ['OPTIMSOC'])
-        p_sim = Process(cmd_sim, logdir=str(tmpdir), cwd=str(tmpdir),
-                        startup_done_expect='Glip TCP DPI listening',
-                        startup_timeout=10)
-        p_sim.run()
-
-        yield p_sim
-
-        p_sim.terminate()
-
-    @pytest.fixture
-    def opensocdebugd_tcp(self, tmpdir):
-        cmd_opensocdebugd = ['opensocdebugd', 'tcp']
-        p_opensocdebugd = Process(cmd_opensocdebugd, logdir=str(tmpdir),
-                                  cwd=str(tmpdir),
-                                  startup_done_expect="Wait for connection",
-                                  startup_timeout=30)
-        p_opensocdebugd.run()
-
-        yield p_opensocdebugd
-
-        p_opensocdebugd.terminate()
-
-
     def test_tutorial5(self, tmpdir, baremetal_apps_hello,
                        sim_system_2x2_cccc_sim_dualcore_debug,
                        opensocdebugd_tcp):
@@ -433,4 +392,54 @@ class TestTutorial:
         except ProcessLookupError:
             # process is already dead
             pass
+
+class TestTutorialFpga:
+    def test_tutorial7(self, tmpdir, localconf, baremetal_apps_hello):
+        """
+        Tutorial 7: Program a 2x2 CCCC system to a Nexys4 DDR board and run
+        hello world on it.
+        """
+
+        # program FPGA with bitstream
+        bitstream = "{}/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit".format(os.environ['OPTIMSOC'])
+        cmd_pgm = ['optimsoc-pgm-fpga', bitstream, 'xc7a100t_0']
+        p_pgm = Process(cmd_pgm, logdir=str(tmpdir), cwd=str(tmpdir))
+        p_pgm.run()
+        p_pgm.proc.wait(timeout=60)
+        assert p_pgm.proc.returncode == 0
+
+        time.sleep(2)
+
+        # connect to board with opensocdebugd
+        nexys4ddr_device = localconf['boards']['nexys4ddr']['device']
+        logging.getLogger(__name__).info("Using Nexys 4 board connected to " + nexys4ddr_device)
+        cmd_opensocdebugd = ['opensocdebugd', 'uart',
+                             'device=' + nexys4ddr_device,
+                             'speed=12000000' ]
+        p_opensocdebugd = Process(cmd_opensocdebugd, logdir=str(tmpdir),
+                                  cwd=str(tmpdir),
+                                  startup_done_expect="Wait for connection",
+                                  startup_timeout=30)
+        p_opensocdebugd.run()
+
+        # run hello world on FPGA
+        hello_elf = str(baremetal_apps_hello.join('hello.elf'))
+        cmd_runelf = ['python2',
+                      '{}/host/share/opensocdebug/examples/runelf.py'.format(os.environ['OPTIMSOC']),
+                      hello_elf]
+        p_runelf = Process(cmd_runelf, logdir=str(tmpdir),
+                           cwd=str(tmpdir))
+        p_runelf.run()
+
+        logging.getLogger(__name__).info("Waiting 10 minutes for process to finish")
+        p_runelf.proc.wait(timeout=600)
+        assert p_runelf.proc.returncode == 0
+
+        try:
+            p_runelf.terminate()
+        except ProcessLookupError:
+            # process is already dead
+            pass
+
+        p_opensocdebugd.terminate()
 
