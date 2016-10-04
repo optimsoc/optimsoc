@@ -296,6 +296,25 @@ def build_tools(options):
         destf = os.path.join(bindistdir, f)
         file_copy(srcf, destf)
 
+    info(" + optimsoc-pgm-fpga")
+    pgmfpgasrcdir = os.path.join(src, "tools", "optimsoc-pgm-fpga")
+    pgmfpgasobjdir = os.path.join(objdir, "tools", "optimsoc-pgm-fpga")
+    bindistdir = os.path.join(dist, "host", "bin")
+    sharedistdir = os.path.join(dist, "host", "share")
+
+    # Copy build artifacts
+    info("  + Copy build artifacts")
+    ensure_directory(bindistdir)
+    ensure_directory(sharedistdir)
+    pgmfpgafiles_bin = ['optimsoc-pgm-fpga']
+    for f in pgmfpgafiles_bin:
+        srcf = os.path.join(pgmfpgasrcdir, f)
+        destf = os.path.join(bindistdir, f)
+        file_copy(srcf, destf)
+
+    file_copytree(os.path.join(pgmfpgasrcdir, 'scripts'),
+                  os.path.join(sharedistdir, "optimsoc-pgm-fpga"))
+
 """Build the SoC software
 
 Builds the SoC software.

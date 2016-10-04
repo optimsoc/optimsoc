@@ -482,7 +482,9 @@ You don't need to connect any additional power supply.
 With the board connected, we can program (or ``flash'') the FPGA with our hardware design, the ``bitstream.''
 The OpTiMSoC release contains pre-built bitstreams for the single compute tile system and a 2x2 system with four compute tiles, meaning we can start directly with programming the FPGA.
 
-To program the FPGA we'll use Vivado.
+There are two ways to program the device: using the Vivado GUI, or using the command line.
+
+\subsubsection{Programming the FPGA with the Vivado GUI}
 \begin{itemize}
  \item Open Vivado (e.g. by typing \verb|vivado| into a terminal window)
  \item On the welcome screen, click on ``Hardware Manager''
@@ -496,6 +498,11 @@ To program the FPGA we'll use Vivado.
 \end{itemize}
 
 After a couple of seconds, your FPGA contains the SoC hardware and is ready to be used.
+
+\subsubsection{Programming the FPGA on the Command Line}
+\begin{lstlisting}[language=sh]
+optimsoc-pgm-fpga $OPTISMOC/examples/system_2x2_cccc_nexys4ddr/system_2x2_cccc_nexys4ddr.bit xc7a100t_0
+\end{lstlisting}
 
 
 \subsection{Connecting}

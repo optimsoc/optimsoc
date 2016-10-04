@@ -1,0 +1,8 @@
+#!/bin/bash
+
+VIVADO=${VIVADO:-vivado}
+
+bitstream=$1
+device=$2
+
+$VIVADO -mode batch -source $OPTIMSOC/host/share/optimsoc-pgm-fpga/xilinx-vivado.tcl -tclargs $device $bitstream
