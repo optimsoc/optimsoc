@@ -51,4 +51,4 @@ install:
 # Test the build
 script:
   - source ${TARGET_BASE}/latest/optimsoc-environment.sh
-  - pytest -s -v test/systemtest/test_tutorial.py
+  - pytest -s -v test/systemtest/test_tutorial.py::TestTutorial
