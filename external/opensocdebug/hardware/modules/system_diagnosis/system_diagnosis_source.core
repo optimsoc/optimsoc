@@ -1,0 +1,36 @@
+CAPI=1
+[main]
+name = opensocdebug:modules:system_diagnosis_source
+depend =
+  opensocdebug:modules:system_diagnosis
+  optimsoc:lisnoc:lisnoc16
+  optimsoc:lisnoc:lisnoc16_converter
+  opensocdebug:blocks:tracepacket
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  common/source/comparator_module.v
+  common/source/diagnosis_system.v
+  common/source/fcnreturn_monitor.v
+  common/source/GPR.v
+  common/source/lifo.v
+  common/source/LUT.v
+  common/source/Memaddr_monitor.v
+  common/source/Packetizer.v
+  common/source/packetizer_dbgnoc_if.v
+  common/source/Packetizer_lite.v
+  common/source/PC_monitor.v
+  common/source/Stack.v
+  common/source/trafficmonitor.v
+  common/source/wb_sr.v
+  common/source/stm_data_sr.v
+
+[fileset include_files]
+file_type = verilogSource
+is_include_file = true
+usage = sim synth
+files =
+  common/source/diagnosis_config.vh
+  common/source/diagnosis_missing_defines.vh

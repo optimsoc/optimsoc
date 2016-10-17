@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = opensocdebug:modules:system_diagnosis
+depend =
+  opensocdebug:blocks:buffer
+  opensocdebug:blocks:regaccess
+  opensocdebug:blocks:timestamp
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  common/osd_system_diagnosis.sv
