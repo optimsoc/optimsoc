@@ -60,7 +60,7 @@ module lisnoc_fifo(/*AUTOARG*/
    reg [flit_width-1:0] fifo_data [0:LENGTH-1]; //actual fifo
    reg [flit_width-1:0] nxt_fifo_data [0:LENGTH-1];
 
-   reg [LENGTH:0]         fifo_write_ptr;
+   reg [LENGTH:0]         fifo_write_ptr = 1'b1;
 
    wire                   pop;
    wire                   push;
