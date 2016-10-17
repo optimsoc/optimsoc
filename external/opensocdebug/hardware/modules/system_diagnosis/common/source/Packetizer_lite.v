@@ -1,10 +1,30 @@
-/* This module generates the snapshot packets for each event, which are then forwarded to the Co-CPU (e.g. via debug NoC).
- Therefore it detects the occurrence of a new event and collects all necessary data:
+/* Copyright (c) 2016 by the author(s)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * This module generates the snapshot packets for each event, which are then forwarded to the Co-CPU (e.g. via debug NoC).
+ * Therefore it detects the occurrence of a new event and collects all necessary data:
  * Event ID
  * Event Time
-
- This is the LITE version of the packetizer, which does not support of packetizer modules and is thus smaller.
- This data is collected, (in the current implementation wrapped into a LISNoC Packet), and then forwarded via NoC interface.
+ *
+ * This is the LITE version of the packetizer, which does not support of packetizer modules and is thus smaller.
+ * This data is collected, (in the current implementation wrapped into a LISNoC Packet), and then forwarded via NoC interface.
  */
 
 `include "diagnosis_config.vh"

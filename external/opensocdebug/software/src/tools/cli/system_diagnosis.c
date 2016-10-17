@@ -21,7 +21,7 @@
  * ============================================================================
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan@wallentowitz.de>
+ *   Tim Fritzmann <tim.fritzmann@tum.de>
  */
 
 #include "cli.h"
