@@ -28,7 +28,7 @@
 #include <libglip.h>
 #include <assert.h>
 
-const struct module_types module_lookup[7] = {
+const struct module_types module_lookup[MODULES_MAX_ID] = {
         { .name = "HOST" },
         { .name = "SCM" },
         { .name = "DEM-UART" },
@@ -219,7 +219,7 @@ OSD_EXPORT
 int osd_get_module_name(struct osd_context *ctx, uint16_t id,
                         char **name) {
     uint16_t type = ctx->system_info->modules[id].type;
-    if (type > modules_max_id) {
+    if (type > MODULES_MAX_ID) {
         *name = strdup("UNKNOWN");
     }
     *name = strdup(module_lookup[type].name);
