@@ -118,22 +118,18 @@ module GPR (/*AUTOARG*/
    assign fifo_input[31:0] = bv_GPR;
    assign fifo_input[32] = full;
 
-   lisnoc_fifo
-     #(.LENGTH(event_fifo_length),
-       .flit_data_width(33),
-       .flit_type_width(0))
+   osd_fifo
+     #(.DEPTH(event_fifo_length),
+       .WIDTH(33))
    u_bv_fifo(
-             // Outputs
-             .in_ready                  (),
-             .out_flit                  (fifo_output),
-             .out_valid                 (bv_valid_fifo),
-             // Inputs
              .clk                       (clk),
              .rst                       (rst),
-             .in_flit                   (fifo_input),
+             .in_data                   (fifo_input),
              .in_valid                  (bv_valid),
+             .in_ready                  (),
+             .out_data                  (fifo_output),
+             .out_valid                 (bv_valid_fifo),
              .out_ready                 (bv_ready_fifo));
-
 
    /* writeback read logic */
    always @(posedge clk) begin
