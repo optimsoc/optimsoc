@@ -64,7 +64,7 @@ module osd_trace_packetization
 
       case (state)
         IDLE: begin
-           debug_out.data = 16'h0 + DEST_ID;
+           debug_out.data = DEST_ID;
            if (trace_valid) begin
               debug_out.valid = 1;
               if (debug_out_ready) begin
