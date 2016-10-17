@@ -18,7 +18,6 @@ files =
   common/source/LUT.v
   common/source/Memaddr_monitor.v
   common/source/Packetizer.v
-  common/source/packetizer_dbgnoc_if.v
   common/source/Packetizer_lite.v
   common/source/PC_monitor.v
   common/source/Stack.v
