@@ -142,7 +142,7 @@ module Stack (/*AUTOARG*/
    assign trace_insn_delayed = trace_out_delayed[31:0];
    assign trace_enable_delayed = trace_out_delayed[32];
 
-   stm_data_sr
+   delay_data_sr
      #(.DELAY_CYCLES(`DIAGNOSIS_SNAPSHOT_DELAY),
        .DATA_WIDTH(33))
      shiftreg(

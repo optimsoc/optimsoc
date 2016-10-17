@@ -47,10 +47,10 @@ module wb_sr(/*AUTOARG*/
    assign wb_reg_o = dout[`DIAGNOSIS_WB_DATA_WIDTH + `DIAGNOSIS_WB_REG_WIDTH -1 : `DIAGNOSIS_WB_DATA_WIDTH];
    assign wb_data_o = dout[`DIAGNOSIS_WB_DATA_WIDTH-1:0];
 
-   stm_data_sr
+   delay_data_sr
      #(.DELAY_CYCLES(`DIAGNOSIS_SNAPSHOT_DELAY),
        .DATA_WIDTH(`DIAGNOSIS_WB_DATA_WIDTH + `DIAGNOSIS_WB_REG_WIDTH + 1))
-     stm_data_sr(
+     delay_data_sr(
                  // Outputs
                  .dout                  (dout),
                  // Inputs

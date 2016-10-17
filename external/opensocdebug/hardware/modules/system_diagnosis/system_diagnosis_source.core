@@ -25,7 +25,7 @@ files =
   common/source/Stack.v
   common/source/trafficmonitor.v
   common/source/wb_sr.v
-  common/source/stm_data_sr.v
+  common/source/delay_data_sr.v
 
 [fileset include_files]
 file_type = verilogSource

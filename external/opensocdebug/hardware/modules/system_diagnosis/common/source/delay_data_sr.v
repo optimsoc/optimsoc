@@ -30,7 +30,7 @@
 
 `include "dbg_config.vh"
 
-module stm_data_sr(/*AUTOARG*/
+module delay_data_sr(/*AUTOARG*/
    // Outputs
    dout,
    // Inputs
