@@ -17,7 +17,8 @@
 import dii_package::dii_flit;
 
 module osd_trace_packetization
-  #(parameter WIDTH='x)
+  #(parameter WIDTH='x,
+    parameter DEST_ID=16'h0)
    (
     input             clk,
     input             rst,
@@ -32,7 +33,7 @@ module osd_trace_packetization
     output            dii_flit debug_out,
     input             debug_out_ready
     );
-
+   
    localparam NUM_FLITS = ((WIDTH + 15) >> 4);
    localparam COUNTER_WIDTH = $clog2(NUM_FLITS);
 
@@ -63,7 +64,7 @@ module osd_trace_packetization
 
       case (state)
         IDLE: begin
-           debug_out.data = 16'h0;
+           debug_out.data = 16'h0 + DEST_ID;
            if (trace_valid) begin
               debug_out.valid = 1;
               if (debug_out_ready) begin
