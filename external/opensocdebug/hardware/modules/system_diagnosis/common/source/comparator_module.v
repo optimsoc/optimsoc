@@ -1,6 +1,6 @@
-/* This module monitors signals of the cpu, 
+/* This module monitors signals of the cpu,
  detects matches of preconfigured signal values and forwards a respective
- event signal along with the event id. 
+ event signal along with the event id.
  For further use, this module should be integrated into a wrapper for
  * program counter module
  * memory address module
@@ -42,16 +42,16 @@ module comparator_module (/*AUTOARG*/
    output reg [TIMESTAMP_WIDTH-1:0] ev_time;
    /* interface to global timestamp provider module */
    input [TIMESTAMP_WIDTH-1:0]      time_global;
-   
 
 
-   
+
+
    //--------------
    /* output register wiring */
    wire                             nxt_ev_valid;
    wire [EVENT_ID_WIDTH-1:0]        nxt_ev_id;
-   
-   
+
+
    /* Configuration registers (wires) */
     /* 16bit config register format (Data = Program counter or memory address value):
     *
@@ -61,12 +61,12 @@ module comparator_module (/*AUTOARG*/
     *    |      ...      |      ...      |     ...      |
     *    |      ...      |      ...      |     ...      |
     *    +---------------+---------------+--------------+
-    * 
+    *
     */
    wire [31:0]                       pc_values [0:MAX_EVENT_COUNT-1];
    wire                              pc_values_valid [0:MAX_EVENT_COUNT-1];
    wire [EVENT_ID_WIDTH-1:0]         pc_ev_id [0:MAX_EVENT_COUNT-1];
-   
+
    genvar                            j;
    generate
       for (j = 0; j < MAX_EVENT_COUNT; j = j + 1) begin: gen_conf_mem_mapping
@@ -75,7 +75,7 @@ module comparator_module (/*AUTOARG*/
          assign pc_ev_id[j] = conf_reg_flat_in[j*48+32+EVENT_ID_WIDTH-1:j*48+32];
       end
    endgenerate
-      
+
 
    /* Bitvector for comparator logic that indicates a match */
    wire [MAX_EVENT_COUNT-1:0]         comparator_match;
@@ -94,7 +94,7 @@ module comparator_module (/*AUTOARG*/
    endfunction
    //------------
 
-   
+
 
    /* Comparator logic */
    genvar                                     i;
@@ -124,11 +124,11 @@ module comparator_module (/*AUTOARG*/
       end
    end // always @ (posedge clk)
 
-  
+
 endmodule // PC_monitor
 
-      
-   
-         
-   
-   
+
+
+
+
+

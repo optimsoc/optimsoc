@@ -1,10 +1,10 @@
-/* 
+/*
  This is the toplevel module of the diagnosis system.
- It holds interfaces for the necessary openrisc nodes 
+ It holds interfaces for the necessary openrisc nodes
  (program counter, writeback signal etc.) and a debug-NoC
- interface for system configuration and output of 
+ interface for system configuration and output of
  snapshot packets.
- 
+
  Author: Markus Goehrle, <Markus.Goehrle@tum.de>
  */
 
@@ -17,14 +17,14 @@ module diagnosis_system(/*AUTOARG*/
    // Outputs
    dbgnoc_in_ready, dbgnoc_out_flit, dbgnoc_out_valid,
    // Inputs
-   clk, rst, memaddr_val, sram_ce, sram_we, time_global, trace_port, 
+   clk, rst, memaddr_val, sram_ce, sram_we, time_global, trace_port,
    dbgnoc_in_flit, dbgnoc_in_valid, dbgnoc_out_ready, conf_mem
    );
 
    /** Configuration memory: 16 bit flits **/
    /** We have currently 3 x 16 bit flits for one config entry (including valid flag).
     Also, the LUT module holds exactly half the config entries of the system.
-    This makes a total configuration memory size of 3 x 2 x TOTAL_EVENTS_MAX 
+    This makes a total configuration memory size of 3 x 2 x TOTAL_EVENTS_MAX
     Furthermore, we have to consider three more flits for CORE_ID, Module_type + version and system on/off flag**/
    localparam CONF_FLITS_PER_ENTRY = `DIAGNOSIS_CONF_FLITS_PER_ENTRY;
    localparam CONF_MEM_SIZE = (2 * CONF_FLITS_PER_ENTRY * `DIAGNOSIS_TOTAL_EVENTS_MAX) + 3;
@@ -32,16 +32,16 @@ module diagnosis_system(/*AUTOARG*/
    localparam CONF_FCNRET_SIZE = `DIAGNOSIS_FCNRET_EVENTS_MAX * CONF_FLITS_PER_ENTRY;
    localparam CONF_MEMADDR_SIZE = `DIAGNOSIS_MEMADDR_EVENTS_MAX * CONF_FLITS_PER_ENTRY;
    localparam CONF_LUT_SIZE = `DIAGNOSIS_TOTAL_EVENTS_MAX * CONF_FLITS_PER_ENTRY;
-  
+
  /* Core ID */
    parameter CORE_ID = 16'hx;
-    
+
    /** Debug NoC Parameters **/
    parameter DBG_NOC_DATA_WIDTH = `FLIT16_CONTENT_WIDTH;
    parameter DBG_NOC_FLIT_TYPE_WIDTH = `FLIT16_TYPE_WIDTH;
    localparam DBG_NOC_FLIT_WIDTH = DBG_NOC_DATA_WIDTH + DBG_NOC_FLIT_TYPE_WIDTH;
    parameter DBG_NOC_VCHANNELS = 1;
-   
+
    input clk, rst;
    /* Memory interface */
    input [31:0]                         memaddr_val;
@@ -60,7 +60,7 @@ module diagnosis_system(/*AUTOARG*/
    input [DBG_NOC_VCHANNELS-1:0]      dbgnoc_out_ready;
    /* Configuration of Events */
    input [3*16*`DIAGNOSIS_TOTAL_EVENTS_MAX*2:0] conf_mem;
-   
+
    /* mor1kx program counter interface */
    wire [31:0] pc_val;
    wire        pc_enable;
@@ -134,7 +134,6 @@ module diagnosis_system(/*AUTOARG*/
    assign conf_memaddr_flat_in = conf_mem[CONF_MEMADDR_MSB:CONF_MEMADDR_LSB];
    assign conf_lut_flat_in = conf_mem[CONF_LUT_MSB:CONF_LUT_LSB];
 
-   
    PC_monitor
      #(.CONF_PC_SIZE(CONF_PC_SIZE))
      u_PC_monitor(/*AUTOINST*/
@@ -209,7 +208,7 @@ module diagnosis_system(/*AUTOARG*/
            .memaddr_ev_valid            (memaddr_ev_valid),
            .memaddr_ev_id               (memaddr_ev_id[`DIAGNOSIS_EV_ID_WIDTH-1:0]),
            .memaddr_ev_time             (memaddr_ev_time[`DIAGNOSIS_TIMESTAMP_WIDTH-1:0]));
-   
+
    Packetizer
      #(.DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
         .CONF_MEM_SIZE(CONF_MEM_SIZE),
@@ -273,4 +272,4 @@ module diagnosis_system(/*AUTOARG*/
              .gpr_data_i                (stackarg_data_o),
              .out_stack_rdy             (out_stack_rdy));
 
-   endmodule
+endmodule

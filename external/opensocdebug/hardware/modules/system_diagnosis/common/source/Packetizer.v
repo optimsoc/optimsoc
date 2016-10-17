@@ -27,18 +27,18 @@ module Packetizer (/*AUTOARG*/
    /*** Parameters ***/
    /** Core ID **/
    parameter CORE_ID = 16'hx;
-   
+
    /** Fifo lengths **/
    parameter gpr_fifo_length = `DIAGNOSIS_GPR_FIFO_LENGTH;
    parameter stack_fifo_length = `DIAGNOSIS_STACK_FIFO_LENGTH;
    parameter event_fifo_length = `DIAGNOSIS_EVENT_FIFO_LENGTH;
 
    /** Configuration memory: 16 bit flits **/
-   /** We have currently 3 x 16 bit flits for one config entry (including valid flag). 
+   /** We have currently 3 x 16 bit flits for one config entry (including valid flag).
     This means 6 flits per event (config of both the monitor and the LUT module) **/
    parameter CONF_MEM_SIZE = 2;
-   
-   
+
+
    /** NoC Parameters **/
    // parameters for the Debug NoC interface
    parameter DBG_NOC_DATA_WIDTH = `FLIT16_CONTENT_WIDTH;
@@ -47,12 +47,12 @@ module Packetizer (/*AUTOARG*/
    parameter DBG_NOC_VCHANNELS = 1;
    parameter DBG_NOC_TRACE_VCHANNEL = 0;
    parameter DBG_NOC_CONF_VCHANNEL = 0;
-   
+
    /** Header Format: **/
    /*       +------------------------------------------------------------------------------+
-    *       | Type  |  Dest  |  Src  |  Class  |  --  |  #Stack  |  #GPR  |  #Time  |  ID  |  
+    *       | Type  |  Dest  |  Src  |  Class  |  --  |  #Stack  |  #GPR  |  #Time  |  ID  |
     *       +------------------------------------------------------------------------------+
-    */ 
+    */
    //localparam flit_width = flit_data_width+flit_type_width;
 
    /*** Interfaces ***/
@@ -77,17 +77,17 @@ module Packetizer (/*AUTOARG*/
    input [DBG_NOC_FLIT_WIDTH-1:0]     dbgnoc_in_flit;
    input [DBG_NOC_VCHANNELS-1:0]      dbgnoc_in_valid;
    output [DBG_NOC_VCHANNELS-1:0] dbgnoc_in_ready;
-  
+
    output [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_out_flit;
    output [DBG_NOC_VCHANNELS-1:0]  dbgnoc_out_valid;
    input [DBG_NOC_VCHANNELS-1:0]       dbgnoc_out_ready;
-   
 
-   
-   
+
+
+
    /*** Wires and Regs ***/
-   
-   
+
+
    // Event fifo output wiring
    wire                                ev_fifo_valid;
    wire [`DIAGNOSIS_EV_ID_WIDTH-1:0]   ev_fifo_id;
@@ -102,9 +102,9 @@ module Packetizer (/*AUTOARG*/
    reg                                   gpr_fifo_ready;
    wire [`DIAGNOSIS_WB_DATA_WIDTH+2:0]   gpr_fifo_input;
    assign gpr_fifo_input[`DIAGNOSIS_WB_DATA_WIDTH+2:`DIAGNOSIS_WB_DATA_WIDTH] = in_GPR_type;
-   assign gpr_fifo_input[`DIAGNOSIS_WB_DATA_WIDTH-1:0] = in_GPR_data; 
-  
-   
+   assign gpr_fifo_input[`DIAGNOSIS_WB_DATA_WIDTH-1:0] = in_GPR_data;
+
+
    // Stack fifo output wiring
    wire                                                          stack_fifo_valid;
    wire [`DIAGNOSIS_WB_DATA_WIDTH-1:0]                           stack_fifo_data;
@@ -130,52 +130,25 @@ module Packetizer (/*AUTOARG*/
    reg                                 out_data34_valid;
    wire                                out_data34_ready;
 
-/*   packetizer_dbgnoc_if
-     #(.CONF_MEM_SIZE(CONF_MEM_SIZE),
-       .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
-		 .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL),
-		 .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
-       .CORE_ID(CORE_ID))
-     u_packetizer_dbgnoc_if(
-                            // Outputs
-                            .in_data34_ready    (out_data34_ready),
-                            .dbgnoc_out_flit    (dbgnoc_out_flit[DBG_NOC_FLIT_WIDTH-1:0]),
-                            .dbgnoc_out_valid   (dbgnoc_out_valid[DBG_NOC_VCHANNELS-1:0]),
-                            .dbgnoc_in_ready    (dbgnoc_in_ready[DBG_NOC_VCHANNELS-1:0]),
-                            .sys_clk_disable    (),
-                            .conf_mem_flat_out  (conf_mem_flat_out),
-                            // Inputs
-                            .clk                (clk),
-                            .rst                (rst),
-                            .in_data34          (out_data34[33:0]),
-                            .in_data34_valid    (out_data34_valid),
-                            .dbgnoc_out_ready   (dbgnoc_out_ready[DBG_NOC_VCHANNELS-1:0]),
-                            .dbgnoc_in_flit     (dbgnoc_in_flit[DBG_NOC_FLIT_WIDTH-1:0]),
-                            .dbgnoc_in_valid    (dbgnoc_in_valid[DBG_NOC_VCHANNELS-1:0]),
-                            .full_packetizer_fifo(any_input_fifo_full));
-*/
+   /* OSD Packetizer */
+   osd_trace_packetization
+      #(.WIDTH(34),
+        .DEST_ID (0))         // 6 for Debug Processor
+   u_trace_packetization
+      (
+        .clk (clk),
+        .rst (rst),
 
-//// NEW PACKETIZER
-  osd_trace_packetization
-    #(.WIDTH(34),
-      .DEST_ID (0))		// 6 for Debug Processor
-  u_trace_packetization
-     (
-      .clk (clk),
-      .rst (rst),
+        .id (5),
 
-      .id (5),
-  
-      .trace_data (out_data34),
-      .trace_overflow (any_input_fifo_full),
-      .trace_valid (out_data34_valid),
-      .trace_ready(out_data34_ready),
+        .trace_data (out_data34),
+        .trace_overflow (any_input_fifo_full),
+        .trace_valid (out_data34_valid),
+        .trace_ready(out_data34_ready),
 
-      .debug_out (dbgnoc_out_flit[DBG_NOC_FLIT_WIDTH-1:0]),
-      .debug_out_ready (dbgnoc_out_ready[DBG_NOC_VCHANNELS-1:0])
-      );
+        .debug_out (dbgnoc_out_flit[DBG_NOC_FLIT_WIDTH-1:0]),
+        .debug_out_ready (dbgnoc_out_ready[DBG_NOC_VCHANNELS-1:0]));
 
-   
    /*** Input Fifos for Snapshot Modules and Event Fingerprints ***/
    lisnoc_fifo
      #(.LENGTH(gpr_fifo_length),
@@ -230,10 +203,10 @@ module Packetizer (/*AUTOARG*/
    localparam STATE_WIDTH = 3;
    localparam STATE_IDLE = 3'd0;
    localparam STATE_Time_out = 3'd1;
-   localparam STATE_Time_out2 = 3'd4;   
+   localparam STATE_Time_out2 = 3'd4;
    localparam STATE_GPR_out = 3'd2;
    localparam STATE_Stack_out = 3'd3;
-   
+
    reg [STATE_WIDTH-1:0]                                        state, nxt_state;
 
    /* FSM next state logic*/
@@ -257,7 +230,7 @@ module Packetizer (/*AUTOARG*/
               nxt_state = state;
               out_data34_valid = 1'b0;
            end
-              
+
         end // case: `STATE_IDLE_Headerout
 
         STATE_Time_out: begin
@@ -283,8 +256,8 @@ module Packetizer (/*AUTOARG*/
                     stack_fifo_ready = 1'b0;
                     ev_fifo_ready = 1'b0;
                  end
-                 
-                 
+
+
               end else begin // if there are GPR or Stackargs wanted: payload flit
                  // only one timeflit: go to GPR or Stack state
                  out_data34 = {2'b00,ev_fifo_time}; // first timeflit
@@ -305,9 +278,9 @@ module Packetizer (/*AUTOARG*/
                     gpr_fifo_ready = 1'b0;
                     stack_fifo_ready = 1'b0;
                     ev_fifo_ready = 1'b0;
-                 end   
+                 end
               end
-              
+
            end else begin // if GPR and Stack data has not arrived yet, do nothing
               out_data34 = 0;
               out_data34_valid = 1'b0;
@@ -317,8 +290,8 @@ module Packetizer (/*AUTOARG*/
               stack_fifo_ready = 1'b0;
            end // else: !if(gpr_fifo_valid && stack_fifo_valid)
         end // case: `STATE_Time_out
-        
-     /* only necessary if timestamp width exceeds 32 bit   
+
+     /* only necessary if timestamp width exceeds 32 bit
         STATE_Time_out2: begin
            out_data34_valid = 1'b1;
            gpr_fifo_ready = 1'b0;
@@ -329,7 +302,7 @@ module Packetizer (/*AUTOARG*/
            end else begin // if there are GPR or Stackargs wanted: payload flit
               out_data34[33:32] = 2'b00;
            end
-           
+
            if (out_data34_ready) begin
               ev_fifo_ready = 1'b1;
               if (gpr_fifo_type != `SNAPSHOT_FLIT_TYPE_NONE) begin
@@ -381,7 +354,7 @@ module Packetizer (/*AUTOARG*/
                     nxt_state = state;
                  end
               end
-              
+
            end else begin // if this is not the last gpr flit
               out_data34[33:32] = 2'b00;
               nxt_state = state;
@@ -392,15 +365,15 @@ module Packetizer (/*AUTOARG*/
                  gpr_fifo_ready = 1'b0;
               end
            end
-           
+
         end // state GPR
-        
+
         STATE_Stack_out: begin
            out_data34_valid = 1'b1;
            ev_fifo_ready = 1'b0;
            gpr_fifo_ready = 1'b0;
            out_data34[31:0] = stack_fifo_data;
-           if (stack_fifo_type == `SNAPSHOT_FLIT_TYPE_LAST || 
+           if (stack_fifo_type == `SNAPSHOT_FLIT_TYPE_LAST ||
                stack_fifo_type == `SNAPSHOT_FLIT_TYPE_SINGLE) begin
               out_data34[33:32] = 2'b10;
               if (out_data34_ready) begin
@@ -429,10 +402,10 @@ module Packetizer (/*AUTOARG*/
            out_data34 = 34'd0;
            nxt_state = STATE_IDLE;
         end
-        
+
       endcase // case (state)
    end
-   
+
    /* sequential */
    always @(posedge clk) begin
       if (rst) begin
@@ -441,5 +414,5 @@ module Packetizer (/*AUTOARG*/
          state <= nxt_state;
       end
    end //always
-   
+
 endmodule // packetizer

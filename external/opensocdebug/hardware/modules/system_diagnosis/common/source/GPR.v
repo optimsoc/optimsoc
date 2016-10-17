@@ -1,4 +1,4 @@
-/* This module enables access to arbitrary General Purpose Registers 
+/* This module enables access to arbitrary General Purpose Registers
  Author: Markus Goehrle, Markus.Goehrle@tum.de */
 
 `include "diagnosis_config.vh"
@@ -27,7 +27,7 @@ module GPR (/*AUTOARG*/
    /* Stack module interface */
    input [`DIAGNOSIS_WB_REG_WIDTH-1:0]   stackarg_addr_i;
    output [`DIAGNOSIS_WB_DATA_WIDTH-1:0] stackarg_data_o;
-   
+
 
    /*** Parameters ***/
    // depth of input buffer for incoming event triggers
@@ -38,7 +38,7 @@ module GPR (/*AUTOARG*/
    /* select signal for data multiplexer */
    reg [4:0]    mux_select, mux_select_tmp;
    reg [4:0]    old_mux_sel, nxt_old_mux_sel;
-  
+
 
    /* Registers for local GPR copy */
    reg [`DIAGNOSIS_WB_DATA_WIDTH-1:0]    GPR[0:31];
@@ -52,7 +52,7 @@ module GPR (/*AUTOARG*/
    reg [1:0]      swapflags, nxt_swapflags; // flag that indicates if GPR_shot "buffer" is full or empty: [rd,wr]
    wire           full;
    assign full = (rd_ptr == wr_ptr) && (swapflags == 2'b01 || swapflags == 2'b10);
-   
+
    /* log2 function for bitvector decryption */
    function [4:0] log2;
       input [31:0] bv_tmp;
@@ -65,12 +65,12 @@ module GPR (/*AUTOARG*/
 
    /* Multiplexer for Stack module read interface */
    assign stackarg_data_o = GPR[stackarg_addr_i];
-   
+
    /* Shift register for delay of write back signal */
    wire wb_enable_delayed;
    wire [`DIAGNOSIS_WB_REG_WIDTH-1:0] wb_reg_delayed;
    wire [`DIAGNOSIS_WB_DATA_WIDTH-1:0] wb_data_delayed;
-   
+
    wb_sr
      wb_sr(
            // Outputs
@@ -111,15 +111,15 @@ module GPR (/*AUTOARG*/
              .rst                       (rst),
              .in_flit                   (fifo_input),
              .in_valid                  (bv_valid),
-             .out_ready                 (bv_ready_fifo));  
- 
+             .out_ready                 (bv_ready_fifo));
+
 
    /* writeback read logic */
    always @(posedge clk) begin
       if (wb_enable_delayed) begin
          GPR[wb_reg_delayed] <= wb_data_delayed;
       end
-   end 
+   end
 
    /* copy GPR snapshot logic */
    /* only make a set copy, if sets are not full and at least one GPR wanted */
@@ -150,21 +150,21 @@ module GPR (/*AUTOARG*/
 
    /* Multiplexer GPR->output */
    assign out_GPR_data = GPR_shot[mux_select][rd_ptr];
-   
+
  /*** FSM ***/
-   
+
    localparam STATE_WIDTH = 2;
    localparam STATE_IDLE = 2'b00;
    localparam STATE_noregswanted = 2'b01;
    localparam STATE_decodebv = 2'b10;
-   
+
    reg [STATE_WIDTH-1:0]              state, nxt_state;
-   
+
    /* FSM next state logic*/
    always @(*) begin
       case(state)
         /* This state checks if there is a new event in the event input buffer.
-           The buffer contains a tuple (full_flag, bv_GPR_fifo), i.e. 
+           The buffer contains a tuple (full_flag, bv_GPR_fifo), i.e.
            an indicator if a GPR set could be saved for the event, and which registers
            are wanted. If a set could be stored and registers are wanted, it reads
            them out to the packetizer module */
@@ -187,7 +187,7 @@ module GPR (/*AUTOARG*/
                  end else begin
                     nxt_state = STATE_noregswanted;
                     nxt_GPR_bv = GPR_bv;
-                 end   
+                 end
               end else begin
                  nxt_state = STATE_noregswanted;
                  nxt_GPR_bv = GPR_bv;
@@ -222,7 +222,7 @@ module GPR (/*AUTOARG*/
            out_GPR_valid = 1'b1;
            bv_ready_fifo = 1'b0;
            /* Index of next '1' in bitvector bv is
-            index = log2(bv AND (twocomplement(bv))). 
+            index = log2(bv AND (twocomplement(bv))).
             Add value of old select, as bv is shifted afterwards */
            mux_select_tmp = log2(GPR_bv & (~GPR_bv + 'b1));
            mux_select = mux_select_tmp + old_mux_sel;
@@ -246,7 +246,7 @@ module GPR (/*AUTOARG*/
                  end
                  if (old_mux_sel == 5'd0) begin
                     out_GPR_type = `SNAPSHOT_FLIT_TYPE_SINGLE;
-                 end else begin 
+                 end else begin
                     out_GPR_type = `SNAPSHOT_FLIT_TYPE_LAST;
                  end
               end else begin // if (nxt_GPR_bv == 32'd0)
@@ -254,9 +254,9 @@ module GPR (/*AUTOARG*/
                  nxt_state = state;
                  nxt_swapflags[1] = swapflags[1];
                  if (old_mux_sel == 5'd0) begin
-                    out_GPR_type = `SNAPSHOT_FLIT_TYPE_FIRST; 
+                    out_GPR_type = `SNAPSHOT_FLIT_TYPE_FIRST;
                  end else begin
-                    out_GPR_type = `SNAPSHOT_FLIT_TYPE_MIDDLE; 
+                    out_GPR_type = `SNAPSHOT_FLIT_TYPE_MIDDLE;
                  end
               end // else: !if(nxt_GPR_bv == 32'd0)
            end else begin // if (out_GPR_rdy)
@@ -279,12 +279,12 @@ module GPR (/*AUTOARG*/
            nxt_old_mux_sel = old_mux_sel;
         end
       endcase // case (state)
-      
-      
-   end // always @ (*)
-   
 
-      
+
+   end // always @ (*)
+
+
+
    /* sequential */
    always @(posedge clk) begin
       if (rst) begin

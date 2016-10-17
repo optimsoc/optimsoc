@@ -1,4 +1,4 @@
-/* This modules enables access to function arguments that are stored on the stack. 
+/* This modules enables access to function arguments that are stored on the stack.
  Author: Markus Goehrle, Markus.Goehrle@tum.de */
 
 `include "diagnosis_config.vh"
@@ -31,7 +31,7 @@ module Stack (/*AUTOARG*/
    /**** Parameters ****/
    parameter stack_sets = `DIAGNOSIS_parallel_stackshots;
    localparam event_fifo_length = `DIAGNOSIS_EVENT_FIFO_LENGTH;
-   
+
    /** Buffer for storage of temporary stack arguments */
    reg [`DIAGNOSIS_WB_DATA_WIDTH-1:0] stackargs[0:`DIAGNOSIS_STACKARGS_MAX - 1];
    reg [`DIAGNOSIS_WB_DATA_WIDTH-1:0] stackargs_shot[0:`DIAGNOSIS_STACKARGS_MAX - 1][0:stack_sets-1];
@@ -46,7 +46,7 @@ module Stack (/*AUTOARG*/
    wire                               full;
    /* we need this signal to avoid overwriting sets that still need to be processed */
    assign full = (rd_ptr == wr_ptr) && (swapflags == 2'b01 || swapflags == 2'b10);
-   
+
    /* Multiplexer for argument output to packetizer module */
    /* rd_ptr selects the set, args_rdptr selects the line, i.e. the argument in the set */
    assign out_stack_data = stackargs_shot[args_rdptr][rd_ptr];
@@ -80,7 +80,7 @@ module Stack (/*AUTOARG*/
          nxt_swapflags[0] = swapflags[0];
       end
    end
-   
+
    /*** Input fifo for gpr bitvectors, for pipelining of events ***/
    wire [31:0]                         args_fifo;
    wire                                args_valid_fifo;
@@ -109,9 +109,9 @@ module Stack (/*AUTOARG*/
              .in_flit                   (fifo_input),
              .in_valid                  (args_valid),
              .out_ready                 (args_ready_fifo));
-   
-    
-   
+
+
+
    /* delay of instruction signals with shift registers */
    wire [32:0]   trace_in;
    wire [32:0]   trace_out_delayed;
@@ -120,7 +120,7 @@ module Stack (/*AUTOARG*/
    assign trace_in = {trace_enable, trace_insn};
    assign trace_insn_delayed = trace_out_delayed[31:0];
    assign trace_enable_delayed = trace_out_delayed[32];
-   
+
    stm_data_sr
      #(.DELAY_CYCLES(`DIAGNOSIS_SNAPSHOT_DELAY),
        .DATA_WIDTH(33))
@@ -144,21 +144,21 @@ module Stack (/*AUTOARG*/
     /* Instruction format for 'l.sw I(rA), rB' on openrisc:
     *
     *            +---------------------------------------------------------+
-    *            |31     26|25      21|20      16|15      11|10           0| 
+    *            |31     26|25      21|20      16|15      11|10           0|
     *            |  Opcode |   sign   |    rA    |    rB    |       I      |
     *            |  110101 |   xxxx   |   00001  |   store  | offset_index |
     *            +---------------------------------------------------------+
     */
-   
+
    always @(posedge clk) begin
       // if ( instr valid && instr == l.sw && rA == 1 && offset >= 0 && offset_index < STACKARGS_MAX)
-      if ( trace_enable_delayed && (trace_insn_delayed[31:26] ==  6'b110101) && 
-           (trace_insn_delayed[20:16] == 5'd1) && (offset[10] == 1'b0) && 
+      if ( trace_enable_delayed && (trace_insn_delayed[31:26] ==  6'b110101) &&
+           (trace_insn_delayed[20:16] == 5'd1) && (offset[10] == 1'b0) &&
            (offset_index < `DIAGNOSIS_STACKARGS_MAX)) begin
 
          // store stack argument on respective index in local buffer
          stackargs[offset_index] = gpr_data_i;
-      end     
+      end
    end
 
     /*** FSM  ***/
@@ -166,7 +166,7 @@ module Stack (/*AUTOARG*/
    localparam STATE_IDLE = 1'b0;
    localparam STATE_forwardargs = 1'b1;
    reg [STATE_WIDTH-1:0]      state, nxt_state;
-   
+
  /* FSM next state logic */
    always @(*) begin
       case(state)
@@ -177,7 +177,7 @@ module Stack (/*AUTOARG*/
            nxt_args_rdptr = 5'd0;
            nxt_rd_ptr = rd_ptr;
            nxt_swapflags[1] = swapflags[1];
-           
+
            if (args_valid_fifo) begin
               args_ready_fifo = 1'b1;
               // check if the args snapshot could be generated
@@ -202,7 +202,7 @@ module Stack (/*AUTOARG*/
            nxt_argsbuf = argsbuf;
            // if amount of desired function args > 0, forward them
            if (out_stack_rdy) begin
-             
+
               if (argsbuf) begin
                  nxt_args_rdptr = args_rdptr + 1;
                  // if rdptr is about to get out of range, it is last or single flit
@@ -231,7 +231,7 @@ module Stack (/*AUTOARG*/
                        out_stack_type = `SNAPSHOT_FLIT_TYPE_FIRST;
                     end
                  end
-              end else begin 
+              end else begin
                  // if (!argsbuf): desired args is zero, send 'NONE' type
                  // and also dont touch rd_ptr, as we do not have a set
                  out_stack_type = `SNAPSHOT_FLIT_TYPE_NONE;
@@ -247,7 +247,7 @@ module Stack (/*AUTOARG*/
               nxt_args_rdptr = args_rdptr;
               out_stack_type = `SNAPSHOT_FLIT_TYPE_NONE;
            end
-           
+
         end // case: `STATE_forwardargs
 
         default: begin
@@ -262,10 +262,7 @@ module Stack (/*AUTOARG*/
         end
       endcase // case (state)
    end // always @ (*)
-   
-      
-  
-  
+
     /* sequential */
    always @(posedge clk) begin
       if (rst) begin
@@ -284,6 +281,5 @@ module Stack (/*AUTOARG*/
          swapflags <= nxt_swapflags;
       end
    end //always
-   
-   
+
 endmodule

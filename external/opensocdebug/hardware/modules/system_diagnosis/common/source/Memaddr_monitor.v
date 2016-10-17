@@ -1,6 +1,6 @@
-/* This module monitors memory writes of the cpu, 
- detects matches of preconfigured memory address signal values 
- and forwards a respective event signal along with the event id. 
+/* This module monitors memory writes of the cpu,
+ detects matches of preconfigured memory address signal values
+ and forwards a respective event signal along with the event id.
  Author: Markus Goehrle, Markus.Goehrle@tum.de */
 
 `include "diagnosis_config.vh"
@@ -13,7 +13,6 @@ module Memaddr_monitor (/*AUTOARG*/
    sram_ce, sram_we, time_global
    );
 
-   
    /** Parameters **/
    // Number of 16 bit configuration registers
    parameter CONF_MEMADDR_SIZE = 3;
@@ -25,7 +24,7 @@ module Memaddr_monitor (/*AUTOARG*/
    parameter MAX_EVENT_COUNT = `DIAGNOSIS_MEMADDR_EVENTS_MAX;
    // Index for multiplexer of lookuptable selection after comparator hit
    parameter INDEX_WIDTH = $clog2(MAX_EVENT_COUNT);
-   
+
    /** Interfaces **/
    input clk, rst;
    /* configuration register interface */
@@ -48,7 +47,7 @@ module Memaddr_monitor (/*AUTOARG*/
    /* enable signal: only track writes (with enabled chip) */
    wire                                    enable;
    assign enable = sram_ce && sram_we;
-   
+
    /* comparator_module AUTO_TEMPLATE(
     .val (memaddr_val),
     .enable (enable),

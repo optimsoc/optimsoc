@@ -7,7 +7,7 @@
  A function is identified over the program counter value
  of its first point in the programme flow. This value has
  to be declared in the corresponding configuration registers.
- 
+
  Author: Markus Goehrle, Markus.Goehrle@tum.de */
 
 `include "diagnosis_config.vh"
@@ -20,7 +20,7 @@ module fcnreturn_monitor (/*AUTOARG*/
    wb_enable, wb_reg, wb_data, time_global
    );
 
-   
+
    /** Parameters **/
    // Number of 16 bit configuration registers (3 per event declaration, for structure see below)
    parameter CONF_FCNRET_SIZE = 3;
@@ -28,12 +28,12 @@ module fcnreturn_monitor (/*AUTOARG*/
    parameter MAX_EVENT_COUNT = `DIAGNOSIS_FCNRET_EVENTS_MAX;
    // Index for multiplexer of lookuptable selection after comparator hit
    parameter INDEX_WIDTH = $clog2(MAX_EVENT_COUNT);
-   // 
-   // Maximum number of supported return addresses, before the first one returns 
+   //
+   // Maximum number of supported return addresses, before the first one returns
    // This is needed, as e.g. the first function call and consecutive resursive calls
    // have different return addresses, and would overwrite each other otherwise
    parameter MAX_RETURN_ADDRESSES = `DIAGNOSIS_R9_ADDRESSES;
-   
+
    /** Interface **/
    input clk, rst;
    /* configuration register interface */
@@ -52,7 +52,7 @@ module fcnreturn_monitor (/*AUTOARG*/
    output reg [`DIAGNOSIS_TIMESTAMP_WIDTH-1:0] fcnret_ev_time;
    /* interface to global timestamp provider module */
    input [`DIAGNOSIS_TIMESTAMP_WIDTH-1:0]  time_global;
-   
+
 
 
    /*********************************************************************************/
@@ -61,14 +61,14 @@ module fcnreturn_monitor (/*AUTOARG*/
    /* Output registers wiring */
    wire                                    nxt_fcnret_ev_valid;
    wire [`DIAGNOSIS_EV_ID_WIDTH-1:0]       nxt_fcnret_ev_id;
-   
+
    /** Lookuptable for function entry and respective event id **/
    /* (Logical) Format:
     *
     *            +----------------------------------------------+
-    *            | Event ID | Entry-PC-value |  valid entry PC  | 
-    *            |   ...    |       ...      |        ...       |      
-    *            |   ...    |       ...      |        ...       |  
+    *            | Event ID | Entry-PC-value |  valid entry PC  |
+    *            |   ...    |       ...      |        ...       |
+    *            |   ...    |       ...      |        ...       |
     *            +----------------------------------------------+
     */
    /* Equivalent 16bit config register format (Data = Entry-PC value):
@@ -79,7 +79,7 @@ module fcnreturn_monitor (/*AUTOARG*/
     *    |      ...      |      ...      |     ...      |
     *    |      ...      |      ...      |     ...      |
     *    +---------------+---------------+--------------+
-    * 
+    *
     */
    wire [`DIAGNOSIS_EV_ID_WIDTH-1:0]        lut_ev_id[0:MAX_EVENT_COUNT-1];
    wire [31:0]                              lut_entry_pc[0:MAX_EVENT_COUNT-1];
@@ -90,13 +90,13 @@ module fcnreturn_monitor (/*AUTOARG*/
       for (j = 0; j < MAX_EVENT_COUNT; j = j + 1) begin: gen_conf_mem_mapping
          assign lut_ev_id[j] = conf_fcnret_flat_in[j*48+32+`DIAGNOSIS_EV_ID_WIDTH-1:j*48+32];
          assign lut_entry_pc[j] = conf_fcnret_flat_in[j*48+31:j*48];
-         assign lut_valid_entrypc[j] = conf_fcnret_flat_in[j*48+47];    
+         assign lut_valid_entrypc[j] = conf_fcnret_flat_in[j*48+47];
       end
    endgenerate
 
    /* Copy of General Purpose Register R9 */
    reg [`DIAGNOSIS_WB_DATA_WIDTH-1:0]                             R9_copy;
-   
+
    /* Bitvector for comparator logic that indicates a match */
    wire [MAX_EVENT_COUNT-1:0]         comparator_entry_match;
    //wire [MAX_EVENT_COUNT-1:0]         comparator_R9_match;
@@ -132,7 +132,7 @@ module fcnreturn_monitor (/*AUTOARG*/
    assign lifo_R9_out = lifo_out[31:0];
    assign lifo_id_out = lifo_out[lifo_width-1:32];
 
-       
+
    lifo
      #(.depth(MAX_RETURN_ADDRESSES),
        .width(lifo_width))
@@ -149,11 +149,11 @@ module fcnreturn_monitor (/*AUTOARG*/
           .push_data                    (lifo_in),
           .pop                          (pop));
 
-   
-   
+
+
    /******************************************************************************/
    /*** Logic ***/
-   
+
    /* writeback read logic */
    always @(posedge clk) begin
       if (wb_enable && wb_reg == 9) begin
@@ -161,13 +161,13 @@ module fcnreturn_monitor (/*AUTOARG*/
       end
    end
 
-   /* PC evaluation logic 
+   /* PC evaluation logic
     * If function entry is detected, it pushes the current R9 value in LIFO.
     */
    genvar c;
    generate
       for (c = 0; c < MAX_EVENT_COUNT; c = c + 1) begin
-         assign comparator_entry_match[c] = (pc_enable && lut_valid_entrypc[c] && pc_val == lut_entry_pc[c]) ? 1'b1 : 1'b0;   
+         assign comparator_entry_match[c] = (pc_enable && lut_valid_entrypc[c] && pc_val == lut_entry_pc[c]) ? 1'b1 : 1'b0;
       end
    endgenerate
 
@@ -183,12 +183,12 @@ module fcnreturn_monitor (/*AUTOARG*/
 
    /** Valid event detection logic: if we have a valid R9 in LIFO and it matches the current PC **/
    assign nxt_fcnret_ev_valid = (!lifo_empty && pc_enable && pc_val ==  lifo_R9_out) ? 1'b1 : 1'b0;
-   
+
    /* index generation logic: index for LUT is index of high comparator bit */
    assign lut_entry_index = log2(comparator_entry_match);
    /* forward the event id in LIFO to output (which is valid, when the R9 in LIFO matches */
    assign nxt_fcnret_ev_id = lifo_id_out;
-  
+
    /* sequential */
    always @(posedge clk) begin
       if (rst || ~diag_sys_enabled) begin
@@ -202,5 +202,4 @@ module fcnreturn_monitor (/*AUTOARG*/
       end
    end // always @ (posedge clk)
 
-      
 endmodule // fcnreturn_monitor

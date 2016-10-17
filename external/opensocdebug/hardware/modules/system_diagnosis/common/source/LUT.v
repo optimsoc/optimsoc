@@ -1,6 +1,6 @@
 /* This module is the interface between the event monitor modules on the
  one hand and the snapshot collector modules and the packetizer on the other.
- Every time an event signal occurs, it triggers and configures the snapshot modules to 
+ Every time an event signal occurs, it triggers and configures the snapshot modules to
  collect the desired data. Furthermore it configures the packetizer to generate
  a snapshot packet.
  Author: Markus Goehrle, Markus.Goehrle@tum.de */
@@ -15,7 +15,7 @@ module LUT (/*AUTOARG*/
    fcnret_ev_valid, fcnret_ev_id, fcnret_ev_time, memaddr_ev_valid,
    memaddr_ev_id, memaddr_ev_time
    );
-   
+
    /*******************************************************************/
    /** Parameters **/
    // Number of 16 bit configuration registers (three registers per event slot in the LUT)
@@ -25,7 +25,7 @@ module LUT (/*AUTOARG*/
    parameter MAX_TOTAL_EVENT_COUNT = `DIAGNOSIS_TOTAL_EVENTS_MAX;
    // Index for multiplexer of lookuptable selection after comparator hit
    parameter INDEX_WIDTH = $clog2(MAX_TOTAL_EVENT_COUNT);
-   
+
    /*******************************************************************/
    /** Interfaces **/
    input clk, rst;
@@ -75,8 +75,8 @@ module LUT (/*AUTOARG*/
     * Stackarguments Nr: 6bit unsigned integer that holds number of desired stackargument words
     *
     *            +--------------------------------------------------------------+
-    *            |  Event ID  |  GPR Bitvector  |  Stackarguments Nr  |  valid  | 
-    *            |     ...    |       ...       |         ...         |   ...   | 
+    *            |  Event ID  |  GPR Bitvector  |  Stackarguments Nr  |  valid  |
+    *            |     ...    |       ...       |         ...         |   ...   |
     *            |     ...    |       ...       |         ...         |   ...   |
     *            +--------------------------------------------------------------+
     */
@@ -88,7 +88,7 @@ module LUT (/*AUTOARG*/
     *    |           ...           |        ...       |        ...        |
     *    |           ...           |        ...       |        ...        |
     *    +-------------------------+------------------+-------------------+
-    * 
+    *
     */
    wire [`DIAGNOSIS_EV_ID_WIDTH-1:0]            lut_ev_id[0:MAX_TOTAL_EVENT_COUNT-1];
    wire [31:0]                                  lut_GPRbv[0:MAX_TOTAL_EVENT_COUNT-1];
@@ -104,7 +104,7 @@ module LUT (/*AUTOARG*/
          assign lut_GPRbv[j] = conf_lut_flat_in[j*48+31:j*48];
       end
    endgenerate
-   
+
    /*******************************************************************/
    /* log2 function for index evaluation */
    function [INDEX_WIDTH-1:0] log2;
@@ -114,8 +114,8 @@ module LUT (/*AUTOARG*/
          for (log2=0; vector_tmp>0; log2=log2+1)
            vector_tmp = vector_tmp>>1;
       end
-   endfunction 
-   
+   endfunction
+
    /*******************************************************************/
    /** Logic **/
    /* Global event signal */
@@ -141,16 +141,16 @@ module LUT (/*AUTOARG*/
    /* Comparator logic to find proper LUT entry (index)*/
    genvar                                     i;
    for (i = 0; i < MAX_TOTAL_EVENT_COUNT; i=i+1) begin
-      assign comparator_match[i] = (lut_validcolumn[i] && lut_ev_id[i] == nxt_ev_id) ? 1'b1 : 1'b0; 
+      assign comparator_match[i] = (lut_validcolumn[i] && lut_ev_id[i] == nxt_ev_id) ? 1'b1 : 1'b0;
    end
-   
+
    /* LUT index generation logic */
    assign lut_index = log2(comparator_match);
 
    /* Snapshot Modules Output Multiplexer */
    assign nxt_bv_GPR = lut_GPRbv[lut_index];
    assign nxt_stackargs = lut_stackargs[lut_index];
-   
+
    /*******************************************************************/
    /* sequential */
    always @(posedge clk) begin
@@ -170,5 +170,4 @@ module LUT (/*AUTOARG*/
       end
    end //always
 
-  
 endmodule // LUT_module

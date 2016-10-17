@@ -27,7 +27,7 @@ module Packetizer_lite (/*AUTOARG*/
    /*** Parameters ***/
    /** Core ID **/
    parameter CORE_ID = 16'hx;
-   
+
    /** Fifo lengths **/
    parameter gpr_fifo_length = `DIAGNOSIS_GPR_FIFO_LENGTH;
    parameter stack_fifo_length = `DIAGNOSIS_STACK_FIFO_LENGTH;
@@ -36,8 +36,8 @@ module Packetizer_lite (/*AUTOARG*/
    /** Configuration memory: 16 bit flits **/
    /** We have currently 3 x 16 bit flits for one config entry (including valid flag). **/
    parameter CONF_MEM_SIZE = 2;
-   
-   
+
+
    /** NoC Parameters **/
    // parameters for the Debug NoC interface
    parameter DBG_NOC_DATA_WIDTH = `FLIT16_CONTENT_WIDTH;
@@ -49,9 +49,9 @@ module Packetizer_lite (/*AUTOARG*/
 
    /** Header Format: **/
    /*       +------------------------------------------------------------------------------+
-    *       | Type  |  Dest  |  Src  |  Class  |  --  |  #Stack  |  #GPR  |  #Time  |  ID  |  
+    *       | Type  |  Dest  |  Src  |  Class  |  --  |  #Stack  |  #GPR  |  #Time  |  ID  |
     *       +------------------------------------------------------------------------------+
-    */ 
+    */
    //localparam flit_width = flit_data_width+flit_type_width;
 
    /*** Interfaces ***/
@@ -76,17 +76,17 @@ module Packetizer_lite (/*AUTOARG*/
    input [DBG_NOC_FLIT_WIDTH-1:0]     dbgnoc_in_flit;
    input [DBG_NOC_VCHANNELS-1:0]      dbgnoc_in_valid;
    output [DBG_NOC_VCHANNELS-1:0] dbgnoc_in_ready;
-  
+
    output [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_out_flit;
    output [DBG_NOC_VCHANNELS-1:0]  dbgnoc_out_valid;
    input [DBG_NOC_VCHANNELS-1:0]       dbgnoc_out_ready;
-   
 
-   
-   
+
+
+
    /*** Wires and Regs ***/
-   
-   
+
+
    // Event fifo output wiring
    wire                                ev_fifo_valid;
    wire [`DIAGNOSIS_EV_ID_WIDTH-1:0]   ev_fifo_id;
@@ -94,7 +94,7 @@ module Packetizer_lite (/*AUTOARG*/
    reg                                   ev_fifo_ready;
    wire                                  ev_fifo_in_ready;
 
- 
+
 
    /** dbgnoc_if  **/
    reg [33:0]                          out_data34; // Datastream of Packetizer FSM
@@ -123,9 +123,9 @@ module Packetizer_lite (/*AUTOARG*/
                             .dbgnoc_in_valid    (dbgnoc_in_valid[DBG_NOC_VCHANNELS-1:0]),
                             .full_packetizer_fifo(1'b0));
 
-   
+
    /*** Input Fifos for Snapshot Modules and Event Fingerprints ***/
- 
+
 
 
    lisnoc_fifo
@@ -149,10 +149,10 @@ module Packetizer_lite (/*AUTOARG*/
    localparam STATE_WIDTH = 3;
    localparam STATE_IDLE = 3'd0;
    localparam STATE_Time_out = 3'd1;
-   localparam STATE_Time_out2 = 3'd4;   
+   localparam STATE_Time_out2 = 3'd4;
    localparam STATE_GPR_out = 3'd2;
    localparam STATE_Stack_out = 3'd3;
-   
+
    reg [STATE_WIDTH-1:0]                                        state, nxt_state;
 
    /* FSM next state logic*/
@@ -174,16 +174,16 @@ module Packetizer_lite (/*AUTOARG*/
               nxt_state = state;
               out_data34_valid = 1'b0;
            end
-              
+
         end // case: `STATE_IDLE_Headerout
 
         STATE_Time_out: begin
-               
+
            ev_fifo_ready = 1'b0;
-       
+
               out_data34_valid = 1'b1;
               // the time flit is the only payload and therefore a 'last' flit
-             
+
                  out_data34 = {2'b10,{(32-`DIAGNOSIS_TIMESTAMP_WIDTH){1'hx}},ev_fifo_time}; //last flit
                  if (out_data34_ready) begin
                     nxt_state = STATE_IDLE;
@@ -192,19 +192,19 @@ module Packetizer_lite (/*AUTOARG*/
                     nxt_state = state;
                     ev_fifo_ready = 1'b0;
                  end
-    
+
         end // case: `STATE_Time_out
-  
+
         default: begin
            out_data34_valid = 1'b0;
            ev_fifo_ready = 1'b0;
            out_data34 = 34'd0;
            nxt_state = STATE_IDLE;
         end
-        
+
       endcase // case (state)
    end
-   
+
    /* sequential */
    always @(posedge clk) begin
       if (rst) begin
@@ -213,5 +213,5 @@ module Packetizer_lite (/*AUTOARG*/
          state <= nxt_state;
       end
    end //always
-   
+
 endmodule // packetizer

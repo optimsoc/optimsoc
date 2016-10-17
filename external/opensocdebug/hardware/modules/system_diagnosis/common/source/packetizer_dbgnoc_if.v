@@ -55,10 +55,7 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
     * To prevent accidental changes, these parameters are defined as localparam.
     */
 
-  
-   
    parameter MAX_SNAPSHOT_PACKET_SIZE = `DIAGNOSIS_MAX_SNPACKET_SIZE16;
-
 
    // parameters for the Debug NoC interface
    parameter DBG_NOC_DATA_WIDTH = `FLIT16_CONTENT_WIDTH;
@@ -134,15 +131,15 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
    // trace FIFO
    //wire trace_in_ready;
    wire trace_fifo_full;
-   assign trace_fifo_full = full_packetizer_fifo; 
+   assign trace_fifo_full = full_packetizer_fifo;
    wire trace_fifo_empty;
-   
+
    //reg trace_fifo_rd_en;
 
    // stores a single trace message after being read from trace_data_fifo
    // and before being separated into individual flits
    //reg [TRACE_WIDTH-1:0] trace_data_buf;
-  
+
    assign trace_fifo_empty = ~in_data34_valid;
 
    // FSM: package compressed trace data into flits
@@ -161,10 +158,10 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
    wire dbgnoc_conf_out_ready;
    assign dbgnoc_conf_out_ready = dbgnoc_conf_out_cts & dbgnoc_out_ready[DBG_NOC_CONF_VCHANNEL];
 
-   
+
    wire dbgnoc_conf_out_valid;
    wire dbgnoc_trace_out_valid;
-   assign dbgnoc_out_valid = {DBG_NOC_VCHANNELS{1'b0}} | (dbgnoc_conf_out_valid << DBG_NOC_CONF_VCHANNEL) | 
+   assign dbgnoc_out_valid = {DBG_NOC_VCHANNELS{1'b0}} | (dbgnoc_conf_out_valid << DBG_NOC_CONF_VCHANNEL) |
                              (dbgnoc_trace_out_valid << DBG_NOC_TRACE_VCHANNEL);
 
    wire [DBG_NOC_FLIT_WIDTH-1:0] dbgnoc_conf_out_flit;
@@ -183,7 +180,7 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
    // ... and discard flits on all other vchannels
    wire [DBG_NOC_VCHANNELS-1:0] dbgnoc_others_in_ready;
    assign dbgnoc_others_in_ready = {DBG_NOC_VCHANNELS{1'b1}} & ~dbgnoc_conf_mask;
-   
+
    assign dbgnoc_in_ready =  dbgnoc_others_in_ready | (dbgnoc_conf_in_ready << DBG_NOC_CONF_VCHANNEL);
 
    // configuration memory
@@ -193,14 +190,14 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
 
    // un-flatten conf_mem_in to conf_mem_flat_in
    reg [15:0] conf_mem_in [CONF_MEM_SIZE-1:0];
-  
+
    genvar i;
    generate
       for (i = 0; i < CONF_MEM_SIZE; i = i + 1) begin : gen_conf_mem_in
          assign conf_mem_flat_in[((i+1)*16)-1:i*16] = conf_mem_in[i];
       end
    endgenerate
- 
+
 
    // configuration interface
    /* dbgnoc_conf_if AUTO_TEMPLATE(
@@ -208,7 +205,7 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
       .dbgnoc_in_valid(dbgnoc_conf_in_valid),
       .\(.*\)(\1), // suppress explict port widths
     ); */
- 
+
 /*  dbgnoc_conf_if
       #(.MEM_SIZE(CONF_MEM_SIZE),
         .MEM_INIT_ZERO(0))
@@ -217,7 +214,7 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
                        .dbgnoc_out_valid(dbgnoc_conf_out_valid),
                        .dbgnoc_out_flit (dbgnoc_conf_out_flit[DBG_NOC_FLIT_WIDTH-1:0]),
 
-                       
+
                        // Outputs
                        .dbgnoc_in_ready (dbgnoc_conf_in_ready),
                        .conf_mem_flat_out(conf_mem_flat_out),
@@ -278,8 +275,8 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
    assign noc_out_mux_signal[MUX_SECOND_DATA16] = in_data32[31:16];
    assign noc_out_mux_signal[MUX_HEADER] = header_fsm_to_noc_out;
    assign to_output_fifo_flit_data = noc_out_mux_signal[noc_out_mux_sel];
-   
-   
+
+
    always @ (posedge clk) begin
       if (rst) begin
          // Initialize configuration memory
@@ -327,7 +324,7 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
             trace_data_buf <= trace_fifo_data_out;
          end
           */
-          
+
          // FSM to send out data through the Debug NoC
          fsm_trace_to_flit_state <= fsm_trace_to_flit_state_next;
       end
@@ -381,14 +378,14 @@ module packetizer_dbgnoc_if(/*AUTOARG*/
          end
 
         // This state forwards the fingerprint flit (currently only holding the event ID)
-        STATE_FLIT_FINGERPRINT: begin 
+        STATE_FLIT_FINGERPRINT: begin
            to_output_fifo_flit_type = `FLIT_TYPE_PAYLOAD;
            noc_out_mux_sel = MUX_FIRST_DATA16;
            to_output_fifo_valid = 1'b1;
            in_data34_ready = 1'b1; // only take 16 LSB, discard rest
            fsm_trace_to_flit_state_next = STATE_FLIT_PAYLOAD_LSB;
         end
-           
+
          STATE_FLIT_PAYLOAD_LSB: begin
             to_output_fifo_flit_type = `FLIT_TYPE_PAYLOAD;
             noc_out_mux_sel = MUX_FIRST_DATA16;

@@ -58,4 +58,5 @@ module stm_data_sr(/*AUTOARG*/
          sr[DATA_WIDTH-1:0] <= din;
       end
    end
+
 endmodule

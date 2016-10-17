@@ -1,6 +1,6 @@
-/* This module monitors program counter values of the cpu, 
- detects matches of preconfigured program counter signal values 
- and forwards a respective event signal along with the event id. 
+/* This module monitors program counter values of the cpu,
+ detects matches of preconfigured program counter signal values
+ and forwards a respective event signal along with the event id.
  Author: Markus Goehrle, Markus.Goehrle@tum.de */
 
 `include "diagnosis_config.vh"
@@ -13,7 +13,7 @@ module PC_monitor (/*AUTOARG*/
    time_global
    );
 
-   
+
    /** Parameters **/
    // Number of 16 bit configuration registers
    parameter CONF_PC_SIZE = 3;
@@ -25,7 +25,7 @@ module PC_monitor (/*AUTOARG*/
    parameter MAX_EVENT_COUNT = `DIAGNOSIS_PC_EVENTS_MAX;
    // Index for multiplexer of lookuptable selection after comparator hit
    parameter INDEX_WIDTH = $clog2(MAX_EVENT_COUNT);
-   
+
    /** Interfaces **/
    input clk, rst;
    /* configuration register interface */
@@ -41,7 +41,7 @@ module PC_monitor (/*AUTOARG*/
    /* interface to global timestamp provider module */
    input [`DIAGNOSIS_TIMESTAMP_WIDTH-1:0]  time_global;
 
- 
+
    /* comparator_module AUTO_TEMPLATE(
     .val (pc_val),
     .enable (pc_enable),

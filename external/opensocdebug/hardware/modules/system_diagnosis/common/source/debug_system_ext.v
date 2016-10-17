@@ -161,9 +161,9 @@ module debug_system_ext(
     * - DEBUG_STM_CORE_COUNT x STM
     * - DEBUG_NRM_COUNT x NRM
     * - DEBUG_MAM_MEMORY_COUNT x MAM
-	 * - 1 x Diagnosis Processor
+    * - 1 x Diagnosis Processor
     */
-   localparam DBG_NOC_ROUTER_COUNT = 2 + 
+   localparam DBG_NOC_ROUTER_COUNT = 2 +
                                      DEBUG_NCM_COUNT +
                                      DEBUG_CTM_COUNT +
                                      DEBUG_ITM_CORE_COUNT +
@@ -171,7 +171,7 @@ module debug_system_ext(
                                      DEBUG_NRM_COUNT +
                                      DEBUG_MAM_MEMORY_COUNT +
                                      4 + // DIAGNOSIS system + 1
-												 1; //Diagnosis processor
+                                     1; //Diagnosis processor
    input    clk;
    input    rst;
 
@@ -334,9 +334,9 @@ module debug_system_ext(
 
    // start addresses for the individual debug modules
    localparam DBG_NOC_ADDR_DP = `DBG_NOC_ADDR_DP;
-	localparam DBG_NOC_ADDR_CTM = `DBG_NOC_ADDR_DYN_START;
+   localparam DBG_NOC_ADDR_CTM = `DBG_NOC_ADDR_DYN_START;
 
-//	localparam DBG_NOC_ADDR_CTM = `DBG_NOC_ADDR_DYN_START;
+// localparam DBG_NOC_ADDR_CTM = `DBG_NOC_ADDR_DYN_START;
    localparam DBG_NOC_ADDR_NCM = DBG_NOC_ADDR_CTM + DEBUG_CTM_COUNT;
    localparam DBG_NOC_ADDR_ITM = DBG_NOC_ADDR_NCM + DEBUG_NCM_COUNT;
    localparam DBG_NOC_ADDR_STM = DBG_NOC_ADDR_ITM + DEBUG_ITM_CORE_COUNT;
@@ -594,11 +594,11 @@ module debug_system_ext(
 
    // DIAGNOSIS system wiring
 
-   
+
 diagnosis_system_PR
                #(.DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
-					  .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
-					  .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL),
+                 .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL),
+                 .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL),
                  .CORE_ID(0))
          u_diag_system_PR(.clk(clk),
                        .rst(rst),
@@ -610,14 +610,14 @@ diagnosis_system_PR
             .dbgnoc_in_flit   (dbg_link_out_flit[((DBG_NOC_ADDR_DIAG+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_DIAG)*DBG_NOC_FLIT_WIDTH]),
             .dbgnoc_in_valid  (dbg_link_out_valid[((DBG_NOC_ADDR_DIAG+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DIAG)*DBG_NOC_VCHANNELS]),
             .dbgnoc_in_ready  (dbg_link_out_ready[((DBG_NOC_ADDR_DIAG+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DIAG)*DBG_NOC_VCHANNELS]),
-                       
-            .traceport_flat   (trace_ports_flat[`DEBUG_TRACE_EXEC_WIDTH-1:0]), 
+
+            .traceport_flat   (trace_ports_flat[`DEBUG_TRACE_EXEC_WIDTH-1:0]),
 
             .time_global      (timestamp)
 
-                    
+
                     );
-   
+
    generate
       for (i = 1; i < 4; i = i + 1) begin : gen_diag
          diagnosis_system_P_without_snapshot
@@ -632,12 +632,12 @@ diagnosis_system_PR
 
             .dbgnoc_in_flit   (dbg_link_out_flit[((DBG_NOC_ADDR_DIAG+i+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_DIAG+i)*DBG_NOC_FLIT_WIDTH]),
             .dbgnoc_in_valid  (dbg_link_out_valid[((DBG_NOC_ADDR_DIAG+i+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DIAG+i)*DBG_NOC_VCHANNELS]),
-            .dbgnoc_in_ready  (dbg_link_out_ready[((DBG_NOC_ADDR_DIAG+i+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DIAG+i)*DBG_NOC_VCHANNELS]),                       
-            .traceport_flat   (trace_ports_flat[(i+1)*`DEBUG_TRACE_EXEC_WIDTH-1:i*`DEBUG_TRACE_EXEC_WIDTH]), 
-          
+            .dbgnoc_in_ready  (dbg_link_out_ready[((DBG_NOC_ADDR_DIAG+i+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DIAG+i)*DBG_NOC_VCHANNELS]),
+            .traceport_flat   (trace_ports_flat[(i+1)*`DEBUG_TRACE_EXEC_WIDTH-1:i*`DEBUG_TRACE_EXEC_WIDTH]),
+
             .time_global      (timestamp)
 
-                    
+
                     );
       end
     endgenerate
@@ -663,22 +663,19 @@ diagnosis_system_PR
        .DBG_NOC_FLIT_TYPE_WIDTH(DBG_NOC_FLIT_TYPE_WIDTH),
        .DBG_NOC_VCHANNELS(DBG_NOC_VCHANNELS),
        .DBG_NOC_CONF_VCHANNEL(DBG_NOC_CONF_VCHANNEL),
-		 .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL))
+       .DBG_NOC_TRACE_VCHANNEL(DBG_NOC_TRACE_VCHANNEL))
    u_debug_coprocessor (
-	         .clk(clk),
-			.rst(rst),
-				.rst_cpu(rst),
-			.rst_sys(rst),
-				
-				// Incoming flits
-				.dbgnoc_in_flit(dbg_link_out_flit[((DBG_NOC_ADDR_DP+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_FLIT_WIDTH]), 
-	         .dbgnoc_in_valid(dbg_link_out_valid[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]),	  
-	         .dbgnoc_in_ready(dbg_link_out_ready[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]),
-				
-			   // Outgoing flits
-	         .dbgnoc_out_flit(dbg_link_in_flit[((DBG_NOC_ADDR_DP+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_FLIT_WIDTH]),
-	         .dbgnoc_out_valid(dbg_link_in_valid[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]),
-				.dbgnoc_out_ready(dbg_link_in_ready[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]));
-	
-			
+       .clk(clk),
+       .rst(rst),
+       .rst_cpu(rst),
+       .rst_sys(rst),
+       // Incoming flits
+       .dbgnoc_in_flit(dbg_link_out_flit[((DBG_NOC_ADDR_DP+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_FLIT_WIDTH]),
+       .dbgnoc_in_valid(dbg_link_out_valid[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]),
+       .dbgnoc_in_ready(dbg_link_out_ready[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]),
+       // Outgoing flits
+       .dbgnoc_out_flit(dbg_link_in_flit[((DBG_NOC_ADDR_DP+1)*DBG_NOC_FLIT_WIDTH)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_FLIT_WIDTH]),
+       .dbgnoc_out_valid(dbg_link_in_valid[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]),
+       .dbgnoc_out_ready(dbg_link_in_ready[((DBG_NOC_ADDR_DP+1)*DBG_NOC_VCHANNELS)-1:(DBG_NOC_ADDR_DP)*DBG_NOC_VCHANNELS]));
+
 endmodule

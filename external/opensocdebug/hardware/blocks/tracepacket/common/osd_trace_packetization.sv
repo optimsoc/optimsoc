@@ -33,7 +33,7 @@ module osd_trace_packetization
     output            dii_flit debug_out,
     input             debug_out_ready
     );
-   
+
    localparam NUM_FLITS = ((WIDTH + 15) >> 4);
    localparam COUNTER_WIDTH = $clog2(NUM_FLITS);
 
