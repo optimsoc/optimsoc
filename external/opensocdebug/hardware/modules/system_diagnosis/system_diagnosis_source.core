@@ -15,7 +15,6 @@ files =
   common/source/diagnosis_system.v
   common/source/fcnreturn_monitor.v
   common/source/GPR.v
-  common/source/lifo.v
   common/source/LUT.v
   common/source/Memaddr_monitor.v
   common/source/Packetizer.v
