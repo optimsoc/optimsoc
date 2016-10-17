@@ -105,6 +105,7 @@ package optimsoc;
       logic              USE_DEBUG;
       logic              DEBUG_STM;
       logic              DEBUG_CTM;
+
       // -> derived
       integer            DEBUG_MODS_PER_CORE;
       integer            DEBUG_MODS_PER_TILE;
@@ -135,7 +136,7 @@ package optimsoc;
       // Derive the other parameters
       derive_config.TOTAL_NUM_CORES = conf.NUMCTS * conf.CORES_PER_TILE;
       derive_config.NOC_FLIT_WIDTH = conf.NOC_DATA_WIDTH + conf.NOC_TYPE_WIDTH;
-      derive_config.DEBUG_MODS_PER_CORE = (conf.DEBUG_STM + conf.DEBUG_CTM) * conf.USE_DEBUG;
+      derive_config.DEBUG_MODS_PER_CORE = (conf.DEBUG_STM + conf.DEBUG_CTM + 1) * conf.USE_DEBUG;	// + 1 for system diagnosis module
       derive_config.DEBUG_MODS_PER_TILE = (1 + derive_config.DEBUG_MODS_PER_CORE *
                                            conf.CORES_PER_TILE) * conf.USE_DEBUG;
       derive_config.DEBUG_NUM_MODS = (1 + conf.NUMCTS *
