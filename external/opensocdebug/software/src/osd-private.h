@@ -47,6 +47,7 @@ struct osd_module_info {
         struct osd_memory_descriptor *memory;
         struct osd_stm_descriptor *stm;
         struct osd_ctm_descriptor *ctm;
+        struct osd_system_diagnosis_descriptor *system_diagnosis;
     } descriptor;
 };
 
@@ -125,11 +126,11 @@ static const uint8_t REG_WRITE32 = 0x5;
 static const uint8_t REG_WRITE64 = 0x6;
 static const uint8_t REG_WRITE128 = 0x7;
 
-static const uint16_t modules_max_id = 4;
+static const uint16_t modules_max_id = 7;
 struct module_types {
     const char *name;
 };
-extern const struct module_types module_lookup[6];
+extern const struct module_types module_lookup[7];
 
 struct module_callback {
     osd_incoming_handler call;

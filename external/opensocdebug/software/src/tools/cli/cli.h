@@ -30,5 +30,6 @@
 #include <opensocdebug.h>
 
 int memory_tests(struct osd_context *ctx);
+int write_configreg(struct osd_context *ctx);
 
 #endif
