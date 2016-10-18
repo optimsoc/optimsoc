@@ -31,4 +31,3 @@ is_include_file = true
 usage = sim synth
 files =
   common/source/diagnosis_config.vh
-  common/source/diagnosis_missing_defines.vh
