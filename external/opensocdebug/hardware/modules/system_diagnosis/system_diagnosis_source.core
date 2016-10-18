@@ -21,7 +21,6 @@ files =
   common/source/Packetizer_lite.v
   common/source/PC_monitor.v
   common/source/Stack.v
-  common/source/trafficmonitor.v
   common/source/wb_sr.v
   common/source/delay_data_sr.v
 
