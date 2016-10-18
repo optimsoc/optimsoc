@@ -36,16 +36,10 @@ There is a generic interface between the CPU Debug Unit and the system:
 
  Signal             | Direction              | Description
  -------------------| -----------------------| -----------
- `memaddr_val`      | System->CPU Debug Unit | Memory Interface (of Memory Address Monitor), address value (32 bit)
+ `sram_addr`        | System->CPU Debug Unit | Memory Interface (of Memory Address Monitor), address value (32 bit)
  `sram_ce`          | System->CPU Debug Unit | Memory Inferface (of Memory Address Monitor), chip enable
  `sram_we`          | System->CPU Debug Unit | Memory Interface (of Memory Address Monitor), write enable
- `pc_val`	    | System->CPU Debug Unit | Program Counter Interface (of Program Counter Monitor), Program Counter value (32 bit)
- `pc_enable`        | System->CPU Debug Unit | Program Counter Interface (of Program Counter Monitor), Program Counter enable
- `wb_enable`        | System->CPU Debug Unit | Writeback Register Interface (of Function Return Monitor), writeback enable
- `wb_reg`           | System->CPU Debug Unit | Writeback Register Interface (of Function Return Monitor), writeback register
- `wb_data`          | System->CPU Debug Unit | Writeback Register Interface (of Function Return Monitor), writeback data
- `trace_insn`       | System->CPU Debug Unit | Instruction Trace Interface (of the Stack), trace insn
- `trace_enable`     | System->CPU Debug Unit | Instruction Trace Interface (of the Stack), trace enable
+ `trace_port`       | System->CPU Debug Unit | CPU signals (e.g. Program Counter, Instruction and Writeback Register Interface)
 
 # Debug Content
 
