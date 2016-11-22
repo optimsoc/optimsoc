@@ -30,9 +30,12 @@ import logging
 @pytest.hookimpl(tryfirst=True)
 def pytest_exception_interact(node, call, report):
     """Dump all log files in case of a test failure"""
-    if not report.failed:
-        return
-    if not 'tmpdir' in node.funcargs:
+    try:
+        if not report.failed:
+            return
+        if not 'tmpdir' in node.funcargs:
+            return
+    except:
         return
 
     tmpdir = str(node.funcargs['tmpdir'])
@@ -57,7 +60,7 @@ def localconf(request):
     if os.getenv('OPTIMSOC_TEST_LOCALCONF') and os.path.isfile(os.environ['OPTIMSOC_TEST_LOCALCONF']):
         localconf_yaml_file = os.environ['OPTIMSOC_TEST_LOCALCONF']
     else:
-        XDG_CONFIG_HOME = os.getenv('XDG_CONFIG_HOME', 
+        XDG_CONFIG_HOME = os.getenv('XDG_CONFIG_HOME',
                                     os.path.join(os.environ['HOME'], '.config'))
         localconf_yaml_file = os.path.join(XDG_CONFIG_HOME, 'optimsoc', 'test-localconf.yaml')
     logging.getLogger('__name__').info('Reading configuration from ' + localconf_yaml_file)
