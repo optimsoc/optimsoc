@@ -1,0 +1,4 @@
+# OpTiMSoC trace_monitor stdout file
+# [TIME, CORE] MESSAGE
+[               43238, 0] Wait for 3 messages
+[               48668, 0] Received all messages. Hello World!

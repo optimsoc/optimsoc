@@ -453,6 +453,39 @@ class TestTutorial:
             # process is already dead
             pass
 
+    def test_tutorial6_hello_mpsimple(self, tmpdir, baremetal_apps_hello_mpsimple,
+                                      sim_system_2x2_cccc_sim_dualcore_debug,
+                                      opensocdebugd_tcp):
+        """
+        Variation of tutorial 6: Run the same steps as tutorial 6, just this time
+        use hello_mpsimple instead of hello.
+        """
+
+        hello_mpsimple_elf = str(baremetal_apps_hello_mpsimple.join('hello_mpsimple.elf'))
+        cmd_runelf = ['python2',
+                      '{}/host/share/opensocdebug/examples/runelf.py'.format(os.environ['OPTIMSOC']),
+                      hello_mpsimple_elf]
+        p_runelf = Process(cmd_runelf, logdir=str(tmpdir),
+                           cwd=str(tmpdir))
+        p_runelf.run()
+
+        logging.getLogger(__name__).info("Waiting 10 minutes for process to finish")
+        p_runelf.proc.wait(timeout=600)
+        assert p_runelf.proc.returncode == 0
+
+        try:
+            p_runelf.terminate()
+        except ProcessLookupError:
+            # process is already dead
+            pass
+
+        # check all output files
+        for i in range(0, 7):
+            f = "stdout.{:03d}".format(i)
+            assert tmpdir.join(f).isfile()
+            assert self.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=self.filter_timestamps)
+
 class TestTutorialFpga:
     def test_tutorial7(self, tmpdir, localconf, baremetal_apps_hello):
         """
