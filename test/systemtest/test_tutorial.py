@@ -30,6 +30,7 @@ import shlex
 import logging
 import time
 import re
+import difflib
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -178,7 +179,7 @@ class TestTutorial:
     full coverage of the used parts of OpTiMSoC.
     """
 
-    def matches_golden_reference(self, basedir, testfile):
+    def matches_golden_reference(self, basedir, testfile, filter_func=None):
         """
         Check if the given file matches a golden reference
         """
@@ -192,8 +193,54 @@ class TestTutorial:
         path_ref = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                 this_test_file + '.data',
                                 this_test_name, testfile)
-        return filecmp.cmp(path_ref, path_test)
 
+        if filter_func:
+            # filter reference
+            ref_lines = open(path_ref, 'U').readlines()
+            ref_lines_filtered = filter_func(ref_lines)
+            path_ref_filtered = os.path.join(basedir,
+                                             testfile+'.reference.filtered');
+            f = open(path_ref_filtered, 'w')
+            f.write(''.join(ref_lines_filtered))
+            f.close()
+
+            # filter test output
+            test_lines = open(path_test, 'U').readlines()
+            test_lines_filtered = filter_func(test_lines)
+            path_test_filtered = path_test+'.filtered'
+            f = open(path_test_filtered, 'w')
+            f.write(''.join(test_lines_filtered))
+            f.close()
+
+            path_ref = path_ref_filtered
+            path_test = path_test_filtered
+
+        result = filecmp.cmp(path_ref, path_test, shallow=False)
+
+        if not result:
+            logger = logging.getLogger(__name__)
+            logger.error("golden reference test: "+
+                "test output {} does not match golden reference {}"
+                .format(path_test, path_ref))
+            ref_lines = open(path_ref, 'U').readlines()
+            test_lines = open(path_test, 'U').readlines()
+            diff = difflib.unified_diff(ref_lines, test_lines,
+                                        fromfile='reference',
+                                        tofile='test_output')
+            logger.error(''.join(list(diff)))
+
+        return result
+
+    def filter_timestamps(self, in_str_list):
+        """
+        Filter out timestamps and core IDs in OpTiMSoC STDOUT/STM/CTM log files
+
+        The timestamps depend at least on the compiler, but also on other
+        variables. For functional tests we are only interested in the output,
+        not the timing of the output.
+        """
+        filter_expr = re.compile(r'^\[\s*\d+, \d+\] ', flags=re.MULTILINE)
+        return [filter_expr.sub(repl='', string=l) for l in in_str_list]
 
     @pytest.fixture
     def sim_system_2x2_cccc_sim_dualcore_debug(self, tmpdir):
@@ -245,7 +292,8 @@ class TestTutorial:
         assert tmpdir.join('stdout.000').isfile()
 
         # compare output to golden reference
-        assert self.matches_golden_reference(str(tmpdir), 'stdout.000')
+        assert self.matches_golden_reference(str(tmpdir), 'stdout.000',
+                                             filter_func=self.filter_timestamps)
 
     def test_tutorial2(self, baremetal_apps_hello, tmpdir):
         """
@@ -274,7 +322,8 @@ class TestTutorial:
         # check all output files
         for f in ['stdout.000', 'stdout.001']:
             assert tmpdir.join(f).isfile()
-            assert self.matches_golden_reference(str(tmpdir), f)
+            assert self.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=self.filter_timestamps)
 
     def test_tutorial3_quadcore(self, baremetal_apps_hello, tmpdir):
         """
@@ -289,9 +338,14 @@ class TestTutorial:
         # check all output files
         for f in ['stdout.000', 'stdout.001', 'stdout.002', 'stdout.003']:
             assert tmpdir.join(f).isfile()
-            assert self.matches_golden_reference(str(tmpdir), f)
+            assert self.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=self.filter_timestamps)
 
     def test_tutorial4_hello(self, baremetal_apps_hello, tmpdir):
+        """
+        Tutorial 4: Run hello world application on 2x2 CCCC in Verilator
+        Memory loading is done through Verilator meminit.
+        """
         # run simulation
         cmd = ['{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
                '--meminit={}'.format(str(baremetal_apps_hello.join('hello.vmem')))]
@@ -301,9 +355,14 @@ class TestTutorial:
         for i in range(0, 7):
             f = "stdout.{:03d}".format(i)
             assert tmpdir.join(f).isfile()
-            assert self.matches_golden_reference(str(tmpdir), f)
+            assert self.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=self.filter_timestamps)
 
     def test_tutorial4_hello_mpsimple(self, baremetal_apps_hello_mpsimple, tmpdir):
+        """
+        Tutorial 4: Run hello_mpsimple world application on 2x2 CCCC in Verilator
+        Memory loading is done through Verilator meminit.
+        """
         # run simulation
         cmd = ['{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
                '--meminit={}'.format(str(baremetal_apps_hello_mpsimple.join('hello_mpsimple.vmem')))]
@@ -313,7 +372,8 @@ class TestTutorial:
         for i in range(0, 7):
             f = "stdout.{:03d}".format(i)
             assert tmpdir.join(f).isfile()
-            assert self.matches_golden_reference(str(tmpdir), f)
+            assert self.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=self.filter_timestamps)
 
     def test_tutorial5(self, tmpdir, baremetal_apps_hello,
                        sim_system_2x2_cccc_sim_dualcore_debug,
