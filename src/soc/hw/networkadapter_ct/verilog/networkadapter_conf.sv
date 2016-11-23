@@ -144,10 +144,10 @@ module networkadapter_conf
 
    genvar                   i;
    generate
-      for(i=0;i<CONFIG.NUMCTS;i=i+1) begin // array is indexed by the desired destination
+      for (i=0; i<CONFIG.NUMCTS; i=i+1) begin : gen_ctlist_vector // array is indexed by the desired destination
          // The entries of this array are subranges from the parameter, where
          // the indexing is reversed (num_dests-i-1)!
-         assign ctlist_vector[CONFIG.NUMCTS-i-1] = CONFIG.CTLIST[(i+1)*16-1:i*16];
+         assign ctlist_vector[CONFIG.NUMCTS - i - 1] = CONFIG.CTLIST[i];
       end
    endgenerate
 
