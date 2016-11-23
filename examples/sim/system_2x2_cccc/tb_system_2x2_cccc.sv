@@ -20,14 +20,17 @@
  *
  * =============================================================================
  *
- * A testbench for a simple systems with only one compute tile
+ * A testbench for a 2x2 CCCC system with distributed memory
  *
  * Parameters:
  *   USE_DEBUG:
  *     Enable the OSD-based debug system.
  *
  *   NUM_CORES:
- *     Number of CPU cores inside the compute tile (default: 1)
+ *     Number of CPU cores inside each compute tile (default: 1)
+ *
+ *   LMEM_SIZE:
+ *     Size of the local distributed memory in bytes (default: 32 MB)
  *
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
@@ -52,7 +55,7 @@ module tb_system_2x2_cccc(
    parameter integer LMEM_SIZE = 32*1024*1024;
 
    localparam base_config_t
-     BASE_CONFIG = '{ NUMTILES: 1,
+     BASE_CONFIG = '{ NUMTILES: 4,
                       NUMCTS: 4,
                       CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
                       CORES_PER_TILE: NUM_CORES,
@@ -91,7 +94,7 @@ module tb_system_2x2_cccc(
    // the host software. In simulations without debug systems, we only rely on
    // the global reset signal.
    generate
-      if (USE_DEBUG == 0) begin
+      if (CONFIG.USE_DEBUG == 0) begin : gen_use_debug_rst
          assign rst_sys = rst;
          assign rst_cpu = rst;
       end
@@ -102,7 +105,7 @@ module tb_system_2x2_cccc(
 
    logic com_rst, logic_rst;
 
-   if (USE_DEBUG == 1) begin
+   if (CONFIG.USE_DEBUG == 1) begin : gen_use_debug_glip
       // TCP communication interface (simulation only)
       glip_tcp_toplevel
         u_glip
@@ -113,24 +116,22 @@ module tb_system_2x2_cccc(
            .fifo_in   (c_glip_in),
            .fifo_out  (c_glip_out)
            );
-   end // if (USE_DEBUG == 1)
+   end // if (CONFIG.USE_DEBUG == 1)
 
    // Monitor system behavior in simulation
-   localparam NUM_TILES = 4;
-
    genvar t;
    genvar i;
 
-   wire [NUM_CORES*NUM_TILES-1:0] termination;
+   wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
-      for (t = 0; t < NUM_TILES; t = t + 1) begin
+      for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
 
-         logic [31:0] trace_r3 [0:NUM_CORES-1];
-         mor1kx_trace_exec [NUM_CORES-1:0] trace;
+         logic [31:0] trace_r3 [0:CONFIG.CORES_PER_TILE-1];
+         mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
          assign trace = u_system.gen_ct[t].u_ct.trace;
 
-         for (i = 0; i < NUM_CORES; i = i + 1) begin
+         for (i = 0; i < CONFIG.CORES_PER_TILE; i = i + 1) begin : gen_tracemon_core
             r3_checker
                u_r3_checker(
                   .clk(clk),
@@ -143,14 +144,14 @@ module tb_system_2x2_cccc(
 
             trace_monitor
                #(
-                  .STDOUT_FILENAME({"stdout.",index2string((t*NUM_CORES)+i)}),
-                  .TRACEFILE_FILENAME({"trace.",index2string((t*NUM_CORES)+i)}),
+                  .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
+                  .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
                   .ENABLE_TRACE(0),
-                  .ID((t*NUM_CORES)+i),
-                  .TERM_CROSS_NUM(NUM_TILES*NUM_CORES)
+                  .ID((t*CONFIG.CORES_PER_TILE)+i),
+                  .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
                )
                u_mon0(
-                  .termination            (termination[(t*NUM_CORES)+i]),
+                  .termination            (termination[(t*CONFIG.CORES_PER_TILE)+i]),
                   .clk                    (clk),
                   .enable                 (trace[i].valid),
                   .wb_pc                  (trace[i].pc),
