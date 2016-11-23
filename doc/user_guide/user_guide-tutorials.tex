@@ -134,7 +134,7 @@ $OPTIMSOC/examples/sim/compute_tile/compute_tile_sim_singlecore --meminit=hello.
 This command will run the hello world example like it did before, but this time Verilator additionally writes a \verb|sim.vcd| waveform file.
 You can now view this file.
 \begin{lstlisting}
-gtkwave sim.vcd
+gtkwave -o sim.vcd
 \end{lstlisting}
 The screenshot in Figure~\ref{fig:tutorials:screenshot-gtkwave-compute_tile} is similar to what you should see when running GTKWave.
 
