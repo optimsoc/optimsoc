@@ -427,9 +427,9 @@ class TestTutorial:
 
         return
 
-    def test_tutorial6(self, tmpdir, baremetal_apps_hello,
-                       sim_system_2x2_cccc_sim_dualcore_debug,
-                       opensocdebugd_tcp):
+    def test_tutorial6_hello(self, tmpdir, baremetal_apps_hello,
+                             sim_system_2x2_cccc_sim_dualcore_debug,
+                             opensocdebugd_tcp):
         """
         Tutorial 6: Same as tutorial 5, but using the python interface of
         osd-cli instead of manually typing commands
@@ -452,6 +452,13 @@ class TestTutorial:
         except ProcessLookupError:
             # process is already dead
             pass
+
+        # check all output files
+        for i in range(0, 7):
+            f = "stdout.{:03d}".format(i)
+            assert tmpdir.join(f).isfile()
+            assert self.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=self.filter_timestamps)
 
     def test_tutorial6_hello_mpsimple(self, tmpdir, baremetal_apps_hello_mpsimple,
                                       sim_system_2x2_cccc_sim_dualcore_debug,
