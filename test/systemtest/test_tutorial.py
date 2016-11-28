@@ -35,7 +35,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 class TestTutorial:
     """
-    Test all examples in the User Guide Tutorial
+    Test all simulated examples in the User Guide Tutorial
 
     The goal of this test case is to ensure that the tutorials as described in
     the user guide continue to work after changes to OpTiMSoC. It therefore
@@ -291,10 +291,17 @@ class TestTutorial:
         for i in range(0, 7):
             f = "stdout.{:03d}".format(i)
             assert tmpdir.join(f).isfile()
-            assert self.matches_golden_reference(str(tmpdir), f,
-                                                 filter_func=self.filter_timestamps)
+            assert util.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=util.filter_timestamps)
 
 class TestTutorialFpga:
+    """
+    Test all FPGA-based tutorial steps in the User Guide
+
+    The tests in this class require the same hardware as used in the User Guide
+    to be connected to the node that executes this test. Currently, this is the
+    Nexus 4 DDR board.
+    """
     def test_tutorial7(self, tmpdir, localconf, baremetal_apps_hello):
         """
         Tutorial 7: Program a 2x2 CCCC system to a Nexys4 DDR board and run
@@ -343,3 +350,25 @@ class TestTutorialFpga:
 
         p_opensocdebugd.terminate()
 
+        # Ensure that all cores execute some code, as shown in the CTM logs
+        # We currently don't check for the exact software execution, but the
+        # output of the program as shown in the STM logs (below)
+        ctmlogs = [ 'ctm004.log', 'ctm007.log', 'ctm010.log', 'ctm013.log' ]
+        for f in ctmlogs:
+            # CTM log file exists
+            assert tmpdir.join(f).isfile()
+
+            # CTM log >= 0 bytes
+            f_stat = os.stat(str(tmpdir.join(f)))
+            assert f_stat.st_size > 0
+
+
+        # Ensure that the STMs log the expected printf() messages
+        stmlogs = [ 'stm003.log', 'stm006.log', 'stm009.log', 'stm012.log' ]
+        for f in stmlogs:
+            # STM log file exists
+            assert tmpdir.join(f).isfile()
+
+            # Check printf() program output in STM logs
+            assert util.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=util.filter_stm_printf)
