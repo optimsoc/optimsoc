@@ -52,12 +52,15 @@ module osd_mam
     output reg                    req_rw, // 0: Read, 1: Write
     output reg [ADDR_WIDTH-1:0]   req_addr, // Request base address
     output reg                    req_burst, // 0 for single beat access, 1 for incremental burst
-    output reg [13:0]             req_beats, // Burst length in number of words
+    output reg [12:0]             req_beats, // Burst length in number of words
+    output reg                    req_sync, // Request a synchronous access
 
     output reg                    write_valid, // Next write data is valid
     output reg [DATA_WIDTH-1:0]   write_data, // Write data
     output reg [DATA_WIDTH/8-1:0] write_strb, // Byte strobe if req_burst==0
     input                         write_ready, // Acknowledge this data item
+
+    input                         write_complete, // Signal completion if sync access
 
     input                         read_valid, // Next read data is valid
     input [DATA_WIDTH-1:0]        read_data, // Read data
@@ -160,7 +163,7 @@ module osd_mam
          STATE_INACTIVE, STATE_CMD_SKIP, STATE_CMD, STATE_ADDR,
          STATE_REQUEST, STATE_WRITE_PACKET, STATE_WRITE, STATE_WRITE_WAIT,
          STATE_READ_PACKET, STATE_READ, STATE_READ_WAIT, STATE_WRITE_SINGLE,
-         STATE_WRITE_SINGLE_WAIT
+         STATE_WRITE_SINGLE_WAIT, STATE_SYNC_WAIT, STATE_SYNC_PACKET
          } state, nxt_state;
 
    // The counter is used to count flits
@@ -185,6 +188,7 @@ module osd_mam
    logic [13:0]                      nxt_req_beats;
    logic                             nxt_req_rw;
    logic                             nxt_req_burst;
+   logic                             nxt_req_sync;
    logic [ADDR_WIDTH-1:0]            nxt_req_addr;
    logic [DATA_WIDTH/8-1:0]          nxt_write_strb;
 
@@ -205,6 +209,7 @@ module osd_mam
       req_rw <= nxt_req_rw;
       req_burst <= nxt_req_burst;
       req_addr <= nxt_req_addr;
+      req_sync <= nxt_req_sync;
       counter <= nxt_counter;
       write_data_reg <= nxt_write_data_reg;
       wcounter <= nxt_wcounter;
@@ -225,7 +230,7 @@ module osd_mam
       nxt_write_strb = write_strb;
       nxt_req_rw = req_rw;
       nxt_req_burst = req_burst;
-
+      nxt_req_sync = req_sync;
       nxt_req_addr = req_addr;
 
       dp_in_ready = 0;
@@ -255,9 +260,10 @@ module osd_mam
            nxt_write_strb = dp_in.data[DATA_WIDTH/8-1:0];
            nxt_req_rw = dp_in.data[15];
            nxt_req_burst = dp_in.data[14];
+           nxt_req_sync = dp_in.data[13];
 
            if (nxt_req_burst)
-             nxt_req_beats = dp_in.data[13:0];
+             nxt_req_beats = dp_in.data[12:0];
            else
              nxt_req_beats = 1;
 
@@ -322,7 +328,16 @@ module osd_mam
                  end else begin
                     nxt_req_beats = req_beats - 1;
                     if (req_beats == 1) begin
-                       nxt_state = STATE_INACTIVE;
+                       if (!req_sync) begin
+                          nxt_state = STATE_INACTIVE;
+                       end else begin
+                          if (!write_complete) begin
+                             nxt_state = STATE_SYNC_WAIT;
+                          end else begin
+                             nxt_state = STATE_SYNC_PACKET;
+                             nxt_counter = 0;
+                          end
+                       end
                     end else if (dp_in.last) begin
                        nxt_counter = 0;
                        nxt_state = STATE_WRITE_PACKET;
@@ -342,7 +357,16 @@ module osd_mam
            if (write_ready) begin
               nxt_req_beats = req_beats - 1;
               if (req_beats == 1) begin
-                 nxt_state = STATE_INACTIVE;
+                 if (!req_sync) begin
+                    nxt_state = STATE_INACTIVE;
+                 end else begin
+                    if (!write_complete) begin
+                       nxt_state = STATE_SYNC_WAIT;
+                    end else begin
+                       nxt_state = STATE_SYNC_PACKET;
+                       nxt_counter = 0;
+                    end
+                 end
               end else begin
                  if (in_packet) begin
                     nxt_state = STATE_WRITE;
@@ -364,7 +388,16 @@ module osd_mam
                  if (!write_ready) begin
                     nxt_state = STATE_WRITE_SINGLE_WAIT;
                  end else begin
-                    nxt_state = STATE_INACTIVE;
+                    if (!req_sync) begin
+                       nxt_state = STATE_INACTIVE;
+                    end else begin
+                       if (!write_complete) begin
+                          nxt_state = STATE_SYNC_WAIT;
+                       end else begin
+                          nxt_state = STATE_SYNC_PACKET;
+                          nxt_counter = 0;
+                       end
+                    end
                  end
               end
            end
@@ -372,7 +405,36 @@ module osd_mam
         STATE_WRITE_SINGLE_WAIT: begin
            write_valid = 1;
            if (write_ready) begin
-              nxt_state = STATE_INACTIVE;
+              if (!req_sync) begin
+                 nxt_state = STATE_INACTIVE;
+              end else begin
+                 if (!write_complete) begin
+                    nxt_state = STATE_SYNC_WAIT;
+                 end else begin
+                    nxt_state = STATE_SYNC_PACKET;
+                    nxt_counter = 0;
+                 end
+              end
+           end
+        end
+        STATE_SYNC_WAIT: begin
+           if (write_complete) begin
+              nxt_state = STATE_SYNC_PACKET;
+           end
+        end
+        STATE_SYNC_PACKET: begin
+           dp_out.valid = 1;
+           if (counter == 0) begin
+              dp_out.data = 16'h0;
+           end else begin
+              dp_out.data = { 2'b01, 4'b1111, id };
+	      dp_out.last = 1;
+           end
+           if (dp_out_ready) begin
+              nxt_counter = counter + 1;
+              if (counter == 1) begin
+                 nxt_state = STATE_INACTIVE;
+              end
            end
         end
         STATE_READ_PACKET: begin
