@@ -13,5 +13,4 @@ clean-vivado:
 	rm -f *.backup.log
 	rm -rf .Xil
 	rm -f ipc_tcp_xilinx_srv.log ipc_tcp_xilinx.log
-	rm -rf kc705_loopback
 
