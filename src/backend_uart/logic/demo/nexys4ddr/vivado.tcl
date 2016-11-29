@@ -105,6 +105,9 @@ set files [list \
  "[file normalize "$origin_dir/../../../../common/logic/measure/glip_measure.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/scaler/verilog/glip_downscale.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/scaler/verilog/glip_upscale.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/oh_fifo_sync.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/oh_memory_dp.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/oh_memory_ram.v"]"\
 ]
 add_files -norecurse -fileset $obj $files
 
