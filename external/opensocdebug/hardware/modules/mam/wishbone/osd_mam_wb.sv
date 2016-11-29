@@ -68,11 +68,13 @@ module osd_mam_wb
    logic [ADDR_WIDTH-1:0]       req_addr;
    logic                        req_burst;
    logic [13:0]                 req_beats;
+   logic                        req_sync;
 
    logic                        write_valid;
    logic [DATA_WIDTH-1:0]       write_data;
    logic [DATA_WIDTH/8-1:0]     write_strb;
    logic                        write_ready;
+   logic 			write_complete;
 
    logic                        read_valid;
    logic [DATA_WIDTH-1:0]       read_data;
@@ -92,6 +94,8 @@ module osd_mam_wb
    u_mam(.*,
          .clk(clk_i),
          .rst(rst_i));
+
+   assign write_complete = 1'b1;
 
    osd_mam_wb_if
      #(.DATA_WIDTH(DATA_WIDTH), .ADDR_WIDTH(ADDR_WIDTH))
