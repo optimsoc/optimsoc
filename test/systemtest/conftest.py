@@ -63,7 +63,7 @@ def localconf(request):
         XDG_CONFIG_HOME = os.getenv('XDG_CONFIG_HOME',
                                     os.path.join(os.environ['HOME'], '.config'))
         localconf_yaml_file = os.path.join(XDG_CONFIG_HOME, 'optimsoc', 'test-localconf.yaml')
-    logging.getLogger('__name__').info('Reading configuration from ' + localconf_yaml_file)
+    logging.getLogger(__name__).info('Reading configuration from ' + localconf_yaml_file)
 
     with open(str(localconf_yaml_file), 'r') as fp:
         y = yaml.load(fp)
