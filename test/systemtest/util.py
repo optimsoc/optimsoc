@@ -30,6 +30,7 @@ import subprocess
 import shlex
 import logging
 import time
+import difflib
 
 
 def matches_golden_reference(basedir, testfile, filter_func=None):

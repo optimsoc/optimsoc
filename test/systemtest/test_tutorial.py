@@ -26,7 +26,6 @@ import subprocess
 import pytest
 import logging
 import time
-import difflib
 import re
 
 import util
