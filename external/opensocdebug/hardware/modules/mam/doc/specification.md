@@ -62,7 +62,7 @@ The sequence starts with a common header:
 
  Payload | Content
  ------- | -------
- 0       | `[15]`: R/W, `[14]`: Single/Chunk, `[13:0]`: Strobe/Chunk size
+ 0       | `[15]`: R/W, `[14]`: Single/Chunk, `[13]`: Synchronous, `[12:0]`: Strobe/Chunk size
  1       | `Address[WIDTH-1:WIDTH-16]`
  ..      | ..
  N       | `Address[15:0]`
@@ -77,8 +77,9 @@ The bits in the first transfer are defined as:
  ------ | -------
  `15`   | R: `0`, W: `1`
  `14`   | Single word access: `0`, Chunk access: `1`
- `13:0` | Chunk: the burst size in number of words,
- `13:0` | Single: byte strobe
+ `13`   | Synchronous write: `1`, asynchronous write: `0`
+ `12:0` | Chunk: the burst size in number of words,
+ `12:0` | Single: byte strobe
 
 TODO: Byte strobe definition
 
@@ -86,6 +87,9 @@ Following this setup information, the actual transfer takes place be
 sending the data in a stream, meaning the debug packets are maximally
 filled and the data spans multiple packets. It is only possible to
 have one read or one write access at a time.
+
+If synchronous mode is selected, a ACK packet is sent after the last word has
+been written. An ACK packet is equal to a read packet with no content.
 
 ## Write Sequence
 

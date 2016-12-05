@@ -428,7 +428,7 @@ module osd_mam
               dp_out.data = 16'h0;
            end else begin
               dp_out.data = { 2'b01, 4'b1111, id };
-	      dp_out.last = 1;
+              dp_out.last = 1;
            end
            if (dp_out_ready) begin
               nxt_counter = counter + 1;
