@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
         while (1) {
             uint16_t *packet = malloc(64);
 
-            int rv = recv(clientsocket, packet, 2, 0);
+            rv = recv(clientsocket, packet, 2, MSG_WAITALL);
             if (rv == 0) {
                 break;
             }
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
 
             size_t size = packet[0];
 
-            rv = recv(clientsocket, &packet[1], size*2, 0);
+            rv = recv(clientsocket, &packet[1], size*2, MSG_WAITALL);
             if (rv == 0) {
                 break;
             }

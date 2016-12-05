@@ -36,4 +36,4 @@ for m in osd.get_modules("MAM"):
     m.loadelf(elffile, options.verify)
 
 osd.start()
-osd.wait(10)
+osd.wait(120)
