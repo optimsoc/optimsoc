@@ -25,7 +25,7 @@
 CC_FOR_TARGET ?= @OR1K-CC@
 OBJDUMP_FOR_TARGET ?= @OR1K-OBJDUMP@
 OBJCOPY_FOR_TARGET ?= @OR1K-OBJCOPY@
-CFLAGS ?= -mnewlib -mmulticore
+CFLAGS ?= -mnewlib -mboard=optimsoc
 
 BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-baremetal-runtime)
 
@@ -39,16 +39,15 @@ LIBS += $(shell pkg-config --libs --static optimsoc-baremetal-mcapi-simple-runti
 INCS += $(shell pkg-config --cflags optimsoc-baremetal-mcapi-simple-runtime)
 endif
 
+EXTRA_OBJS = $(EXTRA_SRCS:.c=.o)
+
 $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 	@PROGRAM=$(PROGRAM) sh $(BUILDSCRIPTS)/create_pgas_binary.sh 
 
-$(PROGRAM).elf: $(PROGRAM).o optimsoc-sysconfig.o
+$(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS) $(EXTRA_DEPS)
 	$(CC_FOR_TARGET) $(CFLAGS) -Wall \
-	$(PROGRAM).o optimsoc-sysconfig.o -o $@ \
+	$(PROGRAM).o -o $@ \
 	$(LIBS)
-
-optimsoc-sysconfig.o: ../optimsoc-sysconfig.c
-	$(CC_FOR_TARGET) -O0 -c -o $@ $^
 
 %.dis: %.elf
 	$(OBJDUMP_FOR_TARGET) -D $^ > $@
