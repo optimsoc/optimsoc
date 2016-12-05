@@ -74,7 +74,7 @@ module osd_mam_wb
    logic [DATA_WIDTH-1:0]       write_data;
    logic [DATA_WIDTH/8-1:0]     write_strb;
    logic                        write_ready;
-   logic 			write_complete;
+   logic                        write_complete;
 
    logic                        read_valid;
    logic [DATA_WIDTH-1:0]       read_data;
