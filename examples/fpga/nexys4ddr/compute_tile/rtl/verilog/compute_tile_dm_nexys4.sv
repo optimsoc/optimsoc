@@ -138,8 +138,7 @@ module compute_tile_dm_nexys4
       #(.FREQ_CLK_IO(50000000),
         .BAUD(12000000),
         .WIDTH(16),
-        .BUFFER_OUT_DEPTH(256*1024),
-        .XILINX_TARGET_DEVICE("7SERIES"))
+        .BUFFER_OUT_DEPTH(256*1024))
       u_glip(
          .clk_io(sys_clk),
          .clk(sys_clk),
