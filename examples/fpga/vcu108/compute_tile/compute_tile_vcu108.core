@@ -1,0 +1,27 @@
+CAPI=1
+[main]
+name = optimsoc:examples:compute_tile_vcu108
+description = "Xilinx VCU 108 board with compute tile"
+depend =
+  wallento:boards:vcu108
+  wallento:svchannels:nasti
+  wallento:svchannels:wishbone
+  wallento:wb2axi:wb2axi
+  optimsoc:tile:compute_tile_dm
+  optimsoc:debug:debug_interface
+  opensocdebug:interconnect:debug_ring
+  glip:backend:uart
+  optimsoc:base:config
+
+simulators = xsim
+
+[fileset rtl_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  rtl/verilog/compute_tile_dm_vcu108.sv
+
+[parameter NUM_CORES]
+datatype = int
+paramtype = vlogparam
+scope = public

@@ -1,0 +1,10 @@
+SAPI=1
+[main]
+name = optimsoc:examples:compute_tile_vcu108
+description = "Xilinx VCU108 board with compute tile"
+
+backend = vivado
+
+[vivado]
+part = "xcvu095-ffva2104-2-e"
+hw_device = xcvu095_0
