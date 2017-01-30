@@ -575,7 +575,7 @@ def build_externals_glip_software(options):
     dist = os.path.join(objdir, "dist")
 
     src = os.path.join(src, "external", "glip")
-    objdir = os.path.join(objdir, "external", "opensocdebug")
+    objdir = os.path.join(objdir, "external", "glip")
     dist = os.path.join(dist, "host")
     # magic escaping to ultimately get prefix=${OPTIMSOC}/host into the
     # pkg-config file
