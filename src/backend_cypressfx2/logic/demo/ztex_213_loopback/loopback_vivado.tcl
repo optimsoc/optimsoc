@@ -26,16 +26,17 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
- "[file normalize "$origin_dir/../../verilog/cdc/cdc_wrptr_full.v"]"\
- "[file normalize "$origin_dir/../../verilog/cdc/cdc_sync_wr2rd.v"]"\
- "[file normalize "$origin_dir/../../verilog/cdc/cdc_sync_rd2wr.v"]"\
- "[file normalize "$origin_dir/../../verilog/cdc/cdc_rdptr_empty.v"]"\
- "[file normalize "$origin_dir/../../verilog/cdc/cdc_fifo_mem.v"]"\
- "[file normalize "$origin_dir/../../verilog/cdc/cdc_fifo.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_wrptr_full.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_wr2rd.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_rd2wr.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_rdptr_empty.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo_mem.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_cypressfx2_toplevel.v"]"\
  "[file normalize "$origin_dir/ztex_213_loopback.v"]"\
 ]
 add_files -norecurse -fileset $obj $files
+
 
 # Set 'sources_1' fileset file properties for remote files
 # None

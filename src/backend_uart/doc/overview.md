@@ -2,12 +2,13 @@
 @ingroup backend
 
 The UART backends (internal name: `uart`) connects to the target via a
-UART device. Such UART devices are usually integrated on a board or
-are otherwise are available as USB adapters. Nevertheless, only those
-UART devices that have hardware flow control (`CTS` and `RTS` signal)
-are supported. All standard baud rates of up to 4M are supported as
-long the clock frequency is sufficiently larger than the baud rate.
+UART (aka RS-232 or "serial") device. Such UART devices are usually 
+integrated on a board or are otherwise are available as USB adapters. 
 
+GLIP uses a very efficient coding to achieve near-maximum bandwidth.
+Still, UART is a rather slow protocol, which is often limited by the 
+cabelling and the intermediate adapter (such as USB to UART chips)
+to not more than a couple MBaud.
 
 Supported Features
 ==================
@@ -18,8 +19,6 @@ Supported Features
 
 Components
 ==========
-
-To make use of this backend, the standard linux terminal I/O is used.
 
 For details and usage instructions for the individual components, see these
 pages:
@@ -40,3 +39,4 @@ data stream. With uniformly distributed random data you get
 approximately 298,500 Byte/s at 3 MBaud. Hence you generally get
 nearly full throughput, with the exception that it drops to roughly
 50% if you only send the byte `0xfe`.
+

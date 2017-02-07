@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+name = glip:common:fifo_sync_fwft
+description = Synchronous First Word Fall Through (FWFT) FIFO
+depend = glip:common:fifo_sync
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/fifo_sync_fwft.v
+

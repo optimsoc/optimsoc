@@ -65,18 +65,18 @@ if { $::argc > 0 } {
 }
 
 # Set the directory path for the original project from where this script was exported
-set orig_proj_dir "[file normalize "$origin_dir/nexys4ddr"]"
+set orig_proj_dir "[file normalize "$origin_dir/vcu108"]"
 
 # Create project
-create_project nexys4ddr ./vivado
+create_project vcu108 ./vivado
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
-set obj [get_projects nexys4ddr]
+set obj [get_projects vcu108]
 set_property "default_lib" "xil_defaultlib" $obj
-set_property "part" "xc7a100tcsg324-1" $obj
+set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property "sim.ip.auto_export_scripts" "1" $obj
 set_property "simulator_language" "Mixed" $obj
 set_property "source_mgmt_mode" "DisplayOnly" $obj
@@ -89,8 +89,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
- "[file normalize "$origin_dir/nexys4ddr.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/nexys4ddr/nexys4ddr_display.v"]"\
+ "[file normalize "$origin_dir/vcu108.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_toplevel.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_control.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_control_egress.v"]"\
@@ -99,10 +98,6 @@ set files [list \
  "[file normalize "$origin_dir/../../verilog/glip_uart_transmit.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/credit/verilog/creditor.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/credit/verilog/debtor.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/bcdcounter/bcdcounter.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/sevensegment/sevensegment.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/measure/glip_measure_sevensegment.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/measure/glip_measure.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/scaler/verilog/glip_downscale.sv"]"\
  "[file normalize "$origin_dir/../../../../common/logic/scaler/verilog/glip_upscale.sv"]"\
  "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_sync_fwft.v"]"\
@@ -126,7 +121,7 @@ add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
-set_property "top" "nexys4ddr" $obj
+set_property "top" "vcu108" $obj
 
 # Create 'constrs_1' fileset (if not found)
 if {[string equal [get_filesets -quiet constrs_1] ""]} {
@@ -137,16 +132,16 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 set obj [get_filesets constrs_1]
 
 # Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/../../boards/nexys4ddr/nexys4ddr.xdc"]"
+set file "[file normalize "$origin_dir/../../boards/vcu108/vcu108.xdc"]"
 set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/../../boards/nexys4ddr/nexys4ddr.xdc"
+set file "$origin_dir/../../boards/vcu108/vcu108.xdc"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property "file_type" "XDC" $file_obj
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
-set_property "target_constrs_file" "[file normalize "$origin_dir/../../boards/nexys4ddr/nexys4ddr.xdc"]" $obj
+set_property "target_constrs_file" "[file normalize "$origin_dir/../../boards/vcu108/vcu108.xdc"]" $obj
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
@@ -159,30 +154,30 @@ set obj [get_filesets sim_1]
 
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
-set_property "top" "nexys4ddr" $obj
+set_property "top" "vcu108" $obj
 set_property "xelab.nosort" "1" $obj
 set_property "xelab.unifast" "" $obj
 
 # Create 'synth_1' run (if not found)
 if {[string equal [get_runs -quiet synth_1] ""]} {
-  create_run -name synth_1 -part xc7a100tcsg324-1 -flow {Vivado Synthesis 2015} -strategy "Vivado Synthesis Defaults" -constrset constrs_1
+  create_run -name synth_1 -part xcvu095-ffva2104-2-e -flow {Vivado Synthesis 2015} -strategy "Vivado Synthesis Defaults" -constrset constrs_1
 } else {
   set_property strategy "Vivado Synthesis Defaults" [get_runs synth_1]
   set_property flow "Vivado Synthesis 2015" [get_runs synth_1]
 }
 set obj [get_runs synth_1]
-set_property "part" "xc7a100tcsg324-1" $obj
+set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property -name {steps.synth_design.args.more options} -value {-generic WIDTH=8} -objects $obj
 
 # Create 'synth_2' run (if not found)
 if {[string equal [get_runs -quiet synth_2] ""]} {
-  create_run -name synth_2 -part xc7a100tcsg324-1 -flow {Vivado Synthesis 2015} -strategy "Vivado Synthesis Defaults" -constrset constrs_1
+  create_run -name synth_2 -part xcvu095-ffva2104-2-e -flow {Vivado Synthesis 2015} -strategy "Vivado Synthesis Defaults" -constrset constrs_1
 } else {
   set_property strategy "Vivado Synthesis Defaults" [get_runs synth_2]
   set_property flow "Vivado Synthesis 2015" [get_runs synth_2]
 }
 set obj [get_runs synth_2]
-set_property "part" "xc7a100tcsg324-1" $obj
+set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property -name {steps.synth_design.args.more options} -value {-generic WIDTH=16} -objects $obj
 
 # set the current synth run
@@ -190,25 +185,25 @@ current_run -synthesis [get_runs synth_1]
 
 # Create 'impl_1' run (if not found)
 if {[string equal [get_runs -quiet impl_1] ""]} {
-  create_run -name impl_1 -part xc7a100tcsg324-1 -flow {Vivado Implementation 2015} -strategy "Vivado Implementation Defaults" -constrset constrs_1 -parent_run synth_1
+  create_run -name impl_1 -part xcvu095-ffva2104-2-e -flow {Vivado Implementation 2015} -strategy "Vivado Implementation Defaults" -constrset constrs_1 -parent_run synth_1
 } else {
   set_property strategy "Vivado Implementation Defaults" [get_runs impl_1]
   set_property flow "Vivado Implementation 2015" [get_runs impl_1]
 }
 set obj [get_runs impl_1]
-set_property "part" "xc7a100tcsg324-1" $obj
+set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property "steps.write_bitstream.args.readback_file" "0" $obj
 set_property "steps.write_bitstream.args.verbose" "0" $obj
 
 # Create 'impl_2' run (if not found)
 if {[string equal [get_runs -quiet impl_2] ""]} {
-  create_run -name impl_2 -part xc7a100tcsg324-1 -flow {Vivado Implementation 2015} -strategy "Vivado Implementation Defaults" -constrset constrs_1 -parent_run synth_2
+  create_run -name impl_2 -part xcvu095-ffva2104-2-e -flow {Vivado Implementation 2015} -strategy "Vivado Implementation Defaults" -constrset constrs_1 -parent_run synth_2
 } else {
   set_property strategy "Vivado Implementation Defaults" [get_runs impl_2]
   set_property flow "Vivado Implementation 2015" [get_runs impl_2]
 }
 set obj [get_runs impl_2]
-set_property "part" "xc7a100tcsg324-1" $obj
+set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property "steps.write_bitstream.args.readback_file" "0" $obj
 set_property "steps.write_bitstream.args.verbose" "0" $obj
 
