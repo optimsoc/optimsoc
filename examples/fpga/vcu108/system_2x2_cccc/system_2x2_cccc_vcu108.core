@@ -1,0 +1,25 @@
+CAPI=1
+[main]
+name = optimsoc:examples:system_2x2_cccc_vcu108
+description = "Xilinx VCU108 board with 2x2 system"
+depend =
+  wallento:boards:vcu108
+  wallento:svchannels:nasti
+  wallento:svchannels:wishbone
+  wallento:wb2axi:wb2axi
+  optimsoc:system:2x2_cccc_dm
+  glip:backend:uart
+  optimsoc:ip:xilinx_axi_interconnect_4to1
+  optimsoc:ip:xilinx_axi_register_slice
+  optimsoc:base:config
+  
+[fileset rtl_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  rtl/verilog/system_2x2_cccc_vcu108.sv
+
+[parameter NUM_CORES]
+datatype = int
+paramtype = vlogparam
+scope = public
