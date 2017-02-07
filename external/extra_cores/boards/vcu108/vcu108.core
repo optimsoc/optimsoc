@@ -1,0 +1,18 @@
+CAPI=1
+[main]
+name = wallento:boards:vcu108
+depend =
+  wallento:boards:vcu108-ddr
+  wallento:boards:vcu108-axi_clk_converter
+
+[fileset rtl_files]
+files =
+  rtl/verilog/vcu108.sv
+file_type = verilogSource
+usage = sim synth
+
+[fileset constraints]
+usage = vivado
+file_type = xdc
+files =
+  data/pins.xdc
