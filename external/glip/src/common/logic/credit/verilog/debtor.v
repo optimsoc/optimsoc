@@ -43,9 +43,9 @@ module debtor
 
    reg [WIDTH-1:0]            credit;
    reg [WIDTH:0]              nxt_credit;
-   
+
    assign owing = |credit;
-   
+
    always @(posedge clk) begin
       if (rst) begin
          credit <= 0;
@@ -57,7 +57,7 @@ module debtor
    always @(*) begin
       nxt_credit = credit;
       error = 0;
-      
+
       if (lend & !payback) begin
          nxt_credit = credit + tranche;
          error = nxt_credit[WIDTH];
@@ -68,5 +68,5 @@ module debtor
          nxt_credit = nxt_credit + tranche - 1;
       end
    end // always @ (*)
-      
-endmodule // glip_debtor
+
+endmodule

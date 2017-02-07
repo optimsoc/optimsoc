@@ -10,12 +10,12 @@ add_file -ucf "./ztex_115.ucf"
 add_file -constraint "./ztex_115.sdc"
 add_file -constraint "../../boards/ztex_115/fx2.sdc"
 add_file -ucf "../../boards/ztex_115/fx2.ucf"
-add_file -verilog "../../verilog/cdc/cdc_fifo.v"
-add_file -verilog "../../verilog/cdc/cdc_fifo_mem.v"
-add_file -verilog "../../verilog/cdc/cdc_rdptr_empty.v"
-add_file -verilog "../../verilog/cdc/cdc_sync_rd2wr.v"
-add_file -verilog "../../verilog/cdc/cdc_sync_wr2rd.v"
-add_file -verilog "../../verilog/cdc/cdc_wrptr_full.v"
+add_file -verilog "../../../../common/logic/cdc/verilog/cdc_fifo.v"
+add_file -verilog "../../../../common/logic/cdc/verilog/cdc_fifo_mem.v"
+add_file -verilog "../../../../common/logic/cdc/verilog/cdc_rdptr_empty.v"
+add_file -verilog "../../../../common/logic/cdc/verilog/cdc_sync_rd2wr.v"
+add_file -verilog "../../../../common/logic/cdc/verilog/cdc_sync_wr2rd.v"
+add_file -verilog "../../../../common/logic/cdc/verilog/cdc_wrptr_full.v"
 
 
 

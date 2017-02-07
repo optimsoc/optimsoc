@@ -12,7 +12,7 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
                       )
 (
    input               clk, // clock
-   input               nreset, // active high async reset
+   input               nreset, // active low sync reset
    input [DW-1:0]      din, // data to write
    input               wr_en, // write fifo
    input               rd_en, // read fifo
@@ -34,7 +34,7 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
    assign fifo_read   = rd_en & ~empty;
    assign fifo_write  = wr_en & ~full;
 
-   always @ ( posedge clk or negedge nreset)
+   always @ ( posedge clk)
      if(!nreset)
        begin
           wr_addr[AW-1:0]   <= 'd0;

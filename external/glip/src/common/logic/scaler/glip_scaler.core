@@ -3,9 +3,9 @@ CAPI=1
 name = glip:common:scaler
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/glip_downscale.v
-  verilog/glip_upscale.v
+  verilog/glip_downscale.sv
+  verilog/glip_upscale.sv
 

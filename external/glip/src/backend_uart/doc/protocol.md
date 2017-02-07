@@ -79,6 +79,7 @@ incoming data and sends a new credit of the maximum number that can be
 transferred in one datagram (`0x3fff`) once the remaining credit falls
 below the threshold of `HOST_BUFFER_SIZE - 0x3fff`.
 
-The rst pin is set on demand by the user application. The
+The `logic_rst` pin is set on demand by the user application. The
 communications reset pin is used by the communication controller to
 reset itself to a defined state.
+

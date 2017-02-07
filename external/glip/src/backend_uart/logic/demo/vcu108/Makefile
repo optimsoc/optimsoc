@@ -1,8 +1,8 @@
 all: vivado-project
 
-vivado-project: vivado/nexys4ddr.xpr
+vivado-project: vivado/vcu108.xpr
 
-vivado/nexys4ddr.xpr:
+vivado/vcu108.xpr:
 	vivado -mode batch -source vivado.tcl
 
 clean: clean-vivado

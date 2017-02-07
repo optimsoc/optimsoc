@@ -1,0 +1,17 @@
+CAPI=1
+[main]
+name = glip:common:cdc
+description = "Clock-domain crossing (CDC) FIFO in plain HDL"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/cdc_fifo.v
+  verilog/cdc_sync_rd2wr.v
+  verilog/cdc_sync_wr2rd.v
+  verilog/cdc_fifo_mem.v
+  verilog/cdc_rdptr_empty.v
+  verilog/cdc_wrptr_full.v
+  verilog/cdc_rqacksync.v
+  verilog/cdc_sync_2ff.v
