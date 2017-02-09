@@ -12,7 +12,7 @@ depend =
   optimsoc:ip:xilinx_axi_interconnect_4to1
   optimsoc:ip:xilinx_axi_register_slice
   optimsoc:base:config
-  
+
 [fileset rtl_files]
 file_type = systemVerilogSource
 usage = sim synth
@@ -20,6 +20,16 @@ files =
   rtl/verilog/system_2x2_cccc_vcu108.sv
 
 [parameter NUM_CORES]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter UART0_SOURCE]
+datatype = str
+paramtype = vlogparam
+scope = public
+
+[parameter UART0_BAUD]
 datatype = int
 paramtype = vlogparam
 scope = public

@@ -40,10 +40,17 @@ module system_2x2_cccc_vcu108
    input                 cpu_reset,
 
    // all following UART signals are from a DTE (the PC) point-of-view
+   // USB UART (onboard)
    output                usb_uart_rx,
    input                 usb_uart_tx,
    output                usb_uart_cts, // active low (despite the name)
    input                 usb_uart_rts, // active low (despite the name)
+
+   // UART over PMOD (bottom row of J52)
+   output                pmod_uart_rx,
+   input                 pmod_uart_tx,
+   output                pmod_uart_cts, // active low (despite the name)
+   input                 pmod_uart_rts, // active low (despite the name)
 
    // DDR
    output                c0_ddr4_act_n,
@@ -65,12 +72,22 @@ module system_2x2_cccc_vcu108
    parameter integer NUM_CORES = 1;
    localparam integer LMEM_SIZE = 128*1024*1024;
 
+   // source of the UART connection
+   // onboard: Use the UART chip on the VCU108 board
+   // pmod: Connect a pmodusbuart module to J52 (bottom row)
+   parameter UART0_SOURCE = "pmod";
+
+   // onboard: 921600, max. for CP2105
+   // pmod: 3 MBaud, max. for FT232R
+   parameter UART0_BAUD = (UART0_SOURCE == "pmod" ? 3000000 : 921600);
+
+
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 30;
    localparam DDR_DATA_WIDTH = 32;
-   localparam TILE_ADDR_WIDTH = DDR_ADDR_WIDTH - 2;   
+   localparam TILE_ADDR_WIDTH = DDR_ADDR_WIDTH - 2;
 
-   
+
    localparam base_config_t
       BASE_CONFIG = '{ NUMTILES: 4,
          NUMCTS: 4,
@@ -139,7 +156,7 @@ module system_2x2_cccc_vcu108
    // Off-chip UART communication interface for debug
    glip_uart_toplevel
       #(.FREQ_CLK_IO(50000000),
-        .BAUD(921600),
+        .BAUD(UART0_BAUD),
         .WIDTH(16),
         .BUFFER_OUT_DEPTH(256*1024))
       u_glip(
@@ -194,7 +211,8 @@ module system_2x2_cccc_vcu108
    // Nexys 4 board wrapper
    vcu108
       #(
-         .NUM_UART(1)
+         .NUM_UART(1),
+         .UART0_SOURCE(UART0_SOURCE)
       )
       u_board(
          // FPGA/board interface
@@ -206,6 +224,11 @@ module system_2x2_cccc_vcu108
          .usb_uart_tx(usb_uart_tx),
          .usb_uart_cts(usb_uart_cts),
          .usb_uart_rts(usb_uart_rts),
+
+         .pmod_uart_rx(pmod_uart_rx),
+         .pmod_uart_tx(pmod_uart_tx),
+         .pmod_uart_cts(pmod_uart_cts),
+         .pmod_uart_rts(pmod_uart_rts),
 
          .c0_ddr4_act_n          (c0_ddr4_act_n),
          .c0_ddr4_adr            (c0_ddr4_adr),
