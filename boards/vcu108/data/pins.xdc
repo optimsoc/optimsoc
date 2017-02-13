@@ -37,7 +37,7 @@ set_property -quiet -dict IOSTANDARD  LVDS [get_ports -quiet { "clk_125mhz_p" }]
 set_property -quiet -dict PACKAGE_PIN BC8      [get_ports -quiet { "clk_125mhz_n" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L12N_T1U_N11_GC_66
 set_property -quiet -dict IOSTANDARD  LVDS [get_ports -quiet { "clk_125mhz_n" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L12N_T1U_N11_GC_66
 
-# UART
+# On-board USB UART
 set_property  PACKAGE_PIN BD22     [get_ports  { "usb_uart_rts" }] ;# Bank  94 VCCO - VCC1V8_FPGA - IO_L2N_T0L_N3_94
 set_property  IOSTANDARD  LVCMOS18 [get_ports  { "usb_uart_rts" }] ;# Bank  94 VCCO - VCC1V8_FPGA - IO_L2N_T0L_N3_94
 set_property  PACKAGE_PIN BC24     [get_ports  { "usb_uart_tx" }] ;# Bank  94 VCCO - VCC1V8_FPGA - IO_T0U_N12_94
@@ -46,6 +46,22 @@ set_property  PACKAGE_PIN BE24     [get_ports  { "usb_uart_rx" }] ;# Bank  94 VC
 set_property  IOSTANDARD  LVCMOS18 [get_ports  { "usb_uart_rx" }] ;# Bank  94 VCCO - VCC1V8_FPGA - IO_L1P_T0L_N0_DBC_94
 set_property  PACKAGE_PIN BF24     [get_ports  { "usb_uart_cts" }] ;# Bank  94 VCCO - VCC1V8_FPGA - IO_L1N_T0L_N1_DBC_94
 set_property  IOSTANDARD  LVCMOS18 [get_ports  { "usb_uart_cts" }] ;# Bank  94 VCCO - VCC1V8_FPGA - IO_L1N_T0L_N1_DBC_94
+
+# UART via PMOD
+# Connect a Digilent pmodusbuart module to J52, bottom row
+# RTS: pin 2 of J52 (pmod0_4_ls)
+set_property PACKAGE_PIN BC13     [get_ports { "pmod_uart_rts" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L19N_T3L_N1_DBC_AD9N_66
+set_property IOSTANDARD  LVCMOS18 [get_ports { "pmod_uart_rts" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L19N_T3L_N1_DBC_AD9N_66
+# RX: pin 4 of J52 (pmod0_5_ls)
+set_property PACKAGE_PIN BF7      [get_ports { "pmod_uart_rx" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_T1U_N12_66
+set_property IOSTANDARD  LVCMOS18 [get_ports { "pmod_uart_rx" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_T1U_N12_66
+# TX: pin 6 of J52 (pmod0_6_ls)
+set_property PACKAGE_PIN AW12     [get_ports { "pmod_uart_tx" }] ;# Bank  67 VCCO - VADJ_1V8_FPGA - IO_L2P_T0L_N2_67
+set_property IOSTANDARD  LVCMOS18 [get_ports { "pmod_uart_tx" }] ;# Bank  67 VCCO - VADJ_1V8_FPGA - IO_L2P_T0L_N2_67
+# CTS: pin 8 of J52 (pmod0_7_ls)
+set_property PACKAGE_PIN BC16     [get_ports { "pmod_uart_cts" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L20N_T3L_N3_AD1N_66
+set_property IOSTANDARD  LVCMOS18 [get_ports { "pmod_uart_cts" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L20N_T3L_N3_AD1N_66
+
 
 
 ## DDR4
@@ -588,12 +604,8 @@ set_property -quiet -dict PACKAGE_PIN BD15     [get_ports -quiet { "sysmon_ad8_r
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "sysmon_ad8_r_n" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L21N_T3L_N5_AD8N_66
 set_property -quiet -dict PACKAGE_PIN BB16     [get_ports -quiet { "pmod0_3_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L20P_T3L_N2_AD1P_66
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "pmod0_3_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L20P_T3L_N2_AD1P_66
-set_property -quiet -dict PACKAGE_PIN BC16     [get_ports -quiet { "pmod0_7_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L20N_T3L_N3_AD1N_66
-set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "pmod0_7_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L20N_T3L_N3_AD1N_66
 set_property -quiet -dict PACKAGE_PIN BC14     [get_ports -quiet { "pmod0_0_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L19P_T3L_N0_DBC_AD9P_66
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "pmod0_0_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L19P_T3L_N0_DBC_AD9P_66
-set_property -quiet -dict PACKAGE_PIN BC13     [get_ports -quiet { "pmod0_4_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L19N_T3L_N1_DBC_AD9N_66
-set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "pmod0_4_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L19N_T3L_N1_DBC_AD9N_66
 set_property -quiet -dict PACKAGE_PIN AW8      [get_ports -quiet { "sysmon_ad2_r_p" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L18P_T2U_N10_AD2P_66
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "sysmon_ad2_r_p" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L18P_T2U_N10_AD2P_66
 set_property -quiet -dict PACKAGE_PIN AW7      [get_ports -quiet { "sysmon_ad2_r_n" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L18N_T2U_N11_AD2N_66
@@ -620,8 +632,6 @@ set_property -quiet -dict PACKAGE_PIN AY9      [get_ports -quiet { "fmc_hpc0_la0
 set_property -quiet -dict IOSTANDARD  LVDS [get_ports -quiet { "fmc_hpc0_la00_cc_p" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L13P_T2L_N0_GC_QBC_66
 set_property -quiet -dict PACKAGE_PIN BA9      [get_ports -quiet { "fmc_hpc0_la00_cc_n" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L13N_T2L_N1_GC_QBC_66
 set_property -quiet -dict IOSTANDARD  LVDS [get_ports -quiet { "fmc_hpc0_la00_cc_n" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L13N_T2L_N1_GC_QBC_66
-set_property -quiet -dict PACKAGE_PIN BF7      [get_ports -quiet { "pmod0_5_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_T1U_N12_66
-set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "pmod0_5_ls" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_T1U_N12_66
 set_property -quiet -dict PACKAGE_PIN BC10     [get_ports -quiet { "fmc_hpc0_la01_cc_p" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L11P_T1U_N8_GC_66
 set_property -quiet -dict IOSTANDARD  LVDS [get_ports -quiet { "fmc_hpc0_la01_cc_p" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L11P_T1U_N8_GC_66
 set_property -quiet -dict PACKAGE_PIN BD10     [get_ports -quiet { "fmc_hpc0_la01_cc_n" }] ;# Bank  66 VCCO - VADJ_1V8_FPGA - IO_L11N_T1U_N9_GC_66
