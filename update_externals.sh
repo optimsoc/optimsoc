@@ -3,8 +3,12 @@
 # Update all external projects (inside external) from their respective upstream
 #
 
+# only run git stash if the working directory actually has changes; otherwise
+# we stash nothing and stash pop old stuff.
+WD_HAS_CHANGES=$(git diff-index --quiet HEAD --; echo $?)
+
 # we need a clean working directory for subtree
-git stash
+[ $WD_HAS_CHANGES == 1 ] && git stash
 
 # lisnoc
 git subtree pull -m "Update external/lisnoc" --prefix external/lisnoc https://github.com/tum-lis/lisnoc.git master --squash
@@ -28,4 +32,5 @@ git subtree pull -m "Update external/opensocdebug/software" --prefix external/op
 git subtree pull -m "Update external/opensocdebug/hardware" --prefix external/opensocdebug/hardware https://github.com/opensocdebug/hardware.git mam-sync --squash
 
 # reapply our changes to the working directory
-git stash pop
+[ $WD_HAS_CHANGES == 1 ] && git stash pop
+
