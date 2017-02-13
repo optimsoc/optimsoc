@@ -30,7 +30,11 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 module vcu108
-  #(parameter NUM_UART = 1)
+  #(parameter NUM_UART = 1,
+    // Source of uart0
+    // onboard: use USB UART connection on the board
+    // pmod: connect a pmodusbuart module to PMOD connector J52 (bottom row)
+    parameter UART0_SOURCE = "onboard")
   (
    //
    // FPGA IO
@@ -48,6 +52,12 @@ module vcu108
    input                 usb_uart_tx,
    output                usb_uart_cts, // active low (despite the name)
    input                 usb_uart_rts, // active low (despite the name)
+
+   // UART over pmod
+   output                pmod_uart_rx,
+   input                 pmod_uart_tx,
+   output                pmod_uart_cts, // active low (despite the name)
+   input                 pmod_uart_rts, // active low (despite the name)
 
    // DDR C0 I/O
    output                c0_ddr4_act_n,
@@ -407,11 +417,18 @@ module vcu108
    // The signals from/to the board are seen from a DTE (host PC) point of view,
    // all internally used signals are seen from a DCE (FPGA) point of view
    // (i.e. from our view).
-   assign uart_rx[0] = usb_uart_tx;
-   assign usb_uart_rx = uart_tx[0];
-   assign usb_uart_cts = uart_rts_n[0];
-   assign uart_cts_n[0] = usb_uart_rts;
-
-
+   generate
+      if (UART0_SOURCE == "onboard") begin
+         assign uart_rx[0] = usb_uart_tx;
+         assign usb_uart_rx = uart_tx[0];
+         assign usb_uart_cts = uart_rts_n[0];
+         assign uart_cts_n[0] = usb_uart_rts;
+      end else if (UART0_SOURCE == "pmod") begin
+         assign uart_rx[0] = pmod_uart_tx;
+         assign pmod_uart_rx = uart_tx[0];
+         assign pmod_uart_cts = uart_rts_n[0];
+         assign uart_cts_n[0] = pmod_uart_rts;
+      end
+   endgenerate
 
 endmodule
