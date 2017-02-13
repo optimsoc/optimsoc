@@ -78,7 +78,7 @@ class Vivado(Backend):
 
         parameters = ""
         for key, value in self.vlogparam.items():
-            parameters += "set_property generic {{{key}={value}}} [current_fileset]".format(key=key, value=value)
+            parameters += "set_property generic {{{key}={value}}} [current_fileset]\n".format(key=key, value=value)
 
         # Write the formatted string to the tcl file
         tcl_file.write(PROJECT_TCL_TEMPLATE.format(

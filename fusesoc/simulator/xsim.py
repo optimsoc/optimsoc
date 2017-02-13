@@ -70,7 +70,7 @@ class Xsim(Simulator):
 
         parameters = ""
         for key, value in self.vlogparam.items():
-            parameters += "set_property generic {{{key}={value}}} [current_fileset -simset]".format(key=key, value=value)
+            parameters += "set_property generic {{{key}={value}}} [current_fileset -simset]\n".format(key=key, value=value)
 
         part = ""
         if self.part:
