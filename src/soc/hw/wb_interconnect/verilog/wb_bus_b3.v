@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,337 +70,196 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-// TODO: * check bus hold signal correctness
+module wb_bus_b3
+  #(
+    /* User parameters */
+    // Set the number of masters and slaves
+    parameter MASTERS = 2,
+    parameter SLAVES = 1,
 
-module wb_bus_b3(/*AUTOARG*/
-   // Outputs
-   m_dat_o, m_ack_o, m_err_o, m_rty_o, s_adr_o, s_dat_o, s_cyc_o,
-   s_stb_o, s_sel_o, s_we_o, s_cti_o, s_bte_o, snoop_adr_o,
-   snoop_en_o, bus_hold_ack,
-   // Inputs
-   clk_i, rst_i, m_adr_i, m_dat_i, m_cyc_i, m_stb_i, m_sel_i, m_we_i,
-   m_cti_i, m_bte_i, s_dat_i, s_ack_i, s_err_i, s_rty_i, bus_hold
-   );
+    // Set bus address and data width in bits
+    // DATA_WIDTH must be a multiple of 8 (full bytes)!
+    parameter DATA_WIDTH = 32,
+    parameter ADDR_WIDTH = 32,
 
-   /* User parameters */
-   // Set the number of masters and slaves
-   parameter MASTERS = 2;
-   parameter SLAVES = 1;
-
-   // Set bus address and data width in bits
-   // DATA_WIDTH must be a multiple of 8 (full bytes)!
-   parameter DATA_WIDTH = 32;
-   parameter ADDR_WIDTH = 32;
-
-   // Memory range definitions, see above
-   // The number of parameters actually limits the number of slaves as
-   // there is no generic way that is handled by all tools to define
-   // variable width parameter arrays.
-   parameter S0_RANGE_WIDTH = 1;
-   parameter S0_RANGE_MATCH = 1'b0;
-   parameter S1_RANGE_WIDTH = 1;
-   parameter S1_RANGE_MATCH = 1'b0;
-   parameter S2_RANGE_WIDTH = 1;
-   parameter S2_RANGE_MATCH = 1'b0;
-   parameter S3_RANGE_WIDTH = 1;
-   parameter S3_RANGE_MATCH = 1'b0;
-   parameter S4_RANGE_WIDTH = 1;
-   parameter S4_RANGE_MATCH = 1'b0;
-   parameter S5_RANGE_WIDTH = 1;
-   parameter S5_RANGE_MATCH = 1'b0;
-   parameter S6_RANGE_WIDTH = 1;
-   parameter S6_RANGE_MATCH = 1'b0;
-   parameter S7_RANGE_WIDTH = 1;
-   parameter S7_RANGE_MATCH = 1'b0;
-   parameter S8_RANGE_WIDTH = 1;
-   parameter S8_RANGE_MATCH = 1'b0;
-   parameter S9_RANGE_WIDTH = 1;
-   parameter S9_RANGE_MATCH = 1'b0;
+    // Memory range definitions, see above
+    // The number of parameters actually limits the number of slaves as
+    // there is no generic way that is handled by all tools to define
+    // variable width parameter arrays.
+    parameter S0_RANGE_WIDTH = 1,
+    parameter S0_RANGE_MATCH = 1'b0,
+    parameter S1_RANGE_WIDTH = 1,
+    parameter S1_RANGE_MATCH = 1'b0,
+    parameter S2_RANGE_WIDTH = 1,
+    parameter S2_RANGE_MATCH = 1'b0,
+    parameter S3_RANGE_WIDTH = 1,
+    parameter S3_RANGE_MATCH = 1'b0,
+    parameter S4_RANGE_WIDTH = 1,
+    parameter S4_RANGE_MATCH = 1'b0,
+    parameter S5_RANGE_WIDTH = 1,
+    parameter S5_RANGE_MATCH = 1'b0,
+    parameter S6_RANGE_WIDTH = 1,
+    parameter S6_RANGE_MATCH = 1'b0,
+    parameter S7_RANGE_WIDTH = 1,
+    parameter S7_RANGE_MATCH = 1'b0,
+    parameter S8_RANGE_WIDTH = 1,
+    parameter S8_RANGE_MATCH = 1'b0,
+    parameter S9_RANGE_WIDTH = 1,
+    parameter S9_RANGE_MATCH = 1'b0
+    )
+   (
+       /* Ports */
+       input 			       clk_i,
+       input 			       rst_i,
    
-   /* Derived local parameters */
-   // Width of byte select registers
-   localparam SEL_WIDTH = DATA_WIDTH >> 3;   
+       input [ADDR_WIDTH*MASTERS-1:0]  m_adr_i,
+       input [DATA_WIDTH*MASTERS-1:0]  m_dat_i,
+       input [MASTERS-1:0] 	       m_cyc_i,
+       input [MASTERS-1:0] 	       m_stb_i,
+       input [SEL_WIDTH*MASTERS-1:0]   m_sel_i,
+       input [MASTERS-1:0] 	       m_we_i,
+       input [MASTERS*3-1:0] 	       m_cti_i,
+       input [MASTERS*2-1:0] 	       m_bte_i,
 
-   /* Ports */
-   input clk_i;
-   input rst_i;
-   
-   input [ADDR_WIDTH*MASTERS-1:0] m_adr_i;
-   input [DATA_WIDTH*MASTERS-1:0] m_dat_i;
-   input [MASTERS-1:0]            m_cyc_i;
-   input [MASTERS-1:0]            m_stb_i;
-   input [SEL_WIDTH*MASTERS-1:0]  m_sel_i;
-   input [MASTERS-1:0]            m_we_i;
-   input [MASTERS*3-1:0]          m_cti_i;
-   input [MASTERS*2-1:0]          m_bte_i;
+       output [DATA_WIDTH*MASTERS-1:0] m_dat_o,
+       output [MASTERS-1:0] 	       m_ack_o,
+       output [MASTERS-1:0] 	       m_err_o,
+       output [MASTERS-1:0] 	       m_rty_o,
 
-   output [DATA_WIDTH*MASTERS-1:0] m_dat_o;
-   output [MASTERS-1:0]            m_ack_o;
-   output [MASTERS-1:0]            m_err_o;
-   output [MASTERS-1:0]            m_rty_o;
+       output [ADDR_WIDTH*SLAVES-1:0]  s_adr_o,
+       output [DATA_WIDTH*SLAVES-1:0]  s_dat_o,
+       output [SLAVES-1:0] 	       s_cyc_o,
+       output [SLAVES-1:0] 	       s_stb_o,
+       output [SEL_WIDTH*SLAVES-1:0]   s_sel_o,
+       output [SLAVES-1:0] 	       s_we_o,
+       output [SLAVES*3-1:0] 	       s_cti_o,
+       output [SLAVES*2-1:0] 	       s_bte_o,
 
-   output [ADDR_WIDTH*SLAVES-1:0] s_adr_o;
-   output [DATA_WIDTH*SLAVES-1:0] s_dat_o;
-   output [SLAVES-1:0]            s_cyc_o;
-   output [SLAVES-1:0]            s_stb_o;
-   output [SEL_WIDTH*SLAVES-1:0]  s_sel_o;
-   output [SLAVES-1:0]            s_we_o;
-   output [SLAVES*3-1:0]          s_cti_o;
-   output [SLAVES*2-1:0]          s_bte_o;
-
-   input [DATA_WIDTH*SLAVES-1:0]  s_dat_i;
-   input [SLAVES-1:0]             s_ack_i;
-   input [SLAVES-1:0]             s_err_i;
-   input [SLAVES-1:0]             s_rty_i;
+       input [DATA_WIDTH*SLAVES-1:0]   s_dat_i,
+       input [SLAVES-1:0] 	       s_ack_i,
+       input [SLAVES-1:0] 	       s_err_i,
+       input [SLAVES-1:0] 	       s_rty_i,
 
    // The snoop port forwards all write accesses on their success for
    // one cycle.
-   output [DATA_WIDTH-1:0]        snoop_adr_o;
-   output                         snoop_en_o;
+       output [DATA_WIDTH-1:0] 	       snoop_adr_o,
+       output 			       snoop_en_o,
 
-   input                          bus_hold;
-   output reg                     bus_hold_ack;
+       input 			       bus_hold,
+       output 			       bus_hold_ack
+    );
 
-   // Internally all master and slave ports have a bus signal where
-   // all wishbone signals are packed. There are master generated and
-   // slave generated signals. Each master and each slave therefore
-   // generates and receives a bus of packed wishbone signals.
+   /* Derived local parameters */
+   // Width of byte select registers
+   localparam SEL_WIDTH = DATA_WIDTH >> 3;
 
-   // The master signals are of width M_WIDTH and the packing is
-   // defined below.
-   localparam M_WIDTH = ADDR_WIDTH + DATA_WIDTH + SEL_WIDTH + 8;
+   wire [ADDR_WIDTH-1:0] bus_adr;
+   wire [DATA_WIDTH-1:0] bus_wdat;
+   wire                  bus_cyc;
+   wire                  bus_stb;
+   wire [SEL_WIDTH-1:0]  bus_sel;
+   wire                  bus_we;
+   wire [2:0]            bus_cti;
+   wire [1:0]            bus_bte;
 
-   localparam M_ADDR_LSB = 0;
-   localparam M_ADDR_MSB = ADDR_WIDTH - 1;
-   localparam M_DATA_LSB = M_ADDR_MSB + 1;
-   localparam M_DATA_MSB = M_DATA_LSB + DATA_WIDTH - 1;
-   localparam M_CYC      = M_DATA_MSB + 1;
-   localparam M_STB      = M_CYC + 1;
-   localparam M_SEL_LSB  = M_STB + 1;
-   localparam M_SEL_MSB  = M_SEL_LSB + SEL_WIDTH - 1;
-   localparam M_WE       = M_SEL_MSB + 1;
-   localparam M_CTI_LSB  = M_WE + 1;
-   localparam M_CTI_MSB  = M_CTI_LSB + 2;
-   localparam M_BTE_LSB  = M_CTI_MSB + 1;
-   localparam M_BTE_MSB  = M_BTE_LSB + 1;
- 
-   // The slave signals are of width S_WIDTH and the packing is
-   // defined accordingly.
-   localparam S_WIDTH = DATA_WIDTH + 3; // data + ack + err + rty
-
-   localparam S_DATA_LSB = 0;
-   localparam S_DATA_MSB = DATA_WIDTH - 1;
-   localparam S_ACK = S_DATA_MSB + 1;
-   localparam S_ERR = S_ACK + 1;
-   localparam S_RTY = S_ERR + 1;
+   wire [DATA_WIDTH-1:0] bus_rdat;
+   wire                  bus_ack;
+   wire                  bus_err;
+   wire                  bus_rty;
    
-   // The masters have master signals input and slave signal outputs
-   wire [M_WIDTH-1:0]      m_i [0:MASTERS-1];
-   wire [S_WIDTH-1:0]      m_o [0:MASTERS-1];
-
-   // The slaves have master signals output and slave signal inputs
-   wire [M_WIDTH-1:0]      s_o [0:SLAVES-1];
-   wire [S_WIDTH-1:0]      s_i [0:SLAVES-1];
-
-   // After arbitration an internal bus contains the master signals
-   // which are then forwarded to the selected slave
-   reg [M_WIDTH-1:0]      m_bus;
-   
-   // The slave is selected based on the address of the arbitrated
-   // bus. The selected slave signals are then put on this bus and
-   // forwarded to the arbitrated master
-   reg [S_WIDTH-1:0]      s_bus;
-
-   // The granted master is one hot encoded
-   wire [MASTERS-1:0]     grant;
-   // The granted master from previous cycle (register)
-   reg [MASTERS-1:0]      prev_grant;
-
-   // The selected slave is also one hot encoded
-   wire [SLAVES-1:0]      s_select; 
-
-   // If either memory maps overlap or an address is not matched, the
-   // bus generates an error itself.
-   wire                   bus_error;
-   
-   // Generate variables for all the wiring
-   genvar m, s;
-
-   // Generate all the wiring. Of course this could be shortened, but
-   // we like it explicit and it comes free of cost..
-   generate
-      for (m = 0; m < MASTERS; m = m + 1) begin : gen_m_bus
-         // Connect master inputs to packed signal array
-         assign m_i[m][M_ADDR_MSB:M_ADDR_LSB] = m_adr_i[(m+1)*ADDR_WIDTH-1:m*ADDR_WIDTH];
-         assign m_i[m][M_DATA_MSB:M_DATA_LSB] = m_dat_i[(m+1)*DATA_WIDTH-1:m*DATA_WIDTH];
-         assign m_i[m][M_CYC]                 = m_cyc_i[m];
-         assign m_i[m][M_STB]                 = m_stb_i[m];
-         assign m_i[m][M_SEL_MSB:M_SEL_LSB]   = m_sel_i[(m+1)*SEL_WIDTH-1:m*SEL_WIDTH];
-         assign m_i[m][M_WE]                  = m_we_i[m];
-         assign m_i[m][M_CTI_MSB:M_CTI_LSB]   = m_cti_i[(m+1)*3-1:m*3];
-         assign m_i[m][M_BTE_MSB:M_BTE_LSB]   = m_bte_i[(m+1)*2-1:m*2];
-
-         // Connect packed output signals to master output ports
-         assign m_dat_o[(m+1)*DATA_WIDTH-1:m*DATA_WIDTH] = m_o[m][S_DATA_MSB:S_DATA_LSB];
-         assign m_ack_o[m]                               = m_o[m][S_ACK];
-         assign m_err_o[m]                               = m_o[m][S_ERR];
-         assign m_rty_o[m]                               = m_o[m][S_RTY];         
-
-         // Connect the slave bus signals to the master. The data is
-         // just output to all masters..
-         assign m_o[m][S_DATA_MSB:S_DATA_LSB] = s_bus[S_DATA_MSB:S_DATA_LSB];
-         // .. while the status signals are only forwarded to
-         // arbitrated master. The signals are masked with the strobe
-         // to make it more clear and not have for example permanent
-         // ack'ing slaves forwarded to a master without request
-         // (should not have any effect, but more clear).
-         // Error can also be a bus error.
-         assign m_o[m][S_ACK] = grant[m] & (s_bus[S_ACK] & !bus_error) & m_bus[M_STB];
-         assign m_o[m][S_ERR] = grant[m] & (s_bus[S_ERR] | bus_error) & m_bus[M_STB];
-         assign m_o[m][S_RTY] = grant[m] & (s_bus[S_RTY] & !bus_error) & m_bus[M_STB];    
-      end // block: gen_m_bus
-      
-      for (s = 0; s < SLAVES; s = s + 1) begin : gen_s_bus
-         // Connect slave input ports to the packed bus
-         assign s_i[s][S_DATA_MSB:S_DATA_LSB] = s_dat_i[(s+1)*DATA_WIDTH-1:s*DATA_WIDTH];
-         assign s_i[s][S_ACK]                 = s_ack_i[s];
-         assign s_i[s][S_ERR]                 = s_err_i[s];
-         assign s_i[s][S_RTY]                 = s_rty_i[s];
-
-         // Connect packed bus to slave output ports
-         assign s_adr_o[(s+1)*ADDR_WIDTH-1:s*ADDR_WIDTH] = s_o[s][M_ADDR_MSB:M_ADDR_LSB];
-         assign s_dat_o[(s+1)*DATA_WIDTH-1:s*DATA_WIDTH] = s_o[s][M_DATA_MSB:M_DATA_LSB];
-         assign s_cyc_o[s]                               = s_o[s][M_CYC];
-         assign s_stb_o[s]                               = s_o[s][M_STB];
-         assign s_sel_o[(s+1)*SEL_WIDTH-1:s*SEL_WIDTH]   = s_o[s][M_SEL_MSB:M_SEL_LSB];
-         assign s_we_o[s]                                = s_o[s][M_WE];
-         assign s_cti_o[(s+1)*3-1:s*3]                   = s_o[s][M_CTI_MSB:M_CTI_LSB];
-         assign s_bte_o[(s+1)*2-1:s*2]                   = s_o[s][M_BTE_MSB:M_BTE_LSB];
-
-         // Forward the (arbitrated) master bus signals to the slaves.
-         // All slaves get the data and similar signals...
-         assign s_o[s][M_ADDR_MSB:M_ADDR_LSB] = m_bus[M_ADDR_MSB:M_ADDR_LSB];
-         assign s_o[s][M_DATA_MSB:M_DATA_LSB] = m_bus[M_DATA_MSB:M_DATA_LSB];
-         assign s_o[s][M_SEL_MSB:M_SEL_LSB]   = m_bus[M_SEL_MSB:M_SEL_LSB];
-         assign s_o[s][M_WE]                  = m_bus[M_WE];
-         assign s_o[s][M_CTI_MSB:M_CTI_LSB]   = m_bus[M_CTI_MSB:M_CTI_LSB];
-         assign s_o[s][M_BTE_MSB:M_BTE_LSB]   = m_bus[M_BTE_MSB:M_BTE_LSB];
-         // .. but only the selected gets the control signals.
-         assign s_o[s][M_CYC]                 = s_select[s] & m_bus[M_CYC];
-         assign s_o[s][M_STB]                 = s_select[s] & m_bus[M_STB];
-
-      end // block: gen_s_bus
-   endgenerate
-
-   // This is a net that masks the actual requests. The arbiter
-   // selects a different master each cycle. Therefore we need to
-   // actively control the return of the bus arbitration. That means
-   // as long as the granted master still holds is cycle signal, we
-   // mask out all other requests (be setting the requests to grant).
-   // When the cycle signal is released, we set the request to all
-   // masters cycle signals.
-   reg [MASTERS-1:0] m_req;
-
-   // This is the arbitration net from round robin
-   wire [MASTERS-1:0] arb_grant;
-   reg [MASTERS-1:0] prev_arb_grant;
-   
-   // It is masked with the bus_hold_ack to hold back the arbitration
-   // as long as the bus is held
-   assign grant = arb_grant & {MASTERS{!bus_hold_ack}};
-   
-   always @(*) begin
-      if (m_cyc_i & prev_grant) begin
-         // The bus is not released this cycle
-         m_req = prev_grant;
-         bus_hold_ack = 1'b0;
-      end else begin
-         m_req = m_cyc_i;
-         bus_hold_ack = bus_hold;
-      end
-   end
-
-   // We register the grant signal. This is needed nevertheless for
-   // fair arbitration (round robin)
-   always @(posedge clk_i) begin
-      if (rst_i) begin
-         prev_arb_grant <= {{MASTERS-1{1'b0}},1'b1};
-         prev_grant <= {{MASTERS-1{1'b0}},1'b1};
-      end else begin   
-         prev_arb_grant <= arb_grant;
-         prev_grant <= grant;
-      end
-   end
-
-   /* wb_interconnect_arb_rr AUTO_TEMPLATE(
-    .gnt     (prev_arb_grant),
-    .nxt_gnt (arb_grant),
-    .req     (m_req),
+   /* wb_mux AUTO_TEMPLATE(
+    .s_dat_o    (bus_wdat),
+    .s_dat_i    (bus_rdat),
+    .s_\(.*\)_o (bus_\1),
+    .s_\(.*\)_i (bus_\1),
     ); */
-   wb_interconnect_arb_rr
-     #(.N(MASTERS))
-     u_arbiter(/*AUTOINST*/
-               // Outputs
-               .nxt_gnt                 (arb_grant),             // Templated
-               // Inputs
-               .req                     (m_req),                 // Templated
-               .gnt                     (prev_arb_grant));       // Templated
+   wb_mux
+     #(.MASTERS(MASTERS), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH))
+   u_mux(/*AUTOINST*/
+         // Outputs
+         .m_dat_o                       (m_dat_o[DATA_WIDTH*MASTERS-1:0]),
+         .m_ack_o                       (m_ack_o[MASTERS-1:0]),
+         .m_err_o                       (m_err_o[MASTERS-1:0]),
+         .m_rty_o                       (m_rty_o[MASTERS-1:0]),
+         .s_adr_o                       (bus_adr),               // Templated
+         .s_dat_o                       (bus_wdat),              // Templated
+         .s_cyc_o                       (bus_cyc),               // Templated
+         .s_stb_o                       (bus_stb),               // Templated
+         .s_sel_o                       (bus_sel),               // Templated
+         .s_we_o                        (bus_we),                // Templated
+         .s_cti_o                       (bus_cti),               // Templated
+         .s_bte_o                       (bus_bte),               // Templated
+         .bus_hold_ack                  (bus_hold_ack),
+         // Inputs
+         .clk_i                         (clk_i),
+         .rst_i                         (rst_i),
+         .m_adr_i                       (m_adr_i[ADDR_WIDTH*MASTERS-1:0]),
+         .m_dat_i                       (m_dat_i[DATA_WIDTH*MASTERS-1:0]),
+         .m_cyc_i                       (m_cyc_i[MASTERS-1:0]),
+         .m_stb_i                       (m_stb_i[MASTERS-1:0]),
+         .m_sel_i                       (m_sel_i[SEL_WIDTH*MASTERS-1:0]),
+         .m_we_i                        (m_we_i[MASTERS-1:0]),
+         .m_cti_i                       (m_cti_i[MASTERS*3-1:0]),
+         .m_bte_i                       (m_bte_i[MASTERS*2-1:0]),
+         .s_dat_i                       (bus_rdat),              // Templated
+         .s_ack_i                       (bus_ack),               // Templated
+         .s_err_i                       (bus_err),               // Templated
+         .s_rty_i                       (bus_rty),               // Templated
+         .bus_hold                      (bus_hold));
 
-   // Mux the bus based on the grant signal which must be one hot!
-   always @(*) begin : bus_m_mux
-      integer i;
-      m_bus = {M_WIDTH{1'b0}};
-      for (i = 0; i < MASTERS; i = i + 1) begin
-         if (grant[i])
-           m_bus = m_bus | m_i[i];
-      end
-      
-   end
-
-   // Generate the slave select signals based on the master bus
-   // address and the memory range parameters
-   generate
-      if (SLAVES > 0)
-        assign s_select[0] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S0_RANGE_WIDTH+1] == S0_RANGE_MATCH);
-      if (SLAVES > 1)
-        assign s_select[1] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S1_RANGE_WIDTH+1] == S1_RANGE_MATCH);
-      if (SLAVES > 2)
-        assign s_select[2] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S2_RANGE_WIDTH+1] == S2_RANGE_MATCH);
-      if (SLAVES > 3)
-        assign s_select[3] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S3_RANGE_WIDTH+1] == S3_RANGE_MATCH);
-      if (SLAVES > 4)
-        assign s_select[4] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S4_RANGE_WIDTH+1] == S4_RANGE_MATCH);
-      if (SLAVES > 5)
-        assign s_select[5] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S5_RANGE_WIDTH+1] == S5_RANGE_MATCH);
-      if (SLAVES > 6)
-        assign s_select[6] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S6_RANGE_WIDTH+1] == S6_RANGE_MATCH);
-      if (SLAVES > 7)
-        assign s_select[7] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S7_RANGE_WIDTH+1] == S7_RANGE_MATCH);
-      if (SLAVES > 8)
-        assign s_select[8] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S8_RANGE_WIDTH+1] == S8_RANGE_MATCH);
-      if (SLAVES > 9)
-        assign s_select[9] = (m_bus[M_ADDR_MSB:M_ADDR_MSB-S9_RANGE_WIDTH+1] == S9_RANGE_MATCH);      
-   endgenerate
-
-   // If two s_select are high or none, we might have an bus error
-   assign bus_error = ~^s_select;
+   /* wb_decode AUTO_TEMPLATE(
+    .m_dat_o (bus_rdat),
+    .m_dat_i (bus_wdat),
+    .m_\(.*\)_i (bus_\1),
+    .m_\(.*\)_o (bus_\1),
+    ); */
+   wb_decode
+     #(.SLAVES(SLAVES), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH),
+       .S0_RANGE_WIDTH(S0_RANGE_WIDTH), .S0_RANGE_MATCH(S0_RANGE_MATCH),
+       .S1_RANGE_WIDTH(S1_RANGE_WIDTH), .S1_RANGE_MATCH(S1_RANGE_MATCH),
+       .S2_RANGE_WIDTH(S2_RANGE_WIDTH), .S2_RANGE_MATCH(S2_RANGE_MATCH),
+       .S3_RANGE_WIDTH(S3_RANGE_WIDTH), .S3_RANGE_MATCH(S3_RANGE_MATCH),
+       .S4_RANGE_WIDTH(S4_RANGE_WIDTH), .S4_RANGE_MATCH(S4_RANGE_MATCH),
+       .S5_RANGE_WIDTH(S5_RANGE_WIDTH), .S5_RANGE_MATCH(S5_RANGE_MATCH),
+       .S6_RANGE_WIDTH(S6_RANGE_WIDTH), .S6_RANGE_MATCH(S6_RANGE_MATCH),
+       .S7_RANGE_WIDTH(S7_RANGE_WIDTH), .S7_RANGE_MATCH(S7_RANGE_MATCH),
+       .S8_RANGE_WIDTH(S8_RANGE_WIDTH), .S8_RANGE_MATCH(S8_RANGE_MATCH),
+       .S9_RANGE_WIDTH(S9_RANGE_WIDTH), .S9_RANGE_MATCH(S9_RANGE_MATCH))
+   u_decode(/*AUTOINST*/
+            // Outputs
+            .m_dat_o                    (bus_rdat),              // Templated
+            .m_ack_o                    (bus_ack),               // Templated
+            .m_err_o                    (bus_err),               // Templated
+            .m_rty_o                    (bus_rty),               // Templated
+            .s_adr_o                    (s_adr_o[ADDR_WIDTH*SLAVES-1:0]),
+            .s_dat_o                    (s_dat_o[DATA_WIDTH*SLAVES-1:0]),
+            .s_cyc_o                    (s_cyc_o[SLAVES-1:0]),
+            .s_stb_o                    (s_stb_o[SLAVES-1:0]),
+            .s_sel_o                    (s_sel_o[SEL_WIDTH*SLAVES-1:0]),
+            .s_we_o                     (s_we_o[SLAVES-1:0]),
+            .s_cti_o                    (s_cti_o[SLAVES*3-1:0]),
+            .s_bte_o                    (s_bte_o[SLAVES*2-1:0]),
+            // Inputs
+            .clk_i                      (clk_i),
+            .rst_i                      (rst_i),
+            .m_adr_i                    (bus_adr),               // Templated
+            .m_dat_i                    (bus_wdat),              // Templated
+            .m_cyc_i                    (bus_cyc),               // Templated
+            .m_stb_i                    (bus_stb),               // Templated
+            .m_sel_i                    (bus_sel),               // Templated
+            .m_we_i                     (bus_we),                // Templated
+            .m_cti_i                    (bus_cti),               // Templated
+            .m_bte_i                    (bus_bte),               // Templated
+            .s_dat_i                    (s_dat_i[DATA_WIDTH*SLAVES-1:0]),
+            .s_ack_i                    (s_ack_i[SLAVES-1:0]),
+            .s_err_i                    (s_err_i[SLAVES-1:0]),
+            .s_rty_i                    (s_rty_i[SLAVES-1:0]));
    
-   // Mux the slave bus based on the slave select signal (one hot!)
-   always @(*) begin : bus_s_mux
-      integer i;
-      s_bus = {S_WIDTH{1'b0}};
-      for (i = 0; i < SLAVES; i = i + 1) begin
-         if (s_select[i]) begin
-            s_bus = s_bus | s_i[i];
-         end
-      end
-   end
-
    // Snoop address comes direct from master bus
-   assign snoop_adr_o = m_bus[M_ADDR_MSB:M_ADDR_LSB];
+   assign snoop_adr_o = bus_adr;
    // Snoop on acknowledge and write. Mask with strobe to be sure
    // there actually is a something happing and no dangling signals
    // and always ack'ing slaves.
-   assign snoop_en_o = s_bus[S_ACK] & m_bus[M_STB] & m_bus[M_WE];
+   assign snoop_en_o = bus_ack & bus_stb & bus_we;
 
 endmodule // wb_bus_b3

@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:wb_interconnect:decode
+description = "Wishbone B3 decoder"
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/wb_decode.sv
+
