@@ -7,6 +7,7 @@ depend =
   optimsoc:lisnoc:mp_simple
   optimsoc:lisnoc:router
   optimsoc:base:config
+  optimsoc:wb_interconnect:decode
 
 # XXX. Fix import from lisnoc optimsoc:lisnoc:router should be only
 # lisnoc_add_file router/lisnoc_router_output_arbiter.v

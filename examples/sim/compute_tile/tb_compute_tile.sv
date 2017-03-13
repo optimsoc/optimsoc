@@ -68,6 +68,10 @@ module tb_compute_tile(
                       MEMORY_ACCESS: DISTRIBUTED,
                       LMEM_SIZE: LMEM_SIZE,
                       LMEM_STYLE: PLAIN,
+                      NA_ENABLE_MPSIMPLE: 1,
+                      NA_ENABLE_DMA: 1,
+                      NA_DMA_GENIRQ: 1,
+                      NA_DMA_ENTRIES: 4,
                       USE_DEBUG: 1'(USE_DEBUG),
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1

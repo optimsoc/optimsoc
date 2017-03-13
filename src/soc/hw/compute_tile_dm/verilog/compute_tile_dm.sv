@@ -78,9 +78,6 @@ module compute_tile_dm
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
    localparam NR_SLAVES = 3;
 
-   localparam NA_ENABLE_DMA = 1;
-   localparam DMA_ENTRIES = 4;
-
    mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
    wire wb_mem_clk_i, wb_mem_rst_i;
@@ -198,7 +195,7 @@ module compute_tile_dm
 
    generate
       for (c = 1; c < CONFIG.CORES_PER_TILE; c = c + 1) begin
-         assign pic_ints_i[c] = 31'h0;
+         assign pic_ints_i[c] = 32'h0;
       end
    endgenerate
 
@@ -470,21 +467,21 @@ module compute_tile_dm
              )
          u_ram(/*AUTOINST*/
                // Outputs
-               .wb_ack_o                   (wb_mem_ack_o),          // Templated
-               .wb_err_o                   (wb_mem_err_o),          // Templated
-               .wb_rty_o                   (wb_mem_rty_o),          // Templated
-               .wb_dat_o                   (wb_mem_dat_o),          // Templated
+               .wb_ack_o                (wb_mem_ack_o),          // Templated
+               .wb_err_o                (wb_mem_err_o),          // Templated
+               .wb_rty_o                (wb_mem_rty_o),          // Templated
+               .wb_dat_o                (wb_mem_dat_o),          // Templated
                // Inputs
-               .wb_adr_i                   (wb_mem_adr_i),          // Templated
-               .wb_bte_i                   (wb_mem_bte_i),          // Templated
-               .wb_cti_i                   (wb_mem_cti_i),          // Templated
-               .wb_cyc_i                   (wb_mem_cyc_i),          // Templated
-               .wb_dat_i                   (wb_mem_dat_i),          // Templated
-               .wb_sel_i                   (wb_mem_sel_i),          // Templated
-               .wb_stb_i                   (wb_mem_stb_i),          // Templated
-               .wb_we_i                    (wb_mem_we_i),           // Templated
-               .wb_clk_i                   (wb_mem_clk_i),          // Templated
-               .wb_rst_i                   (wb_mem_rst_i));                 // Templated
+               .wb_adr_i                (wb_mem_adr_i),          // Templated
+               .wb_bte_i                (wb_mem_bte_i),          // Templated
+               .wb_cti_i                (wb_mem_cti_i),          // Templated
+               .wb_cyc_i                (wb_mem_cyc_i),          // Templated
+               .wb_dat_i                (wb_mem_dat_i),          // Templated
+               .wb_sel_i                (wb_mem_sel_i),          // Templated
+               .wb_stb_i                (wb_mem_stb_i),          // Templated
+               .wb_we_i                 (wb_mem_we_i),           // Templated
+               .wb_clk_i                (wb_mem_clk_i),          // Templated
+               .wb_rst_i                (wb_mem_rst_i));                 // Templated
       end else begin // if ((CONFIG.MEMORY_ACCESS == DISTRIBUTED) &&...
          assign wb_ext_adr_i = wb_mem_adr_i;
          assign wb_ext_bte_i = wb_mem_bte_i;
@@ -501,37 +498,9 @@ module compute_tile_dm
       end // else: !if((CONFIG.MEMORY_ACCESS == DISTRIBUTED) &&...
    endgenerate
 
-   wire [DMA_ENTRIES:0] na_irq;
-
-   /*
-    *  +---+-..-+----+
-    *  |   dma  | mp |
-    *  +---+-..-+----+
-    * dma_entries 1  (0)
-    *
-    * map to irq lines of cpu
-    *
-    *  +----+-----+
-    *  | mp | dma |
-    *  +----+-----+
-    *    3     2
-    */
-   assign pic_ints_i[0][3:2] = {na_irq[0],|na_irq[DMA_ENTRIES:1]};
-
-
-   /* networkadapter_ct AUTO_TEMPLATE(
-    .clk(clk),
-    .rst(rst_sys),
-    .wbs_\(.*\)   (bussl_\1[1]),
-    .wbm_\(.*\)      (busms_\1[NR_MASTERS-1]),
-    .irq    (na_irq),
-    );*/
    networkadapter_ct
       #(.CONFIG(CONFIG),
         .TILEID(ID),
-        .ENABLE_MPSIMPLE(1),
-        .ENABLE_DMA(NA_ENABLE_DMA),
-        .DMA_ENTRIES(DMA_ENTRIES),
         .COREBASE(COREBASE))
       u_na(
 `ifdef OPTIMSOC_CLOCKDOMAINS
@@ -540,11 +509,10 @@ module compute_tile_dm
            .cdc_enable                   (cdc_enable),
  `endif
 `endif
-           /*AUTOINST*/
            // Outputs
-           .noc_in_ready                (noc_in_ready[(CONFIG.NOC_VCHANNELS)-1:0]),
-           .noc_out_flit                (noc_out_flit[(CONFIG.NOC_FLIT_WIDTH)-1:0]),
-           .noc_out_valid               (noc_out_valid[(CONFIG.NOC_VCHANNELS)-1:0]),
+           .noc_in_ready                (noc_in_ready[(CONFIG).NOC_VCHANNELS-1:0]),
+           .noc_out_flit                (noc_out_flit[(CONFIG).NOC_FLIT_WIDTH-1:0]),
+           .noc_out_valid               (noc_out_valid[(CONFIG).NOC_VCHANNELS-1:0]),
            .wbm_adr_o                   (busms_adr_o[NR_MASTERS-1]), // Templated
            .wbm_cyc_o                   (busms_cyc_o[NR_MASTERS-1]), // Templated
            .wbm_dat_o                   (busms_dat_o[NR_MASTERS-1]), // Templated
@@ -558,13 +526,13 @@ module compute_tile_dm
            .wbs_rty_o                   (bussl_rty_o[1]),        // Templated
            .wbs_err_o                   (bussl_err_o[1]),        // Templated
            .wbs_dat_o                   (bussl_dat_o[1]),        // Templated
-           .irq                         (na_irq),                // Templated
+           .irq                         (pic_ints_i[0][3:2]),
            // Inputs
            .clk                         (clk),                   // Templated
            .rst                         (rst_sys),               // Templated
-           .noc_in_flit                 (noc_in_flit[(CONFIG.NOC_FLIT_WIDTH)-1:0]),
-           .noc_in_valid                (noc_in_valid[(CONFIG.NOC_VCHANNELS)-1:0]),
-           .noc_out_ready               (noc_out_ready[(CONFIG.NOC_VCHANNELS)-1:0]),
+           .noc_in_flit                 (noc_in_flit[(CONFIG).NOC_FLIT_WIDTH-1:0]),
+           .noc_in_valid                (noc_in_valid[(CONFIG).NOC_VCHANNELS-1:0]),
+           .noc_out_ready               (noc_out_ready[(CONFIG).NOC_VCHANNELS-1:0]),
            .wbm_ack_i                   (busms_ack_i[NR_MASTERS-1]), // Templated
            .wbm_rty_i                   (busms_rty_i[NR_MASTERS-1]), // Templated
            .wbm_err_i                   (busms_err_i[NR_MASTERS-1]), // Templated

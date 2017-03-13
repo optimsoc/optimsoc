@@ -71,9 +71,7 @@ import optimsoc::*;
 module networkadapter_conf
   #(parameter config_t CONFIG = 'x,
     parameter TILEID = 'x,
-    parameter COREBASE = 'x,
-    parameter CONF_MPSIMPLE_PRESENT = 0,
-    parameter CONF_DMA_PRESENT = 0
+    parameter COREBASE = 'x
     )
   (
 `ifdef OPTIMSOC_CLOCKDOMAINS
@@ -169,8 +167,8 @@ module networkadapter_conf
            end
            REG_CONF: begin
               data = 32'h0000_0000;
-              data[REGBIT_CONF_MPSIMPLE] = CONF_MPSIMPLE_PRESENT;
-              data[REGBIT_CONF_DMA] = CONF_DMA_PRESENT;
+              data[REGBIT_CONF_MPSIMPLE] = CONFIG.NA_ENABLE_MPSIMPLE;
+              data[REGBIT_CONF_DMA] = CONFIG.NA_ENABLE_DMA;
            end
            REG_COREBASE: begin
               data = COREBASE;

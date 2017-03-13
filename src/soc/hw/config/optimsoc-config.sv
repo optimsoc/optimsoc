@@ -69,6 +69,12 @@ package optimsoc;
       integer            LMEM_SIZE;
       lmem_style_t       LMEM_STYLE;
 
+      // Network adapter configuration
+      integer            NA_ENABLE_MPSIMPLE;
+      integer            NA_ENABLE_DMA;
+      integer            NA_DMA_GENIRQ;
+      integer            NA_DMA_ENTRIES;
+
       // Debug configuration
       logic              USE_DEBUG;
       logic              DEBUG_STM;
@@ -101,6 +107,12 @@ package optimsoc;
       integer            LMEM_SIZE;
       lmem_style_t       LMEM_STYLE;
 
+      // Network adapter configuration
+      integer            NA_ENABLE_MPSIMPLE;
+      integer            NA_ENABLE_DMA;
+      integer            NA_DMA_GENIRQ;
+      integer            NA_DMA_ENTRIES;
+
       // Debug configuration
       logic              USE_DEBUG;
       logic              DEBUG_STM;
@@ -128,6 +140,10 @@ package optimsoc;
       derive_config.MEMORY_ACCESS = conf.MEMORY_ACCESS;
       derive_config.LMEM_SIZE = conf.LMEM_SIZE;
       derive_config.LMEM_STYLE = conf.LMEM_STYLE;
+      derive_config.NA_ENABLE_MPSIMPLE = conf.NA_ENABLE_MPSIMPLE;
+      derive_config.NA_ENABLE_DMA = conf.NA_ENABLE_DMA;
+      derive_config.NA_DMA_GENIRQ = conf.NA_DMA_GENIRQ;
+      derive_config.NA_DMA_ENTRIES = conf.NA_DMA_ENTRIES;
       derive_config.USE_DEBUG = conf.USE_DEBUG;
       derive_config.DEBUG_STM = conf.DEBUG_STM;
       derive_config.DEBUG_CTM = conf.DEBUG_CTM;
