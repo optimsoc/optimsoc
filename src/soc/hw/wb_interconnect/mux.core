@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:wb_interconnect:mux
+description = "Wishbone B3 multiplexer"
+
+[fileset src_files]
+file_type = verilogSource
+usage = sim synth
+files =
+  verilog/wb_mux.sv
+  verilog/wb_interconnect_arb_rr.v

@@ -2,10 +2,14 @@ CAPI=1
 [main]
 name = optimsoc:wb_interconnect:bus
 description = "Wishbone B3 bus"
+depend =
+  optimsoc:wb_interconnect:mux
+  optimsoc:wb_interconnect:decode
 
 [fileset src_files]
 file_type = verilogSource
 usage = sim synth
 files =
   verilog/wb_bus_b3.v
-  verilog/wb_interconnect_arb_rr.v
+
+
