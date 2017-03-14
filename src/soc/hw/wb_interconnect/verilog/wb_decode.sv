@@ -172,7 +172,7 @@ module wb_decode
    endgenerate
    
    // If two s_select are high or none, we might have an bus error
-   wire 			   bus_error;
+   wire                            bus_error;
    assign bus_error = ~^s_select;
 
    wire                            m_ack, m_err, m_rty;
@@ -180,7 +180,7 @@ module wb_decode
    // Mux the slave bus based on the slave select signal (one hot!)
    always @(*) begin : bus_s_mux
       integer i;
-      m_dat_o = {DATA_WIDTH{1'bz}};
+      m_dat_o = {DATA_WIDTH{1'b0}};
       m_ack = 1'bz;
       m_err = 1'bz;
       m_rty = 1'bz;
@@ -196,7 +196,7 @@ module wb_decode
          s_stb_o[i] = m_stb_i & s_select[i];
 
          if (s_select[i]) begin
-            m_dat_o = s_dat_i[(i+1)*DATA_WIDTH-1 -: DATA_WIDTH];
+            m_dat_o = s_dat_i[i*DATA_WIDTH +: DATA_WIDTH];
             m_ack = s_ack_i[i];
             m_err = s_err_i[i];
             m_rty = s_rty_i[i];
