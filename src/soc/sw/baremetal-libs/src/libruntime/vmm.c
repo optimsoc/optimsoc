@@ -728,7 +728,7 @@ optimsoc_page_dir_t optimsoc_vmm_dir_copy(uint32_t remote_tile,
 
                     local_table[table_index] = pte;
 
-                    void *remote_page = OR1K_ADDR_PN_SET(0, OR1K_PTE_PPN_GET(remote_table[table_index]));
+                    void *remote_page = (void *) OR1K_ADDR_PN_SET(0, OR1K_PTE_PPN_GET(remote_table[table_index]));
 
                     printf("copy page %p (tile %u) to local page %p\n",
                            remote_page, (unsigned) remote_tile, local_page);
