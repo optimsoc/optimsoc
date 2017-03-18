@@ -1,7 +1,0 @@
-libruntime_la-context-asm.lo: context-asm.S \
- /opt/optimsoc/toolchains/or1k-elf-multicore/or1k-elf/include/or1k-sprs.h \
- /opt/optimsoc/toolchains/or1k-elf-multicore/or1k-elf/include/or1k-asm.h
-
-/opt/optimsoc/toolchains/or1k-elf-multicore/or1k-elf/include/or1k-sprs.h:
-
-/opt/optimsoc/toolchains/or1k-elf-multicore/or1k-elf/include/or1k-asm.h:
