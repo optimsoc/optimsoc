@@ -714,7 +714,7 @@ optimsoc_page_dir_t optimsoc_vmm_dir_copy(uint32_t remote_tile,
                 table_index ++) {
 
                 if (OR1K_PTE_PRESENT_GET(remote_table[table_index])) {
-                    void *local_page = (uint32_t)(page_alloc_fnc)() << 13;
+                    void *local_page = (void *)((uint32_t)(page_alloc_fnc)() << 13);
 
                     uint32_t ppn = OR1K_PTE_PPN_GET(local_page);
                     uint32_t pte = OR1K_PTE_PPN_SET(0, ppn);
@@ -730,8 +730,8 @@ optimsoc_page_dir_t optimsoc_vmm_dir_copy(uint32_t remote_tile,
 
                     void *remote_page = OR1K_ADDR_PN_SET(0, OR1K_PTE_PPN_GET(remote_table[table_index]));
 
-                    printf("copy page %p (tile %d) to local page %p\n",
-                           remote_page, remote_tile, local_page);
+                    printf("copy page %p (tile %u) to local page %p\n",
+                           remote_page, (unsigned) remote_tile, local_page);
 
                     optimsoc_dma_transfer(local_page,
                                           remote_tile,
