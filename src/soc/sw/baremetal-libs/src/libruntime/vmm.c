@@ -58,9 +58,9 @@
 #define OR1K_ADDR_PN_LSB           13
 
 /*! Get page number in address */
-#define OR1K_ADDR_PN_GET(addr) (addr >> OR1K_ADDR_PN_LSB)
+#define OR1K_ADDR_PN_GET(addr) ((addr) >> OR1K_ADDR_PN_LSB)
 /*! Set page number in address */
-#define OR1K_ADDR_PN_SET(addr,pn) (addr | ((pn & 0x7ffff) << OR1K_ADDR_PN_LSB))
+#define OR1K_ADDR_PN_SET(addr,pn) ((addr) | (((pn) & 0x7ffff) << OR1K_ADDR_PN_LSB))
 
 /*! The number of bits for the offset */
 #define OR1K_ADDR_OFFSET_BITS       13
@@ -70,9 +70,9 @@
 #define OR1K_ADDR_OFFSET_LSB        0
 
 /*! Get the offset in address */
-#define OR1K_ADDR_OFFSET_GET(addr) (addr & 0x1fff)
+#define OR1K_ADDR_OFFSET_GET(addr) ((addr) & 0x1fff)
 /*! Set the offset in address */
-#define OR1K_ADDR_OFFSET_SET(addr,offset) (addr | (offset & 0x1fff))
+#define OR1K_ADDR_OFFSET_SET(addr,offset) ((addr) | ((offset) & 0x1fff))
 
 // The VPN-to-PPN translation is generally done using a table (as it is fast
 // and it allows to do it also in hardware). We would therefore need a table
