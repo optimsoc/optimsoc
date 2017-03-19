@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <inttypes.h>
 
 #include "include/optimsoc-runtime.h"
 #include "vmm.h"
@@ -58,9 +59,9 @@
 #define OR1K_ADDR_PN_LSB           13
 
 /*! Get page number in address */
-#define OR1K_ADDR_PN_GET(addr) (addr >> OR1K_ADDR_PN_LSB)
+#define OR1K_ADDR_PN_GET(addr) ((addr) >> OR1K_ADDR_PN_LSB)
 /*! Set page number in address */
-#define OR1K_ADDR_PN_SET(addr,pn) (addr | ((pn & 0x7ffff) << OR1K_ADDR_PN_LSB))
+#define OR1K_ADDR_PN_SET(addr,pn) ((addr) | (((pn) & 0x7ffff) << OR1K_ADDR_PN_LSB))
 
 /*! The number of bits for the offset */
 #define OR1K_ADDR_OFFSET_BITS       13
@@ -70,9 +71,9 @@
 #define OR1K_ADDR_OFFSET_LSB        0
 
 /*! Get the offset in address */
-#define OR1K_ADDR_OFFSET_GET(addr) (addr & 0x1fff)
+#define OR1K_ADDR_OFFSET_GET(addr) ((addr) & 0x1fff)
 /*! Set the offset in address */
-#define OR1K_ADDR_OFFSET_SET(addr,offset) (addr | (offset & 0x1fff))
+#define OR1K_ADDR_OFFSET_SET(addr,offset) ((addr) | ((offset) & 0x1fff))
 
 // The VPN-to-PPN translation is generally done using a table (as it is fast
 // and it allows to do it also in hardware). We would therefore need a table
@@ -714,7 +715,7 @@ optimsoc_page_dir_t optimsoc_vmm_dir_copy(uint32_t remote_tile,
                 table_index ++) {
 
                 if (OR1K_PTE_PRESENT_GET(remote_table[table_index])) {
-                    void *local_page = (uint32_t)(page_alloc_fnc)() << 13;
+                    void *local_page = (void *)((uint32_t)(page_alloc_fnc)() << 13);
 
                     uint32_t ppn = OR1K_PTE_PPN_GET(local_page);
                     uint32_t pte = OR1K_PTE_PPN_SET(0, ppn);
@@ -728,9 +729,9 @@ optimsoc_page_dir_t optimsoc_vmm_dir_copy(uint32_t remote_tile,
 
                     local_table[table_index] = pte;
 
-                    void *remote_page = OR1K_ADDR_PN_SET(0, OR1K_PTE_PPN_GET(remote_table[table_index]));
+                    void *remote_page = (void *) OR1K_ADDR_PN_SET(0, OR1K_PTE_PPN_GET(remote_table[table_index]));
 
-                    printf("copy page %p (tile %d) to local page %p\n",
+                    printf("copy page %p (tile %"PRIx32") to local page %p\n",
                            remote_page, remote_tile, local_page);
 
                     optimsoc_dma_transfer(local_page,
