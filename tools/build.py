@@ -44,6 +44,7 @@ import os
 import subprocess
 import shutil
 import sys
+import multiprocessing
 
 ###############################################################################
 # Logging
@@ -267,6 +268,7 @@ def build_tools(options):
     src = options.src
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
+    nthreads = multiprocessing.cpu_count()
 
     info("Build host tools")
 
@@ -284,7 +286,7 @@ def build_tools(options):
     # Build the utils (bin2vmem currently)
     info("  + Build")
     ensure_directory(utilsobjdir)
-    makecmd = "make -C {} OBJDIR={}".format(utilssrcdir, utilsobjdir)
+    makecmd = "make -j {} -C {} OBJDIR={}".format(nthreads, utilssrcdir, utilsobjdir)
     run_command(makecmd, cwd=utilsobjdir)
 
     # Copy build artifacts
@@ -323,6 +325,7 @@ def build_soc_software(options):
     src = options.src
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
+    nthreads = multiprocessing.cpu_count()
 
     info("Build SoC software")
     check_autotools()
@@ -357,7 +360,7 @@ def build_soc_software(options):
         run_command(cmd, cwd=libobjdir)
 
         info("  + Build")
-        cmd = "make"
+        cmd = "make -j {}".format(nthreads)
         run_command(cmd, cwd=libobjdir)
 
         info("  + Install build artifacts")
@@ -488,6 +491,7 @@ def build_docs(options):
     src = options.src
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
+    nthreads = multiprocessing.cpu_count()
 
     info("Build and install documentation")
 
@@ -499,7 +503,7 @@ def build_docs(options):
     ensure_directory(user_guide_objdir)
 
     info(" + Build")
-    cmd="make pdf OBJDIR={}".format(user_guide_objdir)
+    cmd="make -j {} pdf OBJDIR={}".format(nthreads, user_guide_objdir)
     run_command(cmd, cwd=user_guide_srcdir)
 
     info(" + Install build artifacts")
@@ -573,6 +577,7 @@ def build_externals_glip_software(options):
     src = options.src
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
+    nthreads = multiprocessing.cpu_count()
 
     src = os.path.join(src, "external", "glip")
     objdir = os.path.join(objdir, "external", "glip")
@@ -596,7 +601,7 @@ def build_externals_glip_software(options):
     run_command(cmd, cwd=objdir)
 
     info(" + Build")
-    cmd = "make"
+    cmd = "make -j {}".format(nthreads)
     run_command(cmd, cwd=objdir)
 
     info(" + Install build artifacts")
@@ -624,6 +629,7 @@ def build_externals_opensocdebug_software(options, env):
     src = options.src
     objdir = options.objdir
     dist = os.path.join(objdir, "dist")
+    nthreads = multiprocessing.cpu_count()
 
     src = os.path.join(src, "external", "opensocdebug", "software")
     objdir = os.path.join(objdir, "external", "opensocdebug", "software")
@@ -647,7 +653,7 @@ def build_externals_opensocdebug_software(options, env):
     run_command(cmd, cwd=objdir, env=env)
 
     info(" + Build")
-    cmd = "make"
+    cmd = "make -j {}".format(nthreads)
     run_command(cmd, cwd=objdir, env=env)
 
     info(" + Install build artifacts")
