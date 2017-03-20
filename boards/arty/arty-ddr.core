@@ -7,4 +7,4 @@ depend =
 usage = vivado
 files =
   ip/mig_7series.xci[file_type=xci]
-  ip/mig_a.prj[file_type=data]
+  ip/mig_a.prj[file_type=user]
