@@ -3,7 +3,6 @@ import importlib
 import logging
 import os
 import shutil
-import subprocess
 
 from ipyxact.ipyxact import Component
 from fusesoc import section
@@ -11,7 +10,7 @@ from fusesoc import utils
 from fusesoc.config import Config
 from fusesoc.fusesocconfigparser import FusesocConfigParser
 from fusesoc.plusargs import Plusargs
-from fusesoc.system import System
+from fusesoc.vlnv import Vlnv
 
 logger = logging.getLogger(__name__)
 
@@ -22,22 +21,15 @@ class FileSet(object):
         self.usage   = usage
         self.private = private
 
-class OptionSectionMissing(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
 class Core:
-    def __init__(self, core_file=None, name=None, core_root=None):
-        if core_file:
-            basename = os.path.basename(core_file)
+    def __init__(self, core_file):
+        basename = os.path.basename(core_file)
         self.depend = []
         self.simulators = []
 
         self.plusargs = None
         self.provider = None
-        self.system   = None
+        self.backend  = None
 
         for s in section.SECTION_MAP:
             assert(not hasattr(self, s))
@@ -50,69 +42,70 @@ class Core:
         self.files_root = self.core_root
 
         self.export_files = []
-        if core_file:
 
-            config = FusesocConfigParser(core_file)
+        config = FusesocConfigParser(core_file)
 
-            #FIXME : Make simulators part of the core object
-            self.simulator        = config.get_section('simulator')
+        #Add .system options to .core file
+        system_file = os.path.join(self.core_root, basename.split('.core')[0]+'.system')
+        if os.path.exists(system_file):
+            self._merge_system_file(system_file, config)
 
-            for s in section.load_all(config, core_file):
-                if type(s) == tuple:
-                    _l = getattr(self, s[0].TAG)
-                    _l[s[1]] = s[0]
-                    setattr(self, s[0].TAG, _l)
-                else:
-                    setattr(self, s.TAG, s)
+        #FIXME : Make simulators part of the core object
+        self.simulator        = config.get_section('simulator')
+        if not 'toplevel' in self.simulator:
+            self.simulator['toplevel'] = 'orpsoc_tb'
 
-            if self.main.name:
-                self.name = self.main.name
+        for s in section.load_all(config, core_file):
+            if type(s) == tuple:
+                _l = getattr(self, s[0].TAG)
+                _l[s[1]] = s[0]
+                setattr(self, s[0].TAG, _l)
             else:
-                self.name = basename.split('.core')[0]
+                setattr(self, s.TAG, s)
 
-            self.sanitized_name = self.name.replace(":", "_")
-
-            self.depend     = self.main.depend
-            self.simulators = self.main.simulators
-
-            self._collect_filesets()
-
-            cache_root = os.path.join(Config().cache_root, self.sanitized_name)
-            if config.has_section('plusargs'):
-                utils.pr_warn("plusargs section is deprecated and will not be parsed by FuseSoC. Please migrate to parameters in " + str(self.name))
-                self.plusargs = Plusargs(dict(config.items('plusargs')))
-            if config.has_section('provider'):
-                items    = dict(config.items('provider'))
-
-                provider_name = items.get('name')
-                if provider_name is None:
-                    raise RuntimeError('Missing "name" in section [provider]')
-                try:
-                    provider_module = importlib.import_module(
-                            'fusesoc.provider.%s' % provider_name)
-                    self.provider = provider_module.PROVIDER_CLASS(self.name,
-                        items, self.core_root, cache_root)
-                except ImportError:
-                    raise
-            if self.provider:
-                self.files_root = self.provider.files_root
-
-            # We need the component file here, but it might not be
-            # available until the core is fetched. Try to fetch first if any
-            # of the component files are missing
-            if False in [os.path.exists(f) for f in self.main.component]:
-                self.setup()
-
-            for f in self.main.component:
-                self._parse_component(os.path.join(self.files_root, f))
-
-            system_file = os.path.join(self.core_root, basename.split('.core')[0]+'.system')
-            if os.path.exists(system_file):
-                self.system = System(system_file)
+        if self.main.name:
+            self.name = Vlnv(self.main.name)
         else:
-            self.name = name
-            self.provider = None
+            self.name = Vlnv(basename.split('.core')[0])
 
+        self.sanitized_name = self.name.sanitized_name
+
+        self.depend     = self.main.depend
+        self.simulators = self.main.simulators
+
+        if self.main.backend:
+            self.backend = getattr(self, self.main.backend)
+
+        self._collect_filesets()
+
+        cache_root = os.path.join(Config().cache_root, self.sanitized_name)
+        if config.has_section('plusargs'):
+            utils.pr_warn("plusargs section is deprecated and will not be parsed by FuseSoC. Please migrate to parameters in " + str(self.name))
+            self.plusargs = Plusargs(dict(config.items('plusargs')))
+        if config.has_section('provider'):
+            items    = dict(config.items('provider'))
+
+            provider_name = items.get('name')
+            if provider_name is None:
+                raise RuntimeError('Missing "name" in section [provider]')
+            try:
+                provider_module = importlib.import_module(
+                        'fusesoc.provider.%s' % provider_name)
+                self.provider = provider_module.PROVIDER_CLASS(
+                    items, self.core_root, cache_root)
+            except ImportError:
+                raise
+        if self.provider:
+            self.files_root = self.provider.files_root
+
+        # We need the component file here, but it might not be
+        # available until the core is fetched. Try to fetch first if any
+        # of the component files are missing
+        if False in [os.path.exists(f) for f in self.main.component]:
+            self.setup()
+
+        for f in self.main.component:
+            self._parse_component(os.path.join(self.files_root, f))
 
     def cache_status(self):
         if self.provider:
@@ -172,62 +165,128 @@ class Core:
                 logger.debug("  applying patch file: " + patch_file + "\n" +
                              "                   to: " + os.path.join(dst_dir))
                 try:
-                    subprocess.call(['patch','-p1', '-s',
-                                     '-d', os.path.join(dst_dir),
-                                     '-i', patch_file])
+                    utils.Launcher('git', ['apply', '--unsafe-paths',
+                                     '--directory', os.path.join(dst_dir),
+                                     patch_file]).run()
                 except OSError:
                     print("Error: Failed to call external command 'patch'")
                     return False
         return True
 
+    def _merge_system_file(self, system_file, config):
+        def _replace(sec, src=None, dst=None):
+            if not system.has_section(sec):
+                return
+
+            if not config.has_section(sec):
+                config.add_section(sec)
+
+            if src:
+                if system.has_option(sec, src):
+                    items = [src]
+                else:
+                    items = []
+            else:
+                items = system.options(sec)
+
+            for item in items:
+                if dst:
+                    _dst = dst
+                else:
+                    _dst = item
+                if not config.has_option(sec, _dst):
+                    config.set(sec, _dst, system.get(sec, item))
+
+        system = FusesocConfigParser(system_file)
+        for section in ['icestorm', 'ise', 'quartus', 'vivado']:
+            _replace(section)
+
+        _replace('main', 'backend')
+        _replace('scripts', 'pre_build_scripts' , 'pre_synth_scripts')
+        _replace('scripts', 'post_build_scripts', 'post_impl_scripts')
+
     def _collect_filesets(self):
+        def _append_files(section, file_type, is_include_file=False):
+            _files = []
+            for f in section:
+                if not f.file_type:
+                    f.file_type = file_type
+                f.is_include_file = is_include_file
+                _files.append(f)
+            return _files
 
         self.file_sets = []
 
-        if self.verilog:
-            _files = []
-            for f in self.verilog.include_files:
-                if not f.file_type:
-                    f.file_type = self.verilog.file_type
-                f.is_include_file = True
-                _files.append(f)
-            for f in self.verilog.src_files:
-                if not f.file_type:
-                    f.file_type = self.verilog.file_type
-                _files.append(f)
-
+        _v = self.verilog
+        if _v:
+            _files  = _append_files(_v.include_files, _v.file_type, True)
+            _files += _append_files(_v.src_files, _v.file_type)
             self.file_sets.append(FileSet(name  = "verilog_src_files",
                                           file  = _files,
                                           usage = ['sim', 'synth']))
 
-            _files = []
-            for f in self.verilog.tb_include_files:
-                if not f.file_type:
-                    f.file_type = self.verilog.file_type
-                    f.is_include_file = True
-                _files.append(f)
-            for f in self.verilog.tb_src_files:
-                if not f.file_type:
-                    f.file_type = self.verilog.file_type
-                _files.append(f)
+            _files  = _append_files(_v.tb_include_files, _v.file_type, True)
+            _files += _append_files(_v.tb_src_files, _v.file_type)
             self.file_sets.append(FileSet(name  = "verilog_tb_src_files",
                                           file  = _files,
                                           usage = ['sim']))
-
-            _files = []
-            for f in self.verilog.tb_private_src_files:
-                if not f.file_type:
-                    f.file_type = self.verilog.file_type
-                _files.append(f)
+            _files  = _append_files(_v.tb_private_src_files, _v.file_type)
             self.file_sets.append(FileSet(name    = "verilog_tb_private_src_files",
                                           file    = _files,
                                           usage   = ['sim'],
                                           private = True))
+
+
         for k, v in self.fileset.items():
             self.file_sets.append(FileSet(name = k,
                                           file = v.files,
                                           usage = v.usage,
                                           private = (v.scope == 'private')))
+
+        _bname = self.main.backend
+        _b = self.backend
+        if _b and _bname in ['icestorm', 'ise', 'quartus']:
+            _files = []
+            if _bname == 'icestorm':
+                _files += _append_files(_b.pcf_file, 'PCF')
+                del(_b.pcf_file)
+            elif _bname == 'ise':
+                _files += _append_files(_b.tcl_files, 'tclSource')
+                _files += _append_files(_b.ucf_files, 'UCF')
+                del(_b.ucf_files)
+            elif _bname == 'quartus':
+                _files += _append_files(_b.qsys_files, 'QSYS')
+                _files += _append_files(_b.sdc_files, 'SDC')
+                _files += _append_files(_b.tcl_files, 'tclSource')
+                del(_b.qsys_files)
+            if _files:
+                self.file_sets.append(FileSet(name = "backend_files",
+                                              file = _files,
+                                              usage = [_bname],
+                                              private = True))
+                self.export_files += [f.name for f in _files]
+        if self.verilator:
+            if self.verilator.source_type == 'CPP':
+                _file_type = 'cppSource'
+            elif self.verilator.source_type == 'systemC':
+                _file_type = 'systemCSource'
+            elif self.verilator.source_type in ['', 'C']:
+                _file_type = 'cSource'
+            else:
+                raise RuntimeError("Invalid verilator file type '{}'".format(self.verilator.source_type))
+            _files  = _append_files(self.verilator.src_files, _file_type)
+            _files += _append_files(self.verilator.include_files, _file_type, True)
+            self.file_sets.append(FileSet(name = "verilator_src_files",
+                                          file = _files,
+                                          usage = ['verilator']))
+            self.export_files += [f.name for f in _files]
+
+            _files  = _append_files(self.verilator.tb_toplevel, _file_type)
+            self.file_sets.append(FileSet(name = "verilator_tb_toplevel",
+                                          file = _files,
+                                          usage = ['verilator'],
+                                          private = True))
+            self.export_files += [f.name for f in _files]
 
     def _parse_component(self, component_file):
         component = Component()
@@ -264,24 +323,26 @@ class Core:
         show_dict = lambda d: show_list(["%s: %s" % (k, d[k]) for k in d.keys()])
 
         print("CORE INFO")
-        print("Name:                   " + self.name)
+        print("Name:                   " + str(self.name))
         print("Core root:              " + self.core_root)
         if self.simulators:
             print("Supported simulators:   " + show_list(self.simulators))
         if self.plusargs: 
             print("\nPlusargs:               " + show_dict(self.plusargs.items))
         if self.depend:
-            print("\nCommon dependencies:    " + show_list(self.depend))
+            print("\nCommon dependencies : " + ' '.join([x.depstr() for x in self.depend]))
+
         for s in section.SECTION_MAP:
             if s in ['main', 'verilog']:
                 continue
             obj = getattr(self, s)
             if obj:
-                print("== " + s + " ==")
                 if(type(obj) == OrderedDict):
                     for k, v in obj.items():
-                        print(str(k))
+                        print("== " + s + " " + k + " ==")
+                        print(v)
                 else:
+                    print("== " + s + " ==")
                     print(obj)
         print("File sets:")
         for s in self.file_sets:
@@ -298,4 +359,7 @@ class Core:
                 for f in s.file:
                     print("  {} {} {}".format(f.name.ljust(_longest_name),
                                               f.file_type.ljust(_longest_type),
-                                              f.is_include_file))
+                                              "(include file)" if f.is_include_file else ""))
+        if self.main.backend:
+            print("\n== Backend " + self.main.backend + " ==")
+            print(self.backend)

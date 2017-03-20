@@ -1,0 +1,262 @@
+
+fileset
+-------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|file_type | String | Default file type of the files in fileset
+|files | Space-separated list of files | List of files in fileset
+|is_include_file | String | Specify all files in fileset as include files
+|logical_name | String | Default logical_name (e.g. library) of the files in fileset
+|scope | String | Visibility of fileset (private/public). Private filesets are only visible when this core is the top-level. Public filesets are visible also for cores that depend on this core. Default is public
+|usage | Space-separated list | List of tags describing when this fileset should be used. Can be general such as sim or synth, or tool-specific such as quartus, verilator, icarus. Defaults to 'sim synth'.
+|==============================
+
+
+
+ghdl
+----
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|analyze_options | Space-separated list | Extra GHDL analyzer options
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|run_options | Space-separated list | Extra GHDL run options
+|==============================
+
+
+
+icarus
+------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|iverilog_options | Space-separated list | Extra Icarus verilog compile options
+|==============================
+
+
+
+icestorm
+--------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|arachne_pnr_options | Space-separated list | arachne-pnr options
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|pcf_file | Space-separated list of files | Physical constraint file
+|top_module | String | RTL top-level module
+|==============================
+
+
+
+ise
+---
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|device | String | FPGA device identifier
+|family | String | FPGA device family
+|package | String | FPGA device package
+|speed | String | FPGA device speed grade
+|tcl_files | Space-separated list of files | Extra TCL scripts
+|top_module | String | RTL top-level module
+|ucf_files | Space-separated list of files | UCF constraint files
+|==============================
+
+
+
+isim
+----
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|isim_options | Space-separated list | Extra Isim compile options
+|==============================
+
+
+
+main
+----
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|backend | String | Backend for FPGA implementation
+|component | Space-separated list of paths | Core IP-Xact component file
+|depend | Space-separated list of VLNV identifiers | Common dependencies
+|description | String | Core description
+|name | String | Component name
+|patches | Space-separated list | FuseSoC-specific patches
+|simulators | Space-separated list | Supported simulators. Valid values are icarus, modelsim, verilator, isim and xsim. Each simulator have a dedicated section desribed elsewhere in this document
+|==============================
+
+
+
+modelsim
+--------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|vlog_options | Space-separated list | Additional arguments for vlog
+|vsim_options | Space-separated list | Additional arguments for vsim
+|==============================
+
+
+
+parameter
+---------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|datatype | String | Data type of argument (int, str, bool, file
+|default | String | Default value of argument
+|description | String | Parameter description
+|paramtype | String | Type of parameter (plusarg, vlogparam, generic, cmdlinearg
+|scope | String | Visibility of parameter. Private parameters are only visible when this core is the top-level. Public parameters are visible also when this core is pulled in as a dependency of another core
+|==============================
+
+
+
+quartus
+-------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|device | String | FPGA device identifier
+|family | String | FPGA device family
+|qsys_files | Space-separated list of files | Qsys IP description files
+|quartus_options | String | Quartus command-line options
+|sdc_files | Space-separated list of files | SDC constraint files
+|tcl_files | Space-separated list of files | Extra script files
+|top_module | String | RTL top-level module
+|==============================
+
+
+
+rivierapro
+----------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|vlog_options | Space-separated list | Additional arguments for vlog
+|vsim_options | Space-separated list | Additional arguments for vsim
+|==============================
+
+
+
+scripts
+-------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|post_impl_scripts | Space-separated list | Scripts to run after backend implementation
+|post_run_scripts | Space-separated list | Scripts to run after simulations
+|pre_build_scripts | Space-separated list | Scripts to run before building
+|pre_run_scripts | Space-separated list | Scripts to run before running simulations
+|pre_synth_scripts | Space-separated list | Scripts to run before backend synthesis
+|==============================
+
+
+
+verilator
+---------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|cli_parser | String | Select CLI argument parser. Set to 'fusesoc' to handle parameter sections like other simulators. Set to 'passthrough' to send the arguments directly to the verilated model. Default is 'passthrough'
+|define_files | Space-separated list of paths | Verilog include files containing `define directives to be converted to C #define directives in corresponding .h files
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|include_files | Space-separated list of files | Verilator testbench C include files
+|libs | Space-separated list of paths | External libraries linked with the generated model
+|source_type | String | Testbench source code language (Legal values are systemC, C, CPP. Default is C)
+|src_files | Space-separated list of files | Verilator testbench C/cpp/sysC source files
+|tb_toplevel | String | Testbench top-level C/C++/SC file
+|top_module | String | verilog top-level module
+|verilator_options | Space-separated list | Verilator build options
+|==============================
+
+
+
+verilog
+-------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|file_type | String | Default file type of the files in fileset
+|include_files | Space-separated list of files | Verilog include files
+|src_files | Space-separated list of files | Verilog source files for synthesis/simulation
+|tb_include_files | Space-separated list of files | Testbench include files
+|tb_private_src_files | Space-separated list of files | Verilog source files that are only used in the core's own testbench. Not visible to other cores
+|tb_src_files | Space-separated list of files | Verilog source files that are only used in simulation. Visible to other cores
+|==============================
+
+
+
+vhdl
+----
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|src_files | Space-separated list of paths | VHDL source files for simulation and synthesis
+|==============================
+
+
+
+vivado
+------
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|hw_device | String | FPGA device identifier
+|part | String | FPGA device part
+|top_module | String | RTL top-level module
+|==============================
+
+
+
+vpi
+---
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|include_files | Space-separated list of files | C include files for VPI library
+|libs | Space-separated list | External libraries linked with the VPI library
+|src_files | Space-separated list of files | C source files for VPI library
+|==============================
+
+
+
+xsim
+----
+
+[cols="2,1,5",options="header"]
+|==============================
+|Name | Type | Description
+|depend | Space-separated list of VLNV identifiers | Tool-specific Dependencies
+|xsim_options | Space-separated list | Extra Xsim compile options
+|==============================
+
+

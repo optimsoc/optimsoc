@@ -1,24 +1,11 @@
 import os
 from fusesoc.simulator.simulator import Simulator
 import logging
-from fusesoc.utils import Launcher, pr_err
+from fusesoc.utils import Launcher, pr_err, pr_warn
 
 logger = logging.getLogger(__name__)
 
 class Isim(Simulator):
-
-    TOOL_NAME = 'ISIM'
-    def __init__(self, system):
-
-        self.cores = []
-        self.isim_options = []
-
-        if system.isim is not None:
-            self.isim_options = system.isim.isim_options
-        super(Isim, self).__init__(system)
-
-
-
 
     def configure(self, args):
         super(Isim, self).configure(args)
@@ -26,7 +13,7 @@ class Isim(Simulator):
 
     def _write_config_files(self):
         isim_file = 'isim.prj'
-        f1 = open(os.path.join(self.sim_root,isim_file),'w')
+        f1 = open(os.path.join(self.work_root,isim_file),'w')
         self.incdirs = set()
         src_files = []
 
@@ -36,12 +23,8 @@ class Isim(Simulator):
 		                      "verilogSource-95",
 		                      "verilogSource-2001"]:
                 f1.write('verilog work ' + src_file.name + '\n')
-            elif src_file.file_type in ["vhdlSource",
-                                        "vhdlSource-87",
-                                        "vhdlSource-93"]:
+            elif src_file.file_type.startswith("vhdlSource"):
                 f1.write('vhdl work ' + src_file.logical_name + " " + src_file.name + '\n')
-            elif src_file.file_type in ['vhdlSource-2008']:
-                f1.write('vhdl2008 ' + src_file.logical_name + " " + src_file.name + '\n')
             elif src_file.file_type in ["systemVerilogSource",
                                         "systemVerilogSource-3.0",
                                         "systemVerilogSource-3.1",
@@ -55,7 +38,7 @@ class Isim(Simulator):
         f1.close()
 
         tcl_file = 'isim.tcl'
-        f2 = open(os.path.join(self.sim_root,tcl_file),'w')
+        f2 = open(os.path.join(self.work_root,tcl_file),'w')
         f2.write('wave log -r /\n')
         f2.write('run all\n')
         f2.close()
@@ -79,10 +62,11 @@ class Isim(Simulator):
 
         for key, value in self.vlogparam.items():
             args += ['--generic_top', '{}={}'.format(key, value)]
-        args += self.isim_options
+        if self.system.isim is not None:
+            args += self.system.isim.isim_options
 
         Launcher('fuse', args,
-                 cwd      = self.sim_root,
+                 cwd      = self.work_root,
                  errormsg = "Failed to compile Isim simulation model").run()
 
     def run(self, args):
@@ -100,7 +84,7 @@ class Isim(Simulator):
         #FIXME Top-level parameters
 
         Launcher('./fusesoc.elf', args,
-                 cwd = self.sim_root,
+                 cwd = self.work_root,
                  errormsg = "Failed to run Isim simulation").run()
 
         super(Isim, self).done(args)
