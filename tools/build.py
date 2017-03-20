@@ -397,28 +397,28 @@ def build_examples_sim(options, env):
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_singlecore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
         "options": "--NUM_CORES 1" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_dualcore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
         "options": "--NUM_CORES 2" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_quadcore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
         "options": "--NUM_CORES 4" },
 
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore",
         "path": "system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ],
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc" ],
         "options": "--NUM_CORES 2"},
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore_debug",
         "path": "system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ],
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc" ],
         "options": "--NUM_CORES 2 --USE_DEBUG 1"},
     ]
 
@@ -671,16 +671,11 @@ def build_externals_fusesoc(options):
 
     info("Build and install our private copy of FuseSoC")
 
-    info(" + Copy sources")
-    srcdir = os.path.join(src, "external", "fusesoc", "fusesoc")
+    info(" + Install")
+    srcdir = os.path.join(src, "external", "fusesoc")
     distdir = os.path.join(dist, "tools", "fusesoc")
-    file_copytree(srcdir, distdir)
-
-
-    info(" + Copy ipyxact module as dependency into fusesoc")
-    srcdir = os.path.join(src, "external", "fusesoc-ipyxact", "ipyxact")
-    distdir = os.path.join(dist, "tools", "fusesoc", "ipyxact")
-    file_copytree(srcdir, distdir)
+    cmd = "pip install -t {} .".format(distdir)
+    run_command(cmd, cwd=srcdir)
 
     info(" + Create optimsoc-fusesoc wrapper script")
     bindistdir  = os.path.join(dist, "host", "bin")
@@ -691,7 +686,7 @@ def build_externals_fusesoc(options):
     fusesoc_wrapper = open(fusesoc_wrapper_file, "w")
     fusesoc_wrapper.write("""#!/bin/sh
 test -z "$OPTIMSOC" && (echo 'The environment variable $OPTIMSOC must be set.' >&2; exit 1)
-exec python3 $OPTIMSOC/tools/fusesoc/main.py $@
+exec python $OPTIMSOC/tools/fusesoc/fusesoc/main.py $@
 """)
     os.chmod(fusesoc_wrapper_file, 0o755)
 
