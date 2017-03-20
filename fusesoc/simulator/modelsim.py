@@ -36,28 +36,18 @@ clean_{name}:
 
 class Modelsim(Simulator):
 
-    TOOL_NAME = 'MODELSIM'
-    def __init__(self, system):
+    def __init__(self, system, export):
 
-        self.vlog_options = []
-        self.vsim_options = []
-        self.run_default_args = ['-quiet', '-c', '-do', 'run -all']
-
-        if system.modelsim is not None:
-            self.vlog_options = system.modelsim.vlog_options
-            self.vsim_options = system.modelsim.vsim_options
-            if system.modelsim.run_default_args:
-                self.run_default_args = system.modelsim.run_default_args
-        super(Modelsim, self).__init__(system)
+        super(Modelsim, self).__init__(system, export)
         self.model_tech = os.getenv('MODEL_TECH')
         if not self.model_tech:
             raise RuntimeError("Environment variable MODEL_TECH was not found. It should be set to <modelsim install path>/bin")
 
     def _write_build_rtl_tcl_file(self, tcl_main):
-        tcl_build_rtl  = open(os.path.join(self.sim_root, "fusesoc_build_rtl.tcl"), 'w')
+        tcl_build_rtl  = open(os.path.join(self.work_root, "fusesoc_build_rtl.tcl"), 'w')
 
         (src_files, incdirs) = self._get_fileset_files(['sim', 'modelsim'])
-        vlog_include_dirs = ['+incdir+'+d for d in incdirs]
+        vlog_include_dirs = ['+incdir+'+d.replace('\\','/') for d in incdirs]
 
         libs = []
         for f in src_files:
@@ -66,33 +56,30 @@ class Modelsim(Simulator):
             if not f.logical_name in libs:
                 tcl_build_rtl.write("vlib {}\n".format(f.logical_name))
                 libs.append(f.logical_name)
-            if f.file_type in ["verilogSource",
-		               "verilogSource-95",
-		               "verilogSource-2001",
-		               "verilogSource-2005"]:
+            if f.file_type.startswith("verilogSource") or \
+               f.file_type.startswith("systemVerilogSource"):
                 cmd = 'vlog'
-                args = self.vlog_options[:]
-                args += vlog_include_dirs
-            elif f.file_type in ["systemVerilogSource",
-			         "systemVerilogSource-3.0",
-			         "systemVerilogSource-3.1",
-			         "systemVerilogSource-3.1a"]:
-                cmd = 'vlog'
-                args = self.vlog_options[:]
-                args += ['-sv']
-                args += vlog_include_dirs
-            elif f.file_type == 'vhdlSource':
-                cmd = 'vcom'
                 args = []
-            elif f.file_type == 'vhdlSource-87':
+
+                if self.system.modelsim is not None:
+                    args += self.system.modelsim.vlog_options
+
+                for k, v in self.vlogdefine.items():
+                    args += ['+define+{}={}'.format(k,v)]
+
+                if f.file_type.startswith("systemVerilogSource"):
+                    args += ['-sv']
+                args += vlog_include_dirs
+            elif f.file_type.startswith("vhdlSource"):
                 cmd = 'vcom'
-                args = ['-87']
-            elif f.file_type == 'vhdlSource-93':
-                cmd = 'vcom'
-                args = ['-93']
-            elif f.file_type == 'vhdlSource-2008':
-                cmd = 'vcom'
-                args = ['-2008']
+                if f.file_type.endswith("-87"):
+                    args = ['-87']
+                if f.file_type.endswith("-93"):
+                    args = ['-93']
+                if f.file_type.endswith("-2008"):
+                    args = ['-2008']
+                else:
+                    args = []
             elif f.file_type == 'tclSource':
                 cmd = None
                 tcl_main.write("do {}\n".format(f.name))
@@ -107,11 +94,34 @@ class Modelsim(Simulator):
                 if not Config().verbose:
                     args += ['-quiet']
                 args += ['-work', f.logical_name]
-                args += [f.name]
+                args += [f.name.replace('\\','/')]
                 tcl_build_rtl.write("{} {}\n".format(cmd, ' '.join(args)))
 
+    def _write_run_tcl_file(self):
+        tcl_run = open(os.path.join(self.work_root, "fusesoc_run.tcl"), 'w')
+
+        #FIXME: Handle failures. Save stdout/stderr
+        vpi_options = []
+        for vpi_module in self.vpi_modules:
+            vpi_options += ['-pli', vpi_module['name']]
+
+        args = ['vsim']
+        if self.system.modelsim is not None:
+            args += self.system.modelsim.vsim_options
+        args += vpi_options
+        args += self.toplevel.split()
+
+        # Plusargs
+        for key, value in self.plusarg.items():
+            args += ['+{}={}'.format(key, value)]
+        #Top-level parameters
+        for key, value in self.vlogparam.items():
+            args += ['-g{}={}'.format(key, value)]
+        tcl_run.write(' '.join(args)+'\n')
+        tcl_run.close()
+
     def _write_vpi_makefile(self):
-        vpi_make = open(os.path.join(self.sim_root, "Makefile"), 'w')
+        vpi_make = open(os.path.join(self.work_root, "Makefile"), 'w')
         _vpi_inc = self.model_tech+'/../include'
         _modules = [m['name'] for m in self.vpi_modules]
         _clean_targets = ' '.join(["clean_"+m for m in _modules])
@@ -137,7 +147,7 @@ class Modelsim(Simulator):
 
     def configure(self, args):
         super(Modelsim, self).configure(args)
-        tcl_main = open(os.path.join(self.sim_root, "fusesoc_main.tcl"), 'w')
+        tcl_main = open(os.path.join(self.work_root, "fusesoc_main.tcl"), 'w')
         tcl_main.write("do fusesoc_build_rtl.tcl\n")
 
         self._write_build_rtl_tcl_file(tcl_main)
@@ -145,36 +155,22 @@ class Modelsim(Simulator):
             self._write_vpi_makefile()
             tcl_main.write("make\n")
         tcl_main.close()
+        self._write_run_tcl_file()
+
 
     def build(self):
         super(Modelsim, self).build()
         args = ['-c', '-do', 'do fusesoc_main.tcl; exit']
         Launcher(self.model_tech+'/vsim', args,
-                 cwd      = self.sim_root,
-                 errormsg = "Failed to build simulation model. Log is available in '{}'".format(os.path.join(self.sim_root, 'transcript'))).run()
+                 cwd      = self.work_root,
+                 errormsg = "Failed to build simulation model. Log is available in '{}'".format(os.path.join(self.work_root, 'transcript'))).run()
 
     def run(self, args):
         super(Modelsim, self).run(args)
 
-        #FIXME: Handle failures. Save stdout/stderr
-        vpi_options = []
-        for vpi_module in self.vpi_modules:
-            vpi_options += ['-pli', vpi_module['name']]
-
-        args = self.run_default_args
-        args += self.vsim_options
-        args += vpi_options
-        args += [self.toplevel]
-
-        # Plusargs
-        for key, value in self.plusarg.items():
-            args += ['+{}={}'.format(key, value)]
-        #Top-level parameters
-        for key, value in self.vlogparam.items():
-            args += ['-g{}={}'.format(key, value)]
-
+        args = ['-c', '-quiet', '-do', 'fusesoc_run.tcl', '-do', 'run -all']
         Launcher(self.model_tech+'/vsim', args,
-                 cwd      = self.sim_root,
-                 errormsg = "Simulation failed. Simulation log is available in '{}'".format(os.path.join(self.sim_root, 'transcript'))).run()
+                 cwd      = self.work_root,
+                 errormsg = "Simulation failed. Simulation log is available in '{}'".format(os.path.join(self.work_root, 'transcript'))).run()
 
         super(Modelsim, self).done(args)

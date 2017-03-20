@@ -5,26 +5,16 @@ from fusesoc.utils import Launcher, pr_warn
 
 logger = logging.getLogger(__name__)
 
-class SimulatorIcarus(Simulator):
-
-    TOOL_NAME = 'ICARUS'
-    def __init__(self, system):
-
-        self.cores = []
-        self.iverilog_options = []
-
-        if system.icarus is not None:
-            self.iverilog_options = system.icarus.iverilog_options
-        super(SimulatorIcarus, self).__init__(system)
+class Icarus(Simulator):
 
     def configure(self, args):
-        super(SimulatorIcarus, self).configure(args)
+        super(Icarus, self).configure(args)
         self._write_config_files()
 
     def _write_config_files(self):
         icarus_file = 'icarus.scr'
 
-        f = open(os.path.join(self.sim_root,icarus_file),'w')
+        f = open(os.path.join(self.work_root,icarus_file),'w')
 
         incdirs = set()
         src_files = []
@@ -50,7 +40,7 @@ class SimulatorIcarus(Simulator):
         f.close()
 
     def build(self):
-        super(SimulatorIcarus, self).build()
+        super(Icarus, self).build()
         
         #Build VPI modules
         for vpi_module in self.vpi_modules:
@@ -61,8 +51,8 @@ class SimulatorIcarus(Simulator):
             args += vpi_module['src_files']
 
             Launcher('iverilog-vpi', args,
-                     stderr   = open(os.path.join(self.sim_root,vpi_module['name']+'.log'),'w'),
-                     cwd      = os.path.join(self.sim_root),
+                     stderr   = open(os.path.join(self.work_root,vpi_module['name']+'.log'),'w'),
+                     cwd      = os.path.join(self.work_root),
                      errormsg = "Failed to compile VPI library " + vpi_module['name']).run()
                                       
         #Build simulation model
@@ -70,16 +60,25 @@ class SimulatorIcarus(Simulator):
         args += ['-s'+s for s in self.toplevel.split(' ')]
         args += ['-c', 'icarus.scr']
         args += ['-o', 'fusesoc.elf']
+
+        for key, value in self.vlogdefine.items():
+            args += ['-D{}={}'.format(key, value)]
+
         for key, value in self.vlogparam.items():
+            #Workaround since Icarus treats all unqouted strings containing 'e' as floats
+            if value == "true":
+                value = "\"true\""
+            print("'{}' '{}'".format(key, value))
             args += ['-P{}.{}={}'.format(self.toplevel, key, value)]
-        args += self.iverilog_options
+        if self.system.icarus is not None:
+            args += self.system.icarus.iverilog_options
 
         Launcher('iverilog', args,
-                 cwd      = self.sim_root,
+                 cwd      = self.work_root,
                  errormsg = "Failed to compile Icarus Simulation model").run()
         
     def run(self, args):
-        super(SimulatorIcarus, self).run(args)
+        super(Icarus, self).run(args)
 
         #FIXME: Handle failures. Save stdout/stderr.
         args = []
@@ -95,7 +94,7 @@ class SimulatorIcarus(Simulator):
             args += ['+{}={}'.format(key, value)]
         #FIXME Top-level parameters
         Launcher('vvp', args,
-                 cwd = self.sim_root,
+                 cwd = self.work_root,
                  errormsg = "Failed to run Icarus Simulation").run()
 
-        super(SimulatorIcarus, self).done(args)
+        super(Icarus, self).done(args)
