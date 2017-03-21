@@ -85,6 +85,8 @@ class Verilator(Simulator):
             f.write('--exe\n')
             f.write('\n'.join(opt_c_files))
             f.write('\n')
+            f.write('\n'.join(['-G{}={}'.format(key, value) for key, value in self.vlogparam.items()]))
+            f.write('\n')
 
         with open(os.path.join(self.work_root, 'Makefile'), 'w') as makefile:
             makefile.write(MAKEFILE_TEMPLATE)
