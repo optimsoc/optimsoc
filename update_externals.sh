@@ -26,7 +26,7 @@ git subtree pull -m "Update external/fusesoc" --prefix external/fusesoc https://
 git subtree pull -m "Update external/opensocdebug/software" --prefix external/opensocdebug/software https://github.com/opensocdebug/software.git master --squash
 
 # opensocdebug/hardware: OSD hardware
-git subtree pull -m "Update external/opensocdebug/hardware" --prefix external/opensocdebug/hardware https://github.com/opensocdebug/hardware.git mam-sync --squash
+git subtree pull -m "Update external/opensocdebug/hardware" --prefix external/opensocdebug/hardware https://github.com/opensocdebug/hardware.git master --squash
 
 # reapply our changes to the working directory
 [ $WD_HAS_CHANGES == 1 ] && git stash pop
