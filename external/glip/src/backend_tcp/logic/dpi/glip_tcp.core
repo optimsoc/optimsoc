@@ -6,7 +6,7 @@ depend = glip:common:channel
 
 [fileset src_files]
 file_type = systemVerilogSource
-usage = sim
+usage = sim synth
 files =
   glip_tcp_toplevel.sv
 
