@@ -430,7 +430,7 @@ def build_examples_sim(options, env):
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} sim --build-only optimsoc:examples:{} {}".format(buildsrcdir, ex["name"], ex["options"])
+        cmd = "fusesoc --verbose --monochrome --cores-root {} sim --build-only optimsoc:examples:{} {}".format(buildsrcdir, ex["name"], ex["options"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Copy build artifacts")
@@ -472,7 +472,7 @@ def build_examples_fpga(options, env):
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        cmd = "fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{}".format(buildsrcdir, ex["name"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Copy build artifacts")
@@ -653,43 +653,6 @@ def build_externals_opensocdebug_software(options, env):
     info(" + Install build artifacts")
     cmd = "make install prefix={}".format(dist)
     run_command(cmd, cwd=objdir, env=env)
-
-
-""" Build and install our private copy of FuseSoC
-
-We don't "build" or "install" fusesoc using setuptools, pip or any other of the
-numerous options in python to install things. All those methods output
-directories which depend on a specific python version, in addition to a specific
-OS and architecture.
-Instead, just copying the fusesoc sources and calling them directly works just
-fine.
-"""
-def build_externals_fusesoc(options):
-    src = options.src
-    objdir = options.objdir
-    dist = os.path.join(objdir, "dist")
-
-    info("Build and install our private copy of FuseSoC")
-
-    info(" + Install")
-    srcdir = os.path.join(src, "external", "fusesoc")
-    distdir = os.path.join(dist, "tools", "fusesoc")
-    cmd = "pip install -t {} .".format(distdir)
-    run_command(cmd, cwd=srcdir)
-
-    info(" + Create optimsoc-fusesoc wrapper script")
-    bindistdir  = os.path.join(dist, "host", "bin")
-    ensure_directory(bindistdir)
-
-    fusesoc_wrapper_file = "{}/optimsoc-fusesoc".format(bindistdir)
-
-    fusesoc_wrapper = open(fusesoc_wrapper_file, "w")
-    fusesoc_wrapper.write("""#!/bin/sh
-test -z "$OPTIMSOC" && (echo 'The environment variable $OPTIMSOC must be set.' >&2; exit 1)
-exec python $OPTIMSOC/tools/fusesoc/fusesoc/main.py $@
-""")
-    os.chmod(fusesoc_wrapper_file, 0o755)
-
 
 """Setup the OpTiMSoC environment variables pointing towards the dist directory
 
@@ -895,9 +858,6 @@ if __name__ == '__main__':
 
         if options.with_docs:
             build_docs(options)
-
-        # External dependencies
-        build_externals_fusesoc(options)
 
         # Additional hardware
         build_externals_lisnoc(options)

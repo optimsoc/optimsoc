@@ -29,9 +29,8 @@ The great benefit of using FuseSoC is that you can now simply compile and run th
 
 Before we start, two notes:
 \begin{itemize}
- \item OpTiMSoC uses a slightly modified version of FuseSoC. You can call it by running \verb|optimsoc-fusesoc|.
  \item We set an environment variable (\verb|$FUSESOC_CORES|) during the installation that makes FuseSoC find all OpTiMSoC hardware modules. You do not need to add a special configuration for this. However, the examples inside \verb|$OPTIMSOC_SOURCE| are not part of this search path.
- \item You can call \verb|optimsoc-fusesoc| from any directory. We recommend \textbf{not} calling FuseSoC from inside your source directory. (This allows you to just delete the build folder and retain a clean source folder.)
+ \item You can call \verb|fusesoc| from any directory. We recommend \textbf{not} calling FuseSoC from inside your source directory. (This allows you to just delete the build folder and retain a clean source folder.)
 \end{itemize}
 
 So let's look at a couple of examples how to build a SoC hardware with fusesoc.
@@ -45,29 +44,29 @@ All the examples require an OpTiMSoC source tree to be available at \verb|$OPTIM
 \item Build and run a Verilator-based simulation of a single compute tile.
 \begin{lstlisting}
 cd some/directory
-optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim optimsoc:examples:compute_tile_sim
+fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim optimsoc:examples:compute_tile_sim
 \end{lstlisting}
 
 \item Only build a Verilator simulation of a single compute tile
 \begin{lstlisting}
-optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim
+fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim
 \end{lstlisting}
 
 \item Set the parameter \verb|NUM_CORES| to 2 to create a system with two CPU cores inside the compute tile.
   You can have a look inside the top-level source file \path{$OPTIMSOC_SOURCE/examples/sim/compute_tile/tb_compute_tile.sv} for other parameters that are available.
 \begin{lstlisting}
-optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim --NUM_CORES 2
+fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim --NUM_CORES 2
 \end{lstlisting}
 
 \item Synthesize a 2x2 system with four compute tiles for the Nexys 4 DDR board using Xilinx Vivado.
 This step requires Vivado to be installed and working, and a lot of time (approx. 30 minutes, depending on your machine).
 \begin{lstlisting}
-optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples build optimsoc:examples:system_2x2_cccc_nexys4ddr
+fusesoc --cores-root $OPTIMSOC_SOURCE/examples build optimsoc:examples:system_2x2_cccc_nexys4ddr
 \end{lstlisting}
 
 \item Now flash the bitstream that the previous step generated to the FPGA.
 \begin{lstlisting}
-optimsoc-fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
+fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
 \end{lstlisting}
 \end{enumerate}
 

@@ -27,10 +27,20 @@ First, install all required packages from Ubuntu.
 
 \begin{lstlisting}[language=sh]
 sudo apt-get -y install curl git build-essential tcl libusb-1.0-0-dev \
-  libboost-dev libelf-dev swig python3 python3-yaml
+  libboost-dev libelf-dev swig python3 python3-yaml python3-pip
 
 # optional, but highly recommended: a waveform viewer
 sudo apt-get -y install gtkwave
+\end{lstlisting}
+
+We build our systems with
+\href{https://github.com/olofk/fusesoc}{FuseSoC}, which is a package
+manager for RTL designs. It automatically arranges the sources and
+writes project files for our systems. You can install it simply from
+the Python package index:
+
+\begin{lstlisting}[language=sh]
+sudo pip3 install fusesoc
 \end{lstlisting}
 
 Additionally, we need two things which are not available as Ubuntu packages right now: a recent version of Verilator, and the or1k-elf-multicore toolchain (compiler, C library, debugger, etc.).

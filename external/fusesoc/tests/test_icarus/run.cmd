@@ -1,1 +1,0 @@
--M. -l icarus.log -melf-loader_0 fusesoc.elf -lxt2 +plusarg_bool=true +plusarg_int=42 +plusarg_str=hello
