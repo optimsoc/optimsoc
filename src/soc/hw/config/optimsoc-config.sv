@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 by the author(s)
+/* Copyright (c) 2016-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,10 +59,6 @@ package optimsoc;
       // NoC-related configuration
       integer            NOC_DATA_WIDTH;
       integer            NOC_TYPE_WIDTH;
-      integer            NOC_VCHANNELS;
-      integer            NOC_VC_MPSIMPLE;
-      integer            NOC_VC_DMA_REQ;
-      integer            NOC_VC_DMA_RESP;
 
       // Tile configuration
       mem_access_t       MEMORY_ACCESS;
@@ -95,12 +91,9 @@ package optimsoc;
       // NoC-related configuration
       integer            NOC_DATA_WIDTH;
       integer            NOC_TYPE_WIDTH;
-      integer            NOC_VCHANNELS;
-      integer            NOC_VC_MPSIMPLE;
-      integer            NOC_VC_DMA_REQ;
-      integer            NOC_VC_DMA_RESP;
       // -> derived
       integer            NOC_FLIT_WIDTH; // Must be DATA_WIDTH+TYPE_WIDTH
+      integer            NOC_VCHANNELS;
 
       // Tile configuration
       mem_access_t       MEMORY_ACCESS;
@@ -133,10 +126,6 @@ package optimsoc;
       derive_config.GMEM_TILE = conf.GMEM_TILE;
       derive_config.NOC_DATA_WIDTH = conf.NOC_DATA_WIDTH;
       derive_config.NOC_TYPE_WIDTH = conf.NOC_TYPE_WIDTH;
-      derive_config.NOC_VCHANNELS = conf.NOC_VCHANNELS;
-      derive_config.NOC_VC_MPSIMPLE = conf.NOC_VC_MPSIMPLE;
-      derive_config.NOC_VC_DMA_REQ = conf.NOC_VC_DMA_REQ;
-      derive_config.NOC_VC_DMA_RESP = conf.NOC_VC_DMA_RESP;
       derive_config.MEMORY_ACCESS = conf.MEMORY_ACCESS;
       derive_config.LMEM_SIZE = conf.LMEM_SIZE;
       derive_config.LMEM_STYLE = conf.LMEM_STYLE;
@@ -156,6 +145,9 @@ package optimsoc;
                                            conf.CORES_PER_TILE) * conf.USE_DEBUG;
       derive_config.DEBUG_NUM_MODS = (1 + conf.NUMCTS *
                                       derive_config.DEBUG_MODS_PER_TILE) * conf.USE_DEBUG;
+
+      // Constants
+      derive_config.NOC_VCHANNELS = 2;
    endfunction // DERIVE_CONFIG
 
 endpackage // optimsoc

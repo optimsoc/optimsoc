@@ -8,6 +8,9 @@ depend =
   optimsoc:lisnoc:router
   optimsoc:base:config
   optimsoc:wb_interconnect:decode
+  optimsoc:noc:mux
+  optimsoc:noc:demux
+  optimsoc:noc:buffer
 
 # XXX. Fix import from lisnoc optimsoc:lisnoc:router should be only
 # lisnoc_add_file router/lisnoc_router_output_arbiter.v
