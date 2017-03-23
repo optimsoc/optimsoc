@@ -621,7 +621,12 @@ def build_externals_glip_software(options):
     info(" + Configure")
     ensure_directory(objdir)
 
-    cmd = "{}/configure --prefix={} --enable-cypressfx2 --enable-jtag --enable-tcp".format(src, prefix)
+    cmd = ("{}/configure "
+        "--prefix={} "
+        "--enable-cypressfx2 "
+        "--enable-jtag "
+        "--enable-uart "
+        "--enable-tcp").format(src, prefix)
     run_command(cmd, cwd=objdir)
 
     info(" + Build")
