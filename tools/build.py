@@ -873,6 +873,7 @@ if __name__ == '__main__':
     # ensure absolute paths for source and object directories
     options.src = os.path.abspath(options.src)
     options.objdir = os.path.abspath(options.objdir)
+    ensure_directory(options.objdir)
 
     # open the build log file
     build_log_fp = open(os.path.join(options.objdir, 'build.log'), 'w');
