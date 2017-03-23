@@ -49,20 +49,29 @@ import multiprocessing
 ###############################################################################
 # Logging
 
-"""Print debug message
+# build log file handle
+build_log_fp = None
+
+"""Print and log a debug message
 
 If verbose logging is enabled, prints an debug message prepended by (D)
-on the command line. Otherwise nothing is done.
+on the command line.
+In any case, the message is also added to the build log.
 """
 def dbg(msg):
+    write_to_build_log(msg+"\n")
+
     if logging_verbose:
         print("(D) {}".format(msg))
 
-"""Print info message
+"""Print and log a info message
 
-Prints an info message prepended by (I) on the command line
+Prints an info message prepended by (I) on the command line.
+Also adds the same message to the build log.
 """
 def info(msg):
+    write_to_build_log(msg+"\n")
+
     # we only print bold in verbose mode to make our messages more visible
     if console_colors and logging_verbose:
         print("\033[1m(I) {}\033[0m".format(msg))
@@ -71,9 +80,12 @@ def info(msg):
 
 """Print warning message
 
-Prints a warning message prepended by (W) on the command line
+Prints a warning message prepended by (W) on the command line.
+Also adds the same message to the build log.
 """
 def warn(msg):
+    write_to_build_log(msg+"\n")
+
     if console_colors:
         print("\033[93m(W) {}\033[0m".format(msg))
     else:
@@ -81,9 +93,12 @@ def warn(msg):
 
 """Print error message
 
-Prints an error message prepended by (E) on the command line
+Prints an error message prepended by (E) on the command line.
+Also adds the same message to the build log.
 """
 def error(msg):
+    write_to_build_log(msg+"\n")
+
     if console_colors:
         print("\033[91m(E) {}\033[0m".format(msg))
     else:
@@ -91,11 +106,21 @@ def error(msg):
 
 """Print fatal message
 
-Cause a fatal error, print a message prepended by (E) and exit
+Cause a fatal error, print a message prepended by (E) and exit.
+Also adds the same message to the build log.
 """
 def fatal(msg):
     error(msg)
+    build_log_fp.close()
     exit(1)
+
+def write_to_build_log(msg):
+    # The log file is opened early in the process, but possibly not early
+    # enough. In this case, messages only go to stdout/stderr.
+    if not build_log_fp:
+        return
+    build_log_fp.write(msg)
+
 
 ###############################################################################
 # Checks
@@ -182,25 +207,24 @@ def run_command(cmd, **kwargs):
     try:
         dbg("Executing command:\n{}".format(cmd))
 
-        if not logging_verbose:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT,
-                                    universal_newlines=True,
-                                    shell=True, **kwargs)
-        else:
+        popen = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
+                                 universal_newlines=True,
+                                 shell=True, **kwargs)
+        stdout_lines = iter(popen.stdout.readline, "")
+        for stdout_line in stdout_lines:
+            # always write the subprocess output to the build log
+            write_to_build_log(stdout_line)
+
             # In verbose mode, we forward all output of the executed command
             # to the user directly to make debugging easier.
-            popen = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT,
-                                     universal_newlines=True,
-                                     shell=True, **kwargs)
-            stdout_lines = iter(popen.stdout.readline, "")
-            for stdout_line in stdout_lines:
+            if logging_verbose:
                 print(stdout_line, end="")
 
-            popen.stdout.close()
-            return_code = popen.wait()
-            if return_code != 0:
-                raise subprocess.CalledProcessError(return_code, cmd)
+        popen.stdout.close()
+        return_code = popen.wait()
+        if return_code != 0:
+            raise subprocess.CalledProcessError(return_code, cmd)
     except subprocess.CalledProcessError as e:
         fatal("Error {}\n{}".format(e, e.output))
 
@@ -845,6 +869,9 @@ if __name__ == '__main__':
     options.src = os.path.abspath(options.src)
     options.objdir = os.path.abspath(options.objdir)
 
+    # open the build log file
+    build_log_fp = open(os.path.join(options.objdir, 'build.log'), 'w');
+
     info("Building OpTiMSoC")
     info(" version: {}".format(options.version))
     info(" source: {}".format(options.src))
@@ -894,7 +921,9 @@ if __name__ == '__main__':
             build_examples_fpga(options, env)
 
     except Exception as e:
+
         if logging_verbose:
+            build_log_fp.close()
             raise
         else:
             fatal(e)
@@ -903,3 +932,4 @@ if __name__ == '__main__':
     info("Build finished.")
     distdir = os.path.join(options.objdir, "dist")
     info("All build artifacts are available at {}".format(distdir))
+    build_log_fp.close()
