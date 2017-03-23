@@ -485,10 +485,10 @@ def build_examples_fpga(options, env):
     examples = [
       { "name": "compute_tile_nexys4ddr",
         "path": "nexys4ddr/compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr.bit" ] },
+        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr.bit" ] },
       { "name": "system_2x2_cccc_nexys4ddr",
         "path": "nexys4ddr/system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_nexys4ddr/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr.bit" ] },
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr.bit" ] },
     ]
 
     for ex in examples:
