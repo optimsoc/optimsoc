@@ -1,5 +1,5 @@
-#include "obj_dir/Vtb_compute_tile__Syms.h"
-#include "obj_dir/Vtb_compute_tile__Dpi.h"
+#include "Vtb_compute_tile__Syms.h"
+#include "Vtb_compute_tile__Dpi.h"
 
 #include <VerilatedToplevel.h>
 #include <VerilatedControl.h>

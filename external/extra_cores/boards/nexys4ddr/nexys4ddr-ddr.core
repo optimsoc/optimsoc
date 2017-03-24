@@ -8,4 +8,4 @@ depend =
 usage = vivado xsim
 files =
   ip/mig_7series.xci[file_type=xci]
-  ip/mig_config.prj[file_type=data]
+  ip/mig_config.prj[file_type=user]

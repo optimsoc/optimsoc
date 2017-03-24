@@ -49,20 +49,29 @@ import multiprocessing
 ###############################################################################
 # Logging
 
-"""Print debug message
+# build log file handle
+build_log_fp = None
+
+"""Print and log a debug message
 
 If verbose logging is enabled, prints an debug message prepended by (D)
-on the command line. Otherwise nothing is done.
+on the command line.
+In any case, the message is also added to the build log.
 """
 def dbg(msg):
+    write_to_build_log(msg+"\n")
+
     if logging_verbose:
         print("(D) {}".format(msg))
 
-"""Print info message
+"""Print and log a info message
 
-Prints an info message prepended by (I) on the command line
+Prints an info message prepended by (I) on the command line.
+Also adds the same message to the build log.
 """
 def info(msg):
+    write_to_build_log(msg+"\n")
+
     # we only print bold in verbose mode to make our messages more visible
     if console_colors and logging_verbose:
         print("\033[1m(I) {}\033[0m".format(msg))
@@ -71,9 +80,12 @@ def info(msg):
 
 """Print warning message
 
-Prints a warning message prepended by (W) on the command line
+Prints a warning message prepended by (W) on the command line.
+Also adds the same message to the build log.
 """
 def warn(msg):
+    write_to_build_log(msg+"\n")
+
     if console_colors:
         print("\033[93m(W) {}\033[0m".format(msg))
     else:
@@ -81,9 +93,12 @@ def warn(msg):
 
 """Print error message
 
-Prints an error message prepended by (E) on the command line
+Prints an error message prepended by (E) on the command line.
+Also adds the same message to the build log.
 """
 def error(msg):
+    write_to_build_log(msg+"\n")
+
     if console_colors:
         print("\033[91m(E) {}\033[0m".format(msg))
     else:
@@ -91,11 +106,21 @@ def error(msg):
 
 """Print fatal message
 
-Cause a fatal error, print a message prepended by (E) and exit
+Cause a fatal error, print a message prepended by (E) and exit.
+Also adds the same message to the build log.
 """
 def fatal(msg):
     error(msg)
+    build_log_fp.close()
     exit(1)
+
+def write_to_build_log(msg):
+    # The log file is opened early in the process, but possibly not early
+    # enough. In this case, messages only go to stdout/stderr.
+    if not build_log_fp:
+        return
+    build_log_fp.write(msg)
+
 
 ###############################################################################
 # Checks
@@ -182,25 +207,24 @@ def run_command(cmd, **kwargs):
     try:
         dbg("Executing command:\n{}".format(cmd))
 
-        if not logging_verbose:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT,
-                                    universal_newlines=True,
-                                    shell=True, **kwargs)
-        else:
+        popen = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
+                                 universal_newlines=True,
+                                 shell=True, **kwargs)
+        stdout_lines = iter(popen.stdout.readline, "")
+        for stdout_line in stdout_lines:
+            # always write the subprocess output to the build log
+            write_to_build_log(stdout_line)
+
             # In verbose mode, we forward all output of the executed command
             # to the user directly to make debugging easier.
-            popen = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT,
-                                     universal_newlines=True,
-                                     shell=True, **kwargs)
-            stdout_lines = iter(popen.stdout.readline, "")
-            for stdout_line in stdout_lines:
+            if logging_verbose:
                 print(stdout_line, end="")
 
-            popen.stdout.close()
-            return_code = popen.wait()
-            if return_code != 0:
-                raise subprocess.CalledProcessError(return_code, cmd)
+        popen.stdout.close()
+        return_code = popen.wait()
+        if return_code != 0:
+            raise subprocess.CalledProcessError(return_code, cmd)
     except subprocess.CalledProcessError as e:
         fatal("Error {}\n{}".format(e, e.output))
 
@@ -400,28 +424,28 @@ def build_examples_sim(options, env):
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_singlecore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
         "options": "--NUM_CORES 1" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_dualcore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
         "options": "--NUM_CORES 2" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_quadcore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim/sim-verilator/obj_dir/Vtb_compute_tile" ],
+        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
         "options": "--NUM_CORES 4" },
 
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore",
         "path": "system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ],
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc" ],
         "options": "--NUM_CORES 2"},
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore_debug",
         "path": "system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim/sim-verilator/obj_dir/Vtb_system_2x2_cccc" ],
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc" ],
         "options": "--NUM_CORES 2 --USE_DEBUG 1"},
     ]
 
@@ -433,7 +457,7 @@ def build_examples_sim(options, env):
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} sim --build-only optimsoc:examples:{} {}".format(buildsrcdir, ex["name"], ex["options"])
+        cmd = "fusesoc --verbose --monochrome --cores-root {} sim --build-only optimsoc:examples:{} {}".format(buildsrcdir, ex["name"], ex["options"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Copy build artifacts")
@@ -461,10 +485,10 @@ def build_examples_fpga(options, env):
     examples = [
       { "name": "compute_tile_nexys4ddr",
         "path": "nexys4ddr/compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr.bit" ] },
+        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit" ] },
       { "name": "system_2x2_cccc_nexys4ddr",
         "path": "nexys4ddr/system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_nexys4ddr/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr.bit" ] },
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit" ] },
     ]
 
     for ex in examples:
@@ -475,7 +499,7 @@ def build_examples_fpga(options, env):
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "optimsoc-fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        cmd = "fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{}".format(buildsrcdir, ex["name"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Copy build artifacts")
@@ -597,7 +621,12 @@ def build_externals_glip_software(options):
     info(" + Configure")
     ensure_directory(objdir)
 
-    cmd = "{}/configure --prefix={} --enable-cypressfx2 --enable-jtag --enable-tcp".format(src, prefix)
+    cmd = ("{}/configure "
+        "--prefix={} "
+        "--enable-cypressfx2 "
+        "--enable-jtag "
+        "--enable-uart "
+        "--enable-tcp").format(src, prefix)
     run_command(cmd, cwd=objdir)
 
     info(" + Build")
@@ -659,48 +688,6 @@ def build_externals_opensocdebug_software(options, env):
     info(" + Install build artifacts")
     cmd = "make install prefix={}".format(dist)
     run_command(cmd, cwd=objdir, env=env)
-
-
-""" Build and install our private copy of FuseSoC
-
-We don't "build" or "install" fusesoc using setuptools, pip or any other of the
-numerous options in python to install things. All those methods output
-directories which depend on a specific python version, in addition to a specific
-OS and architecture.
-Instead, just copying the fusesoc sources and calling them directly works just
-fine.
-"""
-def build_externals_fusesoc(options):
-    src = options.src
-    objdir = options.objdir
-    dist = os.path.join(objdir, "dist")
-
-    info("Build and install our private copy of FuseSoC")
-
-    info(" + Copy sources")
-    srcdir = os.path.join(src, "external", "fusesoc", "fusesoc")
-    distdir = os.path.join(dist, "tools", "fusesoc")
-    file_copytree(srcdir, distdir)
-
-
-    info(" + Copy ipyxact module as dependency into fusesoc")
-    srcdir = os.path.join(src, "external", "fusesoc-ipyxact", "ipyxact")
-    distdir = os.path.join(dist, "tools", "fusesoc", "ipyxact")
-    file_copytree(srcdir, distdir)
-
-    info(" + Create optimsoc-fusesoc wrapper script")
-    bindistdir  = os.path.join(dist, "host", "bin")
-    ensure_directory(bindistdir)
-
-    fusesoc_wrapper_file = "{}/optimsoc-fusesoc".format(bindistdir)
-
-    fusesoc_wrapper = open(fusesoc_wrapper_file, "w")
-    fusesoc_wrapper.write("""#!/bin/sh
-test -z "$OPTIMSOC" && (echo 'The environment variable $OPTIMSOC must be set.' >&2; exit 1)
-exec python3 $OPTIMSOC/tools/fusesoc/main.py $@
-""")
-    os.chmod(fusesoc_wrapper_file, 0o755)
-
 
 """Setup the OpTiMSoC environment variables pointing towards the dist directory
 
@@ -886,6 +873,10 @@ if __name__ == '__main__':
     # ensure absolute paths for source and object directories
     options.src = os.path.abspath(options.src)
     options.objdir = os.path.abspath(options.objdir)
+    ensure_directory(options.objdir)
+
+    # open the build log file
+    build_log_fp = open(os.path.join(options.objdir, 'build.log'), 'w');
 
     info("Building OpTiMSoC")
     info(" version: {}".format(options.version))
@@ -906,9 +897,6 @@ if __name__ == '__main__':
 
         if options.with_docs:
             build_docs(options)
-
-        # External dependencies
-        build_externals_fusesoc(options)
 
         # Additional hardware
         build_externals_lisnoc(options)
@@ -939,7 +927,9 @@ if __name__ == '__main__':
             build_examples_fpga(options, env)
 
     except Exception as e:
+
         if logging_verbose:
+            build_log_fp.close()
             raise
         else:
             fatal(e)
@@ -948,3 +938,4 @@ if __name__ == '__main__':
     info("Build finished.")
     distdir = os.path.join(options.objdir, "dist")
     info("All build artifacts are available at {}".format(distdir))
+    build_log_fp.close()

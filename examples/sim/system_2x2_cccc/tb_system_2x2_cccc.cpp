@@ -1,5 +1,5 @@
-#include "obj_dir/Vtb_system_2x2_cccc__Syms.h"
-#include "obj_dir/Vtb_system_2x2_cccc__Dpi.h"
+#include "Vtb_system_2x2_cccc__Syms.h"
+#include "Vtb_system_2x2_cccc__Dpi.h"
 
 #include <VerilatedToplevel.h>
 #include <VerilatedControl.h>

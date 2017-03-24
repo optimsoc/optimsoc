@@ -34,6 +34,7 @@ env:
 before_install:
   # dependency for fusesoc
   - pip install pyyaml
+  - pip install "fusesoc>=1.6.1"
 
   # Create folder for target
   - mkdir -p ${TARGET_BASE}

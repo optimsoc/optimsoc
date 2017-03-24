@@ -6,13 +6,13 @@ depend = glip:common:channel
 
 [fileset src_files]
 file_type = systemVerilogSource
-usage = sim
+usage = sim synth
 files =
   glip_tcp_toplevel.sv
 
 [fileset dpi]
-file_type = CPP
-usage = sim
+file_type = cppSource
+usage = sim verilator
 files =
   glip_tcp_dpi.cpp
   GlipTcp.cpp  
