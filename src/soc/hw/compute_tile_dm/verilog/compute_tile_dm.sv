@@ -510,9 +510,9 @@ module compute_tile_dm
  `endif
 `endif
            // Outputs
-           .noc_in_ready                (noc_in_ready[(CONFIG).NOC_VCHANNELS-1:0]),
-           .noc_out_flit                (noc_out_flit[(CONFIG).NOC_FLIT_WIDTH-1:0]),
-           .noc_out_valid               (noc_out_valid[(CONFIG).NOC_VCHANNELS-1:0]),
+           .noc_in_ready                (noc_in_ready[CONFIG.NOC_VCHANNELS-1:0]),
+           .noc_out_flit                (noc_out_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
+           .noc_out_valid               (noc_out_valid[CONFIG.NOC_VCHANNELS-1:0]),
            .wbm_adr_o                   (busms_adr_o[NR_MASTERS-1]), // Templated
            .wbm_cyc_o                   (busms_cyc_o[NR_MASTERS-1]), // Templated
            .wbm_dat_o                   (busms_dat_o[NR_MASTERS-1]), // Templated
@@ -530,9 +530,9 @@ module compute_tile_dm
            // Inputs
            .clk                         (clk),                   // Templated
            .rst                         (rst_sys),               // Templated
-           .noc_in_flit                 (noc_in_flit[(CONFIG).NOC_FLIT_WIDTH-1:0]),
-           .noc_in_valid                (noc_in_valid[(CONFIG).NOC_VCHANNELS-1:0]),
-           .noc_out_ready               (noc_out_ready[(CONFIG).NOC_VCHANNELS-1:0]),
+           .noc_in_flit                 (noc_in_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
+           .noc_in_valid                (noc_in_valid[CONFIG.NOC_VCHANNELS-1:0]),
+           .noc_out_ready               (noc_out_ready[CONFIG.NOC_VCHANNELS-1:0]),
            .wbm_ack_i                   (busms_ack_i[NR_MASTERS-1]), // Templated
            .wbm_rty_i                   (busms_rty_i[NR_MASTERS-1]), // Templated
            .wbm_err_i                   (busms_err_i[NR_MASTERS-1]), // Templated
