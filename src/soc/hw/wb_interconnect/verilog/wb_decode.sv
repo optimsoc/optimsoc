@@ -108,36 +108,36 @@ module wb_decode
    )
    (
     /* Ports */
-    input                          clk_i,
-    input                          rst_i,
+    input 			       clk_i,
+    input 			       rst_i,
    
-    input [ADDR_WIDTH-1:0]         m_adr_i,
-    input [DATA_WIDTH-1:0]         m_dat_i,
-    input                          m_cyc_i,
-    input                          m_stb_i,
-    input [SEL_WIDTH-1:0]          m_sel_i,
-    input                          m_we_i,
-    input [2:0]                    m_cti_i,
-    input [1:0]                    m_bte_i,
+    input [ADDR_WIDTH-1:0] 	       m_adr_i,
+    input [DATA_WIDTH-1:0] 	       m_dat_i,
+    input 			       m_cyc_i,
+    input 			       m_stb_i,
+    input [SEL_WIDTH-1:0] 	       m_sel_i,
+    input 			       m_we_i,
+    input [2:0] 		       m_cti_i,
+    input [1:0] 		       m_bte_i,
 
-    output reg [DATA_WIDTH-1:0]    m_dat_o,
-    output                         m_ack_o,
-    output                         m_err_o,
-    output                         m_rty_o,
+    output reg [DATA_WIDTH-1:0]        m_dat_o,
+    output 			       m_ack_o,
+    output 			       m_err_o,
+    output 			       m_rty_o,
 
-    output [ADDR_WIDTH*SLAVES-1:0] s_adr_o,
-    output [DATA_WIDTH*SLAVES-1:0] s_dat_o,
-    output [SLAVES-1:0]            s_cyc_o,
-    output [SLAVES-1:0]            s_stb_o,
-    output [SEL_WIDTH*SLAVES-1:0]  s_sel_o,
-    output [SLAVES-1:0]            s_we_o,
-    output [SLAVES*3-1:0]          s_cti_o,
-    output [SLAVES*2-1:0]          s_bte_o,
+    output reg [ADDR_WIDTH*SLAVES-1:0] s_adr_o,
+    output reg [DATA_WIDTH*SLAVES-1:0] s_dat_o,
+    output reg [SLAVES-1:0] 	       s_cyc_o,
+    output reg [SLAVES-1:0] 	       s_stb_o,
+    output reg [SEL_WIDTH*SLAVES-1:0]  s_sel_o,
+    output reg [SLAVES-1:0] 	       s_we_o,
+    output reg [SLAVES*3-1:0] 	       s_cti_o,
+    output reg [SLAVES*2-1:0] 	       s_bte_o,
 
-    input [DATA_WIDTH*SLAVES-1:0]  s_dat_i,
-    input [SLAVES-1:0]             s_ack_i,
-    input [SLAVES-1:0]             s_err_i,
-    input [SLAVES-1:0]             s_rty_i
+    input [DATA_WIDTH*SLAVES-1:0]      s_dat_i,
+    input [SLAVES-1:0] 		       s_ack_i,
+    input [SLAVES-1:0] 		       s_err_i,
+    input [SLAVES-1:0] 		       s_rty_i
     );
    
    /* Derived local parameters */
@@ -175,7 +175,7 @@ module wb_decode
    wire                            bus_error;
    assign bus_error = ~^s_select;
 
-   wire                            m_ack, m_err, m_rty;
+   reg 				   m_ack, m_err, m_rty;
    
    // Mux the slave bus based on the slave select signal (one hot!)
    always @(*) begin : bus_s_mux
