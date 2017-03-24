@@ -52,39 +52,39 @@ module wb_mux
     )
    (
     /* Ports */
-    input 			    clk_i,
-    input 			    rst_i,
+    input                               clk_i,
+    input                               rst_i,
    
-    input [ADDR_WIDTH*MASTERS-1:0]  m_adr_i,
-    input [DATA_WIDTH*MASTERS-1:0]  m_dat_i,
-    input [MASTERS-1:0] 	    m_cyc_i,
-    input [MASTERS-1:0] 	    m_stb_i,
-    input [SEL_WIDTH*MASTERS-1:0]   m_sel_i,
-    input [MASTERS-1:0] 	    m_we_i,
-    input [MASTERS*3-1:0] 	    m_cti_i,
-    input [MASTERS*2-1:0] 	    m_bte_i,
+    input [ADDR_WIDTH*MASTERS-1:0]      m_adr_i,
+    input [DATA_WIDTH*MASTERS-1:0]      m_dat_i,
+    input [MASTERS-1:0]                 m_cyc_i,
+    input [MASTERS-1:0]                 m_stb_i,
+    input [SEL_WIDTH*MASTERS-1:0]       m_sel_i,
+    input [MASTERS-1:0]                 m_we_i,
+    input [MASTERS*3-1:0]               m_cti_i,
+    input [MASTERS*2-1:0]               m_bte_i,
 
-    output [DATA_WIDTH*MASTERS-1:0] m_dat_o,
-    output [MASTERS-1:0] 	    m_ack_o,
-    output [MASTERS-1:0] 	    m_err_o,
-    output [MASTERS-1:0] 	    m_rty_o,
+    output reg [DATA_WIDTH*MASTERS-1:0] m_dat_o,
+    output reg [MASTERS-1:0]            m_ack_o,
+    output reg [MASTERS-1:0]            m_err_o,
+    output reg [MASTERS-1:0]            m_rty_o,
 
-    output [ADDR_WIDTH-1:0] 	    s_adr_o,
-    output [DATA_WIDTH-1:0] 	    s_dat_o,
-    output 			    s_cyc_o,
-    output 			    s_stb_o,
-    output [SEL_WIDTH-1:0] 	    s_sel_o,
-    output 			    s_we_o,
-    output [2:0] 		    s_cti_o,
-    output [1:0] 		    s_bte_o,
+    output reg [ADDR_WIDTH-1:0]         s_adr_o,
+    output reg [DATA_WIDTH-1:0]         s_dat_o,
+    output reg                          s_cyc_o,
+    output reg                          s_stb_o,
+    output reg [SEL_WIDTH-1:0]          s_sel_o,
+    output reg                          s_we_o,
+    output reg [2:0]                    s_cti_o,
+    output reg [1:0]                    s_bte_o,
 
-    input [DATA_WIDTH-1:0] 	    s_dat_i,
-    input 			    s_ack_i,
-    input 			    s_err_i,
-    input 			    s_rty_i,
+    input [DATA_WIDTH-1:0]              s_dat_i,
+    input                               s_ack_i,
+    input                               s_err_i,
+    input                               s_rty_i,
 
-    input 			    bus_hold,
-    output reg 			    bus_hold_ack
+    input                               bus_hold,
+    output reg                          bus_hold_ack
     );
 
    /* Derived local parameters */
@@ -144,11 +144,11 @@ module wb_mux
    wb_interconnect_arb_rr
      #(.N(MASTERS))
      u_arbiter(/*AUTOINST*/
-	       // Outputs
-	       .nxt_gnt			(arb_grant),		 // Templated
-	       // Inputs
-	       .req			(m_req),		 // Templated
-	       .gnt			(prev_arb_grant));	 // Templated
+               // Outputs
+               .nxt_gnt                 (arb_grant),             // Templated
+               // Inputs
+               .req                     (m_req),                 // Templated
+               .gnt                     (prev_arb_grant));       // Templated
 
    // Mux the bus based on the grant signal which must be one hot!
    always @(*) begin : bus_m_mux
@@ -163,21 +163,21 @@ module wb_mux
       s_stb_o = 1'b0;
       
       for (i = 0; i < MASTERS; i = i + 1) begin
-	 m_dat_o[i*DATA_WIDTH +: DATA_WIDTH] = s_dat_i;
-	 m_ack_o[i] = grant[i] & s_ack_i;
-	 m_err_o[i] = grant[i] & s_err_i;
-	 m_rty_o[i] = grant[i] & s_rty_i;	 
-		  
+         m_dat_o[i*DATA_WIDTH +: DATA_WIDTH] = s_dat_i;
+         m_ack_o[i] = grant[i] & s_ack_i;
+         m_err_o[i] = grant[i] & s_err_i;
+         m_rty_o[i] = grant[i] & s_rty_i;
+
          if (grant[i]) begin
-	    s_adr_o = m_adr_i[(i+1)*ADDR_WIDTH-1 -: ADDR_WIDTH];
-	    s_dat_o = m_dat_i[(i+1)*DATA_WIDTH-1 -: DATA_WIDTH];
-	    s_sel_o = m_sel_i[(i+1)*SEL_WIDTH-1 -: SEL_WIDTH];
-	    s_we_o = m_we_i[i];
-	    s_cti_o = m_cti_i[(i+1)*3-1 -: 3];
-	    s_bte_o = m_bte_i[(i+1)*2-1 -: 2];
-	    s_cyc_o = m_cyc_i[i];
-	    s_stb_o = m_stb_i[i];	    
-	 end
+            s_adr_o = m_adr_i[(i+1)*ADDR_WIDTH-1 -: ADDR_WIDTH];
+            s_dat_o = m_dat_i[(i+1)*DATA_WIDTH-1 -: DATA_WIDTH];
+            s_sel_o = m_sel_i[(i+1)*SEL_WIDTH-1 -: SEL_WIDTH];
+            s_we_o = m_we_i[i];
+            s_cti_o = m_cti_i[(i+1)*3-1 -: 3];
+            s_bte_o = m_bte_i[(i+1)*2-1 -: 2];
+            s_cyc_o = m_cyc_i[i];
+            s_stb_o = m_stb_i[i];
+         end
       end
       
    end
