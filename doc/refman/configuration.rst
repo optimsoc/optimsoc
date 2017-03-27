@@ -63,11 +63,11 @@ Cores per tile (``CORES_PER_TILE``)
 **Description** Sets the number of cores per compute tile.
 
 **Usage** As generator for the core instantiations in the tiles and
- base core id in each tile. Both can be queried as informational field
- in the network adapter.
+base core id in each tile. Both can be queried as informational field
+in the network adapter.
 
 **Software** Can be queried as ? and influences the values of
- ``or1k_coreid()`` and ``or1k_numcores()``.
+``or1k_coreid()`` and ``or1k_numcores()``.
 
 Global memory size (``GMEM_SIZE``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,7 +84,7 @@ Global memory tile (``GMEM_TILE``)
 **Type** Base item, integer.
 
 **Description** Sets the tile identifier of the global memory
- tile. Used by PGAS.
+tile. Used by PGAS.
 
 **Usage** Configures the PGAS load-store unit.
 
