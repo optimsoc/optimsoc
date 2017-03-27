@@ -48,7 +48,7 @@ List of Compute Tiles (``CTLIST``)
 **Type** Base item, packed multi-dimensional array (64 of 16 bit).
 
 **Description** Provide a map of compute tiles (max. 64 currently)
- with the tile id at the index of the array. Be careful that it is
+with the tile id at the index of the array. Be careful that it is
 sorted as little endian ("from right to left").
 
 **Usage** As informational field in the network adapter.
