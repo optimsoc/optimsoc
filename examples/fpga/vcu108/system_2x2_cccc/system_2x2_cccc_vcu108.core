@@ -13,11 +13,17 @@ depend =
   optimsoc:ip:xilinx_axi_register_slice
   optimsoc:base:config
 
+backend = vivado
+
 [fileset rtl_files]
 file_type = systemVerilogSource
-usage = sim synth
+usage = synth
 files =
   rtl/verilog/system_2x2_cccc_vcu108.sv
+
+[vivado]
+part = "xcvu095-ffva2104-2-e"
+hw_device = xcvu095_0
 
 [parameter NUM_CORES]
 datatype = int

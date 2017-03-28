@@ -13,13 +13,17 @@ depend =
   glip:backend:uart
   optimsoc:base:config
 
-simulators = xsim
+backend = vivado
 
 [fileset rtl_files]
 file_type = systemVerilogSource
-usage = sim synth
+usage = synth
 files =
   rtl/verilog/compute_tile_dm_vcu108.sv
+
+[vivado]
+part = "xcvu095-ffva2104-2-e"
+hw_device = xcvu095_0
 
 [parameter NUM_CORES]
 datatype = int

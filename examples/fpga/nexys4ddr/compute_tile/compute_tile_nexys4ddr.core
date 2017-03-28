@@ -14,6 +14,7 @@ depend =
   optimsoc:base:config
 
 simulators = xsim
+backend = vivado
 
 [fileset rtl_files]
 file_type = systemVerilogSource
@@ -30,6 +31,10 @@ files =
 [xsim]
 top_module = tb_compute_tile_nexys4ddr
 part = xc7a100tcsg324-1
+
+[vivado]
+part = "xc7a100tcsg324-1"
+hw_device = xc7a100t_0
 
 [parameter NUM_CORES]
 datatype = int
