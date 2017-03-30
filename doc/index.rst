@@ -11,6 +11,7 @@ Welcome to OpTiMSoC's documentation!
    :caption: Documentation Parts	   
 
    refman/index
+   api/index
 	     
 Indices and tables
 ==================
