@@ -1,6 +1,7 @@
 CAPI=1
 [main]
 name = optimsoc:base:config
+depend = optimsoc:base:functions
 
 [fileset include_files]
 file_type = systemVerilogSource
