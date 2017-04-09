@@ -32,7 +32,7 @@ module mor1kx_cfgrs
     parameter OPTION_DCACHE_SET_WIDTH    = 9,
     parameter OPTION_DCACHE_WAYS         = 2,
     parameter FEATURE_DMMU               = "NONE",
-    parameter OPTION_DMMU_SET_WIDTH      = 6,
+    parameter [2:0] OPTION_DMMU_SET_WIDTH      = 6,
     parameter OPTION_DMMU_WAYS           = 1,
     parameter FEATURE_INSTRUCTIONCACHE   = "NONE",
     parameter OPTION_ICACHE_BLOCK_WIDTH  = 5,
@@ -45,6 +45,7 @@ module mor1kx_cfgrs
     parameter FEATURE_TIMER              = "ENABLED",
     parameter FEATURE_DEBUGUNIT          = "NONE",
     parameter FEATURE_PERFCOUNTERS       = "NONE",
+    parameter OPTION_PERFCOUNTERS_NUM    = 0,
     parameter FEATURE_PMU                = "NONE",
     parameter FEATURE_MAC                = "NONE",
     parameter FEATURE_FPU                = "NONE",
@@ -234,6 +235,6 @@ module mor1kx_cfgrs
                                              3'd0 : 3'd0;
 
    assign spr_dcfgr = 0;
-   assign spr_pccfgr = 0;
+   assign spr_pccfgr = (FEATURE_PERFCOUNTERS!="NONE") ? OPTION_PERFCOUNTERS_NUM : 0;
 
 endmodule // mor1kx_cfgrs

@@ -385,7 +385,7 @@ endgenerate
 
    // One signed overflow detection for all multiplication implmentations
    assign mul_signed_overflow = (FEATURE_MULTIPLIER=="NONE") ||
-				(FEATURE_MULTIPLIER=="PIPELINED") ? 0 :
+				(FEATURE_MULTIPLIER=="PIPELINED") ? 1'b0 :
 				// Same signs, check for negative result
 				// (should be positive)
 				((a[OPTION_OPERAND_WIDTH-1] ==
@@ -776,7 +776,6 @@ endgenerate
 			 op_movhi_i ? immediate_i :
 			 op_mul_i ? mul_result[OPTION_OPERAND_WIDTH-1:0] :
 			 fpu_arith_valid ? fpu_result :
-			 fpu_cmp_valid ? {OPTION_OPERAND_WIDTH{1'b0}} :
 			 op_shift_i ? shift_result :
 			 op_div_i ? div_result :
 			 op_ffl1_i ? ffl1_result :

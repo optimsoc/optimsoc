@@ -32,6 +32,7 @@ module mor1kx_icache
     output 			      refill_req_o,
     output 			      refill_done_o,
     output 			      invalidate_o,
+    output 			      cache_hit_o,
 
     // CPU Interface
     output 			      cpu_ack_o,
@@ -96,7 +97,6 @@ module mor1kx_icache
 
    // FSM state signals
    reg [3:0] 			      state;
-   wire				      idle;
    wire				      read;
    wire				      refill;
    wire				      invalidate;
@@ -213,6 +213,7 @@ module mor1kx_icache
    endgenerate
 
    assign hit = |way_hit;
+   assign cache_hit_o = hit;
 
    integer w0;
    always @(*) begin
@@ -239,7 +240,6 @@ module mor1kx_icache
 			       OPTION_ICACHE_BLOCK_WIDTH] &
 		       refill;
 
-   assign idle = (state == IDLE);
    assign refill = (state == REFILL);
    assign read = (state == READ);
    assign invalidate = (state == INVALIDATE);

@@ -287,13 +287,15 @@ module mor1kx_decode
 			   // All '11????' opcodes except l.sfxx and l.mtspr
 			   (decode_insn_i[31:30] == 2'b11 &
 			    !(opc_insn == `OR1K_OPCODE_SF |
-			      decode_op_mtspr_o | decode_op_lsu_store_o));
+			      decode_op_mtspr_o | decode_op_lsu_store_o) &
+          !((FEATURE_FPU != "NONE") &
+            (opc_insn == `OR1K_OPCODE_FPU) & decode_insn_i[3]));
 
    // Register file addresses
    assign decode_rfa_adr_o = decode_insn_i[`OR1K_RA_SELECT];
    assign decode_rfb_adr_o = decode_insn_i[`OR1K_RB_SELECT];
 
-   assign decode_rfd_adr_o = decode_op_jal_o ? 9 :
+   assign decode_rfd_adr_o = decode_op_jal_o ? 4'd9 :
 			     decode_insn_i[`OR1K_RD_SELECT];
 
    // Immediate in l.mtspr is broken up, reassemble
