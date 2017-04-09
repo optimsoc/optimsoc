@@ -294,9 +294,9 @@ module networkadapter_ct
    endgenerate
 
    wire [FLIT_WIDTH-1:0] muxed0_flit;
-   wire 		 muxed0_valid, muxed0_ready;
+   wire                  muxed0_valid, muxed0_ready;
    wire [FLIT_WIDTH-1:0] muxed1_flit;
-   wire 		 muxed1_valid, muxed1_ready;
+   wire                  muxed1_valid, muxed1_ready;
 
    noc_mux
      #(.FLIT_DATA_WIDTH (CONFIG.NOC_DATA_WIDTH),
@@ -315,8 +315,51 @@ module networkadapter_ct
    assign muxed1_valid = mod_out_valid[C_DMA_RESP];
    assign muxed1_ready = mod_out_ready[C_DMA_RESP];
 
+   wire [FLIT_WIDTH-1:0] outbuffer0_flit;
+   wire                  outbuffer0_valid, outbuffer0_ready;
+   wire [FLIT_WIDTH-1:0] outbuffer1_flit;
+   wire                  outbuffer1_valid, outbuffer1_ready;
+
+   noc_buffer
+     #(.FLIT_WIDTH (FLIT_WIDTH),
+       .DEPTH      (4))
+   u_outbuffer0
+     (.*,
+      .in_flit   (muxed0_flit),
+      .in_valid  (muxed0_valid),
+      .in_ready  (muxed0_ready),
+      .out_flit  (outbuffer0_flit),
+      .out_valid (outbuffer0_valid),
+      .out_ready (outbuffer0_ready));
+
+   noc_buffer
+     #(.FLIT_WIDTH (FLIT_WIDTH),
+       .DEPTH      (4))
+   u_outbuffer1
+     (.*,
+      .in_flit   (muxed1_flit),
+      .in_valid  (muxed1_valid),
+      .in_ready  (muxed1_ready),
+      .out_flit  (outbuffer1_flit),
+      .out_valid (outbuffer1_valid),
+      .out_ready (outbuffer1_ready));
+
+   lisnoc_router_output_arbiter
+     #(.vchannels(VCHANNELS))
+   u_arb(
+         // Outputs
+         .fifo_ready_o            ({outbuffer1_ready, outbuffer0_ready}),
+         .link_valid_o            (noc_out_valid[VCHANNELS-1:0]),
+         .link_flit_o             (noc_out_flit[FLIT_WIDTH-1:0]),
+         // Inputs
+         .clk                     (clk),
+         .rst                     (rst),
+         .fifo_valid_i            ({outbuffer1_valid, outbuffer0_valid}),
+         .fifo_flit_i             ({outbuffer1_flit, outbuffer0_flit}),
+         .link_ready_i            (noc_out_ready[VCHANNELS-1:0]));
+
    wire [FLIT_WIDTH-1:0] inbuffer0_flit;
-   wire 		 inbuffer0_valid, inbuffer0_ready;
+   wire                  inbuffer0_valid, inbuffer0_ready;
 
    noc_buffer
      #(.FLIT_WIDTH (FLIT_WIDTH),
@@ -343,20 +386,6 @@ module networkadapter_ct
       .out_flit                   ({mod_in_flit[C_DMA_REQ], mod_in_flit[C_MPSIMPLE]}),
       .out_valid                  ({mod_in_valid[C_DMA_REQ], mod_in_valid[C_MPSIMPLE]}),
       .out_ready                  ({mod_in_ready[C_DMA_REQ], mod_in_ready[C_MPSIMPLE]}));
-
-   lisnoc_router_output_arbiter
-     #(.vchannels(VCHANNELS))
-   u_arb(
-         // Outputs
-         .fifo_ready_o            ({muxed1_ready, muxed0_ready}),
-	 .link_valid_o            (noc_out_valid[VCHANNELS-1:0]),
-         .link_flit_o             (noc_out_flit[FLIT_WIDTH-1:0]),
-         // Inputs
-         .clk                     (clk),
-         .rst                     (rst),
-         .fifo_valid_i            ({muxed1_valid, muxed0_valid}),
-         .fifo_flit_i             ({muxed1_flit, muxed0_flit}),
-         .link_ready_i            (noc_out_ready[VCHANNELS-1:0]));
 
 endmodule // networkadapter_ct
 
