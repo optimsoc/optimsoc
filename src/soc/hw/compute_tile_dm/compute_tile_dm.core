@@ -12,6 +12,8 @@ depend =
   opensocdebug:interfaces:mor1kx_trace_exec
   opensocdebug:modules:stm_mor1kx
   opensocdebug:modules:ctm_mor1kx
+  opensocdebug:modules:system_diagnosis
+  opensocdebug:modules:system_diagnosis_source
   optimsoc:base:config
 
 [fileset src_files]

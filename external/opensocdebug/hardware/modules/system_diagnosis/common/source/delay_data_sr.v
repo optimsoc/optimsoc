@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 by the author(s)
+/* Copyright (c) 2013 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -18,18 +18,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * ============================================================================
+ * =============================================================================
+ *
+ * Submodule of the Software Trace Module (STM): the data shift register
+ *
+ * All incoming data is delayed by DELAY_CYCLES before passing it to the output.
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan@wallentowitz.de>
+ *   Philipp Wagner <mail@philipp-wagner.com>
  */
 
-#ifndef _CLI_H_
-#define _CLI_H_
+`include "dbg_config.vh"
 
-#include <opensocdebug.h>
+module delay_data_sr(/*AUTOARG*/
+   // Outputs
+   dout,
+   // Inputs
+   clk, rst, din
+   );
 
-int memory_tests(struct osd_context *ctx);
-int write_configreg(struct osd_context *ctx);
+   parameter DELAY_CYCLES = `DBG_TRIGGER_DELAY;
+   parameter DATA_WIDTH = `DBG_TIMESTAMP_WIDTH+32+16;
 
-#endif
+   input clk;
+   input rst;
+
+   input [DATA_WIDTH-1:0] din;
+   output [DATA_WIDTH-1:0] dout;
+
+   reg [(DATA_WIDTH*(DELAY_CYCLES+1))-1:0] sr;
+
+   assign dout = sr[(DATA_WIDTH*(DELAY_CYCLES+1))-1:(DATA_WIDTH*DELAY_CYCLES)];
+
+   always @ (posedge clk) begin
+      if (rst) begin
+         sr <= 0;
+      end else begin
+         sr <= sr << DATA_WIDTH;
+         sr[DATA_WIDTH-1:0] <= din;
+      end
+   end
+
+endmodule

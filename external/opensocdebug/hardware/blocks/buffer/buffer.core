@@ -11,3 +11,4 @@ usage = sim synth
 files =
   common/dii_buffer.sv
   common/osd_fifo.sv
+  common/lifo.v

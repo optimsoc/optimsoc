@@ -28,13 +28,14 @@
 #include <libglip.h>
 #include <assert.h>
 
-const struct module_types module_lookup[6] = {
+const struct module_types module_lookup[MODULES_MAX_ID] = {
         { .name = "HOST" },
         { .name = "SCM" },
         { .name = "DEM-UART" },
         { .name = "MAM" },
         { .name = "STM" },
-        { .name = "CTM" }
+        { .name = "CTM" },
+	{ .name = "System-Diagnosis"}
 };
 
 const uint16_t scmid = 0x1;
@@ -117,6 +118,12 @@ int osd_system_enumerate(struct osd_context *ctx) {
 
             osd_reg_read16(ctx, mod->addr, 0x200, &ctm->addr_width);
             osd_reg_read16(ctx, mod->addr, 0x200, &ctm->data_width);
+        } else if (mod->type == OSD_MOD_SYSTEM_DIAGNOSIS) {
+            struct osd_system_diagnosis_descriptor *system_diagnosis;
+            system_diagnosis = calloc(1, sizeof(struct osd_system_diagnosis_descriptor));
+            mod->descriptor.system_diagnosis = system_diagnosis;
+            
+            osd_reg_read16(ctx, mod->addr, 0x200, &system_diagnosis->xlen);
         }
 
         osd_reg_read16(ctx, mod->addr, 1, &mod->version);
@@ -212,7 +219,7 @@ OSD_EXPORT
 int osd_get_module_name(struct osd_context *ctx, uint16_t id,
                         char **name) {
     uint16_t type = ctx->system_info->modules[id].type;
-    if (type > modules_max_id) {
+    if (type > MODULES_MAX_ID) {
         *name = strdup("UNKNOWN");
     }
     *name = strdup(module_lookup[type].name);
