@@ -72,9 +72,9 @@ package optimsoc;
       integer            PGAS_SIZE;
 
       // Network adapter configuration
-      integer            NA_ENABLE_MPSIMPLE;
-      integer            NA_ENABLE_DMA;
-      integer            NA_DMA_GENIRQ;
+      logic              NA_ENABLE_MPSIMPLE;
+      logic              NA_ENABLE_DMA;
+      logic              NA_DMA_GENIRQ;
       integer            NA_DMA_ENTRIES;
 
       // Debug configuration
@@ -118,9 +118,9 @@ package optimsoc;
       integer            PGAS_RANGE_MATCH;
 
       // Network adapter configuration
-      integer            NA_ENABLE_MPSIMPLE;
-      integer            NA_ENABLE_DMA;
-      integer            NA_DMA_GENIRQ;
+      logic              NA_ENABLE_MPSIMPLE;
+      logic              NA_ENABLE_DMA;
+      logic              NA_DMA_GENIRQ;
       integer            NA_DMA_ENTRIES;
 
       // Debug configuration
@@ -170,7 +170,7 @@ package optimsoc;
       derive_config.PGAS_RANGE_WIDTH = conf.ENABLE_PGAS ? 32-clog2_width(conf.PGAS_SIZE) : 1;
       derive_config.PGAS_RANGE_MATCH = conf.PGAS_BASE >> (32-derive_config.PGAS_RANGE_WIDTH);
 
-      derive_config.DEBUG_MODS_PER_CORE = (conf.DEBUG_STM + conf.DEBUG_CTM) * conf.USE_DEBUG;
+      derive_config.DEBUG_MODS_PER_CORE = (int'(conf.DEBUG_STM) + int'(conf.DEBUG_CTM)) * int'(conf.USE_DEBUG);
       derive_config.DEBUG_MODS_PER_TILE = (1 + derive_config.DEBUG_MODS_PER_CORE *
                                            conf.CORES_PER_TILE) * conf.USE_DEBUG;
       derive_config.DEBUG_NUM_MODS = (1 + conf.NUMCTS *
