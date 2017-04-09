@@ -26,25 +26,25 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
+import constants::*;
+
 module noc_demux
   #(
     parameter FLIT_DATA_WIDTH = 32,
     parameter FLIT_TYPE_WIDTH = 34,
     parameter CHANNELS = 2,
-    parameter [0:63] MAPPING = 'x,
-    parameter CLASS_MSB = 26,
-    parameter CLASS_LSB = 24
+    parameter [63:0] MAPPING = 'x
     )
    (
-    input 				  clk, rst,
+    input                                 clk, rst,
 
-    input [FLIT_WIDTH-1:0] 		  in_flit,
-    input 				  in_valid,
-    output reg 				  in_ready,
+    input [FLIT_WIDTH-1:0]                in_flit,
+    input                                 in_valid,
+    output reg                            in_ready,
 
     output [CHANNELS-1:0][FLIT_WIDTH-1:0] out_flit,
-    output reg [CHANNELS-1:0] 		  out_valid,
-    input [CHANNELS-1:0] 		  out_ready
+    output reg [CHANNELS-1:0]             out_valid,
+    input [CHANNELS-1:0]                  out_ready
     );
 
    localparam FLIT_WIDTH = FLIT_DATA_WIDTH + FLIT_TYPE_WIDTH;
@@ -53,9 +53,9 @@ module noc_demux
    reg [CHANNELS-1:0]                         nxt_active;
 
    wire [2:0]                                 packet_class;
-   wire [CHANNELS-1:0] 			      select;
+   reg [CHANNELS-1:0]                         select;
    
-   assign packet_class = in_flit[CLASS_MSB:CLASS_LSB];
+   assign packet_class = in_flit[NOC_CLASS_MSB:NOC_CLASS_LSB];
    
    always @(*) begin : gen_select
       select = MAPPING[8*packet_class +: CHANNELS];
