@@ -15,6 +15,7 @@ files =
   rtl/dma/lisnoc_dma_initiator_nocresp.sv
   rtl/dma/lisnoc_dma_request_table.sv
   rtl/dma/lisnoc_dma_wbinterface.v
+  rtl/infrastructure/lisnoc_packet_buffer.sv
 
 [fileset include_files]
 file_type = verilogSource

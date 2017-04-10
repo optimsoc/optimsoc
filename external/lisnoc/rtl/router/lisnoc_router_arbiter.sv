@@ -121,7 +121,7 @@ module lisnoc_router_arbiter (/*AUTOARG*/
          if (request_i[activeportnum] && ready_i) begin
             read_o[activeportnum] = 1'b1;
             valid_o = 1'b1;
-            if (flit_type == `FLIT_TYPE_LAST)
+            if (flit_type[1])
                nxt_activeroute = 1'b0;
          end else begin
             valid_o = 1'b0;
@@ -131,7 +131,7 @@ module lisnoc_router_arbiter (/*AUTOARG*/
          valid_o = 1'b0;
          if (|request_i & ready_i) begin
             valid_o = 1'b1;
-            nxt_activeroute = (flit_type != `FLIT_TYPE_SINGLE);
+            nxt_activeroute = !flit_type[1];
             read_o[portnum] = 1'b1;
          end
       end
