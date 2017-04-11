@@ -138,7 +138,7 @@ module networkadapter_conf
  `endif
 `endif
 
-   wire [15:0]              ctlist_vector[0:CONFIG.NUMCTS-1];
+   wire [15:0]              ctlist_vector[0:63];
 
    genvar                   i;
    generate
@@ -153,7 +153,7 @@ module networkadapter_conf
    always @(*) begin
       if (adr[11:9] == REG_CTLIST[9:7]) begin
          if (adr[1]) begin
-            data = {16'h0,ctlist_vector[adr[8:1]]};
+            data = {16'h0,ctlist_vector[adr[6:1]]};
          end else begin
             data = {ctlist_vector[adr[8:1]],16'h0};
          end

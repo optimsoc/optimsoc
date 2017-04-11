@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+name = optimsoc:noc:mux
+description = "NoC Mux"
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/noc_mux.sv
+
+

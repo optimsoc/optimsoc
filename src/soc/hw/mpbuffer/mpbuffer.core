@@ -1,0 +1,15 @@
+CAPI=1
+[main]
+description = "Message Passing Buffer"
+name = optimsoc:mp:buffer
+depend =
+  optimsoc:base:functions
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/mpbuffer.sv
+  verilog/mpbuffer_wb.sv
+  verilog/mpbuffer_endpoint.sv
+

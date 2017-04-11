@@ -50,7 +50,7 @@ void uart_printf(const char *fmt, ...) {
     set_bits(&msg, optimsoc_get_tileid(), OPTIMSOC_SRC_MSB, OPTIMSOC_SRC_LSB);
     for (unsigned i=0;i<size;i++) {
         set_bits(&msg, buffer[i],7,0);
-        optimsoc_mp_simple_send(1,&msg);
+        optimsoc_mp_simple_send(0,1,&msg);
     }
 }
 
@@ -66,7 +66,7 @@ int lcd_init() {
         set_bits(&buffer, r, 12, 12);
         for (int c=0;c<16;c++) {
             set_bits(&buffer, c, 11, 8);
-            optimsoc_mp_simple_send(1,&buffer);
+            optimsoc_mp_simple_send(0,1,&buffer);
         }
     }
 
@@ -85,7 +85,7 @@ int lcd_set(unsigned int row,unsigned int col,char c) {
         set_bits(&buffer, col, 11, 8);
         set_bits(&buffer, (uint32_t) c, 7, 0);
 
-        optimsoc_mp_simple_send(1,&buffer);
+        optimsoc_mp_simple_send(0,1,&buffer);
     }
 
     return 0;

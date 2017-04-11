@@ -17,7 +17,7 @@ unsigned int timeout_insns = 1000;
 #define EXTRACT(x,msb,lsb) ((x>>lsb) & ~(~0 << (msb-lsb+1)))
 #define SET(x,v,msb,lsb) (((~0 << (msb+1) | ~(~0 << lsb))&x) | ((v & ~(~0<<(msb-lsb+1))) << lsb))
 
-void control_msg_handler(unsigned int* buffer,int len);
+void control_msg_handler(uint32_t* buffer,size_t len);
 
 void control_init() {
     // Add handler so that received message are treated correctly
@@ -25,12 +25,12 @@ void control_init() {
     optimsoc_mp_simple_init();
     optimsoc_mp_simple_addhandler(NOC_CLASS_FIFO, &control_msg_handler);
 
-    optimsoc_mp_simple_enable();
+    optimsoc_mp_simple_enable(0);
     or1k_interrupts_enable();
 }
 
 // The following handler is called by the message interrupt service routine
-void control_msg_handler(unsigned int* buffer,int len) {
+void control_msg_handler(uint32_t* buffer,size_t len) {
     // Extract sender information
     unsigned int src = EXTRACT(buffer[0],OPTIMSOC_SRC_MSB,OPTIMSOC_SRC_LSB);
     // Extract request type
@@ -73,7 +73,7 @@ void control_msg_handler(unsigned int* buffer,int len) {
         }
 
         trace_ep_get_resp_send(src, (struct endpoint*) rbuffer[1]);
-        optimsoc_mp_simple_send(2,rbuffer);
+        optimsoc_mp_simple_send(0,2,rbuffer);
         break;
     }
     case CTRL_REQUEST_MSG_ALLOC_REQ:
@@ -94,12 +94,12 @@ void control_msg_handler(unsigned int* buffer,int len) {
             rbuffer[1] = CTRL_REQUEST_ACK;
             rbuffer[2] = ptr;
             trace_msg_alloc_resp_send(src, ep, ptr);
-            optimsoc_mp_simple_send(3, rbuffer);
+            optimsoc_mp_simple_send(0,3, rbuffer);
 
         } else {
             rbuffer[1] = CTRL_REQUEST_NACK;
             trace_msg_alloc_resp_send(src, ep, -1);
-            optimsoc_mp_simple_send(2,rbuffer);
+            optimsoc_mp_simple_send(0,2,rbuffer);
         }
 
         break;
@@ -139,7 +139,7 @@ void control_msg_handler(unsigned int* buffer,int len) {
                 (CTRL_REQUEST_CHAN_CONNECT_RESP << CTRL_REQUEST_LSB);
 
         rbuffer[1] = endpoint_channel_get_credit(ep);
-        optimsoc_mp_simple_send(2, rbuffer);
+        optimsoc_mp_simple_send(0, 2, rbuffer);
         break;
     }
     case CTRL_REQUEST_CHAN_DATA:
@@ -205,7 +205,7 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
                                       uint32_t port) {
     struct endpoint *ep;
 
-    while (!optimsoc_mp_simple_ctready(domain));
+    while (!optimsoc_mp_simple_ctready(domain, 0));
 
     trace_ep_get_req_begin(domain, node, port);
 
@@ -222,7 +222,7 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
 
         trace_ep_get_req_send(domain, node, port);
 
-        optimsoc_mp_simple_send(3,ctrl_request.buffer);
+        optimsoc_mp_simple_send(0,3,ctrl_request.buffer);
 
         control_wait_response();
 
@@ -262,7 +262,7 @@ uint32_t control_msg_alloc(struct endpoint_handle *to_ep, uint32_t size) {
 
         trace_msg_alloc_req_send(to_ep, size);
 
-        optimsoc_mp_simple_send(3,ctrl_request.buffer);
+        optimsoc_mp_simple_send(0,3,ctrl_request.buffer);
 
         control_wait_response();
 
@@ -306,7 +306,7 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
         }
 
         trace_msg_data_send(ep, ctrl_request.buffer[2], sz);
-        optimsoc_mp_simple_send(4+sz,ctrl_request.buffer);
+        optimsoc_mp_simple_send(0, 4+sz,ctrl_request.buffer);
     }
 
     ctrl_request.buffer[0] = (ep->domain << OPTIMSOC_DEST_LSB) |
@@ -318,7 +318,7 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
     ctrl_request.buffer[3] = size;
 
     trace_msg_complete_send(ep, address, size);
-    optimsoc_mp_simple_send(4, ctrl_request.buffer);
+    optimsoc_mp_simple_send(0, 4, ctrl_request.buffer);
 
     trace_msg_data_end(ep);
 }
@@ -334,7 +334,7 @@ uint32_t control_channel_connect(struct endpoint_handle *from,
     ctrl_request.buffer[3] = (unsigned int) from->ep;
 
     ctrl_request.done = 0;
-    optimsoc_mp_simple_send(4, ctrl_request.buffer);
+    optimsoc_mp_simple_send(0, 4, ctrl_request.buffer);
 
     control_wait_response();
 
@@ -366,7 +366,7 @@ void control_channel_send(struct endpoint_handle *ep, uint8_t *data, uint32_t si
             ctrl_request.buffer[4+d] = ((unsigned int *)data)[i+d];
         }
 
-        optimsoc_mp_simple_send(4+sz,ctrl_request.buffer);
+        optimsoc_mp_simple_send(0,4+sz,ctrl_request.buffer);
     }
 }
 
@@ -378,5 +378,5 @@ void control_channel_sendcredit(struct endpoint_handle *ep, int32_t credit) {
     ctrl_request.buffer[1] = (unsigned int) ep->ep->remote;
     ctrl_request.buffer[2] = credit;
 
-    optimsoc_mp_simple_send(3, ctrl_request.buffer);
+    optimsoc_mp_simple_send(0,3, ctrl_request.buffer);
 }

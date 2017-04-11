@@ -86,67 +86,77 @@ module wb_bus_b3
     // The number of parameters actually limits the number of slaves as
     // there is no generic way that is handled by all tools to define
     // variable width parameter arrays.
+    parameter S0_ENABLE = 1,
     parameter S0_RANGE_WIDTH = 1,
     parameter S0_RANGE_MATCH = 1'b0,
+    parameter S1_ENABLE = 1,
     parameter S1_RANGE_WIDTH = 1,
     parameter S1_RANGE_MATCH = 1'b0,
+    parameter S2_ENABLE = 1,
     parameter S2_RANGE_WIDTH = 1,
     parameter S2_RANGE_MATCH = 1'b0,
+    parameter S3_ENABLE = 1,
     parameter S3_RANGE_WIDTH = 1,
     parameter S3_RANGE_MATCH = 1'b0,
+    parameter S4_ENABLE = 1,
     parameter S4_RANGE_WIDTH = 1,
     parameter S4_RANGE_MATCH = 1'b0,
+    parameter S5_ENABLE = 1,
     parameter S5_RANGE_WIDTH = 1,
     parameter S5_RANGE_MATCH = 1'b0,
+    parameter S6_ENABLE = 1,
     parameter S6_RANGE_WIDTH = 1,
     parameter S6_RANGE_MATCH = 1'b0,
+    parameter S7_ENABLE = 1,
     parameter S7_RANGE_WIDTH = 1,
     parameter S7_RANGE_MATCH = 1'b0,
+    parameter S8_ENABLE = 1,
     parameter S8_RANGE_WIDTH = 1,
     parameter S8_RANGE_MATCH = 1'b0,
+    parameter S9_ENABLE = 1,
     parameter S9_RANGE_WIDTH = 1,
     parameter S9_RANGE_MATCH = 1'b0
     )
    (
        /* Ports */
-       input 			       clk_i,
-       input 			       rst_i,
+       input                           clk_i,
+       input                           rst_i,
    
        input [ADDR_WIDTH*MASTERS-1:0]  m_adr_i,
        input [DATA_WIDTH*MASTERS-1:0]  m_dat_i,
-       input [MASTERS-1:0] 	       m_cyc_i,
-       input [MASTERS-1:0] 	       m_stb_i,
+       input [MASTERS-1:0]             m_cyc_i,
+       input [MASTERS-1:0]             m_stb_i,
        input [SEL_WIDTH*MASTERS-1:0]   m_sel_i,
-       input [MASTERS-1:0] 	       m_we_i,
-       input [MASTERS*3-1:0] 	       m_cti_i,
-       input [MASTERS*2-1:0] 	       m_bte_i,
+       input [MASTERS-1:0]             m_we_i,
+       input [MASTERS*3-1:0]           m_cti_i,
+       input [MASTERS*2-1:0]           m_bte_i,
 
        output [DATA_WIDTH*MASTERS-1:0] m_dat_o,
-       output [MASTERS-1:0] 	       m_ack_o,
-       output [MASTERS-1:0] 	       m_err_o,
-       output [MASTERS-1:0] 	       m_rty_o,
+       output [MASTERS-1:0]            m_ack_o,
+       output [MASTERS-1:0]            m_err_o,
+       output [MASTERS-1:0]            m_rty_o,
 
        output [ADDR_WIDTH*SLAVES-1:0]  s_adr_o,
        output [DATA_WIDTH*SLAVES-1:0]  s_dat_o,
-       output [SLAVES-1:0] 	       s_cyc_o,
-       output [SLAVES-1:0] 	       s_stb_o,
+       output [SLAVES-1:0]             s_cyc_o,
+       output [SLAVES-1:0]             s_stb_o,
        output [SEL_WIDTH*SLAVES-1:0]   s_sel_o,
-       output [SLAVES-1:0] 	       s_we_o,
-       output [SLAVES*3-1:0] 	       s_cti_o,
-       output [SLAVES*2-1:0] 	       s_bte_o,
+       output [SLAVES-1:0]             s_we_o,
+       output [SLAVES*3-1:0]           s_cti_o,
+       output [SLAVES*2-1:0]           s_bte_o,
 
        input [DATA_WIDTH*SLAVES-1:0]   s_dat_i,
-       input [SLAVES-1:0] 	       s_ack_i,
-       input [SLAVES-1:0] 	       s_err_i,
-       input [SLAVES-1:0] 	       s_rty_i,
+       input [SLAVES-1:0]              s_ack_i,
+       input [SLAVES-1:0]              s_err_i,
+       input [SLAVES-1:0]              s_rty_i,
 
    // The snoop port forwards all write accesses on their success for
    // one cycle.
-       output [DATA_WIDTH-1:0] 	       snoop_adr_o,
-       output 			       snoop_en_o,
+       output [DATA_WIDTH-1:0]         snoop_adr_o,
+       output                          snoop_en_o,
 
-       input 			       bus_hold,
-       output 			       bus_hold_ack
+       input                           bus_hold,
+       output                          bus_hold_ack
     );
 
    /* Derived local parameters */
@@ -215,15 +225,25 @@ module wb_bus_b3
     ); */
    wb_decode
      #(.SLAVES(SLAVES), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH),
+       .S0_ENABLE(S0_ENABLE),
        .S0_RANGE_WIDTH(S0_RANGE_WIDTH), .S0_RANGE_MATCH(S0_RANGE_MATCH),
+       .S1_ENABLE(S1_ENABLE),
        .S1_RANGE_WIDTH(S1_RANGE_WIDTH), .S1_RANGE_MATCH(S1_RANGE_MATCH),
+       .S2_ENABLE(S2_ENABLE),
        .S2_RANGE_WIDTH(S2_RANGE_WIDTH), .S2_RANGE_MATCH(S2_RANGE_MATCH),
+       .S3_ENABLE(S3_ENABLE),
        .S3_RANGE_WIDTH(S3_RANGE_WIDTH), .S3_RANGE_MATCH(S3_RANGE_MATCH),
+       .S4_ENABLE(S4_ENABLE),
        .S4_RANGE_WIDTH(S4_RANGE_WIDTH), .S4_RANGE_MATCH(S4_RANGE_MATCH),
+       .S5_ENABLE(S5_ENABLE),
        .S5_RANGE_WIDTH(S5_RANGE_WIDTH), .S5_RANGE_MATCH(S5_RANGE_MATCH),
+       .S6_ENABLE(S6_ENABLE),
        .S6_RANGE_WIDTH(S6_RANGE_WIDTH), .S6_RANGE_MATCH(S6_RANGE_MATCH),
+       .S7_ENABLE(S7_ENABLE),
        .S7_RANGE_WIDTH(S7_RANGE_WIDTH), .S7_RANGE_MATCH(S7_RANGE_MATCH),
+       .S8_ENABLE(S8_ENABLE),
        .S8_RANGE_WIDTH(S8_RANGE_WIDTH), .S8_RANGE_MATCH(S8_RANGE_MATCH),
+       .S9_ENABLE(S9_ENABLE),
        .S9_RANGE_WIDTH(S9_RANGE_WIDTH), .S9_RANGE_MATCH(S9_RANGE_MATCH))
    u_decode(/*AUTOINST*/
             // Outputs

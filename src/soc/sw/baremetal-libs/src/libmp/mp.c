@@ -212,7 +212,7 @@ int optimsoc_mp_msg_recv(optimsoc_mp_endpoint_handle eph, uint8_t *buffer,
 #endif
     }
 
-    endpoint_msg_recv(eph->ep, buffer, buffer_size, received_size);
+    endpoint_msg_recv(eph->ep, (uint32_t*) buffer, buffer_size, received_size);
 
     return ret;
 }

@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = optimsoc:noc:demux
+description = "NoC Demux"
+depend = optimsoc:base:constants
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/noc_demux.sv
+
+

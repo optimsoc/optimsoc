@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+name = optimsoc:noc:buffer
+description = "NoC Buffer"
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/noc_buffer.sv
+
+

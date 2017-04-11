@@ -107,8 +107,8 @@ module lisnoc_router_input_route (/*AUTOARG*/
    // Generating the current destination selection
    assign nxt_cur_select = ( // If there is no transfer we are waiting for or the active is finished ..
                              (~active || (active && read)) &&
-                             // .. and this is valid and  the first flit in a packet ..
-                             (fifo_valid && (flit_type==`FLIT_TYPE_HEADER || flit_type==`FLIT_TYPE_SINGLE))
+                             // .. and this is valid..
+                             (fifo_valid)
                              // .. take selection from the lookup vector
                              ) ? lookup_vector[flit_dest] :
                            // take current value otherwise

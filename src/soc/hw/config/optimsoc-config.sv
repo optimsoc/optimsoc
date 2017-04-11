@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 by the author(s)
+/* Copyright (c) 2016-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,6 @@
 
 package optimsoc;
 
-   typedef enum { DISTRIBUTED, PGAS } mem_access_t;
    typedef enum { EXTERNAL, PLAIN } lmem_style_t;
 
    typedef struct packed {
@@ -59,20 +58,23 @@ package optimsoc;
       // NoC-related configuration
       integer            NOC_DATA_WIDTH;
       integer            NOC_TYPE_WIDTH;
-      integer            NOC_VCHANNELS;
-      integer            NOC_VC_MPSIMPLE;
-      integer            NOC_VC_DMA_REQ;
-      integer            NOC_VC_DMA_RESP;
 
       // Tile configuration
-      mem_access_t       MEMORY_ACCESS;
       integer            LMEM_SIZE;
       lmem_style_t       LMEM_STYLE;
+      logic              ENABLE_BOOTROM;
+      integer            BOOTROM_SIZE;
+      logic              ENABLE_DM;
+      integer            DM_BASE;
+      integer            DM_SIZE;
+      logic              ENABLE_PGAS;
+      integer            PGAS_BASE;
+      integer            PGAS_SIZE;
 
       // Network adapter configuration
-      integer            NA_ENABLE_MPSIMPLE;
-      integer            NA_ENABLE_DMA;
-      integer            NA_DMA_GENIRQ;
+      logic              NA_ENABLE_MPSIMPLE;
+      logic              NA_ENABLE_DMA;
+      logic              NA_DMA_GENIRQ;
       integer            NA_DMA_ENTRIES;
 
       // Debug configuration
@@ -95,22 +97,30 @@ package optimsoc;
       // NoC-related configuration
       integer            NOC_DATA_WIDTH;
       integer            NOC_TYPE_WIDTH;
-      integer            NOC_VCHANNELS;
-      integer            NOC_VC_MPSIMPLE;
-      integer            NOC_VC_DMA_REQ;
-      integer            NOC_VC_DMA_RESP;
       // -> derived
       integer            NOC_FLIT_WIDTH; // Must be DATA_WIDTH+TYPE_WIDTH
+      integer            NOC_VCHANNELS;
 
       // Tile configuration
-      mem_access_t       MEMORY_ACCESS;
       integer            LMEM_SIZE;
       lmem_style_t       LMEM_STYLE;
+      logic              ENABLE_BOOTROM;
+      integer            BOOTROM_SIZE;
+      logic              ENABLE_DM;
+      integer            DM_BASE;
+      integer            DM_SIZE;
+      logic              ENABLE_PGAS;
+      integer            DM_RANGE_WIDTH;
+      integer            DM_RANGE_MATCH;
+      integer            PGAS_BASE;
+      integer            PGAS_SIZE;
+      integer            PGAS_RANGE_WIDTH;
+      integer            PGAS_RANGE_MATCH;
 
       // Network adapter configuration
-      integer            NA_ENABLE_MPSIMPLE;
-      integer            NA_ENABLE_DMA;
-      integer            NA_DMA_GENIRQ;
+      logic              NA_ENABLE_MPSIMPLE;
+      logic              NA_ENABLE_DMA;
+      logic              NA_DMA_GENIRQ;
       integer            NA_DMA_ENTRIES;
 
       // Debug configuration
@@ -133,13 +143,16 @@ package optimsoc;
       derive_config.GMEM_TILE = conf.GMEM_TILE;
       derive_config.NOC_DATA_WIDTH = conf.NOC_DATA_WIDTH;
       derive_config.NOC_TYPE_WIDTH = conf.NOC_TYPE_WIDTH;
-      derive_config.NOC_VCHANNELS = conf.NOC_VCHANNELS;
-      derive_config.NOC_VC_MPSIMPLE = conf.NOC_VC_MPSIMPLE;
-      derive_config.NOC_VC_DMA_REQ = conf.NOC_VC_DMA_REQ;
-      derive_config.NOC_VC_DMA_RESP = conf.NOC_VC_DMA_RESP;
-      derive_config.MEMORY_ACCESS = conf.MEMORY_ACCESS;
       derive_config.LMEM_SIZE = conf.LMEM_SIZE;
       derive_config.LMEM_STYLE = conf.LMEM_STYLE;
+      derive_config.ENABLE_BOOTROM = conf.ENABLE_BOOTROM;
+      derive_config.BOOTROM_SIZE = conf.BOOTROM_SIZE;
+      derive_config.ENABLE_DM = conf.ENABLE_DM;
+      derive_config.DM_BASE = conf.DM_BASE;
+      derive_config.DM_SIZE = conf.DM_SIZE;
+      derive_config.ENABLE_PGAS = conf.ENABLE_PGAS;
+      derive_config.PGAS_BASE = conf.PGAS_BASE;
+      derive_config.PGAS_SIZE = conf.PGAS_SIZE;
       derive_config.NA_ENABLE_MPSIMPLE = conf.NA_ENABLE_MPSIMPLE;
       derive_config.NA_ENABLE_DMA = conf.NA_ENABLE_DMA;
       derive_config.NA_DMA_GENIRQ = conf.NA_DMA_GENIRQ;
@@ -151,11 +164,22 @@ package optimsoc;
       // Derive the other parameters
       derive_config.TOTAL_NUM_CORES = conf.NUMCTS * conf.CORES_PER_TILE;
       derive_config.NOC_FLIT_WIDTH = conf.NOC_DATA_WIDTH + conf.NOC_TYPE_WIDTH;
-      derive_config.DEBUG_MODS_PER_CORE = (conf.DEBUG_STM + conf.DEBUG_CTM) * conf.USE_DEBUG;
+
+      derive_config.DM_RANGE_WIDTH = conf.ENABLE_DM ? 32-clog2_width(conf.DM_SIZE) : 1;
+      derive_config.DM_RANGE_MATCH = conf.DM_BASE >> (32-derive_config.DM_RANGE_WIDTH);
+      derive_config.PGAS_RANGE_WIDTH = conf.ENABLE_PGAS ? 32-clog2_width(conf.PGAS_SIZE) : 1;
+      derive_config.PGAS_RANGE_MATCH = conf.PGAS_BASE >> (32-derive_config.PGAS_RANGE_WIDTH);
+
+      derive_config.DEBUG_MODS_PER_CORE = (int'(conf.DEBUG_STM) + int'(conf.DEBUG_CTM)) * int'(conf.USE_DEBUG);
       derive_config.DEBUG_MODS_PER_TILE = (1 + derive_config.DEBUG_MODS_PER_CORE *
                                            conf.CORES_PER_TILE) * conf.USE_DEBUG;
       derive_config.DEBUG_NUM_MODS = (1 + conf.NUMCTS *
                                       derive_config.DEBUG_MODS_PER_TILE) * conf.USE_DEBUG;
+
+      // Constants
+      derive_config.NOC_VCHANNELS = 2;
    endfunction // DERIVE_CONFIG
 
+`include "optimsoc_functions.vh"
+   
 endpackage // optimsoc

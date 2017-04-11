@@ -45,13 +45,6 @@
 #define OPTIMSOC_NA_CONF_MPSIMPLE 0x1
 #define OPTIMSOC_NA_CONF_DMA      0x2
 
-#define OPTIMSOC_MPSIMPLE        OPTIMSOC_NA_BASE + 0x100000
-#define OPTIMSOC_MPSIMPLE_SEND   OPTIMSOC_MPSIMPLE + 0x0
-#define OPTIMSOC_MPSIMPLE_RECV   OPTIMSOC_MPSIMPLE + 0x0
-#define OPTIMSOC_MPSIMPLE_ENABLE OPTIMSOC_MPSIMPLE + 0x4
-
-#define OPTIMSOC_MPSIMPLE_STATUS_WAITING OPTIMSOC_MPSIMPLE + 0x18
-
 #define OPTIMSOC_DEST_MSB 31
 #define OPTIMSOC_DEST_LSB 27
 #define OPTIMSOC_CLASS_MSB 26
@@ -69,6 +62,10 @@
 
 /**
  * \defgroup libbaremetal Baremetal library
+ *
+ * This is the library to build software that runs directly on the hardware.
+ * It contains the basic drivers for the hardware, while relying on the
+ * standard OpenRISC libc (newlib).
  */
 
 /**
@@ -537,32 +534,84 @@ extern dma_success_t dma_wait(dma_transfer_handle_t id);
  */
 
 /**
- * \defgroup mp Message passing support
+ * \defgroup mpsimple Simple message passing buffers support
+ *
+ * The simple message passing buffer (mpbuffer) is a hardware device that
+ * can be used to communicate among compute tiles. They are useful to build
+ * efficient or optimized message passing applications, but in most cases
+ * the message passing library is recommended as it first encapsulates the
+ * actual message passing protocol (end-to-end flow control control etc.), and
+ * second uses the available hardware accelerators which are more performant
+ * than the message passing buffers.
+ *
+ * The message passing buffers are hardware FIFOs and the software directly
+ * writes and reads network packets into the FIFOs. There are multiple
+ * endpoints to mitigate message-dependent deadlocks. Your software can query
+ * the number of available endpoints with optimsoc_mp_simple_num_endpoints().
+ *
+ * Software can send a packet on an endpoint using optimsoc_mp_simple_send().
+ * To receive incoming packets, the software registers a handler for incoming
+ * messages using optimsoc_mp_simple_addhandler(). Messages from all endpoints
+ * invoke the handler, but you can register different handlers for different
+ * message classes.
+ *
+ * \note{Be careful with selecting classes, because they may be occupied by
+ * other hardware. If you are not sure, use class 0.}
+ *
  * \ingroup libbaremetal
  * @{
  */
 
 /**
- * Initialize simple message passing environment
+ * Initialize simple message passing buffers
  */
-extern void optimsoc_mp_simple_init(void);
+void optimsoc_mp_simple_init(void);
 
 /**
- * Enable hardware to receive packets
+ * Query the number of endpoints.
+ *
+ * \return Number of endpoints
  */
-void optimsoc_mp_simple_enable(void);
+uint16_t optimsoc_mp_simple_num_endpoints(void);
 
-int optimsoc_mp_simple_ctready(uint32_t rank);
+/**
+ * Enable the endpoint to receive packets
+ *
+ * The hardware will only be able to receive packets after it was enabled.
+ * Hence you need to check the endpoint from the remote using
+ * optimsoc_mp_simple_enable() before calling optimsoc_mp_simple_send().
+ *
+ * @param endpoint Endpoint buffer to enable
+ */
+void optimsoc_mp_simple_enable(uint16_t endpoint);
+
+/**
+ * Check if an endpoint at another compute tile is ready
+ *
+ * This function must be called before calling optimsoc_mp_simple_send(). The
+ * function is non-blocking, meaning that with the first call it will always
+ * return 0. It sends a message to the remote to check the state. Further calls
+ * will then return immediately if a successfull response was received,
+ * otherwise try again.
+ *
+ * The receiver must enable the endpoint using optimsoc_mp_simple_enable().
+ *
+ * \param rank Compute tile rank to check
+ * \param endpoint Endpoint buffer to check
+ * \return Endpoint status (0: not ready, 1: enabled)
+ */
+int optimsoc_mp_simple_ctready(uint32_t rank, uint16_t endpoint);
 
 /**
  * Send a message
  *
  * Sends a message of size from buf.
  *
+ * \param endpoint The endpoint to send the message on
  * \param size Size of the message in (word-sized) flits
  * \param buf Message buffer containint size flits
  */
-extern void optimsoc_mp_simple_send(unsigned int size, uint32_t* buf);
+void optimsoc_mp_simple_send(uint16_t endpoint, size_t size, uint32_t* buf);
 
 /**
  * Add a handler for a class of incoming messages
@@ -572,11 +621,10 @@ extern void optimsoc_mp_simple_send(unsigned int size, uint32_t* buf);
  * system you need to add a class handler. As there is no default class handler
  * all remaining classes are dropped.
  *
- * \param class Class to register
+ * \param cls Class to register
  * \param hnd Function pointer to handler for this class
  */
-extern void optimsoc_mp_simple_addhandler(unsigned int class,
-                                          void (*hnd)(unsigned int*,int));
+void optimsoc_mp_simple_addhandler(uint8_t cls, void (*hnd)(uint32_t*, size_t));
 
 /**
  * @}

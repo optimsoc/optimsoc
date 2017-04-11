@@ -10,9 +10,6 @@ WD_HAS_CHANGES=$(git diff-index --quiet HEAD --; echo $?)
 # we need a clean working directory for subtree
 [ $WD_HAS_CHANGES == 1 ] && git stash
 
-# lisnoc
-git subtree pull -m "Update external/lisnoc" --prefix external/lisnoc https://github.com/tum-lis/lisnoc.git master --squash
-
 # glip
 git subtree pull -m "Update external/glip" --prefix external/glip https://github.com/tum-lis/glip.git master --squash
 
