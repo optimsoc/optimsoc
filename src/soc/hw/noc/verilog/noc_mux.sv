@@ -27,40 +27,43 @@
  *   Andreas Lankes <andreas.lankes@tum.de>
  */
 
+import optimsoc::*;
 
 module noc_mux
   #(
-    parameter FLIT_DATA_WIDTH = 32,
-    parameter FLIT_TYPE_WIDTH = 34,
-    parameter CHANNELS = 2
+    parameter config_t CONFIG = 'x,
+    parameter CHANNELS        = 2
     )
    (
-    input 				 clk, rst,
+    input 					    clk, rst,
 
-    input [CHANNELS-1:0][FLIT_WIDTH-1:0] in_flit,
-    input [CHANNELS-1:0] 		 in_valid,
-    output reg [CHANNELS-1:0] 		 in_ready,
+    input [CHANNELS-1:0][CONFIG.NOC_DATA_WIDTH-1:0] in_flit,
+    input [CHANNELS-1:0] 			    in_last,
+    input [CHANNELS-1:0] 			    in_valid,
+    output reg [CHANNELS-1:0] 			    in_ready,
 
-    output reg [FLIT_WIDTH-1:0] 	 out_flit,
-    output reg 				 out_valid,
-    input 				 out_ready
+    output reg [CONFIG.NOC_DATA_WIDTH-1:0] 	    out_flit,
+    output reg 					    out_last,
+    output reg 					    out_valid,
+    input 					    out_ready
     );
 
-   localparam FLIT_WIDTH = FLIT_DATA_WIDTH + FLIT_TYPE_WIDTH;
+   wire [CHANNELS-1:0] 				     select;
+   reg [CHANNELS-1:0] 				     active;
 
-   wire [CHANNELS-1:0] 			 select;
-   reg [CHANNELS-1:0] 			 active;
-
-   reg 					 activeroute, nxt_activeroute;
+   reg 						     activeroute, nxt_activeroute;
    
-   wire [CHANNELS-1:0] 			 req_masked;
+   wire [CHANNELS-1:0] 				     req_masked;
    assign req_masked = {CHANNELS{~activeroute & out_ready}} & in_valid;
 
    always @(*) begin
-      out_flit = {FLIT_WIDTH{1'bz}};
+      out_flit = {CONFIG.NOC_DATA_WIDTH{1'b0}};
+      out_last = 1'b0;
       for (int c = 0; c < CHANNELS; c = c + 1) begin
-	 if (select[c])
-	   out_flit = in_flit[c];
+         if (select[c]) begin
+            out_flit = in_flit[c];
+	    out_last = in_last[c];
+	 end
       end
    end		 
 
@@ -72,7 +75,7 @@ module noc_mux
          if (|(in_valid & active) && out_ready) begin
             in_ready = active;
             out_valid = 1;
-            if (out_flit[FLIT_DATA_WIDTH])
+            if (out_last)
               nxt_activeroute = 0;
          end else begin
             out_valid = 1'b0;
@@ -82,7 +85,7 @@ module noc_mux
          out_valid = 0;
          if (|in_valid) begin
             out_valid = 1'b1;
-            nxt_activeroute = ~out_flit[FLIT_DATA_WIDTH];
+            nxt_activeroute = ~out_last;
             in_ready = select & {CHANNELS{out_ready}};
          end
       end

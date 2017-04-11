@@ -26,27 +26,31 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
+import optimsoc::*;
+
 module noc_buffer
-  #(parameter FLIT_WIDTH = 34,
+  #(parameter config_t CONFIG = 'x,
     parameter DEPTH = 16)    
    (
-    input 		    clk,
-    input 		    rst,
+    input 				clk,
+    input 				rst,
 
     // FIFO input side
-    input [FLIT_WIDTH-1:0]  in_flit,
-    input 		    in_valid,
-    output 		    in_ready,
+    input [CONFIG.NOC_DATA_WIDTH-1:0] 	in_flit,
+    input 				in_last,
+    input 				in_valid,
+    output 				in_ready,
 
     //FIFO output side
-    output [FLIT_WIDTH-1:0] out_flit,
-    output 		    out_valid,
-    input 		    out_ready
+    output [CONFIG.NOC_DATA_WIDTH-1:0] out_flit,
+    output 				out_last,
+    output 				out_valid,
+    input 				out_ready
     );
    
    // Signals for fifo
-   reg [FLIT_WIDTH-1:0] fifo_data [0:DEPTH-1]; //actual fifo
-   reg [FLIT_WIDTH-1:0] nxt_fifo_data [0:DEPTH-1];
+   reg [CONFIG.NOC_DATA_WIDTH:0] fifo_data [0:DEPTH-1]; //actual fifo
+   reg [CONFIG.NOC_DATA_WIDTH:0] nxt_fifo_data [0:DEPTH-1];
 
    reg [DEPTH:0]         fifo_write_ptr;
 
@@ -56,7 +60,8 @@ module noc_buffer
    assign pop = out_valid & out_ready;
    assign push = in_valid & in_ready;
 
-   assign out_flit = fifo_data[0];
+   assign out_flit = fifo_data[0][CONFIG.NOC_DATA_WIDTH-1:0];
+   assign out_last = fifo_data[0][CONFIG.NOC_DATA_WIDTH];
    assign out_valid = !fifo_write_ptr[0];
 
    assign in_ready = !fifo_write_ptr[DEPTH];
@@ -76,14 +81,14 @@ module noc_buffer
       for (i=0;i<DEPTH;i=i+1) begin
          if (pop) begin
             if (push & fifo_write_ptr[i+1]) begin
-               nxt_fifo_data[i] = in_flit;
+               nxt_fifo_data[i] = {in_last, in_flit};
             end else if (i<DEPTH-1) begin
                nxt_fifo_data[i] = fifo_data[i+1];
             end else begin
                nxt_fifo_data[i] = fifo_data[i];
             end
          end else if (push & fifo_write_ptr[i]) begin
-            nxt_fifo_data[i] = in_flit;
+            nxt_fifo_data[i] = {in_last, in_flit};
          end else begin
             nxt_fifo_data[i] = fifo_data[i];
          end
