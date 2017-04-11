@@ -26,34 +26,34 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
+import optimsoc::*;
 import constants::*;
 
 module noc_demux
   #(
-    parameter FLIT_DATA_WIDTH = 32,
-    parameter FLIT_TYPE_WIDTH = 34,
+    parameter config_t CONFIG = 'x,
     parameter CHANNELS = 2,
     parameter [63:0] MAPPING = 'x
     )
    (
-    input                                 clk, rst,
+    input 					      clk, rst,
 
-    input [FLIT_WIDTH-1:0]                in_flit,
-    input                                 in_valid,
-    output reg                            in_ready,
+    input [CONFIG.NOC_DATA_WIDTH-1:0] 		      in_flit,
+    input 					      in_last,
+    input 					      in_valid,
+    output reg 					      in_ready,
 
-    output [CHANNELS-1:0][FLIT_WIDTH-1:0] out_flit,
-    output reg [CHANNELS-1:0]             out_valid,
-    input [CHANNELS-1:0]                  out_ready
+    output [CHANNELS-1:0][CONFIG.NOC_DATA_WIDTH-1:0] out_flit,
+    output [CHANNELS-1:0] 			      out_last,
+    output reg [CHANNELS-1:0] 			      out_valid,
+    input [CHANNELS-1:0] 			      out_ready
     );
 
-   localparam FLIT_WIDTH = FLIT_DATA_WIDTH + FLIT_TYPE_WIDTH;
+   reg [CHANNELS-1:0] 				      active;
+   reg [CHANNELS-1:0] 				      nxt_active;
 
-   reg [CHANNELS-1:0]                         active;
-   reg [CHANNELS-1:0]                         nxt_active;
-
-   wire [2:0]                                 packet_class;
-   reg [CHANNELS-1:0]                         select;
+   wire [2:0] 					      packet_class;
+   reg [CHANNELS-1:0] 				      select;
    
    assign packet_class = in_flit[NOC_CLASS_MSB:NOC_CLASS_LSB];
    
@@ -65,6 +65,7 @@ module noc_demux
    end
 
    assign out_flit = {CHANNELS{in_flit}};
+   assign out_last = {CHANNELS{in_last}};
    
    always @(*) begin
       nxt_active = active;
@@ -74,16 +75,16 @@ module noc_demux
 
       if (active == 0) begin
          in_ready = select & out_ready;
-         out_valid = select & {CHANNELS{in_valid}};	 
-	 
-         if (in_valid & ~in_flit[FLIT_DATA_WIDTH]) begin
-	    nxt_active = select;
+         out_valid = select & {CHANNELS{in_valid}};
+
+         if (in_valid & ~in_last) begin
+            nxt_active = select;
          end
       end else begin
          in_ready = active & out_ready;
          out_valid = active & {CHANNELS{in_valid}};
 
-         if (in_valid & in_flit[FLIT_DATA_WIDTH]) begin
+         if (in_valid & in_last) begin
             nxt_active = 0;
          end
       end

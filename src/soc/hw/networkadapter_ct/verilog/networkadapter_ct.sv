@@ -97,10 +97,12 @@ module networkadapter_ct
 
    wire [CHANNELS-1:0] mod_out_ready;
    wire [CHANNELS-1:0] mod_out_valid;
-   wire [FLIT_WIDTH-1:0] mod_out_flit[0:CHANNELS-1];
+   wire [CHANNELS-1:0] mod_out_last;
+   wire [CONFIG.NOC_DATA_WIDTH-1:0] mod_out_flit[0:CHANNELS-1];
    wire [CHANNELS-1:0] mod_in_ready;
    wire [CHANNELS-1:0] mod_in_valid;
-   wire [FLIT_WIDTH-1:0] mod_in_flit[0:CHANNELS-1];
+   wire [CHANNELS-1:0] mod_in_last;
+   wire [CONFIG.NOC_DATA_WIDTH-1:0] mod_in_flit[0:CHANNELS-1];
 
    // The different interfaces at the bus slave
    //  slave 0: configuration
@@ -190,49 +192,18 @@ module networkadapter_ct
    // just wire them statically for the moment
    assign wbif_rty_o[ID_MPSIMPLE] = 1'b0;
 
-   wire [2*CONFIG.NOC_DATA_WIDTH-1:0] mpbuffer_out_flit;
-   wire [1:0]                         mpbuffer_out_last;
-   wire [1:0]                         mpbuffer_out_valid;
-   wire [1:0]                         mpbuffer_out_ready;
-   wire [2*CONFIG.NOC_DATA_WIDTH-1:0] mpbuffer_in_flit;
-   wire [1:0]                         mpbuffer_in_last;
-   wire [1:0]                         mpbuffer_in_valid;
-   wire [1:0]                         mpbuffer_in_ready;
-
-   assign mod_out_flit[C_MPSIMPLE_REQ]
-     = {mpbuffer_out_last[0], 1'b0, mpbuffer_out_flit[0 +: CONFIG.NOC_DATA_WIDTH]};
-   assign mod_out_valid[C_MPSIMPLE_REQ] = mpbuffer_out_valid[0];
-   assign mpbuffer_out_ready[0] = mod_out_ready[C_MPSIMPLE_REQ];
-
-   assign mod_out_flit[C_MPSIMPLE_RESP]
-     = {mpbuffer_out_last[1], 1'b0, mpbuffer_out_flit[CONFIG.NOC_DATA_WIDTH +: CONFIG.NOC_DATA_WIDTH]};
-   assign mod_out_valid[C_MPSIMPLE_RESP] = mpbuffer_out_valid[1];
-   assign mpbuffer_out_ready[1] = mod_out_ready[C_MPSIMPLE_RESP];
-
-   assign mpbuffer_in_flit[0 +: CONFIG.NOC_DATA_WIDTH]
-     = mod_in_flit[C_MPSIMPLE_REQ][CONFIG.NOC_DATA_WIDTH-1:0];
-   assign mpbuffer_in_last[0] = mod_in_flit[C_MPSIMPLE_REQ][CONFIG.NOC_DATA_WIDTH+1];
-   assign mpbuffer_in_valid[0] = mod_in_valid[C_MPSIMPLE_REQ];
-   assign mod_in_ready[C_MPSIMPLE_REQ] = mpbuffer_in_ready[0];
-
-   assign mpbuffer_in_flit[CONFIG.NOC_DATA_WIDTH +: CONFIG.NOC_DATA_WIDTH] 
-     = mod_in_flit[C_MPSIMPLE_RESP][CONFIG.NOC_DATA_WIDTH-1:0];
-   assign mpbuffer_in_last[1] = mod_in_flit[C_MPSIMPLE_RESP][CONFIG.NOC_DATA_WIDTH+1];
-   assign mpbuffer_in_valid[1] = mod_in_valid[C_MPSIMPLE_RESP];
-   assign mod_in_ready[C_MPSIMPLE_RESP] = mpbuffer_in_ready[1];
-
    mpbuffer_wb
      #(.CONFIG(CONFIG),.N(2),.SIZE(16))
    u_mpbuffer
      (.*,
-      .noc_out_flit  (mpbuffer_out_flit),
-      .noc_out_last  (mpbuffer_out_last),
-      .noc_out_valid (mpbuffer_out_valid),
-      .noc_out_ready (mpbuffer_out_ready),
-      .noc_in_flit   (mpbuffer_in_flit),
-      .noc_in_last   (mpbuffer_in_last),
-      .noc_in_valid  (mpbuffer_in_valid),
-      .noc_in_ready  (mpbuffer_in_ready),
+      .noc_out_flit  ({mod_out_flit[C_MPSIMPLE_RESP], mod_out_flit[C_MPSIMPLE_REQ]}),
+      .noc_out_last  ({mod_out_last[C_MPSIMPLE_RESP], mod_out_last[C_MPSIMPLE_REQ]}),
+      .noc_out_valid ({mod_out_valid[C_MPSIMPLE_RESP], mod_out_valid[C_MPSIMPLE_REQ]}),
+      .noc_out_ready ({mod_out_ready[C_MPSIMPLE_RESP], mod_out_ready[C_MPSIMPLE_REQ]}),
+      .noc_in_flit   ({mod_in_flit[C_MPSIMPLE_RESP], mod_in_flit[C_MPSIMPLE_REQ]}),
+      .noc_in_last   ({mod_in_last[C_MPSIMPLE_RESP], mod_in_last[C_MPSIMPLE_REQ]}),
+      .noc_in_valid  ({mod_in_valid[C_MPSIMPLE_RESP], mod_in_valid[C_MPSIMPLE_REQ]}),
+      .noc_in_ready  ({mod_in_ready[C_MPSIMPLE_RESP], mod_in_ready[C_MPSIMPLE_REQ]}),
 
       .wb_dat_o      (wbif_dat_o[ID_MPSIMPLE*32 +: 32]),
       .wb_ack_o      (wbif_ack_o[ID_MPSIMPLE]),
@@ -251,19 +222,27 @@ module networkadapter_ct
          wire [3:0] irq_dma;
          assign irq[0] = |irq_dma;
 
+	 wire [1:0][CONFIG.NOC_FLIT_WIDTH-1:0] dma_in_flit, dma_out_flit;
+	 assign dma_in_flit[0] = {mod_in_last[C_DMA_REQ], 1'b0, mod_in_flit[C_DMA_REQ]};
+	 assign mod_out_last[C_DMA_REQ] = dma_out_flit[0][CONFIG.NOC_DATA_WIDTH+1];
+	 assign mod_out_flit[C_DMA_REQ] = dma_out_flit[0][CONFIG.NOC_DATA_WIDTH-1:0];
+	 assign dma_in_flit[1] = {mod_in_last[C_DMA_RESP], 1'b0, mod_in_flit[C_DMA_RESP]};
+	 assign mod_out_last[C_DMA_RESP] = dma_out_flit[1][CONFIG.NOC_DATA_WIDTH+1];
+	 assign mod_out_flit[C_DMA_RESP] = dma_out_flit[1][CONFIG.NOC_DATA_WIDTH-1:0];
+
          /* lisnoc_dma AUTO_TEMPLATE(
           .noc_in_req_ready (mod_in_ready[C_DMA_REQ]),
           .noc_in_req_valid (mod_in_valid[C_DMA_REQ]),
-          .noc_in_req_flit  (mod_in_flit[C_DMA_REQ][FLIT_WIDTH-1:0]),
+          .noc_in_req_flit  (dma_in_flit[0]),
           .noc_in_resp_ready (mod_in_ready[C_DMA_RESP]),
           .noc_in_resp_valid (mod_in_valid[C_DMA_RESP]),
-          .noc_in_resp_flit  (mod_in_flit[C_DMA_RESP][FLIT_WIDTH-1:0]),
+          .noc_in_resp_flit  (dma_in_flit[1]),
           .noc_out_req_ready (mod_out_ready[C_DMA_REQ]),
           .noc_out_req_valid (mod_out_valid[C_DMA_REQ]),
-          .noc_out_req_flit  (mod_out_flit[C_DMA_REQ][FLIT_WIDTH-1:0]),
+          .noc_out_req_flit  (dma_out_flit[0]),
           .noc_out_resp_ready (mod_out_ready[C_DMA_RESP]),
           .noc_out_resp_valid (mod_out_valid[C_DMA_RESP]),
-          .noc_out_resp_flit  (mod_out_flit[C_DMA_RESP][FLIT_WIDTH-1:0]),
+          .noc_out_resp_flit  (dma_out_flit[1]),
           .wb_if_dat_\(.*\)    (wbif_dat_\1[ID_DMA*32 +: 32]),
           .wb_if_adr_i    ({8'h0, wbif_adr_i[ID_DMA*24 +: 24]}),
           .wb_if_\(.*\)    (wbif_\1[ID_DMA]),
@@ -273,179 +252,182 @@ module networkadapter_ct
          lisnoc_dma
            #(.tileid(TILEID),.table_entries(CONFIG.NA_DMA_ENTRIES))
          u_dma(/*AUTOINST*/
-               // Outputs
-               .noc_in_req_ready        (mod_in_ready[C_DMA_REQ]), // Templated
-               .noc_in_resp_ready       (mod_in_ready[C_DMA_RESP]), // Templated
-               .noc_out_req_flit        (mod_out_flit[C_DMA_REQ][FLIT_WIDTH-1:0]), // Templated
-               .noc_out_req_valid       (mod_out_valid[C_DMA_REQ]), // Templated
-               .noc_out_resp_flit       (mod_out_flit[C_DMA_RESP][FLIT_WIDTH-1:0]), // Templated
-               .noc_out_resp_valid      (mod_out_valid[C_DMA_RESP]), // Templated
-               .wb_if_dat_o             (wbif_dat_o[ID_DMA*32 +: 32]), // Templated
-               .wb_if_ack_o             (wbif_ack_o[ID_DMA]),    // Templated
-               .wb_if_err_o             (wbif_err_o[ID_DMA]),    // Templated
-               .wb_if_rty_o             (wbif_rty_o[ID_DMA]),    // Templated
-               .wb_adr_o                (wbm_adr_o),             // Templated
-               .wb_dat_o                (wbm_dat_o),             // Templated
-               .wb_cyc_o                (wbm_cyc_o),             // Templated
-               .wb_stb_o                (wbm_stb_o),             // Templated
-               .wb_sel_o                (wbm_sel_o),             // Templated
-               .wb_we_o                 (wbm_we_o),              // Templated
-               .wb_cab_o                (wbm_cab_o),             // Templated
-               .wb_cti_o                (wbm_cti_o),             // Templated
-               .wb_bte_o                (wbm_bte_o),             // Templated
-               .irq                     (irq_dma),               // Templated
-               // Inputs
-               .clk                     (clk),
-               .rst                     (rst),
-               .noc_in_req_flit         (mod_in_flit[C_DMA_REQ][FLIT_WIDTH-1:0]), // Templated
-               .noc_in_req_valid        (mod_in_valid[C_DMA_REQ]), // Templated
-               .noc_in_resp_flit        (mod_in_flit[C_DMA_RESP][FLIT_WIDTH-1:0]), // Templated
-               .noc_in_resp_valid       (mod_in_valid[C_DMA_RESP]), // Templated
-               .noc_out_req_ready       (mod_out_ready[C_DMA_REQ]), // Templated
-               .noc_out_resp_ready      (mod_out_ready[C_DMA_RESP]), // Templated
-               .wb_if_adr_i             ({8'h0, wbif_adr_i[ID_DMA*24 +: 24]}), // Templated
-               .wb_if_dat_i             (wbif_dat_i[ID_DMA*32 +: 32]), // Templated
-               .wb_if_cyc_i             (wbif_cyc_i[ID_DMA]),    // Templated
-               .wb_if_stb_i             (wbif_stb_i[ID_DMA]),    // Templated
-               .wb_if_we_i              (wbif_we_i[ID_DMA]),     // Templated
-               .wb_dat_i                (wbm_dat_i),             // Templated
-               .wb_ack_i                (wbm_ack_i));            // Templated
+	       // Outputs
+	       .noc_in_req_ready	(mod_in_ready[C_DMA_REQ]), // Templated
+	       .noc_in_resp_ready	(mod_in_ready[C_DMA_RESP]), // Templated
+	       .noc_out_req_flit	(dma_out_flit[0]),	 // Templated
+	       .noc_out_req_valid	(mod_out_valid[C_DMA_REQ]), // Templated
+	       .noc_out_resp_flit	(dma_out_flit[1]),	 // Templated
+	       .noc_out_resp_valid	(mod_out_valid[C_DMA_RESP]), // Templated
+	       .wb_if_dat_o		(wbif_dat_o[ID_DMA*32 +: 32]), // Templated
+	       .wb_if_ack_o		(wbif_ack_o[ID_DMA]),	 // Templated
+	       .wb_if_err_o		(wbif_err_o[ID_DMA]),	 // Templated
+	       .wb_if_rty_o		(wbif_rty_o[ID_DMA]),	 // Templated
+	       .wb_adr_o		(wbm_adr_o),		 // Templated
+	       .wb_dat_o		(wbm_dat_o),		 // Templated
+	       .wb_cyc_o		(wbm_cyc_o),		 // Templated
+	       .wb_stb_o		(wbm_stb_o),		 // Templated
+	       .wb_sel_o		(wbm_sel_o),		 // Templated
+	       .wb_we_o			(wbm_we_o),		 // Templated
+	       .wb_cab_o		(wbm_cab_o),		 // Templated
+	       .wb_cti_o		(wbm_cti_o),		 // Templated
+	       .wb_bte_o		(wbm_bte_o),		 // Templated
+	       .irq			(irq_dma),		 // Templated
+	       // Inputs
+	       .clk			(clk),
+	       .rst			(rst),
+	       .noc_in_req_flit		(dma_in_flit[0]),	 // Templated
+	       .noc_in_req_valid	(mod_in_valid[C_DMA_REQ]), // Templated
+	       .noc_in_resp_flit	(dma_in_flit[1]),	 // Templated
+	       .noc_in_resp_valid	(mod_in_valid[C_DMA_RESP]), // Templated
+	       .noc_out_req_ready	(mod_out_ready[C_DMA_REQ]), // Templated
+	       .noc_out_resp_ready	(mod_out_ready[C_DMA_RESP]), // Templated
+	       .wb_if_adr_i		({8'h0, wbif_adr_i[ID_DMA*24 +: 24]}), // Templated
+	       .wb_if_dat_i		(wbif_dat_i[ID_DMA*32 +: 32]), // Templated
+	       .wb_if_cyc_i		(wbif_cyc_i[ID_DMA]),	 // Templated
+	       .wb_if_stb_i		(wbif_stb_i[ID_DMA]),	 // Templated
+	       .wb_if_we_i		(wbif_we_i[ID_DMA]),	 // Templated
+	       .wb_dat_i		(wbm_dat_i),		 // Templated
+	       .wb_ack_i		(wbm_ack_i));		 // Templated
       end else begin // if (CONFIG.NA_ENABLE_DMA)
          assign irq[0] = 1'b0;
       end
    endgenerate
 
-   wire [FLIT_WIDTH-1:0] muxed0_flit;
-   wire                  muxed0_valid, muxed0_ready;
-   wire [FLIT_WIDTH-1:0] muxed1_flit;
-   wire                  muxed1_valid, muxed1_ready;
+   wire [1:0][CONFIG.NOC_DATA_WIDTH-1:0] muxed_flit;
+   wire [1:0] 				 muxed_last, muxed_valid, muxed_ready;
 
    noc_mux
-     #(.FLIT_DATA_WIDTH (CONFIG.NOC_DATA_WIDTH),
-       .FLIT_TYPE_WIDTH (CONFIG.NOC_TYPE_WIDTH),
-       .CHANNELS        (2))
+     #(.CONFIG(CONFIG), .CHANNELS(2))
    u_mux0
      (.*,
       .in_flit   ({mod_out_flit[C_MPSIMPLE_REQ], mod_out_flit[C_DMA_REQ]}),
+      .in_last   ({mod_out_last[C_MPSIMPLE_REQ], mod_out_last[C_DMA_REQ]}),
       .in_valid  ({mod_out_valid[C_MPSIMPLE_REQ], mod_out_valid[C_DMA_REQ]}),
       .in_ready  ({mod_out_ready[C_MPSIMPLE_REQ], mod_out_ready[C_DMA_REQ]}),
-      .out_flit  (muxed0_flit),
-      .out_valid (muxed0_valid),
-      .out_ready (muxed0_ready));
+      .out_flit  (muxed_flit[0]),
+      .out_last  (muxed_last[0]),
+      .out_valid (muxed_valid[0]),
+      .out_ready (muxed_ready[0]));
 
    noc_mux
-     #(.FLIT_DATA_WIDTH (CONFIG.NOC_DATA_WIDTH),
-       .FLIT_TYPE_WIDTH (CONFIG.NOC_TYPE_WIDTH),
-       .CHANNELS        (2))
+     #(.CONFIG(CONFIG), .CHANNELS(2))
    u_mux1
      (.*,
       .in_flit   ({mod_out_flit[C_MPSIMPLE_RESP], mod_out_flit[C_DMA_RESP]}),
+      .in_last   ({mod_out_last[C_MPSIMPLE_RESP], mod_out_last[C_DMA_RESP]}),
       .in_valid  ({mod_out_valid[C_MPSIMPLE_RESP], mod_out_valid[C_DMA_RESP]}),
       .in_ready  ({mod_out_ready[C_MPSIMPLE_RESP], mod_out_ready[C_DMA_RESP]}),
-      .out_flit  (muxed1_flit),
-      .out_valid (muxed1_valid),
-      .out_ready (muxed1_ready));
+      .out_flit  (muxed_flit[1]),
+      .out_last  (muxed_last[1]),
+      .out_valid (muxed_valid[1]),
+      .out_ready (muxed_ready[1]));
 
-   wire [FLIT_WIDTH-1:0] outbuffer0_flit;
-   wire                  outbuffer0_valid, outbuffer0_ready;
-   wire [FLIT_WIDTH-1:0] outbuffer1_flit;
-   wire                  outbuffer1_valid, outbuffer1_ready;
+   wire [1:0][CONFIG.NOC_DATA_WIDTH-1:0] outbuffer_flit;
+   wire [1:0] 				 outbuffer_last, outbuffer_valid, outbuffer_ready;
 
    noc_buffer
-     #(.FLIT_WIDTH (FLIT_WIDTH),
-       .DEPTH      (4))
+     #(.CONFIG(CONFIG), .DEPTH(4))
    u_outbuffer0
      (.*,
-      .in_flit   (muxed0_flit),
-      .in_valid  (muxed0_valid),
-      .in_ready  (muxed0_ready),
-      .out_flit  (outbuffer0_flit),
-      .out_valid (outbuffer0_valid),
-      .out_ready (outbuffer0_ready));
+      .in_flit   (muxed_flit[0]),
+      .in_last   (muxed_last[0]),
+      .in_valid  (muxed_valid[0]),
+      .in_ready  (muxed_ready[0]),
+      .out_flit  (outbuffer_flit[0]),
+      .out_last  (outbuffer_last[0]),
+      .out_valid (outbuffer_valid[0]),
+      .out_ready (outbuffer_ready[0]));
 
    noc_buffer
-     #(.FLIT_WIDTH (FLIT_WIDTH),
-       .DEPTH      (4))
+     #(.CONFIG(CONFIG), .DEPTH(4))
    u_outbuffer1
      (.*,
-      .in_flit   (muxed1_flit),
-      .in_valid  (muxed1_valid),
-      .in_ready  (muxed1_ready),
-      .out_flit  (outbuffer1_flit),
-      .out_valid (outbuffer1_valid),
-      .out_ready (outbuffer1_ready));
+      .in_flit   (muxed_flit[1]),
+      .in_last   (muxed_last[1]),
+      .in_valid  (muxed_valid[1]),
+      .in_ready  (muxed_ready[1]),
+      .out_flit  (outbuffer_flit[1]),
+      .out_last  (outbuffer_last[1]),
+      .out_valid (outbuffer_valid[1]),
+      .out_ready (outbuffer_ready[1]));
+
+   wire [1:0][CONFIG.NOC_FLIT_WIDTH-1:0] outarb_flit;
+   assign outarb_flit[0] = {outbuffer_last[0], 1'b0, outbuffer_flit[0]};
+   assign outarb_flit[1] = {outbuffer_last[1], 1'b0, outbuffer_flit[1]};
 
    lisnoc_router_output_arbiter
      #(.vchannels(VCHANNELS))
    u_arb(
          // Outputs
-         .fifo_ready_o            ({outbuffer1_ready, outbuffer0_ready}),
+         .fifo_ready_o            ({outbuffer_ready[1], outbuffer_ready[0]}),
          .link_valid_o            (noc_out_valid[VCHANNELS-1:0]),
          .link_flit_o             (noc_out_flit[FLIT_WIDTH-1:0]),
          // Inputs
          .clk                     (clk),
          .rst                     (rst),
-         .fifo_valid_i            ({outbuffer1_valid, outbuffer0_valid}),
-         .fifo_flit_i             ({outbuffer1_flit, outbuffer0_flit}),
+         .fifo_valid_i            ({outbuffer_valid[1], outbuffer_valid[0]}),
+         .fifo_flit_i             ({outarb_flit[1], outarb_flit[0]}),
          .link_ready_i            (noc_out_ready[VCHANNELS-1:0]));
 
-   wire [FLIT_WIDTH-1:0] inbuffer0_flit;
-   wire                  inbuffer0_valid, inbuffer0_ready;
+   wire [1:0][CONFIG.NOC_DATA_WIDTH-1:0] inbuffer_flit;
+   wire [1:0] 				 inbuffer_last, inbuffer_valid, inbuffer_ready;
 
    noc_buffer
-     #(.FLIT_WIDTH (FLIT_WIDTH),
-       .DEPTH      (4))
-   u_buffer0
+     #(.CONFIG(CONFIG), .DEPTH(4))
+   u_inbuffer0
      (.*,
-      .in_flit   (noc_in_flit),
+      .in_flit   (noc_in_flit[CONFIG.NOC_DATA_WIDTH-1:0]),
+      .in_last   (noc_in_flit[CONFIG.NOC_DATA_WIDTH+1]),
       .in_valid  (noc_in_valid[0]),
       .in_ready  (noc_in_ready[0]),
-      .out_flit  (inbuffer0_flit),
-      .out_valid (inbuffer0_valid),
-      .out_ready (inbuffer0_ready));
+      .out_flit  (inbuffer_flit[0]),
+      .out_last  (inbuffer_last[0]),
+      .out_valid (inbuffer_valid[0]),
+      .out_ready (inbuffer_ready[0]));
 
    noc_demux
-     #(.FLIT_DATA_WIDTH (CONFIG.NOC_DATA_WIDTH),
-       .FLIT_TYPE_WIDTH (CONFIG.NOC_TYPE_WIDTH),
+     #(.CONFIG          (CONFIG),
        .CHANNELS        (2),
        .MAPPING         ({ 48'h0, 8'h2, 8'h1 }))
    u_demux0
      (.*,
-      .in_flit                    (inbuffer0_flit),
-      .in_valid                   (inbuffer0_valid),
-      .in_ready                   (inbuffer0_ready),
+      .in_flit                    (inbuffer_flit[0]),
+      .in_last                    (inbuffer_last[0]),
+      .in_valid                   (inbuffer_valid[0]),
+      .in_ready                   (inbuffer_ready[0]),
       .out_flit                   ({mod_in_flit[C_DMA_REQ], mod_in_flit[C_MPSIMPLE_REQ]}),
+      .out_last                   ({mod_in_last[C_DMA_REQ], mod_in_last[C_MPSIMPLE_REQ]}),
       .out_valid                  ({mod_in_valid[C_DMA_REQ], mod_in_valid[C_MPSIMPLE_REQ]}),
       .out_ready                  ({mod_in_ready[C_DMA_REQ], mod_in_ready[C_MPSIMPLE_REQ]}));
 
-   wire [FLIT_WIDTH-1:0] inbuffer1_flit;
-   wire                  inbuffer1_valid, inbuffer1_ready;
-
    noc_buffer
-     #(.FLIT_WIDTH (FLIT_WIDTH),
-       .DEPTH      (4))
-   u_buffer1
+     #(.CONFIG(CONFIG), .DEPTH(4))
+   u_inbuffer1
      (.*,
-      .in_flit   (noc_in_flit),
+      .in_flit   (noc_in_flit[CONFIG.NOC_DATA_WIDTH-1:0]),
+      .in_last   (noc_in_flit[CONFIG.NOC_DATA_WIDTH+1]),
       .in_valid  (noc_in_valid[1]),
       .in_ready  (noc_in_ready[1]),
-      .out_flit  (inbuffer1_flit),
-      .out_valid (inbuffer1_valid),
-      .out_ready (inbuffer1_ready));
+      .out_flit  (inbuffer_flit[1]),
+      .out_last  (inbuffer_last[1]),
+      .out_valid (inbuffer_valid[1]),
+      .out_ready (inbuffer_ready[1]));
 
    noc_demux
-     #(.FLIT_DATA_WIDTH (CONFIG.NOC_DATA_WIDTH),
-       .FLIT_TYPE_WIDTH (CONFIG.NOC_TYPE_WIDTH),
-       .CHANNELS        (2),
-       .MAPPING         ({ 48'h0, 8'h2, 8'h1 }))
+     #(.CONFIG   (CONFIG),
+       .CHANNELS (2),
+       .MAPPING  ({ 48'h0, 8'h2, 8'h1 }))
    u_demux1
      (.*,
-      .in_flit                    (inbuffer1_flit),
-      .in_valid                   (inbuffer1_valid),
-      .in_ready                   (inbuffer1_ready),
-      .out_flit                   ({mod_in_flit[C_DMA_RESP], mod_in_flit[C_MPSIMPLE_RESP]}),
-      .out_valid                  ({mod_in_valid[C_DMA_RESP], mod_in_valid[C_MPSIMPLE_RESP]}),
-      .out_ready                  ({mod_in_ready[C_DMA_RESP], mod_in_ready[C_MPSIMPLE_RESP]}));
+      .in_flit    (inbuffer_flit[1]),
+      .in_last    (inbuffer_last[1]),
+      .in_valid   (inbuffer_valid[1]),
+      .in_ready   (inbuffer_ready[1]),
+      .out_flit   ({mod_in_flit[C_DMA_RESP], mod_in_flit[C_MPSIMPLE_RESP]}),
+      .out_last   ({mod_in_last[C_DMA_RESP], mod_in_last[C_MPSIMPLE_RESP]}),
+      .out_valid  ({mod_in_valid[C_DMA_RESP], mod_in_valid[C_MPSIMPLE_RESP]}),
+      .out_ready  ({mod_in_ready[C_DMA_RESP], mod_in_ready[C_MPSIMPLE_RESP]}));
 
 endmodule // networkadapter_ct
 

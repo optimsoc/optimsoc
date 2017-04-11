@@ -555,8 +555,9 @@ extern dma_success_t dma_wait(dma_transfer_handle_t id);
  * invoke the handler, but you can register different handlers for different
  * message classes.
  *
- * \note{Be careful with selecting classes, because they may be occupied by
- * other hardware. If you are not sure, use class 0.}
+ * \note
+ * Be careful with selecting classes, because they may be occupied by other
+ * hardware. If you are not sure, use class 0.
  *
  * \ingroup libbaremetal
  * @{
@@ -581,7 +582,7 @@ uint16_t optimsoc_mp_simple_num_endpoints(void);
  * Hence you need to check the endpoint from the remote using
  * optimsoc_mp_simple_enable() before calling optimsoc_mp_simple_send().
  *
- * @param endpoint Endpoint buffer to enable
+ * \param endpoint Endpoint buffer to enable
  */
 void optimsoc_mp_simple_enable(uint16_t endpoint);
 

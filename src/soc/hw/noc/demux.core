@@ -2,7 +2,9 @@ CAPI=1
 [main]
 name = optimsoc:noc:demux
 description = "NoC Demux"
-depend = optimsoc:base:constants
+depend =
+  optimsoc:base:constants
+  optimsoc:base:config
 
 [fileset src_files]
 file_type = systemVerilogSource
