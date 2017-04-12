@@ -312,7 +312,7 @@ class TestTutorialFpga:
         cmd_pgm = ['optimsoc-pgm-fpga', bitstream, 'xc7a100t_0']
         p_pgm = util.Process(cmd_pgm, logdir=str(tmpdir), cwd=str(tmpdir))
         p_pgm.run()
-        p_pgm.proc.wait(timeout=60)
+        p_pgm.proc.wait(timeout=300)
         assert p_pgm.proc.returncode == 0
 
         time.sleep(2)
