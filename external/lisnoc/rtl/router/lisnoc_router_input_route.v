@@ -95,18 +95,21 @@ module lisnoc_router_input_route (/*AUTOARG*/
    endgenerate
 
    // Some bit selections for better readability below
-   wire [1:0] flit_type;
-   assign flit_type = fifo_flit[flit_width-1:flit_width-2];
-
    wire [flit_data_width-1:0] flit_header;
    assign flit_header = fifo_flit[flit_data_width-1:0];
 
    wire [ph_dest_width-1:0]     flit_dest;
    assign flit_dest = flit_header[flit_data_width-1:flit_data_width-ph_dest_width];
 
+   wire 			is_last;
+   assign is_last = fifo_flit[flit_data_width+1];
+
+   reg                         is_first;
+   wire                        nxt_is_first;
+
    // Generating the current destination selection
    assign nxt_cur_select = ( // If there is no transfer we are waiting for or the active is finished ..
-                             (~active || (active && read)) &&
+                             (~active || (active && read && is_first)) &&
                              // .. and this is valid..
                              (fifo_valid)
                              // .. take selection from the lookup vector
@@ -129,6 +132,8 @@ module lisnoc_router_input_route (/*AUTOARG*/
                // .. the current request is not finished.
                (active & ~read);
 
+   assign nxt_is_first = active && read && is_last;
+
    // Pop from FIFO when active and successfully routed or not active and something waiting in FIFO.
    assign fifo_ready = (active ? read : 1 ) & fifo_valid;
 
@@ -143,10 +148,12 @@ module lisnoc_router_input_route (/*AUTOARG*/
          active         <= 1'b0;
          switch_request <= {directions{1'b0}};
          cur_select     <= {directions{1'b0}};
+         is_first       <= 0;
       end else begin
          cur_select     <= nxt_cur_select;
          switch_request <= nxt_switch_request;
          active         <= nxt_active;
+         is_first       <= nxt_is_first;
 
          // Additionally check whether
          if ((active && read) || !active)
