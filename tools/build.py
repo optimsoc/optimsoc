@@ -578,6 +578,22 @@ def build_externals_extra_cores(options):
     else:
         file_copytree(srcdir, distdir)
 
+""" Copy mor1kx
+"""
+def build_externals_mor1kx(options):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    info("Copy mor1kx")
+    srcdir = os.path.join(src, "external", "mor1kx")
+    distdir = os.path.join(dist, "external", "mor1kx")
+
+    if (options.link_hw):
+        file_linktree(srcdir, distdir)
+    else:
+        file_copytree(srcdir, distdir)
+
 """ Copy GLIP hardware modules
 """
 def build_externals_glip(options):
@@ -707,6 +723,7 @@ def set_environment(options, env):
         "{dist}/external/lisnoc:"
         "{dist}/external/opensocdebug/hardware:"
         "{dist}/external/extra_cores:"
+        "{dist}/external/mor1kx:"
         "{dist}/external/glip".format(dist=dist));
 
     pkgconfig = (
@@ -772,7 +789,7 @@ export OPTIMSOC_VERSION={}
 export LISNOC=$OPTIMSOC/external/lisnoc
 export LISNOC_RTL=$LISNOC/rtl
 
-export FUSESOC_CORES=$OPTIMSOC/soc/hw:$OPTIMSOC/external/lisnoc:$OPTIMSOC/external/opensocdebug/hardware:$OPTIMSOC/external/extra_cores:$OPTIMSOC/external/glip:$FUSESOC_CORES
+export FUSESOC_CORES=$OPTIMSOC/soc/hw:$OPTIMSOC/external/lisnoc:$OPTIMSOC/external/opensocdebug/hardware:$OPTIMSOC/external/extra_cores:$OPTIMSOC/external/mor1kx:$OPTIMSOC/external/glip:$FUSESOC_CORES
 
 export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/host/lib/pkgconfig:$OPTIMSOC/host/lib64/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
 export PATH=$OPTIMSOC/host/bin:$PATH
@@ -902,6 +919,7 @@ if __name__ == '__main__':
         build_externals_lisnoc(options)
         build_externals_opensocdebug_hardware(options)
         build_externals_extra_cores(options)
+        build_externals_mor1kx(options)
 
         # GLIP
         build_externals_glip(options)
