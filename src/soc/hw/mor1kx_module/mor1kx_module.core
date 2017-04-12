@@ -2,7 +2,7 @@ CAPI=1
 [main]
 name = optimsoc:core:mor1kx_module
 depend =
-  openrisc:mor1kx:cappuccino
+  ::mor1kx:5.0
   opensocdebug:interfaces:mor1kx_trace_exec
 
 [fileset src_files]
