@@ -293,6 +293,23 @@ class TestTutorial:
             assert util.matches_golden_reference(str(tmpdir), f,
                                                  filter_func=util.filter_timestamps)
 
+    def test_tutorial8_hello_mp(self, baremetal_apps_hello_mp, tmpdir):
+        """
+        Tutorial 8: Run hello_mp world application on 2x2 CCCC in Verilator
+        Memory loading is done through Verilator meminit.
+        """
+        # run simulation
+        cmd = ['{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
+               '--meminit={}'.format(str(baremetal_apps_hello_mp.join('hello_mp.vmem')))]
+        subprocess.check_output(cmd, cwd=str(tmpdir))
+
+        # check all output files
+        for i in range(0, 7):
+            f = "stdout.{:03d}".format(i)
+            assert tmpdir.join(f).isfile()
+            assert util.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=util.filter_timestamps)
+        
 class TestTutorialFpga:
     """
     Test all FPGA-based tutorial steps in the User Guide

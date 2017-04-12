@@ -110,3 +110,16 @@ def baremetal_apps_hello_mpsimple(baremetal_apps):
     subprocess.check_output(cmd)
 
     return src_baremetal_apps_hello_mpsimple
+
+@pytest.fixture(scope="module")
+def baremetal_apps_hello_mp(baremetal_apps):
+    """
+    Module-scoped fixture: download and build the hello world mp example
+    from baremetal-apps
+    """
+
+    src_baremetal_apps_hello_mp = baremetal_apps.join('hello_mp')
+    cmd = ['make', '-C', str(src_baremetal_apps_hello_mp)]
+    subprocess.check_output(cmd)
+
+    return src_baremetal_apps_hello_mp
