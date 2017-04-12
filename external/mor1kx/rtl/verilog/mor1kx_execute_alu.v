@@ -385,7 +385,7 @@ endgenerate
 
    // One signed overflow detection for all multiplication implmentations
    assign mul_signed_overflow = (FEATURE_MULTIPLIER=="NONE") ||
-				(FEATURE_MULTIPLIER=="PIPELINED") ? 1'b0 :
+				(FEATURE_MULTIPLIER=="PIPELINED") ? 0 :
 				// Same signs, check for negative result
 				// (should be positive)
 				((a[OPTION_OPERAND_WIDTH-1] ==
