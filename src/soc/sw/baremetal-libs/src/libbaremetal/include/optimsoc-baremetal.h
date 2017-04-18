@@ -486,13 +486,16 @@ extern void dma_init(void);
  * and each of the ongoing transfers is controlled by one slot in the DMA
  * controller. You therefore need to allocate a slot before starting transfers.
  *
- * \param[out] The handle of this slot
+ * \param[out] id The handle of this slot
  * \return Success code
  */
 extern dma_success_t dma_alloc(dma_transfer_handle_t *id);
 
 /**
  * Free a pre-allocated DMA transfer slot
+ *
+ * \param id the handle to free
+ * \return DMA_SUCCESS if successful, any other value indicates an error
  */
 extern dma_success_t dma_free(dma_transfer_handle_t id);
 
