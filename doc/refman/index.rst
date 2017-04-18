@@ -7,5 +7,4 @@ Reference Manual
    :caption: Contents
 
    configuration
-  
-
+   maintainer/release-howto.rst
