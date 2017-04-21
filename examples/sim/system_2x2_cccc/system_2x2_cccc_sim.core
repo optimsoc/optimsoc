@@ -49,3 +49,13 @@ scope = public
 datatype = bool
 paramtype = cmdlinearg
 scope = public
+
+[parameter trace]
+datatype = bool
+paramtype = cmdlinearg
+scope = public
+
+[parameter trace-noc-full]
+datatype = bool
+paramtype = cmdlinearg
+scope = public
