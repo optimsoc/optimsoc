@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <ctime>
 
-Tracer::Tracer() : mEnabled(false), mNoCFull(false) {
+Tracer::Tracer() : mEnabled(false), mNoCFull(false), mNoCTrace(NULL) {
 }
 
 void Tracer::init(bool nocfull) {
