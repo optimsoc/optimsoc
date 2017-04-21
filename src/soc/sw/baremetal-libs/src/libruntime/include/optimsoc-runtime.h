@@ -419,9 +419,9 @@ void optimsoc_timer_wait_ticks(uint32_t ticks);
 /**
  * Initiate a DMA transfer
  */
-void optimsoc_dma_transfer(void *local,
+/*void optimsoc_dma_transfer(void *local,
                            uint32_t remote_tile,
                            void *remote,
                            size_t size,
-                           dma_direction_t dir);
+                           dma_direction_t dir);*/
 #endif /* OPTIMSOC_RUNTIME_H_ */

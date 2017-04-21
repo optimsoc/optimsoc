@@ -252,6 +252,7 @@ void* optimsoc_list_next_element(struct optimsoc_list_t* l,
     }
 }
 
+/*
 struct optimsoc_list_t *optimsoc_list_dma_copy(uint32_t remote_tile,
                                                void *remote_list_addr,
                                                size_t data_size)
@@ -278,10 +279,8 @@ struct optimsoc_list_t *optimsoc_list_dma_copy(uint32_t remote_tile,
                               REMOTE2LOCAL);
 
         if (data_size == 0) {
-            /* Put the remote data into the list */
             optimsoc_list_add_tail(local_list, remote_entry.data);
         } else {
-            /* Copy the data object */
             local_data = malloc(data_size);
             assert(local_data != NULL);
 
@@ -296,3 +295,4 @@ struct optimsoc_list_t *optimsoc_list_dma_copy(uint32_t remote_tile,
 
     return local_list;
 }
+*/

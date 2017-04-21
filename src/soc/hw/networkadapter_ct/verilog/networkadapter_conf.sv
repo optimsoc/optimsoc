@@ -104,7 +104,8 @@ module networkadapter_conf
    localparam REG_LMEM_SIZE = 9;
    localparam REG_NUMCTS = 10;
    localparam REG_SEED = 11;
-
+   localparam REG_DMA_SLOTS = 12;
+   
    localparam REG_CDC      = 10'h40;
    localparam REG_CDC_DYN  = 10'h41;
    localparam REG_CDC_CONF = 10'h42;
@@ -191,6 +192,9 @@ module networkadapter_conf
            REG_SEED: begin
               data = seed;
            end
+	   REG_DMA_SLOTS: begin
+	      data = CONFIG.NA_DMA_USER_SLOTS;
+	   end
            REG_CDC: begin
 `ifdef OPTIMSOC_CLOCKDOMAINS
            data = 32'b1;

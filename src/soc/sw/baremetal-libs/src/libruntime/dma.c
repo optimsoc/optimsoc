@@ -1,12 +1,12 @@
 #include "include/optimsoc-runtime.h"
 #include "optimsoc-baremetal.h"
 
+/*
 void optimsoc_dma_transfer(void *local, uint32_t remote_tile, void *remote,
                            size_t size, dma_direction_t dir)
 {
     dma_transfer_handle_t dma_handle;
 
-    /* allocate transfer handle */
     while(dma_alloc(&dma_handle) != DMA_SUCCESS) {
         optimsoc_thread_yield(optimsoc_thread_current());
     }
@@ -18,3 +18,4 @@ void optimsoc_dma_transfer(void *local, uint32_t remote_tile, void *remote,
 
     dma_free(dma_handle);
 }
+*/

@@ -11,6 +11,7 @@ depend =
   optimsoc:noc:demux
   optimsoc:noc:buffer
   optimsoc:mp:buffer
+  optimsoc:na:dma
 
 # XXX. Fix import from lisnoc optimsoc:lisnoc:router should be only
 # lisnoc_add_file router/lisnoc_router_output_arbiter.v

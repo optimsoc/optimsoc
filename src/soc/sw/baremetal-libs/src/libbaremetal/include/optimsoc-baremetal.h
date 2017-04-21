@@ -39,6 +39,7 @@
 #define OPTIMSOC_NA_LMEM_SIZE  OPTIMSOC_NA_REGS + 0x24
 #define OPTIMSOC_NA_CT_NUM     OPTIMSOC_NA_REGS + 0x28
 #define OPTIMSOC_NA_SEED       OPTIMSOC_NA_REGS + 0x2c
+#define OPTIMSOC_NA_DMA_SLOTS  OPTIMSOC_NA_REGS + 0x30
 #define OPTIMSOC_NA_CT_LIST    (OPTIMSOC_NA_REGS + 0x200)
 
 #define OPTIMSOC_NA_CONF          OPTIMSOC_NA_REGS + 0xc
@@ -448,18 +449,19 @@ extern void optimsoc_mutex_unlock(optimsoc_mutex_t *mutex);
  * The OpTiMSoC dma success code indicated the success of an operation.
  */
 typedef enum {
-    DMA_SUCCESS = 0,            /*!< Successful operation */
-    DMA_ERR_NOTINITIALIZED = 1, /*!< Driver not initialized */
-    DMA_ERR_NOSLOT = 2,         /*!< No slot available */
-    DMA_ERR_NOTALLOCATED = 3      /*!< Slot not allocated */
-} dma_success_t;
+    DMA_SUCCESS,            /*!< Successful operation */
+    DMA_ERR_NOTINITIALIZED, /*!< Driver not initialized */
+    DMA_ERR_NOSLOT,         /*!< No slot available */
+    DMA_ERR_NOTALLOCATED,   /*!< Slot not allocated */
+    DMA_ERR_ILLEGALSLOT
+} optimsoc_dma_success_t;
 
 /**
  * DMA transfer handle
  *
  * The DMA transfer handle is used when calling the DMA functions
  */
-typedef uint32_t dma_transfer_handle_t;
+typedef uint32_t optimsoc_dma_handle_t;
 
 /**
  * The direction of a DMA transfer
@@ -469,15 +471,22 @@ typedef uint32_t dma_transfer_handle_t;
  */
 typedef enum {
     LOCAL2REMOTE=0, /*!< Transfer data from local to remote */
-    REMOTE2LOCAL=1  /*!< Transfer data from remore to local */
-} dma_direction_t;
+    REMOTE2LOCAL=1  /*!< Transfer data from remote to local */
+} optimsoc_dma_direction_t;
 
 /**
  * Initialize DMA driver
  *
  * Initialize the DMA driver. Necessary before calling it the first time
  */
-extern void dma_init(void);
+void optimsoc_dma_init(void);
+
+/**
+ * Get the number of DMA slots
+ *
+ *
+ */
+size_t optimsoc_dma_numslots(void);
 
 /**
  * Allocate a DMA transfer slot and get handle
@@ -489,13 +498,12 @@ extern void dma_init(void);
  * \param[out] The handle of this slot
  * \return Success code
  */
-extern dma_success_t dma_alloc(dma_transfer_handle_t *id);
+optimsoc_dma_success_t optimsoc_dma_alloc(optimsoc_dma_handle_t *id);
 
 /**
  * Free a pre-allocated DMA transfer slot
  */
-extern dma_success_t dma_free(dma_transfer_handle_t id);
-
+optimsoc_dma_success_t optimsoc_dma_free(optimsoc_dma_handle_t id);
 
 /**
  * Initiate a DMA transfer
@@ -504,20 +512,20 @@ extern dma_success_t dma_free(dma_transfer_handle_t id);
  * to remote_tile address remote of size. The direction of the transfer is
  * determined by dir. The slot id will be used for this transfer.
  *
+ * \param id Handle of the slot as allocated by dma_alloc
  * \param local Local address
  * \param remote_tile Remote tile
  * \param remote Remote address
  * \param size Size of the transfer
  * \param dir Direction of the transfer
- * \param id Handle of the slot as allocated by dma_alloc
  * \return Success code
  */
-extern dma_success_t dma_transfer(void* local,
-                                  uint32_t remote_tile,
-                                  void* remote,
-                                  size_t size,
-                                  dma_direction_t dir,
-                                  dma_transfer_handle_t id);
+optimsoc_dma_success_t optimsoc_dma_transfer(optimsoc_dma_handle_t id,
+                                             void* local,
+                                             uint32_t remote_tile,
+                                             void* remote,
+                                             size_t size,
+                                             optimsoc_dma_direction_t dir);
 
 /**
  * Blocking wait for DMA transfer
@@ -527,7 +535,7 @@ extern dma_success_t dma_transfer(void* local,
  * \param id The handle of the transfer slot
  * \return Success code
  */
-extern dma_success_t dma_wait(dma_transfer_handle_t id);
+optimsoc_dma_success_t optimsoc_dma_wait(optimsoc_dma_handle_t id);
 
 /**
  * @}

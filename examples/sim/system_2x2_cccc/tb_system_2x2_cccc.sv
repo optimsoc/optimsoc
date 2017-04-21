@@ -75,8 +75,7 @@ module tb_system_2x2_cccc(
                       PGAS_SIZE: 0,
                       NA_ENABLE_MPSIMPLE: 1,
                       NA_ENABLE_DMA: 1,
-                      NA_DMA_GENIRQ: 1,
-                      NA_DMA_ENTRIES: 4,
+                      NA_DMA_USER_SLOTS: 4,
                       USE_DEBUG: 1'(USE_DEBUG),
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1

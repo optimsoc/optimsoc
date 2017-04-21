@@ -31,69 +31,75 @@
 
 #include "include/optimsoc-baremetal.h"
 
-#define DMA_SLOTS 4
 // This must be changed to 2000 when conf part is removed from dma
 #define DMA_BASE 0xe0200000
+#define DMA_SLOT_OFFSET 0x2000
+#define DMA_REG_LADDR 0
+#define DMA_REG_SIZE  1
+#define DMA_REG_RTILE 2
+#define DMA_REG_RADDR 3
+#define DMA_REG_DIR   4
+#define DMA_REG_CTRL  5
+
+#define DMA_REG(slot,reg) REG32(DMA_BASE+slot*DMA_SLOT_OFFSET+((reg)<<2))
 
 #define DMA_SLOT_FREE 0
 #define DMA_SLOT_ALLOC 1
 #define DMA_SLOT_WAIT 2
 
-
-uint8_t _optimsoc_dma_initialized = 0;
+static uint8_t _initialized = 0;
+static size_t _numslots;
 
 struct dma_slot {
     unsigned int flag;
     unsigned int id;
 };
 
-struct dma_slot *dma_slots[DMA_SLOTS];
+struct dma_slot **dma_slots;
 
-struct dma_slot *dma_alloc_slot() {
-    int i;
-    for (i=0;i<DMA_SLOTS;i++) {
-        if (dma_slots[i]->flag == DMA_SLOT_FREE) {
-            dma_slots[i]->flag = DMA_SLOT_ALLOC;
-            return dma_slots[i];
+void optimsoc_dma_init(void) {
+    _numslots = REG32(OPTIMSOC_NA_DMA_SLOTS);
+
+    dma_slots = calloc(sizeof(struct dma_slot *), _numslots);
+
+    for (size_t s = 0; s < _numslots; s++) {
+        dma_slots[s] = (struct dma_slot*) malloc(sizeof(struct dma_slot));
+        dma_slots[s]->id = s;
+        dma_slots[s]->flag = DMA_SLOT_FREE;
+    }
+
+    _initialized = 1;
+}
+
+size_t optimsoc_dma_slots(void) {
+    return _numslots;
+}
+
+static struct dma_slot *_alloc_slot() {
+    for (size_t s = 0; s < _numslots; s++) {
+        if (dma_slots[s]->flag == DMA_SLOT_FREE) {
+            dma_slots[s]->flag = DMA_SLOT_ALLOC;
+            return dma_slots[s];
         }
     }
     return 0;
 }
 
-void dma_free_slot(struct dma_slot *s) {
+static void _free_slot(struct dma_slot *s) {
     s->flag = DMA_SLOT_FREE;
 }
 
-void dma_alloc_blocking(dma_transfer_handle_t *id) {
-    // not supported in baremetal
-}
-
-
-unsigned int dma_poll(dma_transfer_handle_t id) {
-    struct dma_slot *slot = dma_slots[id];
-    unsigned int p = REG32(DMA_BASE + 0x20 * slot->id + 0x14);
+unsigned int _poll(optimsoc_dma_handle_t id) {
+    unsigned int p = DMA_REG(id,DMA_REG_CTRL);
     return p;
 }
 
-void dma_init(void) {
-    unsigned int s;
-    if (DMA_SLOTS>0) {
-        for (s=0;s<DMA_SLOTS;s++) {
-            dma_slots[s] = (struct dma_slot*) malloc(sizeof(struct dma_slot));
-            dma_slots[s]->id = s;
-            dma_slots[s]->flag = DMA_SLOT_FREE;
-        }
-    }
-
-    _optimsoc_dma_initialized = 1;
-}
-
-dma_success_t dma_alloc(dma_transfer_handle_t *id) {
-    if (_optimsoc_dma_initialized==0) {
+optimsoc_dma_success_t optimsoc_dma_alloc(optimsoc_dma_handle_t *id) {
+    if (_initialized==0) {
         return DMA_ERR_NOTINITIALIZED;
     }
 
-    struct dma_slot *slot = dma_alloc_slot();
+    struct dma_slot *slot = _alloc_slot();
     if (!slot) {
         return DMA_ERR_NOSLOT;
     } else {
@@ -102,52 +108,55 @@ dma_success_t dma_alloc(dma_transfer_handle_t *id) {
     }
 }
 
-dma_success_t dma_free(dma_transfer_handle_t id) {
-
-    if (_optimsoc_dma_initialized==0) {
+optimsoc_dma_success_t optimsoc_dma_free(optimsoc_dma_handle_t id) {
+    if (_initialized==0) {
         return DMA_ERR_NOTINITIALIZED;
     }
 
-    assert(id < DMA_SLOTS);
+    if (id >= _numslots) {
+        return DMA_ERR_ILLEGALSLOT;
+    }
 
     struct dma_slot *slot = dma_slots[id];
 
     if(slot->flag == DMA_SLOT_ALLOC) {
-        slot->flag = DMA_SLOT_FREE;
+        _free_slot(slot);
         return DMA_SUCCESS;
     } else {
         return DMA_ERR_NOTALLOCATED;
     }
 }
 
-dma_success_t dma_transfer(void* local, uint32_t remote_tile, void* remote,
-                           size_t size, dma_direction_t dir,
-                           dma_transfer_handle_t id) {
-    if (_optimsoc_dma_initialized==0) {
+optimsoc_dma_success_t optimsoc_dma_transfer(optimsoc_dma_handle_t id,
+                                             void* local,
+                                             uint32_t remote_tile,
+                                             void* remote,
+                                             size_t size,
+                                             optimsoc_dma_direction_t dir) {
+    if (_initialized==0) {
         return DMA_ERR_NOTINITIALIZED;
     }
 
-    struct dma_slot *slot = dma_slots[id];
-    REG32(DMA_BASE + 0x20 * slot->id) = (uint32_t) local;
-    REG32(DMA_BASE + 0x20 * slot->id + 0x4) = size;
-    REG32(DMA_BASE + 0x20 * slot->id + 0x8) = remote_tile;
-    REG32(DMA_BASE + 0x20 * slot->id + 0xc) = (uint32_t) remote;
-    REG32(DMA_BASE + 0x20 * slot->id + 0x10) = dir;
-    REG32(DMA_BASE + 0x20 * slot->id + 0x14) = 1; // go
+    if (id >= _numslots) {
+        return DMA_ERR_ILLEGALSLOT;
+    }
 
-#ifdef DMA_IRQ
-    dma_slots[id]->flag = DMA_SLOT_WAIT;
-#endif
+    DMA_REG(id,DMA_REG_LADDR) = (uint32_t) local;
+    DMA_REG(id,DMA_REG_SIZE)  = size;
+    DMA_REG(id,DMA_REG_RTILE) = remote_tile;
+    DMA_REG(id,DMA_REG_RADDR) = (uint32_t) remote;
+    DMA_REG(id,DMA_REG_DIR)   = dir;
+    DMA_REG(id,DMA_REG_CTRL)  = 1;
 
     return DMA_SUCCESS;
 }
 
-dma_success_t dma_wait(dma_transfer_handle_t id) {
-    if (_optimsoc_dma_initialized==0) {
+optimsoc_dma_success_t optimsoc_dma_wait(optimsoc_dma_handle_t id) {
+    if (_initialized==0) {
         return DMA_ERR_NOTINITIALIZED;
     }
 
-    while (dma_poll(id)==0) { __asm__ volatile("l.nop"); }
+    while (_poll(id)==0) { __asm__ volatile("l.nop"); }
 
     return DMA_SUCCESS;
 }
