@@ -17,3 +17,6 @@
 
 # test caches
 .cache
+
+# compiled python
+*.pyc
