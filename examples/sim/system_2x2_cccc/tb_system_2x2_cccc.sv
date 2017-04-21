@@ -127,14 +127,13 @@ module tb_system_2x2_cccc(
    end // if (CONFIG.USE_DEBUG == 1)
 
    // Monitor system behavior in simulation
-   genvar t;
-   genvar i;
+   genvar t, i, v;
 
    wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
-      wire [CONFIG.NUMCTS*CONFIG.NOC_VCHANNELS*2-1:0][31:0] flit;
-      wire [CONFIG.NUMCTS*CONFIG.NOC_VCHANNELS*2-1:0]       last, valid, ready;
+      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_VCHANNELS-1:0][31:0] flit;
+      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_VCHANNELS-1:0]       last, valid, ready;
 
       for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
 
@@ -172,20 +171,23 @@ module tb_system_2x2_cccc(
               );
          end
 
-         assign flit[t*2] = u_system.link_out_flit[t][31:0];
-         assign flit[t*2+1] = u_system.link_in_flit[t][31:0];
-         assign last[t*2] = u_system.link_out_flit[t][33];
-         assign last[t*2+1] = u_system.link_in_flit[t][33];
-         assign valid[t*2] = u_system.link_out_valid[t];
-         assign valid[t*2+1] = u_system.link_in_valid[t];
-         assign ready[t*2] = u_system.link_out_ready[t];
-         assign ready[t*2+1] = u_system.link_in_ready[t];
+	 for (v = 0; v < CONFIG.NOC_VCHANNELS; v++) begin
+            assign flit[t][0][v] = u_system.link_out_flit[t][31:0];
+            assign flit[t][1][v] = u_system.link_in_flit[t][31:0];
+            assign last[t][0][v] = u_system.link_out_flit[t][33];
+            assign last[t][1][v] = u_system.link_in_flit[t][33];
+            assign valid[t][0][v] = u_system.link_out_valid[t][v];
+            assign valid[t][1][v] = u_system.link_in_valid[t][v];
+            assign ready[t][0][v] = u_system.link_out_ready[t][v];
+            assign ready[t][1][v] = u_system.link_in_ready[t][v];
+	 end
       end
 
       if (TRACE_NOC) begin
-	 noc_tracer
-           #(.LINKS(CONFIG.NUMCTS*CONFIG.NOC_VCHANNELS*2))
-	 u_noc_tracer
+         noc_tracer
+           #(.LINKS(CONFIG.NUMCTS),
+	     .CHANNELS(CONFIG.NOC_VCHANNELS))
+         u_noc_tracer
            (.*,
             .flit(flit),
             .valid(valid),

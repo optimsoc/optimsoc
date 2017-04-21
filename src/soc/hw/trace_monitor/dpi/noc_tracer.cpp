@@ -19,7 +19,7 @@
  * THE SOFTWARE.
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
 #include <stdint.h>
@@ -74,10 +74,15 @@ extern "C" {
     if (last) {
       uint32_t header = _buffer[link][0];
       uint8_t cls = (header >> 24) & 0x7;
+      int matched = 0;
+      static const uint8_t CLASS_MPBUFFER = 0x0;
+      static const uint8_t CLASS_MPBUFFER_CTRL = 0x7;
+      static const uint8_t CLASS_MP = 0x2;
 
-      if (cls == 0x0) {
+      if (cls == CLASS_MPBUFFER) {
 	// mp buffer messages
 	uint32_t payload_len = _pos[link] - 1;
+	matched = 1;
 
 	_emit_event_context(_fh, link, 3, timestamp, header);
 	fwrite(&_buffer[link][0], 4, 1, _fh);
@@ -85,18 +90,73 @@ extern "C" {
 	for (size_t p = 1; p < _pos[link]; p++) {
 	  fwrite(&_buffer[link][p], 4, 1, _fh);
 	}
-      } else if (cls == 0x7) {
+      } else if (cls == CLASS_MPBUFFER_CTRL) {
 	// mp buffer control
 	if ((_buffer[link][0] & 0x1) == 0) {
 	  // request
+	  matched = 1;
 	  _emit_event_context(_fh, link, 1, timestamp, header);
 	} else {
 	  // response
 	  uint8_t status = (header >> 1) & 0x1;
+	  matched = 1;
 	  _emit_event_context(_fh, link, 2, timestamp, header);
 	  fwrite(&status, 1, 1, _fh);
 	}
-      } else {
+      } else if (cls == CLASS_MP) {
+	// message passing
+	uint8_t request = (header >> 15) & 0xf;
+	static const uint8_t REQ_GET_EP       = 0x0;
+	static const uint8_t RESP_GET_EP      = 0x1;
+	static const uint8_t REQ_MSG_ALLOC    = 0x2;
+	static const uint8_t RESP_MSG_ALLOC   = 0x3;
+	static const uint8_t REQ_MSG_DATA     = 0x4;
+	static const uint8_t REQ_MSG_COMPLETE = 0x5;
+
+	if (request == REQ_GET_EP) {
+	  matched = 1;
+	  _emit_event_context(_fh, link, 4, timestamp, header);
+	  fwrite(&_buffer[link][1], 4, 1, _fh);
+	  fwrite(&_buffer[link][2], 4, 1, _fh);
+	} else if (request == RESP_GET_EP) {
+	  matched = 1;
+	  if (_buffer[link][1] == 0xffffffff) {
+	    _emit_event_context(_fh, link, 6, timestamp, header);
+	  } else {
+	    _emit_event_context(_fh, link, 5, timestamp, header);
+	    fwrite(&_buffer[link][1], 4, 1, _fh);
+	  }
+	} else if (request == REQ_MSG_ALLOC) {
+	  matched = 1;
+	  _emit_event_context(_fh, link, 7, timestamp, header);
+	  fwrite(&_buffer[link][1], 4, 1, _fh);
+	  fwrite(&_buffer[link][2], 4, 1, _fh);
+	} else if (request == RESP_MSG_ALLOC) {
+	  matched = 1;
+	  if (_buffer[link][1]) {
+	    // ack
+	    _emit_event_context(_fh, link, 8, timestamp, header);
+	    fwrite(&_buffer[link][1], 4, 1, _fh);
+	  } else {
+	    // nack
+	    _emit_event_context(_fh, link, 9, timestamp, header);
+	  }
+	} else if (request == REQ_MSG_DATA) {
+	  matched = 1;
+	  _emit_event_context(_fh, link, 10, timestamp, header);
+	  fwrite(&_buffer[link][1], 4, 1, _fh);
+	  fwrite(&_buffer[link][2], 4, 1, _fh);
+	  fwrite(&_buffer[link][3], 4, 1, _fh);
+	} else if (request == REQ_MSG_COMPLETE) {
+	  matched = 1;
+	  _emit_event_context(_fh, link, 11, timestamp, header);
+	  fwrite(&_buffer[link][1], 4, 1, _fh);
+	  fwrite(&_buffer[link][2], 4, 1, _fh);
+	  fwrite(&_buffer[link][3], 4, 1, _fh);
+	}
+      }
+
+      if (matched == 0) {
 	uint32_t payload_len = _pos[link] - 1;
 
 	_emit_event_context(_fh, link, 0, timestamp, header);
@@ -201,7 +261,65 @@ static const char *_metadata = "/* CTF 1.8 */\n\n"
   "	uint32_t length;\n"
   "	uint32_t payload[length];\n"
   "    };\n"
-  "};\n";
+  "};\n"
+  "\n"
+  "event {\n"
+  "    id = 4;\n"
+  "    name = 'mp_getep_req';\n"
+  "    fields := struct {\n"
+  "        uint32_t node;\n"
+  "        uint32_t port;\n"
+  "    };\n"
+  "};\n"
+  "event {\n"
+  "    id = 5;\n"
+  "    name = 'mp_getep_resp_ack';\n"
+  "    fields := struct {\n"
+  "        uint32_t handle;\n"
+  "    };\n"
+  "};\n"
+  "event {\n"
+  "    id = 6;\n"
+  "    name = 'mp_getep_resp_nack';\n"
+  "};\n"
+  "event {\n"
+  "    id = 7;\n"
+  "    name = 'mp_msgalloc_req';\n"
+  "    fields := struct {\n"
+  "        uint32_t handle;\n"
+  "        uint32_t size;\n"
+  "    };\n"
+  "};\n"
+  "event {\n"
+  "    id = 8;\n"
+  "    name = 'mp_msgalloc_resp_ack';\n"
+  "    fields := struct {\n"
+  "        uint32_t ptr;\n"
+  "    };\n"
+  "};\n"
+  "event {\n"
+  "    id = 9;\n"
+  "    name = 'mp_msgalloc_resp_nack';\n"
+  "};\n"
+  "event {\n"
+  "    id = 10;\n"
+  "    name = 'mp_msgdata';\n"
+  "    fields := struct {\n"
+  "        uint32_t handle;\n"
+  "        uint32_t address;\n"
+  "        uint32_t offset;\n"
+  "    };\n"
+  "};\n"
+  "event {\n"
+  "    id = 11;\n"
+  "    name = 'mp_msgcomplete';\n"
+  "    fields := struct {\n"
+  "        uint32_t handle;\n"
+  "        uint32_t address;\n"
+  "        uint32_t size;\n"
+  "    };\n"
+  "};\n"
+  "\n";
 
     
 static void _write_metadata(char* path) {
