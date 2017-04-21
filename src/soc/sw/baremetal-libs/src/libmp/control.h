@@ -6,9 +6,8 @@
 #include "endpoints.h"
 
 #define NOC_CLASS_FIFO     0
-#define NOC_CLASS_DMA_REQ  1
-#define NOC_CLASS_DMA_RESP 2
-#define NOC_CLASS_MP       3
+#define NOC_CLASS_DMA      1
+#define NOC_CLASS_MP       2
 
 // The protocol for the MCAPI message passing uses control
 // messages via the NoC.
