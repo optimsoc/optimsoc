@@ -94,12 +94,6 @@ module sram_sp_impl_plain(/*AUTOARG*/
       for (i = 0; i < SW; i = i + 1) begin : gen_sel_writes
          always @ (posedge clk) begin
             if (we) begin
-               // The "unusual" array bounds here are Verilog-2001 syntax and
-               // necessary to have (even more) constant expressions as array
-               // bounds. Otherwise, we get the error message
-               // "Range must be bounded by constant expressions."
-               // If you cannot support Verilog-2001 you need to rewrite this
-               // as loop.
                if (sel[i] == 1'b1) begin
                   mem[addr][i*8 +: 8] <= din[i*8 +: 8];
                end else begin
@@ -127,14 +121,14 @@ module sram_sp_impl_plain(/*AUTOARG*/
     // Function to access RAM (for use by Verilator).
    function [31:0] get_mem;
       // verilator public
-      input [AW-1:0] addr; // word address
+      input [AW-$clog2(SW)-1:0] addr; // word address
       get_mem = mem[addr];
    endfunction
 
    // Function to write RAM (for use by Verilator).
    function set_mem;
       // verilator public
-      input [AW-1:0] addr; // word address
+      input [AW-$clog2(SW)-1:0] addr; // word address
       input [DW-1:0]           data; // data to write
       mem[addr] = data;
    endfunction // set_mem
@@ -144,5 +138,4 @@ module sram_sp_impl_plain(/*AUTOARG*/
         $readmemh(MEM_FILE, mem);
      end
 `endif
-
 endmodule

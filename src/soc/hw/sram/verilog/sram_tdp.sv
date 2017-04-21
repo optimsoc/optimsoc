@@ -68,7 +68,7 @@ module dp_ram(/*AUTOARG*/
          $stop;
       end
 
-      if ((1 << clog2(SW)) != SW) begin
+      if ((1 << $clog2(SW)) != SW) begin
          $display("dp_ram: the byte select width (paramter SW = DW/8) must be a power of two");
          $stop;
       end
@@ -114,10 +114,10 @@ module dp_ram(/*AUTOARG*/
    output [DW-1:0]         dout_b; // output data bus
 
    // calculate the word address from the byte address
-   wire [AW-clog2(SW)-1:0] addr_word_a;
-   wire [AW-clog2(SW)-1:0] addr_word_b;
-   assign addr_word_a = addr_a[AW-1:clog2(SW)];
-   assign addr_word_b = addr_b[AW-1:clog2(SW)];
+   wire [AW-$clog2(SW)-1:0] addr_word_a;
+   wire [AW-$clog2(SW)-1:0] addr_word_b;
+   assign addr_word_a = addr_a[AW-1:$clog2(SW)];
+   assign addr_word_b = addr_b[AW-1:$clog2(SW)];
 
    //
    // Generic two-port synchronous RAM model
@@ -157,7 +157,5 @@ module dp_ram(/*AUTOARG*/
          end
       end
    end
-
-   `include "optimsoc_functions.vh"
 
 endmodule
