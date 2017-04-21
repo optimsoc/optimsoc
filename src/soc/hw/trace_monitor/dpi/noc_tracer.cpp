@@ -87,12 +87,12 @@ extern "C" {
 	}
       } else if (cls == 0x7) {
 	// mp buffer control
-	if ((_buffer[link][0] & 0x2) == 0) {
+	if ((_buffer[link][0] & 0x1) == 0) {
 	  // request
 	  _emit_event_context(_fh, link, 1, timestamp, header);
 	} else {
 	  // response
-	  uint8_t status = _buffer[link][0] & 0x1;
+	  uint8_t status = (header >> 1) & 0x1;
 	  _emit_event_context(_fh, link, 2, timestamp, header);
 	  fwrite(&status, 1, 1, _fh);
 	}
