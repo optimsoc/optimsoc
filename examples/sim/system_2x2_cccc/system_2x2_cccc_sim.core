@@ -4,6 +4,7 @@ name = optimsoc:examples:system_2x2_cccc_sim
 depend =
   optimsoc:system:2x2_cccc_dm
   optimsoc:trace_monitor:trace_monitor
+  optimsoc:trace:noc
   glip:backend:tcp
 
 simulators = verilator xsim
@@ -23,6 +24,11 @@ cli_parser = fusesoc
 
 [xsim]
 top_module = tb_system_2x2_cccc
+
+[parameter TRACE_NOC]
+datatype = int
+paramtype = vlogparam
+scope = public
 
 [parameter USE_DEBUG]
 datatype = int

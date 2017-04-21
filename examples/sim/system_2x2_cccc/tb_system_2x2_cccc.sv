@@ -51,6 +51,7 @@ module tb_system_2x2_cccc(
    );
 
    parameter USE_DEBUG = 0;
+   parameter TRACE_NOC = 0;
    parameter integer NUM_CORES = 1;
    parameter integer LMEM_SIZE = 32*1024*1024;
 
@@ -132,6 +133,9 @@ module tb_system_2x2_cccc(
    wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
+      wire [CONFIG.NUMCTS*CONFIG.NOC_VCHANNELS*2-1:0][31:0] flit;
+      wire [CONFIG.NUMCTS*CONFIG.NOC_VCHANNELS*2-1:0]       last, valid, ready;
+
       for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
 
          logic [31:0] trace_r3 [0:CONFIG.CORES_PER_TILE-1];
@@ -168,6 +172,25 @@ module tb_system_2x2_cccc(
               );
          end
 
+         assign flit[t*2] = u_system.link_out_flit[t][31:0];
+         assign flit[t*2+1] = u_system.link_in_flit[t][31:0];
+         assign last[t*2] = u_system.link_out_flit[t][33];
+         assign last[t*2+1] = u_system.link_in_flit[t][33];
+         assign valid[t*2] = u_system.link_out_valid[t];
+         assign valid[t*2+1] = u_system.link_in_valid[t];
+         assign ready[t*2] = u_system.link_out_ready[t];
+         assign ready[t*2+1] = u_system.link_in_ready[t];
+      end
+
+      if (TRACE_NOC) begin
+	 noc_tracer
+           #(.LINKS(CONFIG.NUMCTS*CONFIG.NOC_VCHANNELS*2))
+	 u_noc_tracer
+           (.*,
+            .flit(flit),
+            .valid(valid),
+            .last(last),
+            .ready(ready));
       end
    endgenerate
 
