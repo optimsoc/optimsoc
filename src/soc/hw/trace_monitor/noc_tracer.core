@@ -1,0 +1,16 @@
+CAPI=1
+[main]
+name = optimsoc:trace:noc
+description = "Network-on-Chip trace"
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/noc_tracer.sv
+
+[fileset dpi]
+file_type = cppSource
+usage = sim verilator
+files =
+  dpi/noc_tracer.cpp
