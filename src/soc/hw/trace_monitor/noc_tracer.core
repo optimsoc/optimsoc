@@ -2,6 +2,8 @@ CAPI=1
 [main]
 name = optimsoc:trace:noc
 description = "Network-on-Chip trace"
+depend =
+  optimsoc:trace:tracer
 
 [fileset src_files]
 file_type = systemVerilogSource

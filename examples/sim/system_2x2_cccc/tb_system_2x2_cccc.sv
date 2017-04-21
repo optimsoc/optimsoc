@@ -171,7 +171,7 @@ module tb_system_2x2_cccc(
               );
          end
 
-	 for (v = 0; v < CONFIG.NOC_VCHANNELS; v++) begin
+         for (v = 0; v < CONFIG.NOC_VCHANNELS; v++) begin
             assign flit[t][0][v] = u_system.link_out_flit[t][31:0];
             assign flit[t][1][v] = u_system.link_in_flit[t][31:0];
             assign last[t][0][v] = u_system.link_out_flit[t][33];
@@ -180,13 +180,13 @@ module tb_system_2x2_cccc(
             assign valid[t][1][v] = u_system.link_in_valid[t][v];
             assign ready[t][0][v] = u_system.link_out_ready[t][v];
             assign ready[t][1][v] = u_system.link_in_ready[t][v];
-	 end
+         end
       end
 
       if (TRACE_NOC) begin
          noc_tracer
            #(.LINKS(CONFIG.NUMCTS),
-	     .CHANNELS(CONFIG.NOC_VCHANNELS))
+             .CHANNELS(CONFIG.NOC_VCHANNELS))
          u_noc_tracer
            (.*,
             .flit(flit),
