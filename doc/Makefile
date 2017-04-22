@@ -1,4 +1,5 @@
-SPHINXBUILD=.venv/bin/sphinx-build
+SPHINXBUILD?=.venv/bin/sphinx-build
+OBJDIR?=_build
 
 all: html
 
@@ -11,12 +12,12 @@ apidoc:
 	make -C api
 
 html: .env apidoc
-	$(SPHINXBUILD) -b html . _build/html
+	$(SPHINXBUILD) -b html . $(OBJDIR)/html
 
 pdf: .env apidoc
-	$(SPHINXBUILD) -b latex . _build/pdf
-	make -C _build/pdf/ all-pdf
+	$(SPHINXBUILD) -b latex . $(OBJDIR)/pdf
+	make -C $(OBJDIR)/pdf/ all-pdf
 
 clean:
 	make -C api clean
-	rm -rf _build
+	rm -rf $(OBJDIR)

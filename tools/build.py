@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (c) 2016 by the author(s)
+# Copyright (c) 2016-2017 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,7 @@
 #
 # Author(s):
 #   Philipp Wagner <philipp.wagner@tum.de>
+#   Stefan Wallentowitz <stefan@wallentowitz.de>
 #
 #
 # Build, package and install the OpTiMSoC distribution
@@ -519,24 +520,24 @@ def build_docs(options):
 
     info("Build and install documentation")
 
-
+    check_program("python3")
     check_program("pdflatex")
 
-    user_guide_srcdir = os.path.join(src, "doc", "user_guide")
-    user_guide_objdir = os.path.join(objdir, "doc", "user_guide")
-    ensure_directory(user_guide_objdir)
+    doc_srcdir = os.path.join(src, "doc")
+    doc_objdir = os.path.join(objdir, "doc")
+    ensure_directory(doc_objdir)
 
     info(" + Build")
-    cmd="make -j {} pdf OBJDIR={}".format(nthreads, user_guide_objdir)
-    run_command(cmd, cwd=user_guide_srcdir)
+    cmd="make -j {} pdf OBJDIR={}".format(nthreads, doc_objdir)
+    run_command(cmd, cwd=doc_srcdir)
 
     info(" + Install build artifacts")
     distdoc = os.path.join(dist, "doc")
     ensure_directory(distdoc)
 
-    srcuser_guide = os.path.join(user_guide_objdir, "user_guide.pdf")
-    distuser_guide = os.path.join(distdoc, "user_guide.pdf")
-    file_copy(srcuser_guide, distuser_guide)
+    srcdocpdf = os.path.join(doc_objdir, "pdf", "OpTiMSoC.pdf")
+    distdocpdf = os.path.join(distdoc, "OpTiMSoC.pdf")
+    file_copy(srcdocpdf, distdocpdf)
 
     srcreadme = os.path.join(src, "README.installed")
     distreadme = os.path.join(dist, "README")
