@@ -87,29 +87,35 @@ The recommended default is to install OpTiMSoC into ``/opt/optimsoc``.
 There are two packages: the ``base`` package contains the programs, libraries and tools to get started.
 The ``examples`` package contains prebuilt example systems (both in simulation and FPGA bitstreams) for the real quick start.
 
-To install the 2016.1 release into ``/opt/optimsoc``, run the following commands:
+.. ifconfig:: lastversion != version
 
-.. code:: sh
+   .. note:: This documentation was generated for a development version and you cannot download prebuild packages for it.
+      Some parts of this documentation will vary from the release documentation and examples not work anymore.
+      Please refer to the documentation matching the last release that you can find here: https://optimsoc.org/docs.
 
-   wget https://github.com/optimsoc/sources/releases/download/v2016.1/optimsoc-2016.1-base.tar.gz
-   wget https://github.com/optimsoc/sources/releases/download/v2016.1/optimsoc-2016.1-examples.tar.gz
-   tar -xf optimsoc-2016.1-base.tar.gz -C /opt/optimsoc
-   tar -xf optimsoc-2016.1-examples.tar.gz -C /opt/optimsoc
+To install the |lastversion| release into ``/opt/optimsoc``, run the following commands:
+
+.. parsed-literal::
+
+   wget |dl_base|
+   wget |dl_examples|
+   tar -xf optimsoc-|lastversion|-base.tar.gz -C /opt/optimsoc
+   tar -xf optimsoc-|lastversion|-examples.tar.gz -C /opt/optimsoc
 
 To use OpTiMSoC multiple environment variables need to be set.
 This is done by running the following command **in every terminal session that you want to use OpTiMSoC in**:
 
-.. code:: sh
+.. parsed-literal::
 
-   cd /opt/optimsoc/2016.1
+   cd /opt/optimsoc/|lastversion|
    source optimsoc-environment.sh
 
 .. note:: Automatically load the OpTiMSoC environment in every new
    terminal session by adding it to your ``~/.bashrc`` file:
 
-   .. code:: sh
+   .. parsed-literal::
 
-      echo 'cd /opt/optimsoc/2016.1; source optimsoc-environment.sh' >> ~/.bashrc
+      echo 'cd /opt/optimsoc/|lastversion|; source optimsoc-environment.sh' >> ~/.bashrc
 
 Installation complete!
 
@@ -133,12 +139,12 @@ First, you need some additional tools (the "build dependencies"):
 
 Then get the sources from git:
 
-.. code:: sh
+.. parsed-literal::
 
    git clone https://github.com/optimsoc/sources.git optimsoc-sources
    cd optimsoc-sources
    # optional: checkout a release version
-   git checkout v2016.1
+   git checkout |lastversion|
 
 Now you're ready to build OpTiMSoC.
 
