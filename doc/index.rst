@@ -10,6 +10,7 @@ Welcome to OpTiMSoC's documentation!
    :maxdepth: 1
    :caption: Documentation Parts	   
 
+   user_guide/index
    refman/index
    api/index
 	     
