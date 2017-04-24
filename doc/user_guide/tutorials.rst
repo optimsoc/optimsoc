@@ -516,3 +516,115 @@ But: it's much faster. The FPGA runs at 50~MHz, which is still quite slow compar
 
 This concludes our tutorial session, and hands over to you:
 modify the software as you wish, program it again, analyze the simulations and explore your first multicore SoC.
+
+Make Message Passing More Simple
+================================
+
+So far you have used the low level message passing buffers to exchange data between the tiles.
+You may remember that exchanging this data involved forming and parsing messages including the low level network-on-chip details.
+
+To abstract from these low level details and to encapsulate certain extensions OpTiMSoC comes with the message passing library (``libmp``).
+It is a rather simple, straight-forward message passing API.
+Two different styles of communication are supported: message-oriented and connection-oriented.
+Message-oriented communication is prefered when you have spurious communication between many different communication partners.
+Connection-oriented communication is prefered when you have a fixed setup of channels between communication partners.
+
+In this part of the tutorial you will learn the basic usage of the message passing library using message-oriented communication.
+In the ``baremetal-apps`` you can find the ``hello_mp`` example.
+Inspecting ``hello_mp.c`` you can see that it is much less code than the low level example from before.
+
+Lets have a look at how it works. It starts with initializing the hardware and software:
+
+.. code:: c
+
+   optimsoc_init(0);
+   optimsoc_mp_initialize(0);
+
+The parameters of those functions can be ignored for now.
+After calling those functions you can use the message passing library.
+
+Communication in the message passing library takes place between so called endpoints.
+In the next step we create an endpoint in each tile:
+
+.. code:: c
+
+   optimsoc_mp_endpoint_handle ep;
+   optimsoc_mp_endpoint_create(&ep, 0, 0, OPTIMSOC_MP_EP_CONNECTIONLESS, 2, 0);
+
+:c:type:`optimsoc_mp_endpoint_handle` is the opaque type used to identify an endpoint in your code.
+You create and initialize the endpoint by calling :c:func:`optimsoc_mp_endpoint_create` that takes a reference to this handle as first parameter.
+The second and third parameter initialize the endpoint with a node and port.
+Each endpoint is globally addressable with its ``(tile, node, port)`` identifier.
+In our case the node 0 and port 0 endpoint is created in each tile.
+
+The remaining parameters of :c:func:`optimsoc_mp_endpoint_create` configure the endpoint.
+By using :c:type:`OPTIMSOC_MP_EP_CONNECTIONLESS` we create it to receive messages from arbitrary tiles.
+The last two parameters configure the number of messages it can hold and the maximum message size (``0`` says it is the default).
+
+Now the code of the example diverts again, all but tile 0 execute:
+
+.. code:: c
+
+   optimsoc_mp_endpoint_handle ep_remote;
+   optimsoc_mp_endpoint_get(&ep_remote, 0, 0, 0);
+
+   optimsoc_mp_msg_send(ep, ep_remote, (uint8_t*) &rank, sizeof(rank));
+
+So what they do is to define a second endpoint.
+But in this case it is not locally generated but points to a remote endpoint.
+It is the one we want to send a message too: tile 0, node 0, port 0.
+What happens under the hood it blocks until the remote endpoint is created and ready and than stores some information locally.
+In the final step the software sends a word to the remote endpoint using the local endpoint for sending.
+
+In tile zero the software waits to receive all messages using:
+
+.. code:: c
+
+   optimsoc_mp_msg_recv(ep, (uint8_t*) &remote, 4, &received);
+
+You can now run the example using:
+
+.. code:: sh
+
+   # start from the the baremetal-apps source code directory
+   cd hello_mp
+   make
+   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello_mp.vmem
+
+::
+
+   ... (we've skipped some output here) ...
+   [               37812, 0] Event 0x0380: 0x00018c08
+   [               37844, 2] Event 0x0380: 0x00018c08
+   [               37872, 4] Event 0x0380: 0x00018c08
+   [               37900, 6] Event 0x0380: 0x00018c08
+   [               39984, 2] External interrupt exception
+   [               40012, 4] External interrupt exception
+   [               40040, 6] External interrupt exception
+   [               42048, 2] Return from exception
+   [               42076, 4] Return from exception
+   [               42104, 6] Return from exception
+   ... (we've skipped some output here) ...
+   [              171970, 6] Event 0x0303: 0x00018d10
+   [              171982, 6] Event 0x0303: 0x00000000
+   [              172212, 6] Event 0x0304: 0x00018d10
+   [              172224, 6] Event 0x0304: 0x00000000
+   [              172240, 6] Event 0x0304: 0x00000004
+   [              172782, 0] External interrupt exception
+   [              173528, 6] Event 0x0305: 0x00018d10
+   [              174822, 0] Return from exception
+   [              174944, 6] Terminated at address 0x00011364 (status:          0)
+   [              185912, 0] Terminated at address 0x00011364 (status:          0)
+   - ../src/optimsoc_trace_monitor_trace_monitor_0/verilog/trace_monitor.sv:94: Verilog $finish
+
+The simulation is currently very verbose, the events are emitted by the library to debug the message passing protocol.
+More important is the output of tile 0 in ``stdout.000``:
+
+::
+
+   # OpTiMSoC trace_monitor stdout file
+   # [TIME, CORE] MESSAGE
+   [               72050, 0] Received from 1
+   [               78792, 0] Received from 2
+   [              179834, 0] Received from 3
+
