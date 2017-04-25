@@ -589,36 +589,25 @@ You can now run the example using:
    # start from the the baremetal-apps source code directory
    cd hello_mp
    make
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello_mp.vmem
+   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim --meminit=hello_mp.vmem
 
 ::
 
-   ... (we've skipped some output here) ...
-   [               37812, 0] Event 0x0380: 0x00018c08
-   [               37844, 2] Event 0x0380: 0x00018c08
-   [               37872, 4] Event 0x0380: 0x00018c08
-   [               37900, 6] Event 0x0380: 0x00018c08
-   [               39984, 2] External interrupt exception
-   [               40012, 4] External interrupt exception
-   [               40040, 6] External interrupt exception
-   [               42048, 2] Return from exception
-   [               42076, 4] Return from exception
-   [               42104, 6] Return from exception
-   ... (we've skipped some output here) ...
-   [              171970, 6] Event 0x0303: 0x00018d10
-   [              171982, 6] Event 0x0303: 0x00000000
-   [              172212, 6] Event 0x0304: 0x00018d10
-   [              172224, 6] Event 0x0304: 0x00000000
-   [              172240, 6] Event 0x0304: 0x00000004
-   [              172782, 0] External interrupt exception
-   [              173528, 6] Event 0x0305: 0x00018d10
-   [              174822, 0] Return from exception
-   [              174944, 6] Terminated at address 0x00011364 (status:          0)
-   [              185912, 0] Terminated at address 0x00011364 (status:          0)
-   - ../src/optimsoc_trace_monitor_trace_monitor_0/verilog/trace_monitor.sv:94: Verilog $finish
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[0].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[0].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[1].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[1].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[2].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[2].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[3].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[3].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   [               50602, 1] Terminated at address 0x00011364 (status:          0)
+   [               65212, 2] Terminated at address 0x00011364 (status:          0)
+   [              169848, 3] Terminated at address 0x00011364 (status:          0)
+   [              180834, 0] Terminated at address 0x00011364 (status:          0)
 
-The simulation is currently very verbose, the events are emitted by the library to debug the message passing protocol.
-More important is the output of tile 0 in ``stdout.000``:
+You can see that the cores in the tiles have terminated over a longer time frame.
+Core 0 exits as last after printing to the output in ``stdout.000``:
 
 ::
 
