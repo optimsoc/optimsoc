@@ -437,7 +437,11 @@ def build_examples_sim(options, env):
         "path": "compute_tile",
         "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
         "options": "--NUM_CORES 4" },
-
+      { "name": "system_2x2_cccc_sim",
+        "outname": "system_2x2_cccc_sim",
+        "path": "system_2x2_cccc",
+        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc" ],
+        "options": "--NUM_CORES 1"},
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore",
         "path": "system_2x2_cccc",
