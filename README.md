@@ -5,4 +5,4 @@ you in the beginning, this is the resource for OpTiMSoC development.
 
 Current build status in Travis: [![Build Status](https://travis-ci.org/optimsoc/sources.svg?branch=master)](https://travis-ci.org/optimsoc/sources)
 
-Current build status in LibreCores CI: [![Build Status](https://ci.librecores.org/buildStatus/icon?job=Projects/OpTiMSoC/lcci)](https://ci.librecores.org/job/Projects/job/OpTiMSoC/job/lcci/)
+Current build status in LibreCores CI: [![Build Status](https://ci.librecores.org/buildStatus/icon?job=Projects/OpTiMSoC/master)](https://ci.librecores.org/job/Projects/job/OpTiMSoC/job/master/)
