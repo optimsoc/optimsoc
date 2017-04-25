@@ -3,7 +3,7 @@ CAPI=1
 name = optimsoc:examples:compute_tile_sim
 depend =
   optimsoc:tile:compute_tile_dm
-  optimsoc:trace_monitor:trace_monitor
+  optimsoc:trace:software
   glip:backend:tcp
   optimsoc:debug:debug_interface
   opensocdebug:interconnect:debug_ring
