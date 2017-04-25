@@ -9,4 +9,6 @@ usage = sim verilator
 files =
   dpi/Tracer.cpp
   dpi/Tracer.h[is_include_file]
+  dpi/SoftwareEvents.h[is_include_file]
+  dpi/SoftwareMetadata.cpp
 

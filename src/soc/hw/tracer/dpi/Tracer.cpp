@@ -19,6 +19,19 @@ void Tracer::init(bool nocfull) {
     mkdir(folder, 0777);
 
     mFolder = folder;
+
+    std::string swfolder = mFolder + "/sw";
+    mkdir(swfolder.c_str(), 0777);
+
+    std::string metadata = swfolder + "/metadata";
+
+    FILE *fh = fopen(metadata.c_str(), "w");
+    fwrite(mSoftwareMetadata.c_str(), mSoftwareMetadata.length(), 1, fh);
+    ComposedEventRegistry::instance().writeMetadataEvents(fh);
+    fclose(fh);
+
+    std::string trace = swfolder + "/trace";
+    mSoftwareTrace = fopen(trace.c_str(), "w");
 }
 
 void Tracer::initNoC(int numLinks) {
@@ -148,6 +161,8 @@ void Tracer::traceNoCPacket(int link, uint32_t flit, int last,
 
 void Tracer::emitNoCEventContext(int link, uint16_t id,
                                  uint64_t timestamp, uint32_t header) {
+    if (!mEnabled)
+        return;
     uint8_t src = (header >> 19) & 0x1f;
     uint8_t dest = (header >> 27) & 0x1f;
     uint16_t link_short = (uint16_t) link;
@@ -158,6 +173,31 @@ void Tracer::emitNoCEventContext(int link, uint16_t id,
     fwrite(&src, 1, 1, mNoCTrace);
     fwrite(&dest, 1, 1, mNoCTrace);
 }
+
+void Tracer::traceSoftware(uint64_t timestamp, uint16_t cpu, uint16_t id, uint32_t value) {
+    if (!mEnabled)
+        return;
+
+    try {
+        if (mSoftwareStates.find(cpu) == mSoftwareStates.end()) {
+            mSoftwareStates[cpu] = new SoftwareState();
+        }
+        if (mSoftwareStates[cpu]->trace(id, value)) {
+            fwrite(&timestamp, 8, 1, mSoftwareTrace);
+            fwrite(&id, 2, 1, mSoftwareTrace);
+            fwrite(&cpu, 2, 1, mSoftwareTrace);
+            mSoftwareStates[cpu]->emit(id, mSoftwareTrace);
+        }
+    } catch(SoftwareState::UnknownEventException &) {
+        uint16_t evid = 0;
+        fwrite(&timestamp, 8, 1, mSoftwareTrace);
+        fwrite(&evid, 2, 1, mSoftwareTrace);
+        fwrite(&cpu, 2, 1, mSoftwareTrace);
+        fwrite(&id, 2, 1, mSoftwareTrace);
+        fwrite(&value, 4, 1, mSoftwareTrace);
+    }
+}
+
 
 const std::string Tracer::mNoCMetadata =
         "/* CTF 1.8 */\n\n"
