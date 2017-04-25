@@ -158,7 +158,7 @@ module tb_system_2x2_cccc(
                   .r3 (trace_r3[i])
                );
 
-            trace_monitor
+            software_tracer
                #(
                   .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
                   .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
@@ -166,7 +166,7 @@ module tb_system_2x2_cccc(
                   .ID((t*CONFIG.CORES_PER_TILE)+i),
                   .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
                )
-               u_mon0(
+               u_swtrace(
                   .termination            (termination[(t*CONFIG.CORES_PER_TILE)+i]),
                   .clk                    (clk),
                   .enable                 (trace[i].valid),

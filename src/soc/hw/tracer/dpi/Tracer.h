@@ -26,8 +26,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <cstdint>
 #include <cstdio>
+
+#include <SoftwareEvents.h>
 
 /**
  * The tracer class
@@ -74,6 +77,8 @@ public:
     void initNoC(int numLinks);
     void traceNoCPacket(int link, uint32_t flit, int last,
                         uint64_t timestamp);
+
+    void traceSoftware(uint64_t timestamp, uint16_t cpu, uint16_t id, uint32_t value);
 private:
     bool mEnabled;
     bool mNoCFull;
@@ -86,4 +91,8 @@ private:
 
     void emitNoCEventContext(int link, uint16_t id, uint64_t timestamp,
                              uint32_t header);
+
+    FILE *mSoftwareTrace;
+    static const std::string mSoftwareMetadata;
+    std::map<uint16_t, SoftwareState*> mSoftwareStates;
 };
