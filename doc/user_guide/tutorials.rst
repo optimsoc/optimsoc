@@ -22,9 +22,9 @@ You can find this example in ``$OPTIMSOC/examples/sim/compute_tile``.
 In addition to the simulated SoC hardware, you also need software that runs on the system.
 Our demonstration software is available in an extra repository:
 
-.. code:: sh
+.. parsed-literal::
 
-   git clone https://github.com/optimsoc/baremetal-apps
+   git clone -b |version| https://github.com/optimsoc/baremetal-apps
    cd baremetal-apps
 
 Build a simple "Hello World" example:
