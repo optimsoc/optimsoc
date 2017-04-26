@@ -54,7 +54,7 @@ And you'll get roughly this output:
 
    [                  22, 0] Software reset
    [               63128, 0] Terminated at address 0x0000e958 (status:          0)
-   - ../src/optimsoc_trace_monitor_trace_monitor/verilog/trace_monitor.sv:89: Verilog $finish
+   - ../src/optimsoc_trace_software_0/verilog/software_tracer.sv:104: Verilog $finish
 
 Furthermore, you will find a file called ``stdout.000`` which shows the actual output:
 

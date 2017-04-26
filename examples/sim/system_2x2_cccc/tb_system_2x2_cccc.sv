@@ -189,17 +189,15 @@ module tb_system_2x2_cccc(
          end
       end
 
-      if (TRACE_NOC) begin
-         noc_tracer
-           #(.LINKS(CONFIG.NUMCTS),
-             .CHANNELS(CONFIG.NOC_CHANNELS))
-         u_noc_tracer
-           (.*,
-            .flit(flit),
-            .valid(valid),
-            .last(last),
-            .ready(ready));
-      end
+      noc_tracer
+        #(.LINKS(CONFIG.NUMCTS),
+          .CHANNELS(CONFIG.NOC_CHANNELS))
+      u_noc_tracer
+        (.*,
+         .flit(flit),
+         .valid(valid),
+         .last(last),
+         .ready(ready));
    endgenerate
 
    system_2x2_cccc_dm
