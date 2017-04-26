@@ -35,6 +35,9 @@ void Tracer::init(bool nocfull) {
 }
 
 void Tracer::initNoC(int numLinks) {
+    if (!mEnabled)
+        return;
+
     mNoCNumLinks = numLinks;
     mNoCBuffer.resize(numLinks);
 
@@ -53,6 +56,9 @@ void Tracer::initNoC(int numLinks) {
 
 void Tracer::traceNoCPacket(int link, uint32_t flit, int last,
                             uint64_t timestamp) {
+    if (!mEnabled)
+        return;
+
     if (!mNoCFull && (link % 2 == 0))
         return;
 
