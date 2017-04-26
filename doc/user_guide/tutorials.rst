@@ -593,14 +593,6 @@ You can now run the example using:
 
 ::
 
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[0].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[0].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[1].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[1].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[2].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[2].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[3].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
-   TOP.tb_system_2x2_cccc.u_system.gen_ct[3].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
    [               50602, 1] Terminated at address 0x00011364 (status:          0)
    [               65212, 2] Terminated at address 0x00011364 (status:          0)
    [              169848, 3] Terminated at address 0x00011364 (status:          0)
