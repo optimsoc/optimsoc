@@ -56,7 +56,7 @@ And you'll get roughly this output:
    TOP.tb_compute_tile.u_compute_tile.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
    [                  22, 0] Software reset
    [               63128, 0] Terminated at address 0x0000e958 (status:          0)
-   - ../src/optimsoc_trace_monitor_trace_monitor/verilog/trace_monitor.sv:89: Verilog $finish
+   - ../src/optimsoc_trace_software_0/verilog/software_tracer.sv:104: Verilog $finish
 
 Furthermore, you will find a file called ``stdout.000`` which shows the actual output:
 

@@ -51,7 +51,6 @@ module tb_system_2x2_cccc(
    );
 
    parameter USE_DEBUG = 0;
-   parameter TRACE_NOC = 0;
    parameter integer NUM_CORES = 1;
    parameter integer LMEM_SIZE = 32*1024*1024;
 
@@ -183,17 +182,15 @@ module tb_system_2x2_cccc(
          end
       end
 
-      if (TRACE_NOC) begin
-         noc_tracer
-           #(.LINKS(CONFIG.NUMCTS),
-             .CHANNELS(CONFIG.NOC_VCHANNELS))
-         u_noc_tracer
-           (.*,
-            .flit(flit),
-            .valid(valid),
-            .last(last),
-            .ready(ready));
-      end
+      noc_tracer
+        #(.LINKS(CONFIG.NUMCTS),
+          .CHANNELS(CONFIG.NOC_VCHANNELS))
+      u_noc_tracer
+        (.*,
+         .flit(flit),
+         .valid(valid),
+         .last(last),
+         .ready(ready));
    endgenerate
 
    system_2x2_cccc_dm

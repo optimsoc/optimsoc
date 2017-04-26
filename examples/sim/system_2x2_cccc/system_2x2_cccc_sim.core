@@ -25,11 +25,6 @@ cli_parser = fusesoc
 [xsim]
 top_module = tb_system_2x2_cccc
 
-[parameter TRACE_NOC]
-datatype = int
-paramtype = vlogparam
-scope = public
-
 [parameter USE_DEBUG]
 datatype = int
 paramtype = vlogparam
