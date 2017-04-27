@@ -155,7 +155,7 @@ module networkadapter_conf
          if (adr[1]) begin
             data = {16'h0,ctlist_vector[adr[6:1]]};
          end else begin
-            data = {ctlist_vector[adr[8:1]],16'h0};
+            data = {ctlist_vector[adr[6:1]],16'h0};
          end
       end else begin
          case (adr[11:2])
