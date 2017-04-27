@@ -76,6 +76,8 @@ module mpbuffer_endpoint
     output                                 irq
     );
 
+   import functions::*;
+
    localparam SIZE_WIDTH = clog2_width(SIZE);
    
    // Connect from the outgoing state machine to the packet buffer
@@ -458,5 +460,4 @@ module mpbuffer_endpoint
                      .out_valid         (in_valid),
                      .out_ready         (in_ready));
 
-`include "optimsoc_functions.vh"
 endmodule // mpbuffer_endpoint

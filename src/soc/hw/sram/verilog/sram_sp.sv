@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
  * of opencores.org.
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *   Markus Goehrle <markus.goehrle@tum.de>
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
@@ -41,6 +41,8 @@
    clk, rst, ce, we, oe, addr, din, sel
    );
 
+   import functions::*;
+   
    parameter MEM_SIZE = 'hx;
 
    // address width
@@ -59,7 +61,6 @@
    localparam SW = (DW == 32) ? 4 :
                    (DW == 16) ? 2 :
                    (DW ==  8) ? 1 : 'hx;
-
 
    // ensure that parameters are set to allowed values
    // TODO: Check if synthesis tools statically check this statement and remove
@@ -139,7 +140,5 @@
 //         $stop;
       end
    endgenerate
-
-`include "optimsoc_functions.vh"
 
  endmodule

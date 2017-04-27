@@ -57,6 +57,8 @@ module mam_wb_adapter(
    wb_out_ack_o, wb_out_err_o, wb_out_rty_o, wb_out_dat_o
    );
 
+   import functions::*;
+   
    // address width
    parameter AW = 32;
 
@@ -239,7 +241,5 @@ module mam_wb_adapter(
       assign wb_in_dat_o = wb_out_dat_o;
 
    end // if(USE_DEBUG == 1)
-
-   `include "optimsoc_functions.vh"
 
 endmodule

@@ -44,6 +44,8 @@
 
 package optimsoc;
 
+   import functions::*;
+
    typedef enum { EXTERNAL, PLAIN } lmem_style_t;
 
    typedef struct packed {
@@ -180,6 +182,4 @@ package optimsoc;
       derive_config.NOC_VCHANNELS = 2;
    endfunction // DERIVE_CONFIG
 
-`include "optimsoc_functions.vh"
-   
 endpackage // optimsoc

@@ -50,6 +50,8 @@ module tb_system_2x2_cccc(
 `endif
    );
 
+   import functions::*;
+
    parameter USE_DEBUG = 0;
    parameter integer NUM_CORES = 1;
    parameter integer LMEM_SIZE = 32*1024*1024;
@@ -193,7 +195,6 @@ module tb_system_2x2_cccc(
    always clk = #1.25 ~clk;
 `endif
 
-   `include "optimsoc_functions.vh"
 endmodule
 
 // Local Variables:
