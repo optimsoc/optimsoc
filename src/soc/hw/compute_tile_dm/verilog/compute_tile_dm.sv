@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016 by the author(s)
+/* Copyright (c) 2013-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +73,8 @@ module compute_tile_dm
    input [CONFIG.NOC_VCHANNELS-1:0] noc_out_ready
    );
 
+   import functions::*;
+
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
    localparam NR_SLAVES = 4;
    localparam SLAVE_DM   = 0;
@@ -100,14 +102,15 @@ module compute_tile_dm
    logic         wb_mem_err_o;
    logic [31:0]  wb_mem_dat_o;
 
-   dii_flit [CONFIG.DEBUG_NUM_MODS-1:0] dii_in;
-   logic [CONFIG.DEBUG_NUM_MODS-1:0]    dii_in_ready;
-   dii_flit [CONFIG.DEBUG_NUM_MODS-1:0] dii_out;
-   logic [CONFIG.DEBUG_NUM_MODS-1:0]    dii_out_ready;
+   localparam DEBUG_NUM_NONZERO = (CONFIG.DEBUG_NUM_MODS == 0) ? 1 : CONFIG.DEBUG_NUM_MODS;
+
+   dii_flit [DEBUG_NUM_NONZERO-1:0] dii_in;
+   logic [DEBUG_NUM_NONZERO-1:0] dii_in_ready;
+   dii_flit [DEBUG_NUM_NONZERO-1:0] dii_out;
+   logic [DEBUG_NUM_NONZERO-1:0] dii_out_ready;
 
    generate
       if (CONFIG.USE_DEBUG == 1) begin
-
          genvar i;
          logic [CONFIG.DEBUG_NUM_MODS-1:0][9:0] id_map;
          for (i = 0; i < CONFIG.DEBUG_NUM_MODS; i = i+1) begin
@@ -158,7 +161,7 @@ module compute_tile_dm
    wire [31:0]   snoop_adr;
 
    wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
-   assign pic_ints_i[0][31:4] = 17'h0;
+   assign pic_ints_i[0][31:4] = 28'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
 
    genvar        c, m, s;
@@ -505,28 +508,28 @@ module compute_tile_dm
           ); */
          wb_sram_sp
            #(.DW(32),
-             .AW(32),
+             .AW(clog2_width(CONFIG.LMEM_SIZE)),
              .MEM_SIZE(CONFIG.LMEM_SIZE),
              .MEM_FILE(MEM_FILE),
              .MEM_IMPL_TYPE("PLAIN")
              )
          u_ram(/*AUTOINST*/
                // Outputs
-               .wb_ack_o                (wb_mem_ack_o),          // Templated
-               .wb_err_o                (wb_mem_err_o),          // Templated
-               .wb_rty_o                (wb_mem_rty_o),          // Templated
-               .wb_dat_o                (wb_mem_dat_o),          // Templated
+               .wb_ack_o                (wb_mem_ack_o),
+               .wb_err_o                (wb_mem_err_o),
+               .wb_rty_o                (wb_mem_rty_o),
+               .wb_dat_o                (wb_mem_dat_o),
                // Inputs
-               .wb_adr_i                (wb_mem_adr_i),          // Templated
-               .wb_bte_i                (wb_mem_bte_i),          // Templated
-               .wb_cti_i                (wb_mem_cti_i),          // Templated
-               .wb_cyc_i                (wb_mem_cyc_i),          // Templated
-               .wb_dat_i                (wb_mem_dat_i),          // Templated
-               .wb_sel_i                (wb_mem_sel_i),          // Templated
-               .wb_stb_i                (wb_mem_stb_i),          // Templated
-               .wb_we_i                 (wb_mem_we_i),           // Templated
-               .wb_clk_i                (wb_mem_clk_i),          // Templated
-               .wb_rst_i                (wb_mem_rst_i));                 // Templated
+               .wb_adr_i                (wb_mem_adr_i[clog2_width(CONFIG.LMEM_SIZE)-1:0]),
+               .wb_bte_i                (wb_mem_bte_i),
+               .wb_cti_i                (wb_mem_cti_i),
+               .wb_cyc_i                (wb_mem_cyc_i),
+               .wb_dat_i                (wb_mem_dat_i),
+               .wb_sel_i                (wb_mem_sel_i),
+               .wb_stb_i                (wb_mem_stb_i),
+               .wb_we_i                 (wb_mem_we_i),
+               .wb_clk_i                (wb_mem_clk_i),
+               .wb_rst_i                (wb_mem_rst_i));
       end else begin // block: gen_sram
          assign wb_ext_adr_i = wb_mem_adr_i;
          assign wb_ext_bte_i = wb_mem_bte_i;

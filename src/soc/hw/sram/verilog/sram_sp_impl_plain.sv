@@ -1,4 +1,4 @@
-/* Copyright (c) 2013, 2016 by the author(s)
+/* Copyright (c) 2012-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,10 +30,9 @@
  * the do_readmemh() function. It is also possible to read and write the memory
  * using the get_mem() and set_mem() functions.
  *
- * (c) 2012-2013 by the author(s)
- *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
@@ -44,6 +43,8 @@ module sram_sp_impl_plain(/*AUTOARG*/
    clk, rst, ce, we, oe, addr, din, sel
    );
 
+   import functions::*;
+   
    // address width
    parameter AW = 32;
    // data width (must be multiple of 8 for byte selects to work)
@@ -126,14 +127,14 @@ module sram_sp_impl_plain(/*AUTOARG*/
     // Function to access RAM (for use by Verilator).
    function [31:0] get_mem;
       // verilator public
-      input [AW-clog2(SW)-1:0] addr; // word address
+      input [AW-1:0] addr; // word address
       get_mem = mem[addr];
    endfunction
 
    // Function to write RAM (for use by Verilator).
    function set_mem;
       // verilator public
-      input [AW-clog2(SW)-1:0] addr; // word address
+      input [AW-1:0] addr; // word address
       input [DW-1:0]           data; // data to write
       mem[addr] = data;
    endfunction // set_mem
@@ -144,5 +145,4 @@ module sram_sp_impl_plain(/*AUTOARG*/
      end
 `endif
 
-   `include "optimsoc_functions.vh"
 endmodule

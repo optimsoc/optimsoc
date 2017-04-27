@@ -495,13 +495,16 @@ size_t optimsoc_dma_numslots(void);
  * and each of the ongoing transfers is controlled by one slot in the DMA
  * controller. You therefore need to allocate a slot before starting transfers.
  *
- * \param[out] The handle of this slot
+ * \param[out] id The handle of this slot
  * \return Success code
  */
 optimsoc_dma_success_t optimsoc_dma_alloc(optimsoc_dma_handle_t *id);
 
 /**
  * Free a pre-allocated DMA transfer slot
+ *
+ * \param id the handle to free
+ * \return DMA_SUCCESS if successful, any other value indicates an error
  */
 optimsoc_dma_success_t optimsoc_dma_free(optimsoc_dma_handle_t id);
 

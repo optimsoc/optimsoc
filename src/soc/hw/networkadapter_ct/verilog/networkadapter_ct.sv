@@ -231,7 +231,7 @@ module networkadapter_ct
          dma
            #(.CONFIG(CONFIG),.TILEID(TILEID))
          u_dma(.*,
-	       
+               
                .noc_in_req_flit    (mod_in_flit[C_DMA_REQ]),
                .noc_in_req_last    (mod_in_last[C_DMA_REQ]),
                .noc_in_req_valid   (mod_in_valid[C_DMA_REQ]),
@@ -248,7 +248,7 @@ module networkadapter_ct
                .noc_out_resp_last  (mod_out_last[C_DMA_RESP]),
                .noc_out_resp_valid (mod_out_valid[C_DMA_RESP]),
                .noc_out_resp_ready (mod_out_ready[C_DMA_RESP]),
-	       
+               
                .wbs_dat_o          (wbif_dat_o[ID_DMA*32 +: 32]),
                .wbs_ack_o          (wbif_ack_o[ID_DMA]),
                .wbs_err_o          (wbif_err_o[ID_DMA]),
@@ -269,7 +269,7 @@ module networkadapter_ct
                .wbm_bte_o          (wbm_bte_o),
                .wbm_dat_i          (wbm_dat_i),
                .wbm_ack_i          (wbm_ack_i),
-	       
+               
                .irq                (irq_dma));
       end else begin // if (CONFIG.NA_ENABLE_DMA)
          assign irq[0] = 1'b0;

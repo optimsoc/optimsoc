@@ -47,6 +47,8 @@ module tb_compute_tile(
 `endif
    );
 
+   import functions::*;
+
    // Simulation parameters
    parameter USE_DEBUG = 0;
    parameter integer NUM_CORES = 1;
@@ -257,7 +259,6 @@ module tb_compute_tile(
    always clk = #1.25 ~clk;
 `endif
 
-   `include "optimsoc_functions.vh"
 endmodule
 
 // Local Variables:

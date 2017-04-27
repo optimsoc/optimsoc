@@ -23,7 +23,7 @@ void control_init() {
     // Add handler so that received message are treated correctly
     // Class 1: control messages
     optimsoc_mp_simple_init();
-    optimsoc_mp_simple_addhandler(NOC_CLASS_FIFO, &control_msg_handler);
+    optimsoc_mp_simple_addhandler(NOC_CLASS_MP, &control_msg_handler);
 
     optimsoc_mp_simple_enable(0);
     optimsoc_mp_simple_enable(1);
@@ -52,7 +52,7 @@ void control_msg_handler(uint32_t* buffer,size_t len) {
 
         // Return the get endpoint response to sender
         rbuffer[0] = (src << OPTIMSOC_DEST_LSB) |
-                     (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+                     (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
                      (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                      (CTRL_REQUEST_GETEP_RESP << CTRL_REQUEST_LSB);
 
@@ -80,7 +80,7 @@ void control_msg_handler(uint32_t* buffer,size_t len) {
     case CTRL_REQUEST_MSG_ALLOC_REQ:
     {
         rbuffer[0] = (src << OPTIMSOC_DEST_LSB) |
-                (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+                (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
                 (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                 (CTRL_REQUEST_MSG_ALLOC_RESP << CTRL_REQUEST_LSB);
 
@@ -135,7 +135,7 @@ void control_msg_handler(uint32_t* buffer,size_t len) {
         ep->remote = (struct endpoint *) buffer[3];
 
         rbuffer[0] = (src << OPTIMSOC_DEST_LSB) |
-                (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+                (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
                 (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                 (CTRL_REQUEST_CHAN_CONNECT_RESP << CTRL_REQUEST_LSB);
 
@@ -214,7 +214,7 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
         // Try to retrieve from remote
         // We do this as long as we do not get a valid handle back (-1)
         ctrl_request.buffer[0] = (domain << OPTIMSOC_DEST_LSB) |
-                (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+                (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
                 (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                 (CTRL_REQUEST_GETEP_REQ << CTRL_REQUEST_LSB);
         ctrl_request.buffer[1] = node;
@@ -254,7 +254,7 @@ uint32_t control_msg_alloc(struct endpoint_handle *to_ep, uint32_t size) {
         // Try to retrieve from remote
         // We do this as long as we do not get a valid handle back (-1)
         ctrl_request.buffer[0] = (to_ep->domain << OPTIMSOC_DEST_LSB) |
-                (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+                (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
                 (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                 (CTRL_REQUEST_MSG_ALLOC_REQ << CTRL_REQUEST_LSB);
         ctrl_request.buffer[1] = (unsigned int) to_ep->ep;
@@ -291,7 +291,7 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
 
     for (int i=0;i<words;i=i+wordsperpacket) {
         ctrl_request.buffer[0] = (ep->domain << OPTIMSOC_DEST_LSB) |
-                (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+                (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
                 (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                 (CTRL_REQUEST_MSG_DATA << CTRL_REQUEST_LSB);
         ctrl_request.buffer[1] = (unsigned int) ep->ep;
@@ -311,7 +311,7 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
     }
 
     ctrl_request.buffer[0] = (ep->domain << OPTIMSOC_DEST_LSB) |
-            (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+            (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
             (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
             (CTRL_REQUEST_MSG_COMPLETE << CTRL_REQUEST_LSB);
     ctrl_request.buffer[1] = (unsigned int) ep->ep;
@@ -327,7 +327,7 @@ void control_msg_data(struct endpoint_handle *ep, uint32_t address, void* buffer
 uint32_t control_channel_connect(struct endpoint_handle *from,
                                  struct endpoint_handle *to) {
     ctrl_request.buffer[0] = (to->domain << OPTIMSOC_DEST_LSB) |
-            (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+            (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
             (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
             (CTRL_REQUEST_CHAN_CONNECT_REQ << CTRL_REQUEST_LSB);
     ctrl_request.buffer[1] = (unsigned int) to->ep;
@@ -348,7 +348,7 @@ void control_channel_send(struct endpoint_handle *ep, uint8_t *data, uint32_t si
 
     for (int i=0;i<words;i=i+wordsperpacket) {
         ctrl_request.buffer[0] = (ep->domain << OPTIMSOC_DEST_LSB) |
-                (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+                (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
                 (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
                 (CTRL_REQUEST_CHAN_DATA << CTRL_REQUEST_LSB);
         ctrl_request.buffer[1] = (unsigned int) ep->ep;
@@ -373,7 +373,7 @@ void control_channel_send(struct endpoint_handle *ep, uint8_t *data, uint32_t si
 
 void control_channel_sendcredit(struct endpoint_handle *ep, int32_t credit) {
     ctrl_request.buffer[0] = (ep->ep->remotedomain << OPTIMSOC_DEST_LSB) |
-            (NOC_CLASS_FIFO << OPTIMSOC_CLASS_LSB) |
+            (NOC_CLASS_MP << OPTIMSOC_CLASS_LSB) |
             (optimsoc_get_tileid() << OPTIMSOC_SRC_LSB) |
             (CTRL_REQUEST_CHAN_CREDIT << CTRL_REQUEST_LSB);
     ctrl_request.buffer[1] = (unsigned int) ep->ep->remote;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2013 by the author(s)
+/* Copyright (c) 2010-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@
  *
  * Author(s):
  *   Julius Baxter <julius@opencores.org> (original author)
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *   Markus Goehrle <markus.goehrle@tum.de>
  */
 
@@ -43,6 +43,8 @@ module wb2sram(/*AUTOARG*/
    wb_stb_i, wb_we_i, wb_clk_i, wb_rst_i, sram_dout
    );
 
+   import functions::*;
+   
    // Memory parameters
    // data width (word size)
    // Valid values: 32, 16 and 8
@@ -258,7 +260,5 @@ module wb2sram(/*AUTOARG*/
    end
 
    assign wb_err_o = wb_ack & wb_stb_i & (burst_access_wrong_wb_adr);
-
-   `include "optimsoc_functions.vh"
 
 endmodule

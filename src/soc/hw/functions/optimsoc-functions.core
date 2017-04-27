@@ -4,7 +4,6 @@ name = optimsoc:base:functions
 
 [fileset include_files]
 file_type = verilogSource
-is_include_file = true
 usage = sim synth
 files =
-  optimsoc_functions.vh
+  optimsoc_functions.sv

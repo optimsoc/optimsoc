@@ -55,6 +55,9 @@ unsigned long long OptionsParser::str2ull(const std::string &str) {
 void OptionsParser::parse(int argc, char **argv) {
     int c;
 
+    // disable error handling of getopt
+    opterr = 0;
+
     while (1) {
         static struct option long_options[] = {
                 {"standalone", no_argument,       0, 'a'},

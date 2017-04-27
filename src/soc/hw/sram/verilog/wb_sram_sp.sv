@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
  * Single-Port RAM with Wishbone Interface
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *   Markus Goehrle <markus.goehrle@tum.de>
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
@@ -36,6 +36,8 @@ module wb_sram_sp(/*AUTOARG*/
    wb_stb_i, wb_we_i, wb_clk_i, wb_rst_i
    );
 
+   import functions::*;
+   
    // Memory size in bytes
    parameter MEM_SIZE = 'hx;
 
@@ -153,7 +155,5 @@ module wb_sram_sp(/*AUTOARG*/
              .addr                      (sram_addr),             // Templated
              .din                       (sram_din),              // Templated
              .sel                       (sram_sel));             // Templated
-
-   `include "optimsoc_functions.vh"
 
 endmodule
