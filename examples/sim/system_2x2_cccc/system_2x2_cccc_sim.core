@@ -3,7 +3,8 @@ CAPI=1
 name = optimsoc:examples:system_2x2_cccc_sim
 depend =
   optimsoc:system:2x2_cccc_dm
-  optimsoc:trace_monitor:trace_monitor
+  optimsoc:trace:noc
+  optimsoc:trace:software
   glip:backend:tcp
 
 simulators = verilator xsim
@@ -35,6 +36,16 @@ paramtype = vlogparam
 scope = public
 
 [parameter vcd]
+datatype = bool
+paramtype = cmdlinearg
+scope = public
+
+[parameter trace]
+datatype = bool
+paramtype = cmdlinearg
+scope = public
+
+[parameter trace-noc-full]
 datatype = bool
 paramtype = cmdlinearg
 scope = public

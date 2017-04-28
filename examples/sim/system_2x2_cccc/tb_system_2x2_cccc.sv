@@ -127,12 +127,14 @@ module tb_system_2x2_cccc(
    end // if (CONFIG.USE_DEBUG == 1)
 
    // Monitor system behavior in simulation
-   genvar t;
-   genvar i;
+   genvar t, i, v;
 
    wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
+      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_VCHANNELS-1:0][31:0] flit;
+      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_VCHANNELS-1:0]       last, valid, ready;
+
       for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
 
          logic [31:0] trace_r3 [0:CONFIG.CORES_PER_TILE-1];
@@ -150,7 +152,7 @@ module tb_system_2x2_cccc(
                   .r3 (trace_r3[i])
                );
 
-            trace_monitor
+            software_tracer
                #(
                   .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
                   .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
@@ -158,7 +160,7 @@ module tb_system_2x2_cccc(
                   .ID((t*CONFIG.CORES_PER_TILE)+i),
                   .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
                )
-               u_mon0(
+               u_swtrace(
                   .termination            (termination[(t*CONFIG.CORES_PER_TILE)+i]),
                   .clk                    (clk),
                   .enable                 (trace[i].valid),
@@ -169,7 +171,27 @@ module tb_system_2x2_cccc(
               );
          end
 
+         for (v = 0; v < CONFIG.NOC_VCHANNELS; v++) begin
+            assign flit[t][0][v] = u_system.link_out_flit[t][31:0];
+            assign flit[t][1][v] = u_system.link_in_flit[t][31:0];
+            assign last[t][0][v] = u_system.link_out_flit[t][33];
+            assign last[t][1][v] = u_system.link_in_flit[t][33];
+            assign valid[t][0][v] = u_system.link_out_valid[t][v];
+            assign valid[t][1][v] = u_system.link_in_valid[t][v];
+            assign ready[t][0][v] = u_system.link_out_ready[t][v];
+            assign ready[t][1][v] = u_system.link_in_ready[t][v];
+         end
       end
+
+      noc_tracer
+        #(.LINKS(CONFIG.NUMCTS),
+          .CHANNELS(CONFIG.NOC_VCHANNELS))
+      u_noc_tracer
+        (.*,
+         .flit(flit),
+         .valid(valid),
+         .last(last),
+         .ready(ready));
    endgenerate
 
    system_2x2_cccc_dm

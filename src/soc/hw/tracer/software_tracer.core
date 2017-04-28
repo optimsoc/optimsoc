@@ -1,0 +1,21 @@
+CAPI=1
+[main]
+name = optimsoc:trace:software
+description = "Software trace"
+depend =
+  optimsoc:trace:tracer
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/software_tracer.sv
+  verilog/r3_checker.v
+
+[fileset dpi]
+file_type = cppSource
+usage = sim verilator
+files =
+  dpi/software_tracer.cpp
+  dpi/SoftwareEvents.cpp
+  

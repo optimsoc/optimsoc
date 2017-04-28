@@ -124,7 +124,7 @@ module tb_compute_tile(
                .r3 (trace_r3[i])
             );
 
-         trace_monitor
+         software_tracer
             #(
                .STDOUT_FILENAME({"stdout.",index2string(i)}),
                .TRACEFILE_FILENAME({"trace.",index2string(i)}),
@@ -132,7 +132,7 @@ module tb_compute_tile(
                .ID(i),
                .TERM_CROSS_NUM(NUM_CORES)
             )
-            u_mon0(
+            u_swtrace(
                .termination            (termination[i]),
                .clk                    (clk),
                .enable                 (trace[i].valid),
