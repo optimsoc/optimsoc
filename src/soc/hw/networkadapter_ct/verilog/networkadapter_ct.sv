@@ -217,7 +217,7 @@ module networkadapter_ct
 
    generate
       if (CONFIG.NA_ENABLE_DMA) begin
-         wire [3:0] irq_dma;
+         wire [CONFIG.NA_DMA_SLOTS-1:0] irq_dma;
          assign irq[0] = |irq_dma;
 
          wire [1:0][CONFIG.NOC_FLIT_WIDTH-1:0] dma_in_flit, dma_out_flit;

@@ -70,6 +70,7 @@ void Tracer::traceNoCPacket(int link, uint32_t flit, int last,
         int matched = 0;
         static const uint8_t CLASS_MPBUFFER = 0x0;
         static const uint8_t CLASS_MPBUFFER_CTRL = 0x7;
+        static const uint8_t CLASS_DMA = 0x1;
         static const uint8_t CLASS_MP = 0x2;
 
         if (cls == CLASS_MPBUFFER) {
@@ -146,6 +147,21 @@ void Tracer::traceNoCPacket(int link, uint32_t flit, int last,
                 fwrite(&mNoCBuffer[link][1], 4, 1, mNoCTrace);
                 fwrite(&mNoCBuffer[link][2], 4, 1, mNoCTrace);
                 fwrite(&mNoCBuffer[link][3], 4, 1, mNoCTrace);
+            }
+        } else if (cls == CLASS_DMA) {
+            uint8_t type = (header >> 17) & 0x1;
+            uint8_t direction = (header >> 18) & 0x1;
+            if (direction == 0) {
+                if (type == 0) {
+                    matched = 1;
+                    uint8_t size = mNoCBuffer[link].size() - 2;
+                    emitNoCEventContext(link, 12, timestamp, header);
+                    fwrite(&mNoCBuffer[link][1], 4, 1, mNoCTrace);
+                    fwrite(&size, 1, 1, mNoCTrace);
+                } else {
+                    matched = 1;
+                    emitNoCEventContext(link, 13, timestamp, header);
+                }
             }
         }
 
@@ -337,5 +353,17 @@ const std::string Tracer::mNoCMetadata =
         "        uint32_t address;\n"
         "        uint32_t size;\n"
         "    };\n"
+        "};\n"
+        "event {\n"
+        "    id = 12;\n"
+        "    name = 'dma_l2r_req';\n"
+        "    fields := struct {\n"
+        "        uint32_t address;\n"
+        "        uint8_t size;\n"
+        "    };\n"
+        "};\n"
+        "event {\n"
+        "    id = 13;\n"
+        "    name = 'dma_l2r_resp';\n"
         "};\n"
         "\n";

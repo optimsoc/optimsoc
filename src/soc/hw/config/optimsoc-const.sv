@@ -10,7 +10,9 @@ package constants;
    localparam NOC_SRC_LSB = 19;
 
    // Classes
-   localparam NOC_CLASS_LSU = 3'h2;
+   localparam NOC_CLASS_MPBUFFER = 3'h0;
+   localparam NOC_CLASS_DMA = 3'h1;
+   localparam NOC_CLASS_MP = 3'h2;
 
    // NoC LSU
    localparam NOC_LSU_MSGTYPE_MSB = 18;
@@ -19,7 +21,5 @@ package constants;
    localparam NOC_LSU_SIZE_IDX = 15;
    localparam NOC_LSU_SIZE_SINGLE = 0;
    localparam NOC_LSU_SIZE_BURST = 1;
-   
+
 endpackage // constants
-
-

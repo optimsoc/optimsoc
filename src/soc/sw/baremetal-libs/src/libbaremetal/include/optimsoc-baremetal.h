@@ -519,7 +519,7 @@ optimsoc_dma_success_t optimsoc_dma_free(optimsoc_dma_handle_t id);
  * \param local Local address
  * \param remote_tile Remote tile
  * \param remote Remote address
- * \param size Size of the transfer
+ * \param size Size of the transfer in words
  * \param dir Direction of the transfer
  * \return Success code
  */
