@@ -6,7 +6,7 @@ name = optimsoc:debug_system:mam_wb_adapter
 file_type = verilogSource
 usage = sim synth
 files =
-  verilog/mam_wb_adapter.v
+  verilog/mam_wb_adapter.sv
 
 [fileset include_files]
 file_type = verilogSource
