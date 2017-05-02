@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+description = "Round robin arbiter"
+name = wallento:arbiter:rr
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  arb_rr.sv
