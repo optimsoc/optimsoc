@@ -34,8 +34,6 @@ module sram_sp_impl_xilinx_spartan6(/*AUTOARG*/
    clk, rst, sel, addr, we, ce, din
    );
 
-`include "optimsoc_functions.vh"
-
    // Memory size in bytes
    parameter MEM_SIZE  = 'hx;
 
@@ -53,7 +51,7 @@ module sram_sp_impl_xilinx_spartan6(/*AUTOARG*/
     */
 
    // The width of the address bus
-   localparam AW = clog2(MEM_WORDS);
+   localparam AW = $clog2(MEM_WORDS);
 
    input          clk;
    input          rst;
@@ -66,7 +64,7 @@ module sram_sp_impl_xilinx_spartan6(/*AUTOARG*/
 
 
    // The width of the block address
-   localparam BLOCK_AW = clog2(BLOCKNUM);
+   localparam BLOCK_AW = $clog2(BLOCKNUM);
 
    localparam WORD_AW = 9;
 

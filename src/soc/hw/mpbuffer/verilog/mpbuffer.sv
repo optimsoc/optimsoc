@@ -23,7 +23,7 @@
  * The wishbone slave interface to access the simple message passing.
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *
  */
 
@@ -35,49 +35,49 @@ module mpbuffer
     parameter N               = 1
     )
    (
-    input 				 clk,
-    input 				 rst,
+    input                                clk,
+    input                                rst,
 
-    output [N*CONFIG.NOC_DATA_WIDTH-1:0] noc_out_flit,
-    output [N-1:0] 			 noc_out_last,
-    output [N-1:0] 			 noc_out_valid,
-    input [N-1:0] 			 noc_out_ready,
+    output [N*CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit,
+    output [N-1:0]                       noc_out_last,
+    output [N-1:0]                       noc_out_valid,
+    input [N-1:0]                        noc_out_ready,
 
-    input [N*CONFIG.NOC_DATA_WIDTH-1:0]  noc_in_flit,
-    input [N-1:0] 			 noc_in_last,
-    input [N-1:0] 			 noc_in_valid,
-    output [N-1:0] 			 noc_in_ready,
+    input [N*CONFIG.NOC_FLIT_WIDTH-1:0]  noc_in_flit,
+    input [N-1:0]                        noc_in_last,
+    input [N-1:0]                        noc_in_valid,
+    output [N-1:0]                       noc_in_ready,
 
     // Bus side (generic)
-    input [31:0] 			 bus_addr,
-    input 				 bus_we,
-    input 				 bus_en,
-    input [31:0] 			 bus_data_in,
-    output reg [31:0] 			 bus_data_out,
-    output 				 bus_ack,
-    output 				 bus_err,
+    input [31:0]                         bus_addr,
+    input                                bus_we,
+    input                                bus_en,
+    input [31:0]                         bus_data_in,
+    output reg [31:0]                    bus_data_out,
+    output                               bus_ack,
+    output                               bus_err,
 
-    output 				 irq
+    output                               irq
     );
 
-   wire [N:0] 				 bus_sel_mod;
-   wire [N:0] 				 bus_err_mod;
-   wire [N:0] 				 bus_ack_mod;
-   wire [N:0][31:0] 			 bus_data_mod;
-   wire [N-1:0] 			 irq_mod;
+   wire [N:0]                            bus_sel_mod;
+   wire [N:0]                            bus_err_mod;
+   wire [N:0]                            bus_ack_mod;
+   wire [N:0][31:0]                      bus_data_mod;
+   wire [N-1:0]                          irq_mod;
 
-   genvar 				 n;
+   genvar                                n;
    generate
       for (n = 0; n <= N; n++) begin
-	 assign bus_sel_mod[n] = (bus_addr[19:13] == n);
+         assign bus_sel_mod[n] = (bus_addr[19:13] == n);
       end
    endgenerate
 
    always @(*) begin
       bus_data_out = 32'hx;
       for (int i = 0; i <= N; i++) begin
-	 if (bus_sel_mod[i])
-	   bus_data_out = bus_data_mod[i];
+         if (bus_sel_mod[i])
+           bus_data_out = bus_data_mod[i];
       end
    end
    
@@ -91,26 +91,26 @@ module mpbuffer
 
    generate
       for (n = 0; n < N; n++) begin
-	 mpbuffer_endpoint
-	       #(.CONFIG(CONFIG), .SIZE(SIZE))
-	 u_endpoint
-	       (.*,
-		.noc_out_flit  (noc_out_flit[n*CONFIG.NOC_DATA_WIDTH +: CONFIG.NOC_DATA_WIDTH]),
-		.noc_out_last  (noc_out_last[n]),
-		.noc_out_valid (noc_out_valid[n]),
-		.noc_out_ready (noc_out_ready[n]),
-		.noc_in_flit   (noc_in_flit[n*CONFIG.NOC_DATA_WIDTH +: CONFIG.NOC_DATA_WIDTH]),
-		.noc_in_last   (noc_in_last[n]),
-		.noc_in_valid  (noc_in_valid[n]),
-		.noc_in_ready  (noc_in_ready[n]),
+         mpbuffer_endpoint
+               #(.CONFIG(CONFIG), .SIZE(SIZE))
+         u_endpoint
+               (.*,
+                .noc_out_flit  (noc_out_flit[n*CONFIG.NOC_FLIT_WIDTH +: CONFIG.NOC_FLIT_WIDTH]),
+                .noc_out_last  (noc_out_last[n]),
+                .noc_out_valid (noc_out_valid[n]),
+                .noc_out_ready (noc_out_ready[n]),
+                .noc_in_flit   (noc_in_flit[n*CONFIG.NOC_FLIT_WIDTH +: CONFIG.NOC_FLIT_WIDTH]),
+                .noc_in_last   (noc_in_last[n]),
+                .noc_in_valid  (noc_in_valid[n]),
+                .noc_in_ready  (noc_in_ready[n]),
 
-		.bus_en        (bus_en & bus_sel_mod[n+1]),
-		.bus_data_out  (bus_data_mod[n+1]),
-		.bus_ack       (bus_ack_mod[n+1]),
-		.bus_err       (bus_err_mod[n+1]),
+                .bus_en        (bus_en & bus_sel_mod[n+1]),
+                .bus_data_out  (bus_data_mod[n+1]),
+                .bus_ack       (bus_ack_mod[n+1]),
+                .bus_err       (bus_err_mod[n+1]),
 
-		.irq           (irq_mod[n])
-		);
+                .irq           (irq_mod[n])
+                );
       end
    endgenerate
    

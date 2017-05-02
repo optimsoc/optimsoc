@@ -47,6 +47,8 @@ module tb_compute_tile(
 `endif
    );
 
+   import functions::*;
+
    // Simulation parameters
    parameter USE_DEBUG = 0;
    parameter integer NUM_CORES = 1;
@@ -59,8 +61,7 @@ module tb_compute_tile(
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 0,
-                      NOC_DATA_WIDTH: 32,
-                      NOC_TYPE_WIDTH: 2,
+                      NOC_ENABLE_VCHANNELS: 0,
                       LMEM_SIZE: LMEM_SIZE,
                       LMEM_STYLE: PLAIN,
                       ENABLE_BOOTROM: 0,
@@ -94,12 +95,19 @@ module tb_compute_tile(
    reg rst;
 `endif
 
-   reg [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   reg [CONFIG.NOC_VCHANNELS-1:0]  noc_in_valid;
-   wire [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready;
-   wire [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   wire [CONFIG.NOC_VCHANNELS-1:0]  noc_out_valid;
-   reg [CONFIG.NOC_VCHANNELS-1:0]   noc_out_ready;
+   wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0]  noc_in_flit;
+   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_last;
+   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_valid;
+   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_ready;
+   wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0]  noc_out_flit;
+   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_last;
+   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_valid;
+   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_ready;
+
+   assign noc_in_flit   = {CONFIG.NOC_FLIT_WIDTH*CONFIG.NOC_CHANNELS{1'bx}};
+   assign noc_in_last   = {CONFIG.NOC_CHANNELS{1'bx}};
+   assign noc_in_valid  = {CONFIG.NOC_CHANNELS{1'b0}};
+   assign noc_out_ready = {CONFIG.NOC_CHANNELS{1'b0}};
 
    // Monitor system behavior in simulation
    mor1kx_trace_exec [NUM_CORES-1:0] trace;
@@ -214,17 +222,19 @@ module tb_compute_tile(
                      .debug_ring_out(debug_ring_out),
                      .debug_ring_out_ready(debug_ring_out_ready),
                      // Outputs
-                     .noc_in_ready      (noc_in_ready[CONFIG.NOC_VCHANNELS-1:0]),
-                     .noc_out_flit      (noc_out_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
-                     .noc_out_valid     (noc_out_valid[CONFIG.NOC_VCHANNELS-1:0]),
+                     .noc_in_ready      (noc_in_ready),
+                     .noc_out_flit      (noc_out_flit),
+                     .noc_out_last      (noc_out_last),
+                     .noc_out_valid     (noc_out_valid),
                      // Inputs
                      .clk               (clk),
                      .rst_cpu           (rst_cpu),
                      .rst_sys           (rst_sys),
                      .rst_dbg           (rst),
-                     .noc_in_flit       (noc_in_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
-                     .noc_in_valid      (noc_in_valid[CONFIG.NOC_VCHANNELS-1:0]),
-                     .noc_out_ready     (noc_out_ready[CONFIG.NOC_VCHANNELS-1:0]),
+                     .noc_in_flit       (noc_in_flit),
+                     .noc_in_last       (noc_in_last),
+                     .noc_in_valid      (noc_in_valid),
+                     .noc_out_ready     (noc_out_ready),
 
                      // Unused
                      .wb_ext_adr_i (),
@@ -248,8 +258,6 @@ module tb_compute_tile(
    initial begin
       clk = 1'b1;
       rst = 1'b1;
-      noc_out_ready = {VCHANNELS{1'b1}};
-      noc_in_valid = '0;
       #15;
       rst = 1'b0;
    end
@@ -257,7 +265,6 @@ module tb_compute_tile(
    always clk = #1.25 ~clk;
 `endif
 
-   `include "optimsoc_functions.vh"
 endmodule
 
 // Local Variables:

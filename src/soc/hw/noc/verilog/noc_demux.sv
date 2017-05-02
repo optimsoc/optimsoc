@@ -31,29 +31,29 @@ import constants::*;
 
 module noc_demux
   #(
-    parameter config_t CONFIG = 'x,
+    parameter FLIT_WIDTH = 32,
     parameter CHANNELS = 2,
     parameter [63:0] MAPPING = 'x
     )
    (
-    input 					      clk, rst,
+    input                                 clk, rst,
 
-    input [CONFIG.NOC_DATA_WIDTH-1:0] 		      in_flit,
-    input 					      in_last,
-    input 					      in_valid,
-    output reg 					      in_ready,
+    input [FLIT_WIDTH-1:0]                in_flit,
+    input                                 in_last,
+    input                                 in_valid,
+    output reg                            in_ready,
 
-    output [CHANNELS-1:0][CONFIG.NOC_DATA_WIDTH-1:0] out_flit,
-    output [CHANNELS-1:0] 			      out_last,
-    output reg [CHANNELS-1:0] 			      out_valid,
-    input [CHANNELS-1:0] 			      out_ready
+    output [CHANNELS-1:0][FLIT_WIDTH-1:0] out_flit,
+    output [CHANNELS-1:0]                 out_last,
+    output reg [CHANNELS-1:0]             out_valid,
+    input [CHANNELS-1:0]                  out_ready
     );
 
-   reg [CHANNELS-1:0] 				      active;
-   reg [CHANNELS-1:0] 				      nxt_active;
+   reg [CHANNELS-1:0]                                 active;
+   reg [CHANNELS-1:0]                                 nxt_active;
 
-   wire [2:0] 					      packet_class;
-   reg [CHANNELS-1:0] 				      select;
+   wire [2:0]                                         packet_class;
+   reg [CHANNELS-1:0]                                 select;
    
    assign packet_class = in_flit[NOC_CLASS_MSB:NOC_CLASS_LSB];
    
@@ -74,14 +74,14 @@ module noc_demux
       in_ready = 0;
 
       if (active == 0) begin
-         in_ready = select & out_ready;
+         in_ready = |(select & out_ready);
          out_valid = select & {CHANNELS{in_valid}};
 
          if (in_valid & ~in_last) begin
             nxt_active = select;
          end
       end else begin
-         in_ready = active & out_ready;
+         in_ready = |(active & out_ready);
          out_valid = active & {CHANNELS{in_valid}};
 
          if (in_valid & in_last) begin

@@ -31,41 +31,41 @@ import optimsoc::*;
 
 module noc_mux
   #(
-    parameter config_t CONFIG = 'x,
-    parameter CHANNELS        = 2
+    parameter FLIT_WIDTH = 32,
+    parameter CHANNELS   = 2
     )
    (
-    input 					    clk, rst,
+    input                                clk, rst,
 
-    input [CHANNELS-1:0][CONFIG.NOC_DATA_WIDTH-1:0] in_flit,
-    input [CHANNELS-1:0] 			    in_last,
-    input [CHANNELS-1:0] 			    in_valid,
-    output reg [CHANNELS-1:0] 			    in_ready,
+    input [CHANNELS-1:0][FLIT_WIDTH-1:0] in_flit,
+    input [CHANNELS-1:0]                 in_last,
+    input [CHANNELS-1:0]                 in_valid,
+    output reg [CHANNELS-1:0]            in_ready,
 
-    output reg [CONFIG.NOC_DATA_WIDTH-1:0] 	    out_flit,
-    output reg 					    out_last,
-    output reg 					    out_valid,
-    input 					    out_ready
+    output reg [FLIT_WIDTH-1:0]          out_flit,
+    output reg                           out_last,
+    output reg                           out_valid,
+    input                                out_ready
     );
 
-   wire [CHANNELS-1:0] 				     select;
-   reg [CHANNELS-1:0] 				     active;
+   wire [CHANNELS-1:0]                               select;
+   reg [CHANNELS-1:0]                                active;
 
-   reg 						     activeroute, nxt_activeroute;
+   reg                                               activeroute, nxt_activeroute;
    
-   wire [CHANNELS-1:0] 				     req_masked;
+   wire [CHANNELS-1:0]                               req_masked;
    assign req_masked = {CHANNELS{~activeroute & out_ready}} & in_valid;
 
    always @(*) begin
-      out_flit = {CONFIG.NOC_DATA_WIDTH{1'b0}};
+      out_flit = {FLIT_WIDTH{1'b0}};
       out_last = 1'b0;
       for (int c = 0; c < CHANNELS; c = c + 1) begin
          if (select[c]) begin
             out_flit = in_flit[c];
-	    out_last = in_last[c];
-	 end
+            out_last = in_last[c];
+         end
       end
-   end		 
+   end
 
    always @(*) begin
       nxt_activeroute = activeroute;
@@ -101,12 +101,13 @@ module noc_mux
       end
    end
    
-   wb_interconnect_arb_rr
+   arb_rr
      #(.N(CHANNELS))
    u_arb
      (.nxt_gnt (select),
       .req     (req_masked),
-      .gnt     (active));
+      .gnt     (active),
+      .en      (1));
    
 endmodule // noc_mux
 

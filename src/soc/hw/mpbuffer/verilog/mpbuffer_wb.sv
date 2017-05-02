@@ -35,37 +35,37 @@ module mpbuffer_wb
     parameter N               = 1
     )
    (
-    input 				 clk,
-    input 				 rst,
+    input                                clk,
+    input                                rst,
 
-    output [N*CONFIG.NOC_DATA_WIDTH-1:0] noc_out_flit,
-    output [N-1:0] 			 noc_out_last,
-    output [N-1:0] 			 noc_out_valid,
-    input [N-1:0] 			 noc_out_ready,
+    output [N*CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit,
+    output [N-1:0]                       noc_out_last,
+    output [N-1:0]                       noc_out_valid,
+    input [N-1:0]                        noc_out_ready,
 
-    input [N*CONFIG.NOC_DATA_WIDTH-1:0]  noc_in_flit,
-    input [N-1:0] 			 noc_in_last,
-    input [N-1:0] 			 noc_in_valid,
-    output [N-1:0] 			 noc_in_ready,
+    input [N*CONFIG.NOC_FLIT_WIDTH-1:0]  noc_in_flit,
+    input [N-1:0]                        noc_in_last,
+    input [N-1:0]                        noc_in_valid,
+    output [N-1:0]                       noc_in_ready,
     
-    input [31:0] 			 wb_adr_i,
-    input 				 wb_we_i,
-    input 				 wb_cyc_i,
-    input 				 wb_stb_i,
-    input [31:0] 			 wb_dat_i,
-    output [31:0] 			 wb_dat_o,
-    output 				 wb_ack_o,
-    output 				 wb_err_o,
+    input [31:0]                         wb_adr_i,
+    input                                wb_we_i,
+    input                                wb_cyc_i,
+    input                                wb_stb_i,
+    input [31:0]                         wb_dat_i,
+    output [31:0]                        wb_dat_o,
+    output                               wb_ack_o,
+    output                               wb_err_o,
 
-    output 				 irq
+    output                               irq
     );
 
    // Bus side (generic)
    wire [31:0]                  bus_addr;
    wire                         bus_we;
    wire                         bus_en;
-   wire [31:0] 			bus_data_in;
-   wire [31:0] 			bus_data_out;
+   wire [31:0]                  bus_data_in;
+   wire [31:0]                  bus_data_out;
    wire                         bus_ack;
    wire                         bus_err;
 

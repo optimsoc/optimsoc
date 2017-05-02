@@ -45,64 +45,66 @@ module networkadapter_ct
  `endif
 `endif
 
-    input clk, rst,
+    input                                 clk, rst,
 
-    input [CONFIG.NOC_FLIT_WIDTH-1:0]  noc_in_flit,
-    input [CONFIG.NOC_VCHANNELS-1:0]   noc_in_valid,
-    output [CONFIG.NOC_VCHANNELS-1:0]  noc_in_ready,
-    output [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit,
-    output [CONFIG.NOC_VCHANNELS-1:0]  noc_out_valid,
-    input [CONFIG.NOC_VCHANNELS-1:0]   noc_out_ready,
+    input [CHANNELS-1:0][FLIT_WIDTH-1:0]  noc_in_flit,
+    input [CHANNELS-1:0]                  noc_in_last,
+    input [CHANNELS-1:0]                  noc_in_valid,
+    output [CHANNELS-1:0]                 noc_in_ready,
+    output [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_out_flit,
+    output [CHANNELS-1:0]                 noc_out_last,
+    output [CHANNELS-1:0]                 noc_out_valid,
+    input [CHANNELS-1:0]                  noc_out_ready,
 
-    output [31:0]                      wbm_adr_o,
-    output                             wbm_cyc_o,
-    output [31:0]                      wbm_dat_o,
-    output [3:0]                       wbm_sel_o,
-    output                             wbm_stb_o,
-    output                             wbm_we_o,
-    output                             wbm_cab_o,
-    output [2:0]                       wbm_cti_o,
-    output [1:0]                       wbm_bte_o,
-    input                              wbm_ack_i,
-    input                              wbm_rty_i,
-    input                              wbm_err_i,
-    input [31:0]                       wbm_dat_i,
+    output [31:0]                         wbm_adr_o,
+    output                                wbm_cyc_o,
+    output [31:0]                         wbm_dat_o,
+    output [3:0]                          wbm_sel_o,
+    output                                wbm_stb_o,
+    output                                wbm_we_o,
+    output                                wbm_cab_o,
+    output [2:0]                          wbm_cti_o,
+    output [1:0]                          wbm_bte_o,
+    input                                 wbm_ack_i,
+    input                                 wbm_rty_i,
+    input                                 wbm_err_i,
+    input [31:0]                          wbm_dat_i,
 
-    input [31:0]                       wbs_adr_i,
-    input                              wbs_cyc_i,
-    input [31:0]                       wbs_dat_i,
-    input [3:0]                        wbs_sel_i,
-    input                              wbs_stb_i,
-    input                              wbs_we_i,
-    input                              wbs_cab_i,
-    input [2:0]                        wbs_cti_i,
-    input [1:0]                        wbs_bte_i,
-    output                             wbs_ack_o,
-    output                             wbs_rty_o,
-    output                             wbs_err_o,
-    output [31:0]                      wbs_dat_o,
+    input [31:0]                          wbs_adr_i,
+    input                                 wbs_cyc_i,
+    input [31:0]                          wbs_dat_i,
+    input [3:0]                           wbs_sel_i,
+    input                                 wbs_stb_i,
+    input                                 wbs_we_i,
+    input                                 wbs_cab_i,
+    input [2:0]                           wbs_cti_i,
+    input [1:0]                           wbs_bte_i,
+    output                                wbs_ack_o,
+    output                                wbs_rty_o,
+    output                                wbs_err_o,
+    output [31:0]                         wbs_dat_o,
 
-    output [1:0]                       irq
+    output [1:0]                          irq
     );
 
-   localparam VCHANNELS = CONFIG.NOC_VCHANNELS;
+   localparam CHANNELS = CONFIG.NOC_CHANNELS;
    localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH;
 
    // Those are the actual channels from the modules
-   localparam CHANNELS = 4;
+   localparam MODCHANNELS = 4;
    localparam C_MPSIMPLE_REQ  = 0;
    localparam C_MPSIMPLE_RESP = 1;
    localparam C_DMA_REQ       = 2;
    localparam C_DMA_RESP      = 3;
 
-   wire [CHANNELS-1:0] mod_out_ready;
-   wire [CHANNELS-1:0] mod_out_valid;
-   wire [CHANNELS-1:0] mod_out_last;
-   wire [CONFIG.NOC_DATA_WIDTH-1:0] mod_out_flit[0:CHANNELS-1];
-   wire [CHANNELS-1:0] mod_in_ready;
-   wire [CHANNELS-1:0] mod_in_valid;
-   wire [CHANNELS-1:0] mod_in_last;
-   wire [CONFIG.NOC_DATA_WIDTH-1:0] mod_in_flit[0:CHANNELS-1];
+   wire [MODCHANNELS-1:0] mod_out_ready;
+   wire [MODCHANNELS-1:0] mod_out_valid;
+   wire [MODCHANNELS-1:0] mod_out_last;
+   wire [MODCHANNELS-1:0][FLIT_WIDTH-1:0] mod_out_flit;
+   wire [MODCHANNELS-1:0] mod_in_ready;
+   wire [MODCHANNELS-1:0] mod_in_valid;
+   wire [MODCHANNELS-1:0] mod_in_last;
+   wire [MODCHANNELS-1:0][FLIT_WIDTH-1:0] mod_in_flit;
 
    // The different interfaces at the bus slave
    //  slave 0: configuration
@@ -222,13 +224,13 @@ module networkadapter_ct
          wire [3:0] irq_dma;
          assign irq[0] = |irq_dma;
 
-	 wire [1:0][CONFIG.NOC_FLIT_WIDTH-1:0] dma_in_flit, dma_out_flit;
-	 assign dma_in_flit[0] = {mod_in_last[C_DMA_REQ], 1'b0, mod_in_flit[C_DMA_REQ]};
-	 assign mod_out_last[C_DMA_REQ] = dma_out_flit[0][CONFIG.NOC_DATA_WIDTH+1];
-	 assign mod_out_flit[C_DMA_REQ] = dma_out_flit[0][CONFIG.NOC_DATA_WIDTH-1:0];
-	 assign dma_in_flit[1] = {mod_in_last[C_DMA_RESP], 1'b0, mod_in_flit[C_DMA_RESP]};
-	 assign mod_out_last[C_DMA_RESP] = dma_out_flit[1][CONFIG.NOC_DATA_WIDTH+1];
-	 assign mod_out_flit[C_DMA_RESP] = dma_out_flit[1][CONFIG.NOC_DATA_WIDTH-1:0];
+         wire [1:0][CONFIG.NOC_FLIT_WIDTH+1:0] dma_in_flit, dma_out_flit;
+         assign dma_in_flit[0] = {mod_in_last[C_DMA_REQ], 1'b0, mod_in_flit[C_DMA_REQ]};
+         assign mod_out_last[C_DMA_REQ] = dma_out_flit[0][CONFIG.NOC_FLIT_WIDTH+1];
+         assign mod_out_flit[C_DMA_REQ] = dma_out_flit[0][CONFIG.NOC_FLIT_WIDTH-1:0];
+         assign dma_in_flit[1] = {mod_in_last[C_DMA_RESP], 1'b0, mod_in_flit[C_DMA_RESP]};
+         assign mod_out_last[C_DMA_RESP] = dma_out_flit[1][CONFIG.NOC_FLIT_WIDTH+1];
+         assign mod_out_flit[C_DMA_RESP] = dma_out_flit[1][CONFIG.NOC_FLIT_WIDTH-1:0];
 
          /* lisnoc_dma AUTO_TEMPLATE(
           .noc_in_req_ready (mod_in_ready[C_DMA_REQ]),
@@ -252,53 +254,53 @@ module networkadapter_ct
          lisnoc_dma
            #(.tileid(TILEID),.table_entries(CONFIG.NA_DMA_ENTRIES))
          u_dma(/*AUTOINST*/
-	       // Outputs
-	       .noc_in_req_ready	(mod_in_ready[C_DMA_REQ]), // Templated
-	       .noc_in_resp_ready	(mod_in_ready[C_DMA_RESP]), // Templated
-	       .noc_out_req_flit	(dma_out_flit[0]),	 // Templated
-	       .noc_out_req_valid	(mod_out_valid[C_DMA_REQ]), // Templated
-	       .noc_out_resp_flit	(dma_out_flit[1]),	 // Templated
-	       .noc_out_resp_valid	(mod_out_valid[C_DMA_RESP]), // Templated
-	       .wb_if_dat_o		(wbif_dat_o[ID_DMA*32 +: 32]), // Templated
-	       .wb_if_ack_o		(wbif_ack_o[ID_DMA]),	 // Templated
-	       .wb_if_err_o		(wbif_err_o[ID_DMA]),	 // Templated
-	       .wb_if_rty_o		(wbif_rty_o[ID_DMA]),	 // Templated
-	       .wb_adr_o		(wbm_adr_o),		 // Templated
-	       .wb_dat_o		(wbm_dat_o),		 // Templated
-	       .wb_cyc_o		(wbm_cyc_o),		 // Templated
-	       .wb_stb_o		(wbm_stb_o),		 // Templated
-	       .wb_sel_o		(wbm_sel_o),		 // Templated
-	       .wb_we_o			(wbm_we_o),		 // Templated
-	       .wb_cab_o		(wbm_cab_o),		 // Templated
-	       .wb_cti_o		(wbm_cti_o),		 // Templated
-	       .wb_bte_o		(wbm_bte_o),		 // Templated
-	       .irq			(irq_dma),		 // Templated
-	       // Inputs
-	       .clk			(clk),
-	       .rst			(rst),
-	       .noc_in_req_flit		(dma_in_flit[0]),	 // Templated
-	       .noc_in_req_valid	(mod_in_valid[C_DMA_REQ]), // Templated
-	       .noc_in_resp_flit	(dma_in_flit[1]),	 // Templated
-	       .noc_in_resp_valid	(mod_in_valid[C_DMA_RESP]), // Templated
-	       .noc_out_req_ready	(mod_out_ready[C_DMA_REQ]), // Templated
-	       .noc_out_resp_ready	(mod_out_ready[C_DMA_RESP]), // Templated
-	       .wb_if_adr_i		({8'h0, wbif_adr_i[ID_DMA*24 +: 24]}), // Templated
-	       .wb_if_dat_i		(wbif_dat_i[ID_DMA*32 +: 32]), // Templated
-	       .wb_if_cyc_i		(wbif_cyc_i[ID_DMA]),	 // Templated
-	       .wb_if_stb_i		(wbif_stb_i[ID_DMA]),	 // Templated
-	       .wb_if_we_i		(wbif_we_i[ID_DMA]),	 // Templated
-	       .wb_dat_i		(wbm_dat_i),		 // Templated
-	       .wb_ack_i		(wbm_ack_i));		 // Templated
+               // Outputs
+               .noc_in_req_ready        (mod_in_ready[C_DMA_REQ]), // Templated
+               .noc_in_resp_ready       (mod_in_ready[C_DMA_RESP]), // Templated
+               .noc_out_req_flit        (dma_out_flit[0]),       // Templated
+               .noc_out_req_valid       (mod_out_valid[C_DMA_REQ]), // Templated
+               .noc_out_resp_flit       (dma_out_flit[1]),       // Templated
+               .noc_out_resp_valid      (mod_out_valid[C_DMA_RESP]), // Templated
+               .wb_if_dat_o             (wbif_dat_o[ID_DMA*32 +: 32]), // Templated
+               .wb_if_ack_o             (wbif_ack_o[ID_DMA]),    // Templated
+               .wb_if_err_o             (wbif_err_o[ID_DMA]),    // Templated
+               .wb_if_rty_o             (wbif_rty_o[ID_DMA]),    // Templated
+               .wb_adr_o                (wbm_adr_o),             // Templated
+               .wb_dat_o                (wbm_dat_o),             // Templated
+               .wb_cyc_o                (wbm_cyc_o),             // Templated
+               .wb_stb_o                (wbm_stb_o),             // Templated
+               .wb_sel_o                (wbm_sel_o),             // Templated
+               .wb_we_o                 (wbm_we_o),              // Templated
+               .wb_cab_o                (wbm_cab_o),             // Templated
+               .wb_cti_o                (wbm_cti_o),             // Templated
+               .wb_bte_o                (wbm_bte_o),             // Templated
+               .irq                     (irq_dma),               // Templated
+               // Inputs
+               .clk                     (clk),
+               .rst                     (rst),
+               .noc_in_req_flit         (dma_in_flit[0]),        // Templated
+               .noc_in_req_valid        (mod_in_valid[C_DMA_REQ]), // Templated
+               .noc_in_resp_flit        (dma_in_flit[1]),        // Templated
+               .noc_in_resp_valid       (mod_in_valid[C_DMA_RESP]), // Templated
+               .noc_out_req_ready       (mod_out_ready[C_DMA_REQ]), // Templated
+               .noc_out_resp_ready      (mod_out_ready[C_DMA_RESP]), // Templated
+               .wb_if_adr_i             ({8'h0, wbif_adr_i[ID_DMA*24 +: 24]}), // Templated
+               .wb_if_dat_i             (wbif_dat_i[ID_DMA*32 +: 32]), // Templated
+               .wb_if_cyc_i             (wbif_cyc_i[ID_DMA]),    // Templated
+               .wb_if_stb_i             (wbif_stb_i[ID_DMA]),    // Templated
+               .wb_if_we_i              (wbif_we_i[ID_DMA]),     // Templated
+               .wb_dat_i                (wbm_dat_i),             // Templated
+               .wb_ack_i                (wbm_ack_i));            // Templated
       end else begin // if (CONFIG.NA_ENABLE_DMA)
          assign irq[0] = 1'b0;
       end
    endgenerate
 
-   wire [1:0][CONFIG.NOC_DATA_WIDTH-1:0] muxed_flit;
-   wire [1:0] 				 muxed_last, muxed_valid, muxed_ready;
+   wire [1:0][FLIT_WIDTH-1:0] muxed_flit;
+   wire [1:0] 		      muxed_last, muxed_valid, muxed_ready;
 
    noc_mux
-     #(.CONFIG(CONFIG), .CHANNELS(2))
+     #(.FLIT_WIDTH(FLIT_WIDTH), .CHANNELS(2))
    u_mux0
      (.*,
       .in_flit   ({mod_out_flit[C_MPSIMPLE_REQ], mod_out_flit[C_DMA_REQ]}),
@@ -311,7 +313,7 @@ module networkadapter_ct
       .out_ready (muxed_ready[0]));
 
    noc_mux
-     #(.CONFIG(CONFIG), .CHANNELS(2))
+     #(.FLIT_WIDTH(FLIT_WIDTH), .CHANNELS(2))
    u_mux1
      (.*,
       .in_flit   ({mod_out_flit[C_MPSIMPLE_RESP], mod_out_flit[C_DMA_RESP]}),
@@ -323,62 +325,41 @@ module networkadapter_ct
       .out_valid (muxed_valid[1]),
       .out_ready (muxed_ready[1]));
 
-   wire [1:0][CONFIG.NOC_DATA_WIDTH-1:0] outbuffer_flit;
-   wire [1:0] 				 outbuffer_last, outbuffer_valid, outbuffer_ready;
-
    noc_buffer
-     #(.CONFIG(CONFIG), .DEPTH(4))
+     #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_outbuffer0
      (.*,
       .in_flit   (muxed_flit[0]),
       .in_last   (muxed_last[0]),
       .in_valid  (muxed_valid[0]),
       .in_ready  (muxed_ready[0]),
-      .out_flit  (outbuffer_flit[0]),
-      .out_last  (outbuffer_last[0]),
-      .out_valid (outbuffer_valid[0]),
-      .out_ready (outbuffer_ready[0]));
+      .out_flit  (noc_out_flit[0]),
+      .out_last  (noc_out_last[0]),
+      .out_valid (noc_out_valid[0]),
+      .out_ready (noc_out_ready[0]));
 
    noc_buffer
-     #(.CONFIG(CONFIG), .DEPTH(4))
+     #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_outbuffer1
      (.*,
       .in_flit   (muxed_flit[1]),
       .in_last   (muxed_last[1]),
       .in_valid  (muxed_valid[1]),
       .in_ready  (muxed_ready[1]),
-      .out_flit  (outbuffer_flit[1]),
-      .out_last  (outbuffer_last[1]),
-      .out_valid (outbuffer_valid[1]),
-      .out_ready (outbuffer_ready[1]));
+      .out_flit  (noc_out_flit[1]),
+      .out_last  (noc_out_last[1]),
+      .out_valid (noc_out_valid[1]),
+      .out_ready (noc_out_ready[1]));
 
-   wire [1:0][CONFIG.NOC_FLIT_WIDTH-1:0] outarb_flit;
-   assign outarb_flit[0] = {outbuffer_last[0], 1'b0, outbuffer_flit[0]};
-   assign outarb_flit[1] = {outbuffer_last[1], 1'b0, outbuffer_flit[1]};
-
-   lisnoc_router_output_arbiter
-     #(.vchannels(VCHANNELS))
-   u_arb(
-         // Outputs
-         .fifo_ready_o            ({outbuffer_ready[1], outbuffer_ready[0]}),
-         .link_valid_o            (noc_out_valid[VCHANNELS-1:0]),
-         .link_flit_o             (noc_out_flit[FLIT_WIDTH-1:0]),
-         // Inputs
-         .clk                     (clk),
-         .rst                     (rst),
-         .fifo_valid_i            ({outbuffer_valid[1], outbuffer_valid[0]}),
-         .fifo_flit_i             ({outarb_flit[1], outarb_flit[0]}),
-         .link_ready_i            (noc_out_ready[VCHANNELS-1:0]));
-
-   wire [1:0][CONFIG.NOC_DATA_WIDTH-1:0] inbuffer_flit;
-   wire [1:0] 				 inbuffer_last, inbuffer_valid, inbuffer_ready;
+   wire [1:0][FLIT_WIDTH-1:0] inbuffer_flit;
+   wire [1:0] 		      inbuffer_last, inbuffer_valid, inbuffer_ready;
 
    noc_buffer
-     #(.CONFIG(CONFIG), .DEPTH(4))
+     #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_inbuffer0
      (.*,
-      .in_flit   (noc_in_flit[CONFIG.NOC_DATA_WIDTH-1:0]),
-      .in_last   (noc_in_flit[CONFIG.NOC_DATA_WIDTH+1]),
+      .in_flit   (noc_in_flit[0]),
+      .in_last   (noc_in_last[0]),
       .in_valid  (noc_in_valid[0]),
       .in_ready  (noc_in_ready[0]),
       .out_flit  (inbuffer_flit[0]),
@@ -387,9 +368,8 @@ module networkadapter_ct
       .out_ready (inbuffer_ready[0]));
 
    noc_demux
-     #(.CONFIG          (CONFIG),
-       .CHANNELS        (2),
-       .MAPPING         ({ 48'h0, 8'h2, 8'h1 }))
+     #(.FLIT_WIDTH (FLIT_WIDTH), .CHANNELS (2),
+       .MAPPING ({ 48'h0, 8'h2, 8'h1 }))
    u_demux0
      (.*,
       .in_flit                    (inbuffer_flit[0]),
@@ -402,11 +382,11 @@ module networkadapter_ct
       .out_ready                  ({mod_in_ready[C_DMA_REQ], mod_in_ready[C_MPSIMPLE_REQ]}));
 
    noc_buffer
-     #(.CONFIG(CONFIG), .DEPTH(4))
+     #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_inbuffer1
      (.*,
-      .in_flit   (noc_in_flit[CONFIG.NOC_DATA_WIDTH-1:0]),
-      .in_last   (noc_in_flit[CONFIG.NOC_DATA_WIDTH+1]),
+      .in_flit   (noc_in_flit[1]),
+      .in_last   (noc_in_last[1]),
       .in_valid  (noc_in_valid[1]),
       .in_ready  (noc_in_ready[1]),
       .out_flit  (inbuffer_flit[1]),
@@ -415,9 +395,8 @@ module networkadapter_ct
       .out_ready (inbuffer_ready[1]));
 
    noc_demux
-     #(.CONFIG   (CONFIG),
-       .CHANNELS (2),
-       .MAPPING  ({ 48'h0, 8'h2, 8'h1 }))
+     #(.FLIT_WIDTH (FLIT_WIDTH), .CHANNELS (2),
+       .MAPPING ({ 48'h0, 8'h2, 8'h1 }))
    u_demux1
      (.*,
       .in_flit    (inbuffer_flit[1]),

@@ -165,25 +165,25 @@ module wb_decode
    // address and the memory range parameters
    generate
       if (SLAVES > 0)
-        assign s_select[0] = S0_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S0_RANGE_WIDTH] == S0_RANGE_MATCH);
+        assign s_select[0] = S0_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S0_RANGE_WIDTH] == S0_RANGE_MATCH[S0_RANGE_WIDTH-1:0]);
       if (SLAVES > 1)
-        assign s_select[1] = S1_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S1_RANGE_WIDTH] == S1_RANGE_MATCH);
+        assign s_select[1] = S1_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S1_RANGE_WIDTH] == S1_RANGE_MATCH[S1_RANGE_WIDTH-1:0]);
       if (SLAVES > 2)
-        assign s_select[2] = S2_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S2_RANGE_WIDTH] == S2_RANGE_MATCH);
+        assign s_select[2] = S2_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S2_RANGE_WIDTH] == S2_RANGE_MATCH[S2_RANGE_WIDTH-1:0]);
       if (SLAVES > 3)
-        assign s_select[3] = S3_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S3_RANGE_WIDTH] == S3_RANGE_MATCH);
+        assign s_select[3] = S3_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S3_RANGE_WIDTH] == S3_RANGE_MATCH[S3_RANGE_WIDTH-1:0]);
       if (SLAVES > 4)
-        assign s_select[4] = S4_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S4_RANGE_WIDTH] == S4_RANGE_MATCH);
+        assign s_select[4] = S4_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S4_RANGE_WIDTH] == S4_RANGE_MATCH[S4_RANGE_WIDTH-1:0]);
       if (SLAVES > 5)
-        assign s_select[5] = S5_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S5_RANGE_WIDTH] == S5_RANGE_MATCH);
+        assign s_select[5] = S5_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S5_RANGE_WIDTH] == S5_RANGE_MATCH[S5_RANGE_WIDTH-1:0]);
       if (SLAVES > 6)
-        assign s_select[6] = S6_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S6_RANGE_WIDTH] == S6_RANGE_MATCH);
+        assign s_select[6] = S6_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S6_RANGE_WIDTH] == S6_RANGE_MATCH[S6_RANGE_WIDTH-1:0]);
       if (SLAVES > 7)
-        assign s_select[7] = S7_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S7_RANGE_WIDTH] == S7_RANGE_MATCH);
+        assign s_select[7] = S7_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S7_RANGE_WIDTH] == S7_RANGE_MATCH[S7_RANGE_WIDTH-1:0]);
       if (SLAVES > 8)
-        assign s_select[8] = S8_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S8_RANGE_WIDTH] == S8_RANGE_MATCH);
+        assign s_select[8] = S8_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S8_RANGE_WIDTH] == S8_RANGE_MATCH[S8_RANGE_WIDTH-1:0]);
       if (SLAVES > 9)
-        assign s_select[9] = S9_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S9_RANGE_WIDTH] == S9_RANGE_MATCH);
+        assign s_select[9] = S9_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S9_RANGE_WIDTH] == S9_RANGE_MATCH[S9_RANGE_WIDTH-1:0]);
    endgenerate
    
    // If two s_select are high or none, we might have an bus error

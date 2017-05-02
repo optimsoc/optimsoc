@@ -50,8 +50,11 @@ module tb_system_2x2_cccc(
 `endif
    );
 
+   import functions::*;
+
    parameter USE_DEBUG = 0;
-   parameter integer NUM_CORES = 1;
+   parameter ENABLE_VCHANNELS = 1*1;
+   parameter integer NUM_CORES = 1*1; // bug in verilator would give a warning
    parameter integer LMEM_SIZE = 32*1024*1024;
 
    localparam base_config_t
@@ -61,8 +64,7 @@ module tb_system_2x2_cccc(
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
-                      NOC_DATA_WIDTH: 32,
-                      NOC_TYPE_WIDTH: 2,
+                      NOC_ENABLE_VCHANNELS: ENABLE_VCHANNELS,
                       LMEM_SIZE: LMEM_SIZE,
                       LMEM_STYLE: PLAIN,
                       ENABLE_BOOTROM: 0,
@@ -199,7 +201,21 @@ module tb_system_2x2_cccc(
      (.clk (clk),
       .rst (rst | logic_rst),
       .c_glip_in (c_glip_in),
-      .c_glip_out (c_glip_out)
+      .c_glip_out (c_glip_out),
+
+      .wb_ext_ack_o (4'hx),
+      .wb_ext_err_o (4'hx),
+      .wb_ext_rty_o (4'hx),
+      .wb_ext_dat_o (128'hx),
+      .wb_ext_adr_i (),
+      .wb_ext_cyc_i (),
+      .wb_ext_dat_i (),
+      .wb_ext_sel_i (),
+      .wb_ext_stb_i (),
+      .wb_ext_we_i (),
+      .wb_ext_cab_i (),
+      .wb_ext_cti_i (),
+      .wb_ext_bte_i ()
       );
 
 // Generate testbench signals.
@@ -215,7 +231,6 @@ module tb_system_2x2_cccc(
    always clk = #1.25 ~clk;
 `endif
 
-   `include "optimsoc_functions.vh"
 endmodule
 
 // Local Variables:
