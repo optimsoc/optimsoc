@@ -132,8 +132,8 @@ module tb_system_2x2_cccc(
    wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
-      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_CHANNELS-1:0][31:0] flit;
-      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_CHANNELS-1:0]       last, valid, ready;
+      wire [CONFIG.NUMCTS-1:0][1:0][CONFIG.NOC_CHANNELS-1:0][31:0] flit;
+      wire [CONFIG.NUMCTS-1:0][1:0][CONFIG.NOC_CHANNELS-1:0]       last, valid, ready;
 
       for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
 
@@ -157,7 +157,7 @@ module tb_system_2x2_cccc(
                   .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
                   .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
                   .ENABLE_TRACE(0),
-                  .ID((t*CONFIG.CORES_PER_TILE)+i),
+                  .ID(shortint'((t*CONFIG.CORES_PER_TILE)+i)),
                   .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
                )
                u_swtrace(
