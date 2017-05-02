@@ -54,12 +54,12 @@ module mpbuffer_endpoint
     input                                  clk,
     input                                  rst,
 
-    output reg [CONFIG.NOC_DATA_WIDTH-1:0] noc_out_flit,
+    output reg [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit,
     output reg                             noc_out_last,
     output reg                             noc_out_valid,
     input                                  noc_out_ready,
 
-    input [CONFIG.NOC_DATA_WIDTH-1:0]      noc_in_flit,
+    input [CONFIG.NOC_FLIT_WIDTH-1:0]      noc_in_flit,
     input                                  noc_in_last,
     input                                  noc_in_valid,
     output reg                             noc_in_ready,
@@ -81,12 +81,12 @@ module mpbuffer_endpoint
    localparam SIZE_WIDTH = clog2_width(SIZE);
    
    // Connect from the outgoing state machine to the packet buffer
-   wire [CONFIG.NOC_DATA_WIDTH-1:0] out_flit;
+   wire [CONFIG.NOC_FLIT_WIDTH-1:0] out_flit;
    reg                              out_last;
    reg                              out_valid;
    wire                             out_ready;
    
-   wire [CONFIG.NOC_DATA_WIDTH-1:0] in_flit;
+   wire [CONFIG.NOC_FLIT_WIDTH-1:0] in_flit;
    wire                             in_last;
    wire                             in_valid;
    reg                              in_ready;
@@ -359,18 +359,18 @@ module mpbuffer_endpoint
       end
    end
 
-   reg [CONFIG.NOC_DATA_WIDTH-1:0] ingress_flit;
+   reg [CONFIG.NOC_FLIT_WIDTH-1:0] ingress_flit;
    reg                             ingress_last;
    reg                             ingress_valid;
    wire                            ingress_ready;
    
-   wire [CONFIG.NOC_DATA_WIDTH-1:0] egress_flit;
+   wire [CONFIG.NOC_FLIT_WIDTH-1:0] egress_flit;
    wire                             egress_last;
    wire                             egress_valid;
    reg                              egress_ready;
 
-   reg [CONFIG.NOC_DATA_WIDTH-1:0]  control_flit;
-   reg [CONFIG.NOC_DATA_WIDTH-1:0]  nxt_control_flit;
+   reg [CONFIG.NOC_FLIT_WIDTH-1:0]  control_flit;
+   reg [CONFIG.NOC_FLIT_WIDTH-1:0]  nxt_control_flit;
    reg                              control_pending;
    reg                              nxt_control_pending;
 
@@ -422,16 +422,16 @@ module mpbuffer_endpoint
    always @(posedge clk) begin
       if (rst) begin
          control_pending <= 1'b0;
-         control_flit <= {CONFIG.NOC_DATA_WIDTH{1'hx}};
+         control_flit <= {CONFIG.NOC_FLIT_WIDTH{1'hx}};
       end else begin
          control_pending <= nxt_control_pending;
          control_flit <= nxt_control_flit;
       end
    end
 
-   wire [CONFIG.NOC_DATA_WIDTH+1:0] egress_buffer_flit;
-   assign egress_flit = egress_buffer_flit[CONFIG.NOC_DATA_WIDTH-1:0];
-   assign egress_last = egress_buffer_flit[CONFIG.NOC_DATA_WIDTH+1];
+   wire [CONFIG.NOC_FLIT_WIDTH+1:0] egress_buffer_flit;
+   assign egress_flit = egress_buffer_flit[CONFIG.NOC_FLIT_WIDTH-1:0];
+   assign egress_last = egress_buffer_flit[CONFIG.NOC_FLIT_WIDTH+1];
    
    // The output packet buffer
    lisnoc_packet_buffer
@@ -445,9 +445,9 @@ module mpbuffer_endpoint
                       .out_valid        (egress_valid),
                       .out_ready        (egress_ready));
 
-   wire [CONFIG.NOC_DATA_WIDTH+1:0] in_buffer_flit;
-   assign in_flit = in_buffer_flit[CONFIG.NOC_DATA_WIDTH-1:0];
-   assign in_last = in_buffer_flit[CONFIG.NOC_DATA_WIDTH+1];   
+   wire [CONFIG.NOC_FLIT_WIDTH+1:0] in_buffer_flit;
+   assign in_flit = in_buffer_flit[CONFIG.NOC_FLIT_WIDTH-1:0];
+   assign in_last = in_buffer_flit[CONFIG.NOC_FLIT_WIDTH+1];
 
    lisnoc_packet_buffer
      #(.fifo_depth(SIZE))

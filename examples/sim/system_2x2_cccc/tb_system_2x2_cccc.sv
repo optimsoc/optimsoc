@@ -53,6 +53,7 @@ module tb_system_2x2_cccc(
    import functions::*;
 
    parameter USE_DEBUG = 0;
+   parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1*1; // bug in verilator would give a warning
    parameter integer LMEM_SIZE = 32*1024*1024;
 
@@ -63,8 +64,7 @@ module tb_system_2x2_cccc(
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
-                      NOC_DATA_WIDTH: 32,
-                      NOC_TYPE_WIDTH: 2,
+                      NOC_ENABLE_VCHANNELS: ENABLE_VCHANNELS,
                       LMEM_SIZE: LMEM_SIZE,
                       LMEM_STYLE: PLAIN,
                       ENABLE_BOOTROM: 0,
@@ -132,8 +132,8 @@ module tb_system_2x2_cccc(
    wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
-      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_VCHANNELS-1:0][31:0] flit;
-      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_VCHANNELS-1:0]       last, valid, ready;
+      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_CHANNELS-1:0][31:0] flit;
+      wire [CONFIG.NUMCTS*2-1:0][1:0][CONFIG.NOC_CHANNELS-1:0]       last, valid, ready;
 
       for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
 
@@ -171,11 +171,11 @@ module tb_system_2x2_cccc(
               );
          end
 
-         for (v = 0; v < CONFIG.NOC_VCHANNELS; v++) begin
-            assign flit[t][0][v] = u_system.link_out_flit[t][31:0];
-            assign flit[t][1][v] = u_system.link_in_flit[t][31:0];
-            assign last[t][0][v] = u_system.link_out_flit[t][33];
-            assign last[t][1][v] = u_system.link_in_flit[t][33];
+         for (v = 0; v < CONFIG.NOC_CHANNELS; v++) begin
+            assign flit[t][0][v] = u_system.link_out_flit[t][v];
+            assign flit[t][1][v] = u_system.link_in_flit[t][v];
+            assign last[t][0][v] = u_system.link_out_last[t][v];
+            assign last[t][1][v] = u_system.link_in_last[t][v];
             assign valid[t][0][v] = u_system.link_out_valid[t][v];
             assign valid[t][1][v] = u_system.link_in_valid[t][v];
             assign ready[t][0][v] = u_system.link_out_ready[t][v];
@@ -185,7 +185,7 @@ module tb_system_2x2_cccc(
 
       noc_tracer
         #(.LINKS(CONFIG.NUMCTS),
-          .CHANNELS(CONFIG.NOC_VCHANNELS))
+          .CHANNELS(CONFIG.NOC_CHANNELS))
       u_noc_tracer
         (.*,
          .flit(flit),

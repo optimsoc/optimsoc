@@ -43,37 +43,42 @@ module compute_tile_dm
     parameter MEM_FILE = 'x
     )
    (
-   input dii_flit [1:0] debug_ring_in,
-   output [1:0] debug_ring_in_ready,
-   output dii_flit [1:0] debug_ring_out,
-   input [1:0] debug_ring_out_ready,
+   input                                 dii_flit [1:0] debug_ring_in,
+   output [1:0]                          debug_ring_in_ready,
+   output                                dii_flit [1:0] debug_ring_out,
+   input [1:0]                           debug_ring_out_ready,
 
-   output [31:0] wb_ext_adr_i,
-   output        wb_ext_cyc_i,
-   output [31:0] wb_ext_dat_i,
-   output [3:0]  wb_ext_sel_i,
-   output        wb_ext_stb_i,
-   output        wb_ext_we_i,
-   output        wb_ext_cab_i,
-   output [2:0]  wb_ext_cti_i,
-   output [1:0]  wb_ext_bte_i,
-   input         wb_ext_ack_o,
-   input         wb_ext_rty_o,
-   input         wb_ext_err_o,
-   input [31:0]  wb_ext_dat_o,
+   output [31:0]                         wb_ext_adr_i,
+   output                                wb_ext_cyc_i,
+   output [31:0]                         wb_ext_dat_i,
+   output [3:0]                          wb_ext_sel_i,
+   output                                wb_ext_stb_i,
+   output                                wb_ext_we_i,
+   output                                wb_ext_cab_i,
+   output [2:0]                          wb_ext_cti_i,
+   output [1:0]                          wb_ext_bte_i,
+   input                                 wb_ext_ack_o,
+   input                                 wb_ext_rty_o,
+   input                                 wb_ext_err_o,
+   input [31:0]                          wb_ext_dat_o,
 
-   input clk,
-   input rst_cpu, rst_sys, rst_dbg,
+   input                                 clk,
+   input                                 rst_cpu, rst_sys, rst_dbg,
 
-   input [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit,
-   input [CONFIG.NOC_VCHANNELS-1:0] noc_in_valid,
-   output [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready,
-   output [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit,
-   output [CONFIG.NOC_VCHANNELS-1:0] noc_out_valid,
-   input [CONFIG.NOC_VCHANNELS-1:0] noc_out_ready
+   input [CHANNELS-1:0][FLIT_WIDTH-1:0]  noc_in_flit,
+   input [CHANNELS-1:0]                  noc_in_last,
+   input [CHANNELS-1:0]                  noc_in_valid,
+   output [CHANNELS-1:0]                 noc_in_ready,
+   output [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_out_flit,
+   output [CHANNELS-1:0]                 noc_out_last,
+   output [CHANNELS-1:0]                 noc_out_valid,
+   input [CHANNELS-1:0]                  noc_out_ready
    );
 
    import functions::*;
+
+   localparam CHANNELS = CONFIG.NOC_CHANNELS;
+   localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
    localparam NR_SLAVES = 4;
@@ -558,9 +563,10 @@ module compute_tile_dm
  `endif
 `endif
            // Outputs
-           .noc_in_ready                (noc_in_ready[CONFIG.NOC_VCHANNELS-1:0]),
-           .noc_out_flit                (noc_out_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
-           .noc_out_valid               (noc_out_valid[CONFIG.NOC_VCHANNELS-1:0]),
+           .noc_in_ready                (noc_in_ready),
+           .noc_out_flit                (noc_out_flit),
+           .noc_out_last                (noc_out_last),
+           .noc_out_valid               (noc_out_valid),
            .wbm_adr_o                   (busms_adr_o[NR_MASTERS-1]),
            .wbm_cyc_o                   (busms_cyc_o[NR_MASTERS-1]),
            .wbm_dat_o                   (busms_dat_o[NR_MASTERS-1]),
@@ -577,9 +583,10 @@ module compute_tile_dm
            // Inputs
            .clk                         (clk),
            .rst                         (rst_sys),
-           .noc_in_flit                 (noc_in_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
-           .noc_in_valid                (noc_in_valid[CONFIG.NOC_VCHANNELS-1:0]),
-           .noc_out_ready               (noc_out_ready[CONFIG.NOC_VCHANNELS-1:0]),
+           .noc_in_flit                 (noc_in_flit),
+           .noc_in_last                 (noc_in_last),
+           .noc_in_valid                (noc_in_valid),
+           .noc_out_ready               (noc_out_ready),
            .wbm_ack_i                   (busms_ack_i[NR_MASTERS-1]),
            .wbm_rty_i                   (busms_rty_i[NR_MASTERS-1]),
            .wbm_err_i                   (busms_err_i[NR_MASTERS-1]),
@@ -625,7 +632,4 @@ module compute_tile_dm
    endgenerate
 endmodule
 
-// Local Variables:
-// verilog-library-directories:("../../*/verilog/" "../../../../../external/osd/hardware/*/*/common/")
-// verilog-auto-inst-param-value: t
-// End:
+

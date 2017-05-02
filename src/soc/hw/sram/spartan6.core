@@ -4,10 +4,10 @@ name = optimsoc:sram:spartan6
 description = "Single-Port SRAM implementation for Xilinx Spartan 6 devices"
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/wb_sram_sp.v
-  verilog/wb2sram.v
-  verilog/sram_sp.v
-  verilog/sram_sp_impl_xilinx_spartan6.v
+  verilog/wb_sram_sp.sv
+  verilog/wb2sram.sv
+  verilog/sram_sp.sv
+  verilog/sram_sp_impl_xilinx_spartan6.sv

@@ -1,5 +1,8 @@
 
 package constants;
+   // Maximum packet length
+   localparam NOC_MAX_LEN = 32;
+
    // NoC packet header
    // Mandatory fields
    localparam NOC_DEST_MSB = 31;

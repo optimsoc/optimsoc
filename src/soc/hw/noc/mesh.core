@@ -1,0 +1,15 @@
+CAPI=1
+[main]
+name = optimsoc:noc:mesh
+description = "NoC with Mesh Topology"
+depend =
+  optimsoc:noc:router
+  optimsoc:noc:vc_mux
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/topology/noc_mesh.sv
+
+

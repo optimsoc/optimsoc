@@ -31,22 +31,22 @@ import constants::*;
 
 module noc_demux
   #(
-    parameter config_t CONFIG = 'x,
+    parameter FLIT_WIDTH = 32,
     parameter CHANNELS = 2,
     parameter [63:0] MAPPING = 'x
     )
    (
-    input                                             clk, rst,
+    input                                 clk, rst,
 
-    input [CONFIG.NOC_DATA_WIDTH-1:0]                 in_flit,
-    input                                             in_last,
-    input                                             in_valid,
-    output reg                                        in_ready,
+    input [FLIT_WIDTH-1:0]                in_flit,
+    input                                 in_last,
+    input                                 in_valid,
+    output reg                            in_ready,
 
-    output [CHANNELS-1:0][CONFIG.NOC_DATA_WIDTH-1:0] out_flit,
-    output [CHANNELS-1:0]                             out_last,
-    output reg [CHANNELS-1:0]                         out_valid,
-    input [CHANNELS-1:0]                              out_ready
+    output [CHANNELS-1:0][FLIT_WIDTH-1:0] out_flit,
+    output [CHANNELS-1:0]                 out_last,
+    output reg [CHANNELS-1:0]             out_valid,
+    input [CHANNELS-1:0]                  out_ready
     );
 
    reg [CHANNELS-1:0]                                 active;

@@ -45,7 +45,7 @@ module wb_sram_sp(/*AUTOARG*/
    parameter MEM_FILE = "sram.vmem";
 
    // address width
-   parameter AW = clog2(MEM_SIZE);
+   parameter AW = $clog2(MEM_SIZE);
 
    // data width (must be multiple of 8 for byte selects to work)
    // Valid values: 32, 16 and 8

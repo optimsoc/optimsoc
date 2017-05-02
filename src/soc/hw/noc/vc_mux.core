@@ -1,7 +1,7 @@
 CAPI=1
 [main]
-name = optimsoc:noc:mux
-description = "NoC Mux"
+name = optimsoc:noc:vc_mux
+description = "NoC Virtual Channel Mux"
 depend =
   wallento:arbiter:rr
 
@@ -9,6 +9,6 @@ depend =
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/noc_mux.sv
+  verilog/noc_vchannel_mux.sv
 
 
