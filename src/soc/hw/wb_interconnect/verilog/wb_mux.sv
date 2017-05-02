@@ -153,12 +153,12 @@ module wb_mux
    // Mux the bus based on the grant signal which must be one hot!
    always @(*) begin : bus_m_mux
       integer i;
-      s_adr_o = {ADDR_WIDTH{1'bz}};
-      s_dat_o = {DATA_WIDTH{1'bz}};
-      s_sel_o = {SEL_WIDTH{1'bz}};
-      s_we_o = 1'bz;
-      s_cti_o = 3'bz;
-      s_bte_o = 2'bz;
+      s_adr_o = {ADDR_WIDTH{1'bx}};
+      s_dat_o = {DATA_WIDTH{1'bx}};
+      s_sel_o = {SEL_WIDTH{1'bx}};
+      s_we_o = 1'bx;
+      s_cti_o = 3'bx;
+      s_bte_o = 2'bx;
       s_cyc_o = 1'b0;
       s_stb_o = 1'b0;
       

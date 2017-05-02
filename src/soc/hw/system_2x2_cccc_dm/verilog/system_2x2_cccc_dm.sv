@@ -26,7 +26,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "lisnoc_def.vh"
 `include "dbg_config.vh"
 
 import dii_package::dii_flit;
@@ -89,53 +88,35 @@ module system_2x2_cccc_dm(
    assign debug_ring_in[2] = debug_ring_out[3];
    assign debug_ring_out_ready[3] = debug_ring_in_ready[2];
 
+   localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH;
+   localparam CHANNELS = CONFIG.NOC_CHANNELS;
+
    // Flits from NoC->tiles
-   wire [CONFIG.NOC_FLIT_WIDTH-1:0] link_in_flit[0:3];
-   wire [CONFIG.NOC_VCHANNELS-1:0] link_in_valid[0:3];
-   wire [CONFIG.NOC_VCHANNELS-1:0] link_in_ready[0:3];
+   wire [3:0][CHANNELS-1:0][FLIT_WIDTH-1:0] link_in_flit;
+   wire [3:0][CHANNELS-1:0]                 link_in_last;
+   wire [3:0][CHANNELS-1:0]                 link_in_valid;
+   wire [3:0][CHANNELS-1:0]                 link_in_ready;
 
    // Flits from tiles->NoC
-   wire [CONFIG.NOC_FLIT_WIDTH-1:0]   link_out_flit[0:3];
-   wire [CONFIG.NOC_VCHANNELS-1:0] link_out_valid[0:3];
-   wire [CONFIG.NOC_VCHANNELS-1:0] link_out_ready[0:3];
+   wire [3:0][CHANNELS-1:0][FLIT_WIDTH-1:0] link_out_flit;
+   wire [3:0][CHANNELS-1:0]                 link_out_last;
+   wire [3:0][CHANNELS-1:0]                 link_out_valid;
+   wire [3:0][CHANNELS-1:0]                 link_out_ready;
 
-   /* lisnoc_mesh2x2 AUTO_TEMPLATE(
-    .link\(.*\)_in_\(.*\)_.* (link_out_\2[\1]),
-    .link\(.*\)_out_\(.*\)_.* (link_in_\2[\1]),
-    .clk(clk),
-    .rst(rst_sys),
-    ); */
-   lisnoc_mesh2x2
-      #(.vchannels(CONFIG.NOC_VCHANNELS),.in_fifo_length(2),.out_fifo_length(2))
-      u_mesh(/*AUTOINST*/
-             // Outputs
-             .link0_in_ready_o          (link_out_ready[0]),     // Templated
-             .link0_out_flit_o          (link_in_flit[0]),       // Templated
-             .link0_out_valid_o         (link_in_valid[0]),      // Templated
-             .link1_in_ready_o          (link_out_ready[1]),     // Templated
-             .link1_out_flit_o          (link_in_flit[1]),       // Templated
-             .link1_out_valid_o         (link_in_valid[1]),      // Templated
-             .link2_in_ready_o          (link_out_ready[2]),     // Templated
-             .link2_out_flit_o          (link_in_flit[2]),       // Templated
-             .link2_out_valid_o         (link_in_valid[2]),      // Templated
-             .link3_in_ready_o          (link_out_ready[3]),     // Templated
-             .link3_out_flit_o          (link_in_flit[3]),       // Templated
-             .link3_out_valid_o         (link_in_valid[3]),      // Templated
-             // Inputs
-             .clk                       (clk),                   // Templated
-             .rst                       (rst_sys),               // Templated
-             .link0_in_flit_i           (link_out_flit[0]),      // Templated
-             .link0_in_valid_i          (link_out_valid[0]),     // Templated
-             .link0_out_ready_i         (link_in_ready[0]),      // Templated
-             .link1_in_flit_i           (link_out_flit[1]),      // Templated
-             .link1_in_valid_i          (link_out_valid[1]),     // Templated
-             .link1_out_ready_i         (link_in_ready[1]),      // Templated
-             .link2_in_flit_i           (link_out_flit[2]),      // Templated
-             .link2_in_valid_i          (link_out_valid[2]),     // Templated
-             .link2_out_ready_i         (link_in_ready[2]),      // Templated
-             .link3_in_flit_i           (link_out_flit[3]),      // Templated
-             .link3_in_valid_i          (link_out_valid[3]),     // Templated
-             .link3_out_ready_i         (link_in_ready[3]));     // Templated
+   noc_mesh
+     #(.FLIT_WIDTH (FLIT_WIDTH), .X (2), .Y (2),
+       .CHANNELS (CHANNELS), .ENABLE_VCHANNELS(CONFIG.NOC_ENABLE_VCHANNELS))
+   u_noc
+     (.*,
+      .in_flit   (link_out_flit),
+      .in_last   (link_out_last),
+      .in_valid  (link_out_valid),
+      .in_ready  (link_out_ready),
+      .out_flit  (link_in_flit),
+      .out_last  (link_in_last),
+      .out_valid (link_in_valid),
+      .out_ready (link_in_ready)
+      );
 
    genvar i;
    generate
@@ -168,21 +149,18 @@ module system_2x2_cccc_dm(
               .wb_ext_cti_i               (wb_ext_cti_i[(i+1)*3-1:i*3]),
               .wb_ext_bte_i               (wb_ext_bte_i[(i+1)*2-1:i*2]),
 
-              .noc_in_ready               (link_in_ready[i][CONFIG.NOC_VCHANNELS-1:0]),
-              .noc_out_flit               (link_out_flit[i][CONFIG.NOC_FLIT_WIDTH-1:0]),
-              .noc_out_valid              (link_out_valid[i][CONFIG.NOC_VCHANNELS-1:0]),
+              .noc_in_ready               (link_in_ready[i]),
+              .noc_out_flit               (link_out_flit[i]),
+              .noc_out_last               (link_out_last[i]),
+              .noc_out_valid              (link_out_valid[i]),
 
-              .noc_in_flit                (link_in_flit[i][CONFIG.NOC_FLIT_WIDTH-1:0]),
-              .noc_in_valid               (link_in_valid[i][CONFIG.NOC_VCHANNELS-1:0]),
-              .noc_out_ready              (link_out_ready[i][CONFIG.NOC_VCHANNELS-1:0]));
+              .noc_in_flit                (link_in_flit[i]),
+              .noc_in_last                (link_in_last[i]),
+              .noc_in_valid               (link_in_valid[i]),
+              .noc_out_ready              (link_out_ready[i]));
       end
    endgenerate
 
 endmodule
 
-`include "lisnoc_undef.vh"
 
-// Local Variables:
-// verilog-library-directories:("../../../../../external/lisnoc/rtl/meshs/" "../../*/verilog")
-// verilog-auto-inst-param-value: t
-// End:
