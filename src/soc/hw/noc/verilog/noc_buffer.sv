@@ -26,31 +26,29 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-import optimsoc::*;
-
 module noc_buffer
-  #(parameter config_t CONFIG = 'x,
+  #(parameter FLIT_WIDTH = 32,
     parameter DEPTH = 16)    
    (
-    input 				clk,
-    input 				rst,
+    input                   clk,
+    input                   rst,
 
     // FIFO input side
-    input [CONFIG.NOC_DATA_WIDTH-1:0] 	in_flit,
-    input 				in_last,
-    input 				in_valid,
-    output 				in_ready,
+    input [FLIT_WIDTH-1:0]  in_flit,
+    input                   in_last,
+    input                   in_valid,
+    output                  in_ready,
 
     //FIFO output side
-    output [CONFIG.NOC_DATA_WIDTH-1:0] out_flit,
-    output 				out_last,
-    output 				out_valid,
-    input 				out_ready
+    output [FLIT_WIDTH-1:0] out_flit,
+    output                  out_last,
+    output                  out_valid,
+    input                   out_ready
     );
    
    // Signals for fifo
-   reg [CONFIG.NOC_DATA_WIDTH:0] fifo_data [0:DEPTH-1]; //actual fifo
-   reg [CONFIG.NOC_DATA_WIDTH:0] nxt_fifo_data [0:DEPTH-1];
+   reg [FLIT_WIDTH:0] fifo_data [0:DEPTH-1]; //actual fifo
+   reg [FLIT_WIDTH:0] nxt_fifo_data [0:DEPTH-1];
 
    reg [DEPTH:0]         fifo_write_ptr;
 
@@ -60,8 +58,8 @@ module noc_buffer
    assign pop = out_valid & out_ready;
    assign push = in_valid & in_ready;
 
-   assign out_flit = fifo_data[0][CONFIG.NOC_DATA_WIDTH-1:0];
-   assign out_last = fifo_data[0][CONFIG.NOC_DATA_WIDTH];
+   assign out_flit = fifo_data[0][FLIT_WIDTH-1:0];
+   assign out_last = fifo_data[0][FLIT_WIDTH];
    assign out_valid = !fifo_write_ptr[0];
 
    assign in_ready = !fifo_write_ptr[DEPTH];

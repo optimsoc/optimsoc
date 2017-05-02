@@ -3,7 +3,6 @@ CAPI=1
 name = optimsoc:noc:mux
 description = "NoC Mux"
 depend =
-  optimsoc:base:config
 
 [fileset src_files]
 file_type = systemVerilogSource
