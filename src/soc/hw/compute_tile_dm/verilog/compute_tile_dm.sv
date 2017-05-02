@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016 by the author(s)
+/* Copyright (c) 2013-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,6 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-`include "lisnoc_def.vh"
-
 import dii_package::dii_flit;
 
 import opensocdebug::mor1kx_trace_exec;
@@ -45,35 +43,42 @@ module compute_tile_dm
     parameter MEM_FILE = 'x
     )
    (
-   input dii_flit [1:0] debug_ring_in,
-   output [1:0] debug_ring_in_ready,
-   output dii_flit [1:0] debug_ring_out,
-   input [1:0] debug_ring_out_ready,
+   input                                 dii_flit [1:0] debug_ring_in,
+   output [1:0]                          debug_ring_in_ready,
+   output                                dii_flit [1:0] debug_ring_out,
+   input [1:0]                           debug_ring_out_ready,
 
-   output [31:0] wb_ext_adr_i,
-   output        wb_ext_cyc_i,
-   output [31:0] wb_ext_dat_i,
-   output [3:0]  wb_ext_sel_i,
-   output        wb_ext_stb_i,
-   output        wb_ext_we_i,
-   output        wb_ext_cab_i,
-   output [2:0]  wb_ext_cti_i,
-   output [1:0]  wb_ext_bte_i,
-   input         wb_ext_ack_o,
-   input         wb_ext_rty_o,
-   input         wb_ext_err_o,
-   input [31:0]  wb_ext_dat_o,
+   output [31:0]                         wb_ext_adr_i,
+   output                                wb_ext_cyc_i,
+   output [31:0]                         wb_ext_dat_i,
+   output [3:0]                          wb_ext_sel_i,
+   output                                wb_ext_stb_i,
+   output                                wb_ext_we_i,
+   output                                wb_ext_cab_i,
+   output [2:0]                          wb_ext_cti_i,
+   output [1:0]                          wb_ext_bte_i,
+   input                                 wb_ext_ack_o,
+   input                                 wb_ext_rty_o,
+   input                                 wb_ext_err_o,
+   input [31:0]                          wb_ext_dat_o,
 
-   input clk,
-   input rst_cpu, rst_sys, rst_dbg,
+   input                                 clk,
+   input                                 rst_cpu, rst_sys, rst_dbg,
 
-   input [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit,
-   input [CONFIG.NOC_VCHANNELS-1:0] noc_in_valid,
-   output [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready,
-   output [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit,
-   output [CONFIG.NOC_VCHANNELS-1:0] noc_out_valid,
-   input [CONFIG.NOC_VCHANNELS-1:0] noc_out_ready
+   input [CHANNELS-1:0][FLIT_WIDTH-1:0]  noc_in_flit,
+   input [CHANNELS-1:0]                  noc_in_last,
+   input [CHANNELS-1:0]                  noc_in_valid,
+   output [CHANNELS-1:0]                 noc_in_ready,
+   output [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_out_flit,
+   output [CHANNELS-1:0]                 noc_out_last,
+   output [CHANNELS-1:0]                 noc_out_valid,
+   input [CHANNELS-1:0]                  noc_out_ready
    );
+
+   import functions::*;
+
+   localparam CHANNELS = CONFIG.NOC_CHANNELS;
+   localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
    localparam NR_SLAVES = 4;
@@ -102,14 +107,15 @@ module compute_tile_dm
    logic         wb_mem_err_o;
    logic [31:0]  wb_mem_dat_o;
 
-   dii_flit [CONFIG.DEBUG_NUM_MODS-1:0] dii_in;
-   logic [CONFIG.DEBUG_NUM_MODS-1:0]    dii_in_ready;
-   dii_flit [CONFIG.DEBUG_NUM_MODS-1:0] dii_out;
-   logic [CONFIG.DEBUG_NUM_MODS-1:0]    dii_out_ready;
+   localparam DEBUG_NUM_NONZERO = (CONFIG.DEBUG_NUM_MODS == 0) ? 1 : CONFIG.DEBUG_NUM_MODS;
+
+   dii_flit [DEBUG_NUM_NONZERO-1:0] dii_in;
+   logic [DEBUG_NUM_NONZERO-1:0] dii_in_ready;
+   dii_flit [DEBUG_NUM_NONZERO-1:0] dii_out;
+   logic [DEBUG_NUM_NONZERO-1:0] dii_out_ready;
 
    generate
       if (CONFIG.USE_DEBUG == 1) begin
-
          genvar i;
          logic [CONFIG.DEBUG_NUM_MODS-1:0][9:0] id_map;
          for (i = 0; i < CONFIG.DEBUG_NUM_MODS; i = i+1) begin
@@ -160,7 +166,7 @@ module compute_tile_dm
    wire [31:0]   snoop_adr;
 
    wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
-   assign pic_ints_i[0][31:4] = 17'h0;
+   assign pic_ints_i[0][31:4] = 28'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
 
    genvar        c, m, s;
@@ -260,53 +266,53 @@ module compute_tile_dm
                  .NUMCORES(CONFIG.CORES_PER_TILE))
          u_core (
                  /*AUTOINST*/
-		 // Interfaces
-		 .trace_exec		(trace[c]),		 // Templated
-		 // Outputs
-		 .dbg_lss_o		(),			 // Templated
-		 .dbg_is_o		(),			 // Templated
-		 .dbg_wp_o		(),			 // Templated
-		 .dbg_bp_o		(),			 // Templated
-		 .dbg_dat_o		(),			 // Templated
-		 .dbg_ack_o		(),			 // Templated
-		 .iwb_cyc_o		(busms_cyc_o[c*2]),	 // Templated
-		 .iwb_adr_o		(busms_adr_o[c*2][31:0]), // Templated
-		 .iwb_stb_o		(busms_stb_o[c*2]),	 // Templated
-		 .iwb_we_o		(busms_we_o[c*2]),	 // Templated
-		 .iwb_sel_o		(busms_sel_o[c*2][3:0]), // Templated
-		 .iwb_dat_o		(busms_dat_o[c*2][31:0]), // Templated
-		 .iwb_bte_o		(busms_bte_o[c*2][1:0]), // Templated
-		 .iwb_cti_o		(busms_cti_o[c*2][2:0]), // Templated
-		 .dwb_cyc_o		(busms_cyc_o[c*2+1]),	 // Templated
-		 .dwb_adr_o		(busms_adr_o[c*2+1][31:0]), // Templated
-		 .dwb_stb_o		(busms_stb_o[c*2+1]),	 // Templated
-		 .dwb_we_o		(busms_we_o[c*2+1]),	 // Templated
-		 .dwb_sel_o		(busms_sel_o[c*2+1][3:0]), // Templated
-		 .dwb_dat_o		(busms_dat_o[c*2+1][31:0]), // Templated
-		 .dwb_bte_o		(busms_bte_o[c*2+1][1:0]), // Templated
-		 .dwb_cti_o		(busms_cti_o[c*2+1][2:0]), // Templated
-		 // Inputs
-		 .clk_i			(clk),			 // Templated
-		 .bus_clk_i		(clk),			 // Templated
-		 .rst_i			(rst_cpu),		 // Templated
-		 .bus_rst_i		(rst_cpu),		 // Templated
-		 .dbg_stall_i		(1'b0),			 // Templated
-		 .dbg_ewt_i		(1'b0),			 // Templated
-		 .dbg_stb_i		(1'b0),			 // Templated
-		 .dbg_we_i		(1'b0),			 // Templated
-		 .dbg_adr_i		(32'h00000000),		 // Templated
-		 .dbg_dat_i		(32'h00000000),		 // Templated
-		 .pic_ints_i		(pic_ints_i[c]),	 // Templated
-		 .iwb_ack_i		(busms_ack_i[c*2]),	 // Templated
-		 .iwb_err_i		(busms_err_i[c*2]),	 // Templated
-		 .iwb_rty_i		(busms_rty_i[c*2]),	 // Templated
-		 .iwb_dat_i		(busms_dat_i[c*2][31:0]), // Templated
-		 .dwb_ack_i		(busms_ack_i[c*2+1]),	 // Templated
-		 .dwb_err_i		(busms_err_i[c*2+1]),	 // Templated
-		 .dwb_rty_i		(busms_rty_i[c*2+1]),	 // Templated
-		 .dwb_dat_i		(busms_dat_i[c*2+1][31:0]), // Templated
-		 .snoop_enable_i	(snoop_enable),		 // Templated
-		 .snoop_adr_i		(snoop_adr));		 // Templated
+                 // Interfaces
+                 .trace_exec            (trace[c]),              // Templated
+                 // Outputs
+                 .dbg_lss_o             (),                      // Templated
+                 .dbg_is_o              (),                      // Templated
+                 .dbg_wp_o              (),                      // Templated
+                 .dbg_bp_o              (),                      // Templated
+                 .dbg_dat_o             (),                      // Templated
+                 .dbg_ack_o             (),                      // Templated
+                 .iwb_cyc_o             (busms_cyc_o[c*2]),      // Templated
+                 .iwb_adr_o             (busms_adr_o[c*2][31:0]), // Templated
+                 .iwb_stb_o             (busms_stb_o[c*2]),      // Templated
+                 .iwb_we_o              (busms_we_o[c*2]),       // Templated
+                 .iwb_sel_o             (busms_sel_o[c*2][3:0]), // Templated
+                 .iwb_dat_o             (busms_dat_o[c*2][31:0]), // Templated
+                 .iwb_bte_o             (busms_bte_o[c*2][1:0]), // Templated
+                 .iwb_cti_o             (busms_cti_o[c*2][2:0]), // Templated
+                 .dwb_cyc_o             (busms_cyc_o[c*2+1]),    // Templated
+                 .dwb_adr_o             (busms_adr_o[c*2+1][31:0]), // Templated
+                 .dwb_stb_o             (busms_stb_o[c*2+1]),    // Templated
+                 .dwb_we_o              (busms_we_o[c*2+1]),     // Templated
+                 .dwb_sel_o             (busms_sel_o[c*2+1][3:0]), // Templated
+                 .dwb_dat_o             (busms_dat_o[c*2+1][31:0]), // Templated
+                 .dwb_bte_o             (busms_bte_o[c*2+1][1:0]), // Templated
+                 .dwb_cti_o             (busms_cti_o[c*2+1][2:0]), // Templated
+                 // Inputs
+                 .clk_i                 (clk),                   // Templated
+                 .bus_clk_i             (clk),                   // Templated
+                 .rst_i                 (rst_cpu),               // Templated
+                 .bus_rst_i             (rst_cpu),               // Templated
+                 .dbg_stall_i           (1'b0),                  // Templated
+                 .dbg_ewt_i             (1'b0),                  // Templated
+                 .dbg_stb_i             (1'b0),                  // Templated
+                 .dbg_we_i              (1'b0),                  // Templated
+                 .dbg_adr_i             (32'h00000000),          // Templated
+                 .dbg_dat_i             (32'h00000000),          // Templated
+                 .pic_ints_i            (pic_ints_i[c]),         // Templated
+                 .iwb_ack_i             (busms_ack_i[c*2]),      // Templated
+                 .iwb_err_i             (busms_err_i[c*2]),      // Templated
+                 .iwb_rty_i             (busms_rty_i[c*2]),      // Templated
+                 .iwb_dat_i             (busms_dat_i[c*2][31:0]), // Templated
+                 .dwb_ack_i             (busms_ack_i[c*2+1]),    // Templated
+                 .dwb_err_i             (busms_err_i[c*2+1]),    // Templated
+                 .dwb_rty_i             (busms_rty_i[c*2+1]),    // Templated
+                 .dwb_dat_i             (busms_dat_i[c*2+1][31:0]), // Templated
+                 .snoop_enable_i        (snoop_enable),          // Templated
+                 .snoop_adr_i           (snoop_adr));            // Templated
 
 
          assign busms_cab_o[c*2] = 1'b0;
@@ -360,38 +366,38 @@ module compute_tile_dm
        .S3_ENABLE(CONFIG.ENABLE_BOOTROM),
        .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf))
    u_bus(/*AUTOINST*/
-	 // Outputs
-	 .m_dat_o			(busms_dat_i_flat),	 // Templated
-	 .m_ack_o			(busms_ack_i_flat),	 // Templated
-	 .m_err_o			(busms_err_i_flat),	 // Templated
-	 .m_rty_o			(busms_rty_i_flat),	 // Templated
-	 .s_adr_o			(bussl_adr_i_flat),	 // Templated
-	 .s_dat_o			(bussl_dat_i_flat),	 // Templated
-	 .s_cyc_o			(bussl_cyc_i_flat),	 // Templated
-	 .s_stb_o			(bussl_stb_i_flat),	 // Templated
-	 .s_sel_o			(bussl_sel_i_flat),	 // Templated
-	 .s_we_o			(bussl_we_i_flat),	 // Templated
-	 .s_cti_o			(bussl_cti_i_flat),	 // Templated
-	 .s_bte_o			(bussl_bte_i_flat),	 // Templated
-	 .snoop_adr_o			(snoop_adr),		 // Templated
-	 .snoop_en_o			(snoop_enable),		 // Templated
-	 .bus_hold_ack			(),			 // Templated
-	 // Inputs
-	 .clk_i				(clk),			 // Templated
-	 .rst_i				(rst_sys),		 // Templated
-	 .m_adr_i			(busms_adr_o_flat),	 // Templated
-	 .m_dat_i			(busms_dat_o_flat),	 // Templated
-	 .m_cyc_i			(busms_cyc_o_flat),	 // Templated
-	 .m_stb_i			(busms_stb_o_flat),	 // Templated
-	 .m_sel_i			(busms_sel_o_flat),	 // Templated
-	 .m_we_i			(busms_we_o_flat),	 // Templated
-	 .m_cti_i			(busms_cti_o_flat),	 // Templated
-	 .m_bte_i			(busms_bte_o_flat),	 // Templated
-	 .s_dat_i			(bussl_dat_o_flat),	 // Templated
-	 .s_ack_i			(bussl_ack_o_flat),	 // Templated
-	 .s_err_i			(bussl_err_o_flat),	 // Templated
-	 .s_rty_i			(bussl_rty_o_flat),	 // Templated
-	 .bus_hold			(1'b0));			 // Templated
+         // Outputs
+         .m_dat_o                       (busms_dat_i_flat),      // Templated
+         .m_ack_o                       (busms_ack_i_flat),      // Templated
+         .m_err_o                       (busms_err_i_flat),      // Templated
+         .m_rty_o                       (busms_rty_i_flat),      // Templated
+         .s_adr_o                       (bussl_adr_i_flat),      // Templated
+         .s_dat_o                       (bussl_dat_i_flat),      // Templated
+         .s_cyc_o                       (bussl_cyc_i_flat),      // Templated
+         .s_stb_o                       (bussl_stb_i_flat),      // Templated
+         .s_sel_o                       (bussl_sel_i_flat),      // Templated
+         .s_we_o                        (bussl_we_i_flat),       // Templated
+         .s_cti_o                       (bussl_cti_i_flat),      // Templated
+         .s_bte_o                       (bussl_bte_i_flat),      // Templated
+         .snoop_adr_o                   (snoop_adr),             // Templated
+         .snoop_en_o                    (snoop_enable),          // Templated
+         .bus_hold_ack                  (),                      // Templated
+         // Inputs
+         .clk_i                         (clk),                   // Templated
+         .rst_i                         (rst_sys),               // Templated
+         .m_adr_i                       (busms_adr_o_flat),      // Templated
+         .m_dat_i                       (busms_dat_o_flat),      // Templated
+         .m_cyc_i                       (busms_cyc_o_flat),      // Templated
+         .m_stb_i                       (busms_stb_o_flat),      // Templated
+         .m_sel_i                       (busms_sel_o_flat),      // Templated
+         .m_we_i                        (busms_we_o_flat),       // Templated
+         .m_cti_i                       (busms_cti_o_flat),      // Templated
+         .m_bte_i                       (busms_bte_o_flat),      // Templated
+         .s_dat_i                       (bussl_dat_o_flat),      // Templated
+         .s_ack_i                       (bussl_ack_o_flat),      // Templated
+         .s_err_i                       (bussl_err_o_flat),      // Templated
+         .s_rty_i                       (bussl_rty_o_flat),      // Templated
+         .bus_hold                      (1'b0));                         // Templated
 
    //MAM - WB adapter signals
    logic          mam_dm_stb_o;
@@ -460,36 +466,36 @@ module compute_tile_dm
          .wb_mam_err_i    (mam_dm_err_i),
          .wb_mam_dat_i    (mam_dm_dat_i),
          /*AUTOINST*/
-	 // Outputs
-	 .wb_in_ack_o			(bussl_ack_o[SLAVE_DM]), // Templated
-	 .wb_in_err_o			(bussl_err_o[SLAVE_DM]), // Templated
-	 .wb_in_rty_o			(bussl_rty_o[SLAVE_DM]), // Templated
-	 .wb_in_dat_o			(bussl_dat_o[SLAVE_DM]), // Templated
-	 .wb_out_adr_i			(wb_mem_adr_i),		 // Templated
-	 .wb_out_bte_i			(wb_mem_bte_i),		 // Templated
-	 .wb_out_cti_i			(wb_mem_cti_i),		 // Templated
-	 .wb_out_cyc_i			(wb_mem_cyc_i),		 // Templated
-	 .wb_out_dat_i			(wb_mem_dat_i),		 // Templated
-	 .wb_out_sel_i			(wb_mem_sel_i),		 // Templated
-	 .wb_out_stb_i			(wb_mem_stb_i),		 // Templated
-	 .wb_out_we_i			(wb_mem_we_i),		 // Templated
-	 .wb_out_clk_i			(wb_mem_clk_i),		 // Templated
-	 .wb_out_rst_i			(wb_mem_rst_i),		 // Templated
-	 // Inputs
-	 .wb_in_adr_i			(bussl_adr_i[SLAVE_DM]), // Templated
-	 .wb_in_bte_i			(bussl_bte_i[SLAVE_DM]), // Templated
-	 .wb_in_cti_i			(bussl_cti_i[SLAVE_DM]), // Templated
-	 .wb_in_cyc_i			(bussl_cyc_i[SLAVE_DM]), // Templated
-	 .wb_in_dat_i			(bussl_dat_i[SLAVE_DM]), // Templated
-	 .wb_in_sel_i			(bussl_sel_i[SLAVE_DM]), // Templated
-	 .wb_in_stb_i			(bussl_stb_i[SLAVE_DM]), // Templated
-	 .wb_in_we_i			(bussl_we_i[SLAVE_DM]),	 // Templated
-	 .wb_in_clk_i			(clk),			 // Templated
-	 .wb_in_rst_i			(rst_sys),		 // Templated
-	 .wb_out_ack_o			(wb_mem_ack_o),		 // Templated
-	 .wb_out_err_o			(wb_mem_err_o),		 // Templated
-	 .wb_out_rty_o			(wb_mem_rty_o),		 // Templated
-	 .wb_out_dat_o			(wb_mem_dat_o));		 // Templated
+         // Outputs
+         .wb_in_ack_o                   (bussl_ack_o[SLAVE_DM]), // Templated
+         .wb_in_err_o                   (bussl_err_o[SLAVE_DM]), // Templated
+         .wb_in_rty_o                   (bussl_rty_o[SLAVE_DM]), // Templated
+         .wb_in_dat_o                   (bussl_dat_o[SLAVE_DM]), // Templated
+         .wb_out_adr_i                  (wb_mem_adr_i),          // Templated
+         .wb_out_bte_i                  (wb_mem_bte_i),          // Templated
+         .wb_out_cti_i                  (wb_mem_cti_i),          // Templated
+         .wb_out_cyc_i                  (wb_mem_cyc_i),          // Templated
+         .wb_out_dat_i                  (wb_mem_dat_i),          // Templated
+         .wb_out_sel_i                  (wb_mem_sel_i),          // Templated
+         .wb_out_stb_i                  (wb_mem_stb_i),          // Templated
+         .wb_out_we_i                   (wb_mem_we_i),           // Templated
+         .wb_out_clk_i                  (wb_mem_clk_i),          // Templated
+         .wb_out_rst_i                  (wb_mem_rst_i),          // Templated
+         // Inputs
+         .wb_in_adr_i                   (bussl_adr_i[SLAVE_DM]), // Templated
+         .wb_in_bte_i                   (bussl_bte_i[SLAVE_DM]), // Templated
+         .wb_in_cti_i                   (bussl_cti_i[SLAVE_DM]), // Templated
+         .wb_in_cyc_i                   (bussl_cyc_i[SLAVE_DM]), // Templated
+         .wb_in_dat_i                   (bussl_dat_i[SLAVE_DM]), // Templated
+         .wb_in_sel_i                   (bussl_sel_i[SLAVE_DM]), // Templated
+         .wb_in_stb_i                   (bussl_stb_i[SLAVE_DM]), // Templated
+         .wb_in_we_i                    (bussl_we_i[SLAVE_DM]),  // Templated
+         .wb_in_clk_i                   (clk),                   // Templated
+         .wb_in_rst_i                   (rst_sys),               // Templated
+         .wb_out_ack_o                  (wb_mem_ack_o),          // Templated
+         .wb_out_err_o                  (wb_mem_err_o),          // Templated
+         .wb_out_rty_o                  (wb_mem_rty_o),          // Templated
+         .wb_out_dat_o                  (wb_mem_dat_o));                 // Templated
    end else begin // if (CONFIG.ENABLE_DM)
       assign mam_dm_dat_i = 32'hx;
       assign {mam_dm_ack_i, mam_dm_err_i, mam_dm_rty_i} = 3'b000;
@@ -507,28 +513,28 @@ module compute_tile_dm
           ); */
          wb_sram_sp
            #(.DW(32),
-             .AW(32),
+             .AW(clog2_width(CONFIG.LMEM_SIZE)),
              .MEM_SIZE(CONFIG.LMEM_SIZE),
              .MEM_FILE(MEM_FILE),
              .MEM_IMPL_TYPE("PLAIN")
              )
          u_ram(/*AUTOINST*/
-	       // Outputs
-	       .wb_ack_o		(wb_mem_ack_o),		 // Templated
-	       .wb_err_o		(wb_mem_err_o),		 // Templated
-	       .wb_rty_o		(wb_mem_rty_o),		 // Templated
-	       .wb_dat_o		(wb_mem_dat_o),		 // Templated
-	       // Inputs
-	       .wb_adr_i		(wb_mem_adr_i),		 // Templated
-	       .wb_bte_i		(wb_mem_bte_i),		 // Templated
-	       .wb_cti_i		(wb_mem_cti_i),		 // Templated
-	       .wb_cyc_i		(wb_mem_cyc_i),		 // Templated
-	       .wb_dat_i		(wb_mem_dat_i),		 // Templated
-	       .wb_sel_i		(wb_mem_sel_i),		 // Templated
-	       .wb_stb_i		(wb_mem_stb_i),		 // Templated
-	       .wb_we_i			(wb_mem_we_i),		 // Templated
-	       .wb_clk_i		(wb_mem_clk_i),		 // Templated
-	       .wb_rst_i		(wb_mem_rst_i));		 // Templated
+               // Outputs
+               .wb_ack_o                (wb_mem_ack_o),
+               .wb_err_o                (wb_mem_err_o),
+               .wb_rty_o                (wb_mem_rty_o),
+               .wb_dat_o                (wb_mem_dat_o),
+               // Inputs
+               .wb_adr_i                (wb_mem_adr_i[clog2_width(CONFIG.LMEM_SIZE)-1:0]),
+               .wb_bte_i                (wb_mem_bte_i),
+               .wb_cti_i                (wb_mem_cti_i),
+               .wb_cyc_i                (wb_mem_cyc_i),
+               .wb_dat_i                (wb_mem_dat_i),
+               .wb_sel_i                (wb_mem_sel_i),
+               .wb_stb_i                (wb_mem_stb_i),
+               .wb_we_i                 (wb_mem_we_i),
+               .wb_clk_i                (wb_mem_clk_i),
+               .wb_rst_i                (wb_mem_rst_i));
       end else begin // block: gen_sram
          assign wb_ext_adr_i = wb_mem_adr_i;
          assign wb_ext_bte_i = wb_mem_bte_i;
@@ -557,9 +563,10 @@ module compute_tile_dm
  `endif
 `endif
            // Outputs
-           .noc_in_ready                (noc_in_ready[CONFIG.NOC_VCHANNELS-1:0]),
-           .noc_out_flit                (noc_out_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
-           .noc_out_valid               (noc_out_valid[CONFIG.NOC_VCHANNELS-1:0]),
+           .noc_in_ready                (noc_in_ready),
+           .noc_out_flit                (noc_out_flit),
+           .noc_out_last                (noc_out_last),
+           .noc_out_valid               (noc_out_valid),
            .wbm_adr_o                   (busms_adr_o[NR_MASTERS-1]),
            .wbm_cyc_o                   (busms_cyc_o[NR_MASTERS-1]),
            .wbm_dat_o                   (busms_dat_o[NR_MASTERS-1]),
@@ -577,9 +584,10 @@ module compute_tile_dm
            // Inputs
            .clk                         (clk),
            .rst                         (rst_sys),
-           .noc_in_flit                 (noc_in_flit[CONFIG.NOC_FLIT_WIDTH-1:0]),
-           .noc_in_valid                (noc_in_valid[CONFIG.NOC_VCHANNELS-1:0]),
-           .noc_out_ready               (noc_out_ready[CONFIG.NOC_VCHANNELS-1:0]),
+           .noc_in_flit                 (noc_in_flit),
+           .noc_in_last                 (noc_in_last),
+           .noc_in_valid                (noc_in_valid),
+           .noc_out_ready               (noc_out_ready),
            .wbm_ack_i                   (busms_ack_i[NR_MASTERS-1]),
            .wbm_rty_i                   (busms_rty_i[NR_MASTERS-1]),
            .wbm_err_i                   (busms_err_i[NR_MASTERS-1]),
@@ -604,19 +612,19 @@ module compute_tile_dm
          bootrom
            u_bootrom
              (/*AUTOINST*/
-	      // Outputs
-	      .wb_dat_o			(bussl_dat_o[SLAVE_BOOT]), // Templated
-	      .wb_ack_o			(bussl_ack_o[SLAVE_BOOT]), // Templated
-	      .wb_err_o			(bussl_err_o[SLAVE_BOOT]), // Templated
-	      .wb_rty_o			(bussl_rty_o[SLAVE_BOOT]), // Templated
-	      // Inputs
-	      .clk			(clk),			 // Templated
-	      .rst			(rst_sys),		 // Templated
-	      .wb_adr_i			(bussl_adr_i[SLAVE_BOOT]), // Templated
-	      .wb_dat_i			(bussl_dat_i[SLAVE_BOOT]), // Templated
-	      .wb_cyc_i			(bussl_cyc_i[SLAVE_BOOT]), // Templated
-	      .wb_stb_i			(bussl_stb_i[SLAVE_BOOT]), // Templated
-	      .wb_sel_i			(bussl_sel_i[SLAVE_BOOT])); // Templated
+              // Outputs
+              .wb_dat_o                 (bussl_dat_o[SLAVE_BOOT]), // Templated
+              .wb_ack_o                 (bussl_ack_o[SLAVE_BOOT]), // Templated
+              .wb_err_o                 (bussl_err_o[SLAVE_BOOT]), // Templated
+              .wb_rty_o                 (bussl_rty_o[SLAVE_BOOT]), // Templated
+              // Inputs
+              .clk                      (clk),                   // Templated
+              .rst                      (rst_sys),               // Templated
+              .wb_adr_i                 (bussl_adr_i[SLAVE_BOOT]), // Templated
+              .wb_dat_i                 (bussl_dat_i[SLAVE_BOOT]), // Templated
+              .wb_cyc_i                 (bussl_cyc_i[SLAVE_BOOT]), // Templated
+              .wb_stb_i                 (bussl_stb_i[SLAVE_BOOT]), // Templated
+              .wb_sel_i                 (bussl_sel_i[SLAVE_BOOT])); // Templated
       end else begin // if (CONFIG.ENABLE_BOOTROM)
          assign bussl_dat_o[SLAVE_BOOT] = 32'hx;
          assign bussl_ack_o[SLAVE_BOOT] = 1'b0;
@@ -626,7 +634,4 @@ module compute_tile_dm
    endgenerate
 endmodule
 
-// Local Variables:
-// verilog-library-directories:("../../*/verilog/" "../../../../../external/osd/hardware/*/*/common/")
-// verilog-auto-inst-param-value: t
-// End:
+

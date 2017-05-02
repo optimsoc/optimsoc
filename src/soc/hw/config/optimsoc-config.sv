@@ -44,6 +44,8 @@
 
 package optimsoc;
 
+   import functions::*;
+
    typedef enum { EXTERNAL, PLAIN } lmem_style_t;
 
    typedef struct packed {
@@ -56,8 +58,7 @@ package optimsoc;
       integer            GMEM_TILE;
 
       // NoC-related configuration
-      integer            NOC_DATA_WIDTH;
-      integer            NOC_TYPE_WIDTH;
+      logic              NOC_ENABLE_VCHANNELS;
 
       // Tile configuration
       integer            LMEM_SIZE;
@@ -95,11 +96,10 @@ package optimsoc;
       integer            TOTAL_NUM_CORES;
 
       // NoC-related configuration
-      integer            NOC_DATA_WIDTH;
-      integer            NOC_TYPE_WIDTH;
-      // -> derived
-      integer            NOC_FLIT_WIDTH; // Must be DATA_WIDTH+TYPE_WIDTH
-      integer            NOC_VCHANNELS;
+      logic 		 NOC_ENABLE_VCHANNELS;
+      //  -> derived
+      integer            NOC_FLIT_WIDTH;
+      integer            NOC_CHANNELS;
 
       // Tile configuration
       integer            LMEM_SIZE;
@@ -141,8 +141,7 @@ package optimsoc;
       derive_config.CORES_PER_TILE = conf.CORES_PER_TILE;
       derive_config.GMEM_SIZE = conf.GMEM_SIZE;
       derive_config.GMEM_TILE = conf.GMEM_TILE;
-      derive_config.NOC_DATA_WIDTH = conf.NOC_DATA_WIDTH;
-      derive_config.NOC_TYPE_WIDTH = conf.NOC_TYPE_WIDTH;
+      derive_config.NOC_ENABLE_VCHANNELS = conf.NOC_ENABLE_VCHANNELS;
       derive_config.LMEM_SIZE = conf.LMEM_SIZE;
       derive_config.LMEM_STYLE = conf.LMEM_STYLE;
       derive_config.ENABLE_BOOTROM = conf.ENABLE_BOOTROM;
@@ -163,7 +162,6 @@ package optimsoc;
 
       // Derive the other parameters
       derive_config.TOTAL_NUM_CORES = conf.NUMCTS * conf.CORES_PER_TILE;
-      derive_config.NOC_FLIT_WIDTH = conf.NOC_DATA_WIDTH + conf.NOC_TYPE_WIDTH;
 
       derive_config.DM_RANGE_WIDTH = conf.ENABLE_DM ? 32-clog2_width(conf.DM_SIZE) : 1;
       derive_config.DM_RANGE_MATCH = conf.DM_BASE >> (32-derive_config.DM_RANGE_WIDTH);
@@ -176,10 +174,9 @@ package optimsoc;
       derive_config.DEBUG_NUM_MODS = (1 + conf.NUMCTS *
                                       derive_config.DEBUG_MODS_PER_TILE) * conf.USE_DEBUG;
 
-      // Constants
-      derive_config.NOC_VCHANNELS = 2;
+      // Those are supposed to be variables, but are constant at least for now
+      derive_config.NOC_CHANNELS = 2;
+      derive_config.NOC_FLIT_WIDTH = 32;
    endfunction // DERIVE_CONFIG
 
-`include "optimsoc_functions.vh"
-   
 endpackage // optimsoc

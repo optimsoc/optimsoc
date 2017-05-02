@@ -4,7 +4,7 @@ name = optimsoc:system:2x2_cccc_dm
 depend =
   optimsoc:tile:compute_tile_dm
   optimsoc:debug:debug_interface
-  optimsoc:lisnoc:mesh2x2
+  optimsoc:noc:mesh
 
 [fileset src_files]
 file_type = systemVerilogSource
