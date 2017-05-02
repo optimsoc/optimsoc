@@ -101,12 +101,13 @@ module noc_mux
       end
    end
    
-   wb_interconnect_arb_rr
+   arb_rr
      #(.N(CHANNELS))
    u_arb
      (.nxt_gnt (select),
       .req     (req_masked),
-      .gnt     (active));
+      .gnt     (active),
+      .en      (1));
    
 endmodule // noc_mux
 

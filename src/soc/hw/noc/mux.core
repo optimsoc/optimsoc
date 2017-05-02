@@ -3,6 +3,7 @@ CAPI=1
 name = optimsoc:noc:mux
 description = "NoC Mux"
 depend =
+  wallento:arbiter:rr
 
 [fileset src_files]
 file_type = systemVerilogSource
