@@ -36,56 +36,57 @@ module noc_router_input
     parameter BUFFER_DEPTH = 4
     )
    (
-    input 				   clk,
-    input 				   rst,
+    input                                  clk,
+    input                                  rst,
 
-    input [FLIT_WIDTH-1:0] 		   in_flit,
-    input 				   in_last,
-    input [VCHANNELS-1:0] 		   in_valid,
-    output [VCHANNELS-1:0] 		   in_ready,
+    input [FLIT_WIDTH-1:0]                 in_flit,
+    input                                  in_last,
+    input [VCHANNELS-1:0]                  in_valid,
+    output [VCHANNELS-1:0]                 in_ready,
 
     output [VCHANNELS-1:0][OUTPUTS-1:0]    out_valid,
-    output [VCHANNELS-1:0] 		   out_last,
+    output [VCHANNELS-1:0]                 out_last,
     output [VCHANNELS-1:0][FLIT_WIDTH-1:0] out_flit,
-    input [VCHANNELS-1:0][OUTPUTS-1:0] 	   out_ready
+    input [VCHANNELS-1:0][OUTPUTS-1:0]     out_ready
     );
 
    generate
-      genvar 				   v;
+      genvar                               v;
 
       for (v = 0; v < VCHANNELS; v++) begin : vc
-	 wire [FLIT_WIDTH-1:0] buffer_flit;
-	 wire 		       buffer_last;
-	 wire 		       buffer_valid;
-	 wire 		       buffer_ready;
-	 
-	 noc_buffer
-	   #(.FLIT_WIDTH (FLIT_WIDTH),
-	     .DEPTH  (BUFFER_DEPTH))
-	 u_buffer
-	   (.*,
-	    .in_valid  (in_valid[v]),
-	    .in_ready  (in_ready[v]),	    
-	    .out_flit  (buffer_flit),
-	    .out_last  (buffer_last),
-	    .out_valid (buffer_valid),
-	    .out_ready (buffer_ready)
-	    );
-	 
-	 noc_router_lookup
-	   #(.FLIT_WIDTH (FLIT_WIDTH), .DESTS (DESTS),
-	     .OUTPUTS (OUTPUTS), .ROUTES (ROUTES))
-	 u_lookup
-	   (.*,
-	    .in_flit   (buffer_flit),
-	    .in_last   (buffer_last),
-	    .in_valid  (buffer_valid),
-	    .in_ready  (buffer_ready),
-	    .out_flit  (out_flit[v]),
-	    .out_last  (out_last[v]),
-	    .out_valid (out_valid[v]),
-	    .out_ready (out_ready[v])	    
-	    );
+         wire [FLIT_WIDTH-1:0] buffer_flit;
+         wire                  buffer_last;
+         wire                  buffer_valid;
+         wire                  buffer_ready;
+
+         noc_buffer
+           #(.FLIT_WIDTH (FLIT_WIDTH),
+             .DEPTH  (BUFFER_DEPTH))
+         u_buffer
+           (.*,
+            .in_valid    (in_valid[v]),
+            .in_ready    (in_ready[v]),       
+            .out_flit    (buffer_flit),
+            .out_last    (buffer_last),
+            .out_valid   (buffer_valid),
+            .out_ready   (buffer_ready),
+	    .packet_size ()
+            );
+
+         noc_router_lookup
+           #(.FLIT_WIDTH (FLIT_WIDTH), .DESTS (DESTS),
+             .OUTPUTS (OUTPUTS), .ROUTES (ROUTES))
+         u_lookup
+           (.*,
+            .in_flit   (buffer_flit),
+            .in_last   (buffer_last),
+            .in_valid  (buffer_valid),
+            .in_ready  (buffer_ready),
+            .out_flit  (out_flit[v]),
+            .out_last  (out_last[v]),
+            .out_valid (out_valid[v]),
+            .out_ready (out_ready[v])       
+            );
       end
    endgenerate
 

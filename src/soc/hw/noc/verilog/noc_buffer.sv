@@ -1,4 +1,4 @@
-/* Copyright (c) 2015 by the author(s)
+/* Copyright (c) 2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,13 @@
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
+ *   Wei Song <wsong83@gmail.com>
  */
 
 module noc_buffer
   #(parameter FLIT_WIDTH = 32,
-    parameter DEPTH = 16)    
+    parameter DEPTH = 16,
+    parameter FULLPACKET = 0)
    (
     input                   clk,
     input                   rst,
@@ -43,61 +45,77 @@ module noc_buffer
     output [FLIT_WIDTH-1:0] out_flit,
     output                  out_last,
     output                  out_valid,
-    input                   out_ready
+    input                   out_ready,
+
+    output [ID_W-1:0]       packet_size
     );
-   
-   // Signals for fifo
-   reg [FLIT_WIDTH:0] fifo_data [0:DEPTH-1]; //actual fifo
-   reg [FLIT_WIDTH:0] nxt_fifo_data [0:DEPTH-1];
 
-   reg [DEPTH:0]         fifo_write_ptr;
+   localparam ID_W = $clog2(DEPTH); // the width of the index
 
-   wire                   pop;
-   wire                   push;
+   // internal shift register
+   reg [DEPTH-1:0][FLIT_WIDTH:0] data;
+   reg [ID_W:0]                     rp; // read pointer
+   logic                            reg_out_valid;  // local output valid
+   logic                            in_fire, out_fire;
 
-   assign pop = out_valid & out_ready;
-   assign push = in_valid & in_ready;
+   assign in_ready = (rp != DEPTH - 1) || !reg_out_valid;
+   assign in_fire = in_valid && in_ready;
+   assign out_fire = out_valid && out_ready;
 
-   assign out_flit = fifo_data[0][FLIT_WIDTH-1:0];
-   assign out_last = fifo_data[0][FLIT_WIDTH];
-   assign out_valid = !fifo_write_ptr[0];
+   always_ff @(posedge clk)
+     if(rst)
+       reg_out_valid <= 0;
+     else if(in_valid)
+       reg_out_valid <= 1;
+     else if(out_fire && rp == 0)
+       reg_out_valid <= 0;
 
-   assign in_ready = !fifo_write_ptr[DEPTH];
+   always_ff @(posedge clk)
+     if(rst)
+       rp <= 0;
+     else if(in_fire && !out_fire && reg_out_valid)
+       rp <= rp + 1;
+     else if(out_fire && !in_fire && rp != 0)
+       rp <= rp - 1;
 
-   always @(posedge clk) begin
-      if (rst) begin
-         fifo_write_ptr <= {{DEPTH{1'b0}},1'b1};
-      end else if (push & !pop) begin
-         fifo_write_ptr <= fifo_write_ptr << 1;
-      end else if (!push & pop) begin
-         fifo_write_ptr <= fifo_write_ptr >> 1;
-      end
-   end
+   always @(posedge clk)
+     if(in_fire)
+       data <= {data, {in_last, in_flit}};
 
-   always @(*) begin : shift_register_comb
-      integer i;
-      for (i=0;i<DEPTH;i=i+1) begin
-         if (pop) begin
-            if (push & fifo_write_ptr[i+1]) begin
-               nxt_fifo_data[i] = {in_last, in_flit};
-            end else if (i<DEPTH-1) begin
-               nxt_fifo_data[i] = fifo_data[i+1];
-            end else begin
-               nxt_fifo_data[i] = fifo_data[i];
-            end
-         end else if (push & fifo_write_ptr[i]) begin
-            nxt_fifo_data[i] = {in_last, in_flit};
-         end else begin
-            nxt_fifo_data[i] = fifo_data[i];
+   generate                     // SRL does not allow parallel read
+      if(FULLPACKET != 0) begin
+         logic [DEPTH-1:0] data_last_buf, data_last_shifted;
+
+         always @(posedge clk)
+           if(rst)
+             data_last_buf = 0;
+           else if(in_fire)
+             data_last_buf = {data_last_buf, in_last && in_valid};
+
+         // extra logic to get the packet size in a stable manner
+         assign data_last_shifted = data_last_buf << DEPTH - 1 - rp;
+
+         function logic [ID_W:0] find_first_one(input logic [DEPTH-1:0] data);
+            automatic int i;
+            for(i=DEPTH-1; i>=0; i--)
+              if(data[i]) return i;
+            return DEPTH;
+         endfunction // size_count
+
+         assign packet_size = DEPTH - find_first_one(data_last_shifted);
+
+         always_comb begin
+            out_flit = data[rp][FLIT_WIDTH-1:0];
+            out_last = data[rp][FLIT_WIDTH];
+            out_valid = reg_out_valid && |data_last_shifted;
+         end
+      end else begin // if (FULLPACKET)
+         assign packet_size = 0;
+         always_comb begin
+            out_flit = data[rp][FLIT_WIDTH-1:0];
+            out_last = data[rp][FLIT_WIDTH];
+            out_valid = reg_out_valid;
          end
       end
-   end
-
-   always @(posedge clk) begin : shift_register_seq
-      integer i;
-      for (i=0;i<DEPTH;i=i+1) begin
-        fifo_data[i] <= nxt_fifo_data[i];
-      end
-   end
-
+   endgenerate
 endmodule // noc_buffer
