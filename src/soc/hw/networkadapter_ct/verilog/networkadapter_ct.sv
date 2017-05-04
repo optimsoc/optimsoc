@@ -311,27 +311,31 @@ module networkadapter_ct
      #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_outbuffer0
      (.*,
-      .in_flit   (muxed_flit[0]),
-      .in_last   (muxed_last[0]),
-      .in_valid  (muxed_valid[0]),
-      .in_ready  (muxed_ready[0]),
-      .out_flit  (noc_out_flit[0]),
-      .out_last  (noc_out_last[0]),
-      .out_valid (noc_out_valid[0]),
-      .out_ready (noc_out_ready[0]));
+      .in_flit     (muxed_flit[0]),
+      .in_last     (muxed_last[0]),
+      .in_valid    (muxed_valid[0]),
+      .in_ready    (muxed_ready[0]),
+      .out_flit    (noc_out_flit[0]),
+      .out_last    (noc_out_last[0]),
+      .out_valid   (noc_out_valid[0]),
+      .out_ready   (noc_out_ready[0]),
+      .packet_size ()
+      );
 
    noc_buffer
      #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_outbuffer1
      (.*,
-      .in_flit   (muxed_flit[1]),
-      .in_last   (muxed_last[1]),
-      .in_valid  (muxed_valid[1]),
-      .in_ready  (muxed_ready[1]),
-      .out_flit  (noc_out_flit[1]),
-      .out_last  (noc_out_last[1]),
-      .out_valid (noc_out_valid[1]),
-      .out_ready (noc_out_ready[1]));
+      .in_flit     (muxed_flit[1]),
+      .in_last     (muxed_last[1]),
+      .in_valid    (muxed_valid[1]),
+      .in_ready    (muxed_ready[1]),
+      .out_flit    (noc_out_flit[1]),
+      .out_last    (noc_out_last[1]),
+      .out_valid   (noc_out_valid[1]),
+      .out_ready   (noc_out_ready[1]),
+      .packet_size ()
+      );
 
    wire [1:0][FLIT_WIDTH-1:0] inbuffer_flit;
    wire [1:0]                 inbuffer_last, inbuffer_valid, inbuffer_ready;
@@ -340,14 +344,16 @@ module networkadapter_ct
      #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_inbuffer0
      (.*,
-      .in_flit   (noc_in_flit[0]),
-      .in_last   (noc_in_last[0]),
-      .in_valid  (noc_in_valid[0]),
-      .in_ready  (noc_in_ready[0]),
-      .out_flit  (inbuffer_flit[0]),
-      .out_last  (inbuffer_last[0]),
-      .out_valid (inbuffer_valid[0]),
-      .out_ready (inbuffer_ready[0]));
+      .in_flit     (noc_in_flit[0]),
+      .in_last     (noc_in_last[0]),
+      .in_valid    (noc_in_valid[0]),
+      .in_ready    (noc_in_ready[0]),
+      .out_flit    (inbuffer_flit[0]),
+      .out_last    (inbuffer_last[0]),
+      .out_valid   (inbuffer_valid[0]),
+      .out_ready   (inbuffer_ready[0]),
+      .packet_size ()
+      );
 
    noc_demux
      #(.FLIT_WIDTH (FLIT_WIDTH), .CHANNELS (2),
@@ -367,14 +373,16 @@ module networkadapter_ct
      #(.FLIT_WIDTH(FLIT_WIDTH), .DEPTH(4))
    u_inbuffer1
      (.*,
-      .in_flit   (noc_in_flit[1]),
-      .in_last   (noc_in_last[1]),
-      .in_valid  (noc_in_valid[1]),
-      .in_ready  (noc_in_ready[1]),
-      .out_flit  (inbuffer_flit[1]),
-      .out_last  (inbuffer_last[1]),
-      .out_valid (inbuffer_valid[1]),
-      .out_ready (inbuffer_ready[1]));
+      .in_flit     (noc_in_flit[1]),
+      .in_last     (noc_in_last[1]),
+      .in_valid    (noc_in_valid[1]),
+      .in_ready    (noc_in_ready[1]),
+      .out_flit    (inbuffer_flit[1]),
+      .out_last    (inbuffer_last[1]),
+      .out_valid   (inbuffer_valid[1]),
+      .out_ready   (inbuffer_ready[1]),
+      .packet_size ()
+      );
 
    noc_demux
      #(.FLIT_WIDTH (FLIT_WIDTH), .CHANNELS (2),
