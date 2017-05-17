@@ -11,9 +11,10 @@ struct glip_option backend_options[] = {
 
 /*
  * Initialize the GLIP context struct |ctx|. Use the backend "tcp" and pass
- * the 2 options inside backend_options to it.
+ * the 2 options inside backend_options to it. No log handler is set 
+ * explicitly, causing all logs to be sent to STDERR.
  */
-rv = glip_new(&gctx, "tcp", backend_options, 2);
+rv = glip_new(&gctx, "tcp", backend_options, 2, NULL /* log_fn */);
 
 /*
  * (Almost) all GLIP functions return 0 on success and a negative value if an

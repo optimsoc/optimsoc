@@ -56,7 +56,4 @@ int gb_cypressfx2_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 unsigned int gb_cypressfx2_get_channel_count(struct glip_ctx *ctx);
 unsigned int gb_cypressfx2_get_fifo_width(struct glip_ctx *ctx);
 
-void* usb_read_thread(void* ctx_void);
-void* usb_write_thread(void* ctx_void);
-
 #endif /* __BACKEND_CYPRESSFX2_H__ */

@@ -9,6 +9,8 @@ depend =
   wallento:wb2axi:wb2axi
   optimsoc:system:2x2_cccc_dm
   glip:backend:uart
+  glip:backend:cypressfx3
+  glip:backend:cypressfx3-vcu108-16bit
   optimsoc:ip:xilinx_axi_interconnect_4to1
   optimsoc:ip:xilinx_axi_register_slice
   optimsoc:base:config
@@ -39,3 +41,9 @@ scope = public
 datatype = int
 paramtype = vlogparam
 scope = public
+
+[parameter HOST_IF]
+datatype = str
+paramtype = vlogparam
+scope = public
+

@@ -66,11 +66,34 @@ module system_2x2_cccc_vcu108
    inout  [7:0]          c0_ddr4_dm_dbi_n,
    inout  [63:0]         c0_ddr4_dq,
    inout  [7:0]          c0_ddr4_dqs_t,
-   inout  [7:0]          c0_ddr4_dqs_c
+   inout  [7:0]          c0_ddr4_dqs_c,
+
+
+   // Cypress FX3 connected to FMC HPC0 (left, next to the USB jacks)
+   output                fx3_pclk,
+   inout [15:0]          fx3_dq,
+   output                fx3_slcs_n,
+   output                fx3_sloe_n,
+   output                fx3_slrd_n,
+   output                fx3_slwr_n,
+   output                fx3_pktend_n,
+   output [1:0]          fx3_a,
+   input                 fx3_flaga_n,
+   input                 fx3_flagb_n,
+   input                 fx3_flagc_n,
+   input                 fx3_flagd_n,
+   input                 fx3_com_rst,
+   input                 fx3_logic_rst,
+   output [2:0]          fx3_pmode
    );
 
    parameter integer NUM_CORES = 1;
    localparam integer LMEM_SIZE = 128*1024*1024;
+
+   // off-chip host interface
+   // uart: use a UART connection (see UART0_SOURCE for connectivity options)
+   // usb3: use a USB 3 connection (through a Cypress FX3 chip)
+   parameter HOST_IF = "uart";
 
    // source of the UART connection
    // onboard: Use the UART chip on the VCU108 board
@@ -140,11 +163,24 @@ module system_2x2_cccc_vcu108
    // sysclk1_300_p/n is the 300 MHz board clock
    // cpu_reset is a push button on the board labeled "CPU RESET"
 
+   logic glip_com_rst, glip_ctrl_logic_rst;
+
    // system clock: 50 MHz
    logic sys_clk;
 
-   // system reset
+   // reset from the board and the memory subsystem. Held low until the MIGs
+   // are ready.
+   logic sys_rst_board;
+
+   // system reset: triggered either from the board, or from the user through
+   // GLIP's glip_logic_reset() function
+   // XXX: Currently the reset logic of HIM does not take the glip_com_rst
+   // properly into account in order to support "hot attach", i.e. connecting
+   // to a already running system without fully resetting it. Until this is
+   // properly being worked out, we take the glip_com_reset also as system
+   // reset to reset the full system (i.e. all CPUs and the debug system).
    logic sys_rst;
+   assign sys_rst = sys_rst_board | glip_ctrl_logic_rst | glip_com_rst;
 
    // UART signals (naming from our point of view, i.e. from the DCE)
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
@@ -153,40 +189,75 @@ module system_2x2_cccc_vcu108
    glip_channel c_glip_in(.clk(sys_clk));
    glip_channel c_glip_out(.clk(sys_clk));
 
-   // XXX: does the HIM support hot-attach by now?
-   // See discussion in system_2x2_cccc_ztex
-   logic glip_com_rst, glip_ctrl_logic_rst;
+   // Host (off-chip) interface through GLIP (mostly for debug)
+   generate
+      if (HOST_IF == "uart") begin
+         glip_uart_toplevel
+            #(.FREQ_CLK_IO(32'd50_000_000),
+              .BAUD(UART0_BAUD),
+              .WIDTH(16),
+              .BUFFER_OUT_DEPTH(256*1024))
+            u_glip(
+                  .clk_io(sys_clk),
+                  .clk(sys_clk),
+                  .rst(sys_rst_board),
+                  .com_rst(glip_com_rst),
+                  .ctrl_logic_rst(glip_ctrl_logic_rst),
 
-   logic logic_rst;
-   assign logic_rst = sys_rst | glip_ctrl_logic_rst;
+                  .error(/* XXX: connect this to a LED */),
 
-   // Off-chip UART communication interface for debug
-   glip_uart_toplevel
-      #(.FREQ_CLK_IO(50000000),
-        .BAUD(UART0_BAUD),
-        .WIDTH(16),
-        .BUFFER_OUT_DEPTH(256*1024))
-      u_glip(
-         .clk_io(sys_clk),
-         .clk(sys_clk),
-         .rst(sys_rst),
-         .com_rst(glip_com_rst),
-         .ctrl_logic_rst(glip_ctrl_logic_rst),
+                  .fifo_out_data(c_glip_out.data),
+                  .fifo_out_ready(c_glip_out.ready),
+                  .fifo_out_valid(c_glip_out.valid),
+                  .fifo_in_data(c_glip_in.data),
+                  .fifo_in_ready(c_glip_in.ready),
+                  .fifo_in_valid(c_glip_in.valid),
 
-         .error(/* XXX: connect this to a LED */),
+                  .uart_rx(uart_rx),
+                  .uart_tx(uart_tx),
+                  .uart_rts_n(uart_rts_n),
+                  .uart_cts_n(uart_cts_n)
+            );
+      end else if (HOST_IF == "usb3") begin
+         glip_cypressfx3_toplevel
+            #(.WIDTH(16),
+              .FREQ(32'd50_000_000))
+            u_glip(
+                  .clk(sys_clk),
+                  .clk_io(sys_clk),
+                  .rst(sys_rst),
+                  .com_rst(glip_com_rst),
+                  .ctrl_logic_rst(glip_ctrl_logic_rst),
 
-         .fifo_out_data(c_glip_out.data),
-         .fifo_out_ready(c_glip_out.ready),
-         .fifo_out_valid(c_glip_out.valid),
-         .fifo_in_data(c_glip_in.data),
-         .fifo_in_ready(c_glip_in.ready),
-         .fifo_in_valid(c_glip_in.valid),
+                  .fifo_out_data(c_glip_out.data),
+                  .fifo_out_ready(c_glip_out.ready),
+                  .fifo_out_valid(c_glip_out.valid),
+                  .fifo_in_data(c_glip_in.data),
+                  .fifo_in_ready(c_glip_in.ready),
+                  .fifo_in_valid(c_glip_in.valid),
 
-         .uart_rx(uart_rx),
-         .uart_tx(uart_tx),
-         .uart_rts_n(uart_rts_n),
-         .uart_cts_n(uart_cts_n)
-      );
+                  .fx3_pclk      (fx3_pclk),
+                  .fx3_dq        (fx3_dq),
+                  .fx3_slcs_n    (fx3_slcs_n),
+                  .fx3_sloe_n    (fx3_sloe_n),
+                  .fx3_slrd_n    (fx3_slrd_n),
+                  .fx3_slwr_n    (fx3_slwr_n),
+                  .fx3_pktend_n  (fx3_pktend_n),
+                  .fx3_a         (fx3_a[1:0]),
+                  .fx3_flaga_n   (fx3_flaga_n),
+                  .fx3_flagb_n   (fx3_flagb_n),
+                  .fx3_flagc_n   (fx3_flagc_n),
+                  .fx3_flagd_n   (fx3_flagd_n),
+                  .fx3_com_rst   (fx3_com_rst),
+                  .fx3_logic_rst (fx3_logic_rst),
+                  .fx3_pmode     (fx3_pmode)
+            );
+      end else begin
+          $display("%m: Invalid value for parameter HOST_IF detected: %s",
+                  HOST_IF);
+          $stop;
+      end
+   endgenerate
 
 
    // 2x2 distributed memory system with all memory mapped to DDR
@@ -197,15 +268,15 @@ module system_2x2_cccc_vcu108
          .clk           (sys_clk),
          .rst           (sys_rst),
 
-         .c_glip_in (c_glip_in),
-         .c_glip_out (c_glip_out),
+         .c_glip_in     (c_glip_in),
+         .c_glip_out    (c_glip_out),
 
          .wb_ext_adr_i  ({c_wb_ddr3.adr_o, c_wb_ddr2.adr_o, c_wb_ddr1.adr_o, c_wb_ddr0.adr_o}),
          .wb_ext_cyc_i  ({c_wb_ddr3.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr0.cyc_o}),
          .wb_ext_dat_i  ({c_wb_ddr3.dat_o, c_wb_ddr2.dat_o, c_wb_ddr1.dat_o, c_wb_ddr0.dat_o}),
          .wb_ext_sel_i  ({c_wb_ddr3.sel_o, c_wb_ddr2.sel_o, c_wb_ddr1.sel_o, c_wb_ddr0.sel_o}),
          .wb_ext_stb_i  ({c_wb_ddr3.stb_o, c_wb_ddr2.stb_o, c_wb_ddr1.stb_o, c_wb_ddr0.stb_o}),
-         .wb_ext_we_i  ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
+         .wb_ext_we_i   ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
          .wb_ext_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
          .wb_ext_cti_i  ({c_wb_ddr3.cti_o, c_wb_ddr2.cti_o, c_wb_ddr1.cti_o, c_wb_ddr0.cti_o}),
          .wb_ext_bte_i  ({c_wb_ddr3.bte_o, c_wb_ddr2.bte_o, c_wb_ddr1.bte_o, c_wb_ddr0.bte_o}),
@@ -215,7 +286,7 @@ module system_2x2_cccc_vcu108
          .wb_ext_dat_o  ({c_wb_ddr3.dat_i, c_wb_ddr2.dat_i, c_wb_ddr1.dat_i, c_wb_ddr0.dat_i})
       );
 
-   // Nexys 4 board wrapper
+   // board wrapper
    vcu108
       #(
          .NUM_UART(1),
@@ -255,7 +326,7 @@ module system_2x2_cccc_vcu108
 
          // system interface
          .sys_clk     (sys_clk),
-         .sys_rst     (sys_rst),
+         .sys_rst     (sys_rst_board),
 
          .uart_rx     (uart_rx),
          .uart_tx     (uart_tx),
@@ -267,6 +338,7 @@ module system_2x2_cccc_vcu108
          .ddr_awlen   (c_axi_ddr.aw_len),
          .ddr_awsize  (c_axi_ddr.aw_size),
          .ddr_awburst (c_axi_ddr.aw_burst),
+         .ddr_awlock  (1'b0), // unused
          .ddr_awcache (c_axi_ddr.aw_cache),
          .ddr_awprot  (c_axi_ddr.aw_prot),
          .ddr_awqos   (c_axi_ddr.aw_qos),
@@ -286,6 +358,7 @@ module system_2x2_cccc_vcu108
          .ddr_arlen   (c_axi_ddr.ar_len),
          .ddr_arsize  (c_axi_ddr.ar_size),
          .ddr_arburst (c_axi_ddr.ar_burst),
+         .ddr_arlock  (1'b0), // unused
          .ddr_arcache (c_axi_ddr.ar_cache),
          .ddr_arprot  (c_axi_ddr.ar_prot),
          .ddr_arqos   (c_axi_ddr.ar_qos),
@@ -307,7 +380,7 @@ module system_2x2_cccc_vcu108
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr0
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr0.cyc_o),
       .wb_stb_i        (c_wb_ddr0.stb_o),
@@ -360,7 +433,7 @@ module system_2x2_cccc_vcu108
 
 xilinx_axi_register_slice
    u_slice0
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile0.aw_addr),
       .s_axi_awlen(c_axi_tile0.aw_len),
@@ -440,7 +513,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr1
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr1.cyc_o),
       .wb_stb_i        (c_wb_ddr1.stb_o),
@@ -493,7 +566,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice1
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile1.aw_addr),
       .s_axi_awlen(c_axi_tile1.aw_len),
@@ -573,7 +646,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr2
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr2.cyc_o),
       .wb_stb_i        (c_wb_ddr2.stb_o),
@@ -626,7 +699,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice2
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile2.aw_addr),
       .s_axi_awlen(c_axi_tile2.aw_len),
@@ -706,7 +779,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr3
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr3.cyc_o),
       .wb_stb_i        (c_wb_ddr3.stb_o),
@@ -759,7 +832,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice3
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile3.aw_addr),
       .s_axi_awlen(c_axi_tile3.aw_len),
