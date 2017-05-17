@@ -66,11 +66,34 @@ module system_2x2_cccc_vcu108
    inout  [7:0]          c0_ddr4_dm_dbi_n,
    inout  [63:0]         c0_ddr4_dq,
    inout  [7:0]          c0_ddr4_dqs_t,
-   inout  [7:0]          c0_ddr4_dqs_c
+   inout  [7:0]          c0_ddr4_dqs_c,
+
+
+   // Cypress FX3 connected to FMC HPC0 (left, next to the USB jacks)
+   output                fx3_pclk,
+   inout [15:0]          fx3_dq,
+   output                fx3_slcs_n,
+   output                fx3_sloe_n,
+   output                fx3_slrd_n,
+   output                fx3_slwr_n,
+   output                fx3_pktend_n,
+   output [1:0]          fx3_a,
+   input                 fx3_flaga_n,
+   input                 fx3_flagb_n,
+   input                 fx3_flagc_n,
+   input                 fx3_flagd_n,
+   input                 fx3_com_rst,
+   input                 fx3_logic_rst,
+   output [2:0]          fx3_pmode
    );
 
    parameter integer NUM_CORES = 1;
    localparam integer LMEM_SIZE = 128*1024*1024;
+
+   // off-chip host interface
+   // uart: use a UART connection (see UART0_SOURCE for connectivity options)
+   // usb3: use a USB 3 connection (through a Cypress FX3 chip)
+   parameter HOST_IF = "uart";
 
    // source of the UART connection
    // onboard: Use the UART chip on the VCU108 board
@@ -140,11 +163,24 @@ module system_2x2_cccc_vcu108
    // sysclk1_300_p/n is the 300 MHz board clock
    // cpu_reset is a push button on the board labeled "CPU RESET"
 
+   logic glip_com_rst, glip_ctrl_logic_rst;
+
    // system clock: 50 MHz
    logic sys_clk;
 
-   // system reset
+   // reset from the board and the memory subsystem. Held low until the MIGs
+   // are ready.
+   logic sys_rst_board;
+
+   // system reset: triggered either from the board, or from the user through
+   // GLIP's glip_logic_reset() function
+   // XXX: Currently the reset logic of HIM does not take the glip_com_rst
+   // properly into account in order to support "hot attach", i.e. connecting
+   // to a already running system without fully resetting it. Until this is
+   // properly being worked out, we take the glip_com_reset also as system
+   // reset to reset the full system (i.e. all CPUs and the debug system).
    logic sys_rst;
+   assign sys_rst = sys_rst_board | glip_ctrl_logic_rst | glip_com_rst;
 
    // UART signals (naming from our point of view, i.e. from the DCE)
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
@@ -153,40 +189,75 @@ module system_2x2_cccc_vcu108
    glip_channel c_glip_in(.clk(sys_clk));
    glip_channel c_glip_out(.clk(sys_clk));
 
-   // XXX: does the HIM support hot-attach by now?
-   // See discussion in system_2x2_cccc_ztex
-   logic glip_com_rst, glip_ctrl_logic_rst;
+   // Host (off-chip) interface through GLIP (mostly for debug)
+   generate
+      if (HOST_IF == "uart") begin
+         glip_uart_toplevel
+            #(.FREQ_CLK_IO(32'd50_000_000),
+              .BAUD(UART0_BAUD),
+              .WIDTH(16),
+              .BUFFER_OUT_DEPTH(256*1024))
+            u_glip(
+                  .clk_io(sys_clk),
+                  .clk(sys_clk),
+                  .rst(sys_rst_board),
+                  .com_rst(glip_com_rst),
+                  .ctrl_logic_rst(glip_ctrl_logic_rst),
 
-   logic logic_rst;
-   assign logic_rst = sys_rst | glip_ctrl_logic_rst;
+                  .error(/* XXX: connect this to a LED */),
 
-   // Off-chip UART communication interface for debug
-   glip_uart_toplevel
-      #(.FREQ_CLK_IO(50000000),
-        .BAUD(UART0_BAUD),
-        .WIDTH(16),
-        .BUFFER_OUT_DEPTH(256*1024))
-      u_glip(
-         .clk_io(sys_clk),
-         .clk(sys_clk),
-         .rst(sys_rst),
-         .com_rst(glip_com_rst),
-         .ctrl_logic_rst(glip_ctrl_logic_rst),
+                  .fifo_out_data(c_glip_out.data),
+                  .fifo_out_ready(c_glip_out.ready),
+                  .fifo_out_valid(c_glip_out.valid),
+                  .fifo_in_data(c_glip_in.data),
+                  .fifo_in_ready(c_glip_in.ready),
+                  .fifo_in_valid(c_glip_in.valid),
 
-         .error(/* XXX: connect this to a LED */),
+                  .uart_rx(uart_rx),
+                  .uart_tx(uart_tx),
+                  .uart_rts_n(uart_rts_n),
+                  .uart_cts_n(uart_cts_n)
+            );
+      end else if (HOST_IF == "usb3") begin
+         glip_cypressfx3_toplevel
+            #(.WIDTH(16),
+              .FREQ(32'd50_000_000))
+            u_glip(
+                  .clk(sys_clk),
+                  .clk_io(sys_clk),
+                  .rst(sys_rst),
+                  .com_rst(glip_com_rst),
+                  .ctrl_logic_rst(glip_ctrl_logic_rst),
 
-         .fifo_out_data(c_glip_out.data),
-         .fifo_out_ready(c_glip_out.ready),
-         .fifo_out_valid(c_glip_out.valid),
-         .fifo_in_data(c_glip_in.data),
-         .fifo_in_ready(c_glip_in.ready),
-         .fifo_in_valid(c_glip_in.valid),
+                  .fifo_out_data(c_glip_out.data),
+                  .fifo_out_ready(c_glip_out.ready),
+                  .fifo_out_valid(c_glip_out.valid),
+                  .fifo_in_data(c_glip_in.data),
+                  .fifo_in_ready(c_glip_in.ready),
+                  .fifo_in_valid(c_glip_in.valid),
 
-         .uart_rx(uart_rx),
-         .uart_tx(uart_tx),
-         .uart_rts_n(uart_rts_n),
-         .uart_cts_n(uart_cts_n)
-      );
+                  .fx3_pclk      (fx3_pclk),
+                  .fx3_dq        (fx3_dq),
+                  .fx3_slcs_n    (fx3_slcs_n),
+                  .fx3_sloe_n    (fx3_sloe_n),
+                  .fx3_slrd_n    (fx3_slrd_n),
+                  .fx3_slwr_n    (fx3_slwr_n),
+                  .fx3_pktend_n  (fx3_pktend_n),
+                  .fx3_a         (fx3_a[1:0]),
+                  .fx3_flaga_n   (fx3_flaga_n),
+                  .fx3_flagb_n   (fx3_flagb_n),
+                  .fx3_flagc_n   (fx3_flagc_n),
+                  .fx3_flagd_n   (fx3_flagd_n),
+                  .fx3_com_rst   (fx3_com_rst),
+                  .fx3_logic_rst (fx3_logic_rst),
+                  .fx3_pmode     (fx3_pmode)
+            );
+      end else begin
+          $display("%m: Invalid value for parameter HOST_IF detected: %s",
+                  HOST_IF);
+          $stop;
+      end
+   endgenerate
 
 
    // 2x2 distributed memory system with all memory mapped to DDR
@@ -255,7 +326,7 @@ module system_2x2_cccc_vcu108
 
          // system interface
          .sys_clk     (sys_clk),
-         .sys_rst     (sys_rst),
+         .sys_rst     (sys_rst_board),
 
          .uart_rx     (uart_rx),
          .uart_tx     (uart_tx),
