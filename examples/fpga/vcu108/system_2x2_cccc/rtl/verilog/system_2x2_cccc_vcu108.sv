@@ -268,15 +268,15 @@ module system_2x2_cccc_vcu108
          .clk           (sys_clk),
          .rst           (sys_rst),
 
-         .c_glip_in (c_glip_in),
-         .c_glip_out (c_glip_out),
+         .c_glip_in     (c_glip_in),
+         .c_glip_out    (c_glip_out),
 
          .wb_ext_adr_i  ({c_wb_ddr3.adr_o, c_wb_ddr2.adr_o, c_wb_ddr1.adr_o, c_wb_ddr0.adr_o}),
          .wb_ext_cyc_i  ({c_wb_ddr3.cyc_o, c_wb_ddr2.cyc_o, c_wb_ddr1.cyc_o, c_wb_ddr0.cyc_o}),
          .wb_ext_dat_i  ({c_wb_ddr3.dat_o, c_wb_ddr2.dat_o, c_wb_ddr1.dat_o, c_wb_ddr0.dat_o}),
          .wb_ext_sel_i  ({c_wb_ddr3.sel_o, c_wb_ddr2.sel_o, c_wb_ddr1.sel_o, c_wb_ddr0.sel_o}),
          .wb_ext_stb_i  ({c_wb_ddr3.stb_o, c_wb_ddr2.stb_o, c_wb_ddr1.stb_o, c_wb_ddr0.stb_o}),
-         .wb_ext_we_i  ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
+         .wb_ext_we_i   ({c_wb_ddr3.we_o, c_wb_ddr2.we_o, c_wb_ddr1.we_o, c_wb_ddr0.we_o}),
          .wb_ext_cab_i  (), // XXX: this is an old signal not present in WB B3 any more!?
          .wb_ext_cti_i  ({c_wb_ddr3.cti_o, c_wb_ddr2.cti_o, c_wb_ddr1.cti_o, c_wb_ddr0.cti_o}),
          .wb_ext_bte_i  ({c_wb_ddr3.bte_o, c_wb_ddr2.bte_o, c_wb_ddr1.bte_o, c_wb_ddr0.bte_o}),
@@ -286,7 +286,7 @@ module system_2x2_cccc_vcu108
          .wb_ext_dat_o  ({c_wb_ddr3.dat_i, c_wb_ddr2.dat_i, c_wb_ddr1.dat_i, c_wb_ddr0.dat_i})
       );
 
-   // Nexys 4 board wrapper
+   // board wrapper
    vcu108
       #(
          .NUM_UART(1),
@@ -378,7 +378,7 @@ module system_2x2_cccc_vcu108
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr0
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr0.cyc_o),
       .wb_stb_i        (c_wb_ddr0.stb_o),
@@ -431,7 +431,7 @@ module system_2x2_cccc_vcu108
 
 xilinx_axi_register_slice
    u_slice0
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile0.aw_addr),
       .s_axi_awlen(c_axi_tile0.aw_len),
@@ -511,7 +511,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr1
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr1.cyc_o),
       .wb_stb_i        (c_wb_ddr1.stb_o),
@@ -564,7 +564,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice1
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile1.aw_addr),
       .s_axi_awlen(c_axi_tile1.aw_len),
@@ -644,7 +644,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr2
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr2.cyc_o),
       .wb_stb_i        (c_wb_ddr2.stb_o),
@@ -697,7 +697,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice2
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile2.aw_addr),
       .s_axi_awlen(c_axi_tile2.aw_len),
@@ -777,7 +777,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr3
-   (.clk             (sys_clk),
+     (.clk             (sys_clk),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr3.cyc_o),
       .wb_stb_i        (c_wb_ddr3.stb_o),
@@ -830,7 +830,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice3
-   (.aclk(sys_clk),
+     (.aclk(sys_clk),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile3.aw_addr),
       .s_axi_awlen(c_axi_tile3.aw_len),
