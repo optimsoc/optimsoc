@@ -213,9 +213,11 @@ def run_command(cmd, **kwargs):
                                  universal_newlines=True,
                                  shell=True, **kwargs)
         stdout_lines = iter(popen.stdout.readline, "")
+        process_output = ""
         for stdout_line in stdout_lines:
             # always write the subprocess output to the build log
             write_to_build_log(stdout_line)
+            process_output += stdout_line
 
             # In verbose mode, we forward all output of the executed command
             # to the user directly to make debugging easier.
@@ -225,7 +227,8 @@ def run_command(cmd, **kwargs):
         popen.stdout.close()
         return_code = popen.wait()
         if return_code != 0:
-            raise subprocess.CalledProcessError(return_code, cmd)
+            raise subprocess.CalledProcessError(return_code, cmd,
+                                                process_output)
     except subprocess.CalledProcessError as e:
         fatal("Error {}\n{}".format(e, e.output))
 
