@@ -154,7 +154,7 @@ static int reset(struct glip_ctx* ctx);
  * @param ctx_void GLIP context
  * @return Ignored
  */
-void* thread_func(void *ctx_void);
+static void* thread_func(void *ctx_void);
 
 /**
  * Parses an incoming buffer and filters credits
@@ -804,9 +804,7 @@ void parse_buffer(struct glip_backend_ctx *ctx, uint8_t *buffer, size_t size)
     }
 }
 
-int wtotal = 0;
-
-void* thread_func(void *ctx_void)
+static void* thread_func(void *ctx_void)
 {
     struct glip_ctx *ctx = ctx_void;
     struct glip_backend_ctx* bctx = ctx->backend_ctx;

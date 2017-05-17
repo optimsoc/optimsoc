@@ -234,7 +234,7 @@ module glip_uart_toplevel
 
    glip_uart_control
       #(.FIFO_CREDIT_WIDTH(12),
-      .INPUT_FIFO_CREDIT(4090))
+        .INPUT_FIFO_CREDIT(4090))
    u_control(
       .clk                       (clk_io),
       .rst                       (rst),
@@ -310,7 +310,7 @@ module glip_uart_toplevel
 
    glip_upscale
       #(.IN_SIZE(8),
-      .OUT_SIZE(WIDTH))
+        .OUT_SIZE(WIDTH))
    u_ingress_upscale(
       .clk       (clk),
       .rst       (fifo_rst_logic[0]),
@@ -328,11 +328,12 @@ module glip_uart_toplevel
    assign ingress_upscale_out_ready = ~ingress_buffer_full;
 
    fifo_sync_fwft
-      #(.DW(WIDTH),
-      .PROG_FULL(9'h006))
+      #(.WIDTH(WIDTH),
+        .DEPTH(32),
+        .PROG_FULL(9'h006))
    u_ingress_buffer(
       .clk       (clk),
-      .nreset    (~fifo_rst_logic[0]),
+      .rst       (fifo_rst_logic[0]),
 
       .din       (ingress_buffer_din),
       .wr_en     (ingress_buffer_wr_en),
@@ -342,8 +343,7 @@ module glip_uart_toplevel
 
       .rd_en     (ingress_buffer_rd_en),
       .dout      (ingress_buffer_dout),
-      .empty     (ingress_buffer_empty),
-      .rd_count  ());
+      .empty     (ingress_buffer_empty));
 
    // connect ingress_buffer -> output interface (to be used in attached logic)
    assign fifo_in_data = ingress_buffer_dout;
@@ -361,7 +361,7 @@ module glip_uart_toplevel
 
    glip_downscale
       #(.IN_SIZE(WIDTH),
-      .OUT_SIZE(8))
+        .OUT_SIZE(8))
    u_egress_downscale(
       .clk       (clk),
       .rst       (com_rst),
@@ -398,20 +398,19 @@ module glip_uart_toplevel
    assign egress_buffer_wr_en = ~egress_cdc_rd_empty & fifo_en_io[0];
    assign egress_cdc_rd_en = ~egress_buffer_full;
 
-   oh_fifo_sync
-      #(.DW(8),
-      .DEPTH(BUFFER_OUT_DEPTH))
+   fifo_sync_fwft
+      #(.WIDTH(8),
+        .DEPTH(BUFFER_OUT_DEPTH))
    u_egress_buffer(
       .clk       (clk_io),
-      .nreset    (~rst),
+      .rst       (rst),
       .din       (egress_buffer_din),
       .wr_en     (egress_buffer_wr_en),
       .rd_en     (egress_buffer_rd_en),
       .dout      (egress_buffer_dout),
       .full      (egress_buffer_full),
       .prog_full (),
-      .empty     (egress_buffer_empty),
-      .rd_count  ());
+      .empty     (egress_buffer_empty));
 
    // connect u_egress_buffer -> control
    assign egress_ctrl_in_data = egress_buffer_dout;

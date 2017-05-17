@@ -68,41 +68,4 @@ int gb_jtag_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 
 unsigned int gb_jtag_get_channel_count(struct glip_ctx *ctx);
 unsigned int gb_jtag_get_fifo_width(struct glip_ctx *ctx);
-
-void *poll_thread(void *arg);
-
-ssize_t write_b(int fildes, const void *buf, size_t nbyte);
-
-int start_openocd(struct glip_ctx *ctx);
-int close_openocd(struct glip_ctx *ctx);
-
-int discover_targetconf(struct glip_ctx *ctx);
-
-int jtag_drscan(struct glip_ctx *ctx, const uint8_t* req, uint8_t* resp,
-                const size_t size);
-int jtag_drscan_read(struct glip_ctx *ctx, uint8_t* resp, const size_t size);
-int jtag_drscan_write(struct glip_ctx *ctx, const uint8_t* req,
-                      const size_t size);
-int jtag_set_ir(struct glip_ctx *ctx);
-
-int hexstring_to_binarray_le(char* in, size_t in_size, uint8_t* out);
-uint8_t hexstring_to_byte(char* in);
-
-wsize_t calc_payload_len(struct glip_ctx *ctx,
-                         wsize_t wanted_words,
-                         wsize_t *wr_words, wsize_t *rd_words);
-int build_jtag_req(struct glip_ctx *ctx, wsize_t wr_words, wsize_t rd_words,
-                   uint8_t* req, size_t req_size);
-void parse_jtag_resp(struct glip_ctx *ctx, uint8_t *resp, size_t resp_size,
-                     wsize_t *acked_words, wsize_t *read_words);
-
-wsize_t to_words(struct glip_ctx *ctx, size_t bytes);
-size_t to_bytes(struct glip_ctx *ctx, wsize_t words);
-void copy_to_word(struct glip_ctx *ctx, uint32_t value, uint8_t *dest);
-void copy_from_word(struct glip_ctx *ctx, uint8_t *from, uint32_t *out);
-
-size_t grow_buf(size_t current_size);
-
-struct cmdbuf* cmdbuf_new(const size_t buf_size);
-void cmdbuf_append(struct cmdbuf *buf, const char* data, const size_t data_size);
 #endif /* __BACKEND_JTAG_H__ */
