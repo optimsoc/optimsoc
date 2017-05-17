@@ -641,6 +641,7 @@ def build_externals_glip_software(options):
     cmd = ("{}/configure "
         "--prefix={} "
         "--enable-cypressfx2 "
+        "--enable-cypressfx3 "
         "--enable-jtag "
         "--enable-uart "
         "--enable-tcp").format(src, prefix)
