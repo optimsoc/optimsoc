@@ -11,7 +11,6 @@ endif
 
 glip_loopback_measure_LDFLAGS = $(AM_LDFLAGS)
 glip_loopback_measure_CFLAGS  = $(AM_CFLAGS) -I$(top_srcdir)/include
-glip_loopback_measure_SOURCES = loopback_measure.c \
-                                options.c
+glip_loopback_measure_SOURCES = loopback_measure.c
 
 

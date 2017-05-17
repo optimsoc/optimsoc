@@ -1,0 +1,1657 @@
+diff -aur ../SlaveFifoSync/.cproject ./.cproject
+--- ../SlaveFifoSync/.cproject	2014-09-29 17:13:26.000000000 +0200
++++ ./.cproject	2017-05-17 13:30:21.167342000 +0200
+@@ -1,871 +1,486 @@
+ <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+ <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+ 	<storageModule moduleId="org.eclipse.cdt.core.settings">
+-		<cconfiguration id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277">
+-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277" moduleId="org.eclipse.cdt.core.settings" name="Debug">
++		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375">
++			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375" moduleId="org.eclipse.cdt.core.settings" name="Debug">
++				<macros>
++					<stringMacro name="FX3SDKVERSION" type="VALUE_TEXT" value="1_3_3"/>
++				</macros>
+ 				<externalSettings/>
+ 				<extensions>
+-					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
++					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++				</extensions>
++			</storageModule>
++			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
++				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="${cross_rm} -rf" description="Debug configuration" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375" name="Debug" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug" postannouncebuildStep="Generate boot-loadable binary image" postbuildStep="${FX3_INSTALL_PATH}/util/elf2img/elf2img -i ${ProjName}.elf -o ${ProjName}.img -v">
++					<folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375." name="/" resourcePath="">
++						<toolChain id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug.1151280088" name="Cross ARM GCC" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug">
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.2017766214" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.none" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength.1707790703" name="Message length (-fmessage-length=0)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar.641846976" name="'char' is signed (-fsigned-char)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections.1352445634" name="Function sections (-ffunction-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections.310050856" name="Data sections (-fdata-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level.1502028396" name="Debug level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level.max" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.876543349" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name.911942821" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name" value="GNU Tools for ARM Embedded Processors" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.1244969037" name="Architecture" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.architecture" value="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.arm" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.124143563" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.arm926ej-s" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.316787303" name="Instruction set" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.thumb" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix.1205630321" name="Prefix" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix" value="arm-none-eabi-" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.c.1208478883" name="C compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.c" value="gcc" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp.878124527" name="C++ compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp" value="g++" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar.1223635315" name="Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar" value="ar" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy.1232781696" name="Hex/Bin converter" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy" value="objcopy" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump.643386555" name="Listing generator" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump" value="objdump" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.size.1136507607" name="Size command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.size" value="size" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.make.658793164" name="Build command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.make" value="make" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm.1883825690" name="Remove command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm" value="rm" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash.130395209" name="Create flash image" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize.1547591698" name="Print size" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn.1835869530" name="Enable all common warnings (-Wall)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn" value="true" valueType="boolean"/>
++							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.2128110490" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
++							<builder buildPath="${workspace_loc:/SlaveFifoSync32}/Debug" id="ilg.gnuarmeclipse.managedbuild.cross.builder.1114859873" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1956153987" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.890346535" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.457420819" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.903984857" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1751135790" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/inc&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1704981045" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
++									<listOptionValue builtIn="false" value="__CYU3P_TX__=1"/>
++								</option>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1870830185" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.498240018" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.819678370" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections.1744604359" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart.837230870" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.634467039" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.433951793" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.1425688727" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_debug&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.2109962926" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.1425402313" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
++									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
++									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
++								</inputType>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.593000284" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1716864137" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart.153248356" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.128129193" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.2107328593" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.1461058439" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_debug&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other.1230651777" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver.1257231256" name="Cross ARM GNU Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash.1256293532" name="Cross ARM GNU Create Flash Image" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting.144237512" name="Cross ARM GNU Create Listing" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source.1154636289" name="Display source (--source|-S)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders.1621478863" name="Display all headers (--all-headers|-x)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle.1728336942" name="Demangle names (--demangle|-C)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers.428988338" name="Display line numbers (--line-numbers|-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide.1979887747" name="Wide lines (--wide|-w)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide" value="true" valueType="boolean"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize.1741225300" name="Cross ARM GNU Print Size" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format.1953917865" name="Size format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format"/>
++							</tool>
++						</toolChain>
++					</folderInfo>
++				</configuration>
++			</storageModule>
++			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
++		</cconfiguration>
++		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362">
++			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362" moduleId="org.eclipse.cdt.core.settings" name="Release">
++				<macros>
++					<stringMacro name="FX3SDKVERSION" type="VALUE_TEXT" value="1_3_3"/>
++				</macros>
++				<externalSettings/>
++				<extensions>
++					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+ 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+-					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
++					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 				</extensions>
+ 			</storageModule>
+ 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.cross.arm.gnu.buildArtefactType.application" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.cross.arm.gnu.buildArtefactType.application" description="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277" name="Debug" parent="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug" postannouncebuildStep="Converting ELF to image (.img) format" postbuildStep="&quot;${FX3_INSTALL_PATH}\util\elf2img\elf2img.exe&quot; -i ${ProjName}.elf -o ${ProjName}.img">
+-					<folderInfo id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277." name="/" resourcePath="">
+-						<toolChain id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.toolchain.debug.1339062818" name="ARM Windows GCC (Sourcery G++ Lite)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.toolchain.debug">
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.debugging.level.300127433" name="Debug level" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.debugging.level" value="org.eclipse.cdt.cross.arm.gnu.base.option.debugging.level.default" valueType="enumerated"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.processor.1929917867" name="Processor" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.processor" value="org.eclipse.cdt.cross.arm.gnu.base.option.mcpu.arm926ej-s" valueType="enumerated"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumb.1675881701" name="Thumb (-mthumb)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumb" value="false" valueType="boolean"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumbinterwork.808433395" name="Thumb interwork (-mthumb-interwork)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumbinterwork" value="true" valueType="boolean"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createflash.88004011" name="Create Flash Image" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createflash" value="false" valueType="boolean"/>
+-							<targetPlatform id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.platform.debug.560114459" isAbstract="false" name="Windows Platform" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.platform.debug"/>
+-							<builder buildPath="${workspace_loc:/SlaveFifoSync/Debug}" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.builder.debug.1740242202" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="ARM Sourcery Windows GNU Make builder" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.builder.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.assembler.debug.198352821" name="ARM Sourcery Windows GCC Assembler" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.assembler.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.assembler.option.include.paths.1462009518" name="Include paths (-I)" superClass="org.eclipse.cdt.cross.arm.gnu.assembler.option.include.paths" valueType="includePath">
+-									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\inc&quot;"/>
+-								</option>
+-								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input.1400686871" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input"/>
+-							</tool>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.compiler.debug.2067292173" name="ARM Sourcery Windows GCC C Compiler" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.compiler.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.optimization.level.1934284661" name="Optimization level" superClass="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.optimization.level" value="org.eclipse.cdt.cross.arm.gnu.base.option.optimization.level.none" valueType="enumerated"/>
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.include.paths.252264493" name="Include paths (-I)" superClass="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.include.paths" valueType="includePath">
+-									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\inc&quot;"/>
+-									<listOptionValue builtIn="false" value="&quot;..\.&quot;"/>
++				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="${cross_rm} -rf" description="Release configuration" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362" name="Release" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release" postannouncebuildStep="Generate boot-loadable binary image" postbuildStep="${FX3_INSTALL_PATH}/util/elf2img/elf2img -i ${ProjName}.elf -o ${ProjName}.img -v">
++					<folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362." name="/" resourcePath="">
++						<toolChain id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.release.333471385" name="Cross ARM GCC" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.release">
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.250858320" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.most" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength.1908286708" name="Message length (-fmessage-length=0)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar.1875182465" name="'char' is signed (-fsigned-char)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections.1481321160" name="Function sections (-ffunction-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections.66724715" name="Data sections (-fdata-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level.574125165" name="Debug level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.1939975618" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name.935657938" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name" value="GNU Tools for ARM Embedded Processors" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.328894682" name="Architecture" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.architecture" value="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.arm" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1854518241" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.arm926ej-s" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.6250822" name="Instruction set" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.thumb" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix.1152566870" name="Prefix" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix" value="arm-none-eabi-" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.c.53946377" name="C compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.c" value="gcc" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp.2107268644" name="C++ compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp" value="g++" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar.2029281834" name="Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar" value="ar" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy.740392020" name="Hex/Bin converter" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy" value="objcopy" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump.780929099" name="Listing generator" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump" value="objdump" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.size.1593336062" name="Size command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.size" value="size" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.make.1448469248" name="Build command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.make" value="make" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm.1652286865" name="Remove command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm" value="rm" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash.1993430156" name="Create flash image" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize.1518720378" name="Print size" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn.139467235" name="Enable all common warnings (-Wall)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn" value="true" valueType="boolean"/>
++							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1066163418" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
++							<builder buildPath="${workspace_loc:/SlaveFifoSync32}/Release" id="ilg.gnuarmeclipse.managedbuild.cross.builder.1813266354" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1866385200" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.985346125" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.803346439" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1741707317" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.274823908" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/inc&quot;"/>
+ 								</option>
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.preprocessor.def.693944529" name="Defined symbols (-D)" superClass="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.preprocessor.def" valueType="definedSymbols">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.819848106" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
+ 									<listOptionValue builtIn="false" value="__CYU3P_TX__=1"/>
+ 								</option>
+-								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input.985506140" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input"/>
+-							</tool>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.compiler.debug.866028812" name="ARM Sourcery Windows GCC C++ Compiler" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.compiler.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.cpp.compiler.option.optimization.level.1686834350" name="Optimization level" superClass="org.eclipse.cdt.cross.arm.gnu.cpp.compiler.option.optimization.level" value="org.eclipse.cdt.cross.arm.gnu.base.option.optimization.level.none" valueType="enumerated"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.863005909" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
+ 							</tool>
+-							<tool commandLinePattern="${COMMAND} ${INPUTS} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT}" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.linker.debug.1829398460" name="ARM Sourcery Windows GCC C Linker" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.linker.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.link.option.scriptfile.1702951922" name="Script file (-T)" superClass="org.eclipse.cdt.cross.arm.gnu.c.link.option.scriptfile" value="${FX3_INSTALL_PATH}/firmware/common/fx3.ld" valueType="string"/>
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.link.option.otherflags.1116599161" name="Other flags" superClass="org.eclipse.cdt.cross.arm.gnu.c.link.option.otherflags" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry &quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a&quot; &quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\lib\fx3_debug\cyu3lpp.a&quot; &quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a&quot;  &quot;${ARMGCC_INSTALL_PATH}\arm-none-eabi\lib\libc.a&quot; &quot;${ARMGCC_INSTALL_PATH}\lib\gcc\arm-none-eabi\\${ARMGCC_VERSION}\libgcc.a&quot;" valueType="string"/>
+-								<inputType id="org.eclipse.cdt.cross.arm.gnu.c.linker.input.1745850743" superClass="org.eclipse.cdt.cross.arm.gnu.c.linker.input">
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1935694708" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.1981498884" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections.1530749699" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart.1622036846" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.2095264774" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.1842298981" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.481937348" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_release&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.613970187" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.612313665" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
+ 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+ 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+ 								</inputType>
+ 							</tool>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.linker.debug.1123048014" name="ARM Sourcery Windows GCC C++ Linker" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.linker.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.archiver.base.1558617718" name="ARM Sourcery Windows GCC Archiver" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.archiver.base"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createflash.debug.1194332910" name="ARM Sourcery Windows GNU Create Flash Image" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createflash.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createlisting.debug.246606213" name="ARM Sourcery Windows GNU Create Listing" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createlisting.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.printsize.debug.1204947303" name="ARM Sourcery Windows GNU Print Size" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.printsize.debug"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1186763423" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1865304350" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart.1285115617" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.1297120448" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.374575998" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.279914033" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_debug&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other.37809790" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver.1617856740" name="Cross ARM GNU Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash.1776731128" name="Cross ARM GNU Create Flash Image" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting.179961825" name="Cross ARM GNU Create Listing" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source.1499038108" name="Display source (--source|-S)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders.81363122" name="Display all headers (--all-headers|-x)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle.431662658" name="Demangle names (--demangle|-C)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers.1554721525" name="Display line numbers (--line-numbers|-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide.997999690" name="Wide lines (--wide|-w)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide" value="true" valueType="boolean"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize.1022130960" name="Cross ARM GNU Print Size" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format.1274421692" name="Size format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format"/>
++							</tool>
+ 						</toolChain>
+ 					</folderInfo>
+-					<fileInfo id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277.48388382" name="cyfxgpif2config.h" rcbsApplicability="disable" resourcePath="cyfxgpif2config.h" toolsToInvoke=""/>
+-					<sourceEntries>
+-						<entry excluding="cyfxgpif_syncsf.h|cyfxgpif2config.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+-					</sourceEntries>
+ 				</configuration>
+ 			</storageModule>
+ 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+-			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
+-			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+ 		</cconfiguration>
+-		<cconfiguration id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277.749364564">
+-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277.749364564" moduleId="org.eclipse.cdt.core.settings" name="Release">
++		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375.1854163481">
++			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375.1854163481" moduleId="org.eclipse.cdt.core.settings" name="ProfileDebug">
++				<macros>
++					<stringMacro name="FX3SDKVERSION" type="VALUE_TEXT" value="1_3_3"/>
++				</macros>
+ 				<externalSettings/>
+ 				<extensions>
+-					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
++					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++				</extensions>
++			</storageModule>
++			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
++				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="${cross_rm} -rf" description="Profiling enabled debug configuration" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375.1854163481" name="ProfileDebug" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug" postannouncebuildStep="Generate boot-loadable binary image" postbuildStep="${FX3_INSTALL_PATH}/util/elf2img/elf2img -i ${ProjName}.elf -o ${ProjName}.img -v">
++					<folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375.1854163481." name="/" resourcePath="">
++						<toolChain id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug.1154437415" name="Cross ARM GCC" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug">
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.471037630" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.none" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength.720797679" name="Message length (-fmessage-length=0)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar.1496810138" name="'char' is signed (-fsigned-char)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections.706384103" name="Function sections (-ffunction-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections.192917303" name="Data sections (-fdata-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level.1230791049" name="Debug level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level.max" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.440229213" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name.1273656171" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name" value="GNU Tools for ARM Embedded Processors" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.1643866743" name="Architecture" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.architecture" value="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.arm" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1424887589" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.arm926ej-s" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.1748205319" name="Instruction set" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.thumb" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix.1066460641" name="Prefix" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix" value="arm-none-eabi-" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.c.1679015278" name="C compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.c" value="gcc" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp.1791371290" name="C++ compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp" value="g++" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar.940809849" name="Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar" value="ar" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy.1826387619" name="Hex/Bin converter" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy" value="objcopy" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump.1342655427" name="Listing generator" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump" value="objdump" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.size.9134271" name="Size command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.size" value="size" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.make.671945781" name="Build command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.make" value="make" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm.1708323496" name="Remove command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm" value="rm" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash.655366001" name="Create flash image" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize.1896035748" name="Print size" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn.97713711" name="Enable all common warnings (-Wall)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn" value="true" valueType="boolean"/>
++							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1146274773" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
++							<builder buildPath="${workspace_loc:/SlaveFifoSync32}/Debug" id="ilg.gnuarmeclipse.managedbuild.cross.builder.2025478717" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.986430469" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.2118667875" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1874692476" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.807001882" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.594674554" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/inc&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1384625142" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
++									<listOptionValue builtIn="false" value="__CYU3P_TX__=1"/>
++									<listOptionValue builtIn="false" value="CYU3P_PROFILE_EN=1"/>
++								</option>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1899753561" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.326649318" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.537430500" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections.1893221149" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart.1334755476" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.353119040" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.45274242" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.998889449" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_profile_debug&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.389573252" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.2139543905" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
++									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
++									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
++								</inputType>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.862003712" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.2088291329" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart.180127281" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.1850222156" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.2087824945" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.898253659" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_debug&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other.1235332916" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver.320861259" name="Cross ARM GNU Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash.1742207461" name="Cross ARM GNU Create Flash Image" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting.1690160427" name="Cross ARM GNU Create Listing" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source.390878260" name="Display source (--source|-S)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders.481349451" name="Display all headers (--all-headers|-x)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle.343877250" name="Demangle names (--demangle|-C)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers.2015608122" name="Display line numbers (--line-numbers|-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide.2080915868" name="Wide lines (--wide|-w)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide" value="true" valueType="boolean"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize.872315180" name="Cross ARM GNU Print Size" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format.1762696848" name="Size format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format"/>
++							</tool>
++						</toolChain>
++					</folderInfo>
++				</configuration>
++			</storageModule>
++			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
++			<storageModule moduleId="ilg.gnuarmeclipse.managedbuild.packs"/>
++		</cconfiguration>
++		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362.109867462">
++			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362.109867462" moduleId="org.eclipse.cdt.core.settings" name="ProfileRelease">
++				<macros>
++					<stringMacro name="FX3SDKVERSION" type="VALUE_TEXT" value="1_3_3"/>
++				</macros>
++				<externalSettings/>
++				<extensions>
++					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+ 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+-					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
++					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
++					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+ 				</extensions>
+ 			</storageModule>
+ 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.cross.arm.gnu.buildArtefactType.application" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.cross.arm.gnu.buildArtefactType.application" description="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277.749364564" name="Release" parent="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug" postannouncebuildStep="Converting ELF to image (.img) format" postbuildStep="&quot;${FX3_INSTALL_PATH}\util\elf2img\elf2img.exe&quot; -i ${ProjName}.elf -o ${ProjName}.img">
+-					<folderInfo id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277.749364564." name="/" resourcePath="">
+-						<toolChain id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.toolchain.debug.1856680309" name="ARM Windows GCC (Sourcery G++ Lite)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.toolchain.debug">
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.debugging.level.1612422215" name="Debug level" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.debugging.level" value="org.eclipse.cdt.cross.arm.gnu.base.option.debugging.level.none" valueType="enumerated"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.processor.1365444018" name="Processor" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.processor" value="org.eclipse.cdt.cross.arm.gnu.base.option.mcpu.arm926ej-s" valueType="enumerated"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumb.1656069844" name="Thumb (-mthumb)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumb" value="false" valueType="boolean"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumbinterwork.423563805" name="Thumb interwork (-mthumb-interwork)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumbinterwork" value="true" valueType="boolean"/>
+-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createflash.1897064124" name="Create Flash Image" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createflash" value="false" valueType="boolean"/>
+-							<targetPlatform id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.platform.debug.726590250" isAbstract="false" name="Windows Platform" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.platform.debug"/>
+-							<builder buildPath="${workspace_loc:/SlaveFifoSync/Debug}" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.builder.debug.1349258206" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="ARM Sourcery Windows GNU Make builder" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.builder.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.assembler.debug.2015342146" name="ARM Sourcery Windows GCC Assembler" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.assembler.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.assembler.option.include.paths.1846833929" name="Include paths (-I)" superClass="org.eclipse.cdt.cross.arm.gnu.assembler.option.include.paths" valueType="includePath">
+-									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\inc&quot;"/>
+-								</option>
+-								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input.623275281" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input"/>
+-							</tool>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.compiler.debug.178307497" name="ARM Sourcery Windows GCC C Compiler" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.compiler.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.optimization.level.1292722750" name="Optimization level" superClass="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.optimization.level" value="org.eclipse.cdt.cross.arm.gnu.base.option.optimization.level.size" valueType="enumerated"/>
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.include.paths.914423801" name="Include paths (-I)" superClass="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.include.paths" valueType="includePath">
+-									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\inc&quot;"/>
+-									<listOptionValue builtIn="false" value="&quot;..\.&quot;"/>
++				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="${cross_rm} -rf" description="Profiling enabled release configuration" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362.109867462" name="ProfileRelease" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release" postannouncebuildStep="Generate boot-loadable binary image" postbuildStep="${FX3_INSTALL_PATH}/util/elf2img/elf2img -i ${ProjName}.elf -o ${ProjName}.img -v">
++					<folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362.109867462." name="/" resourcePath="">
++						<toolChain id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.release.1241342520" name="Cross ARM GCC" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.release">
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.1597350132" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.most" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength.1928517066" name="Message length (-fmessage-length=0)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar.29779431" name="'char' is signed (-fsigned-char)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections.947944768" name="Function sections (-ffunction-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections.854136511" name="Data sections (-fdata-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.datasections" value="true" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level.572703229" name="Debug level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.1276111820" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name.99969348" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.name" value="GNU Tools for ARM Embedded Processors" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.1698333896" name="Architecture" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.architecture" value="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.arm" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1810606556" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.arm926ej-s" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.45646027" name="Instruction set" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.instructionset.thumb" valueType="enumerated"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix.2077183195" name="Prefix" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.prefix" value="arm-none-eabi-" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.c.2124762732" name="C compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.c" value="gcc" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp.1108484759" name="C++ compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.cpp" value="g++" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar.1775986326" name="Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.ar" value="ar" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy.331959889" name="Hex/Bin converter" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objcopy" value="objcopy" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump.195177669" name="Listing generator" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.objdump" value="objdump" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.size.2061714524" name="Size command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.size" value="size" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.make.316568637" name="Build command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.make" value="make" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm.725270964" name="Remove command" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.command.rm" value="rm" valueType="string"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash.2057841205" name="Create flash image" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize.938986868" name="Print size" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize" value="false" valueType="boolean"/>
++							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn.1458161862" name="Enable all common warnings (-Wall)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.allwarn" value="true" valueType="boolean"/>
++							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1934268877" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
++							<builder buildPath="${workspace_loc:/SlaveFifoSync32}/Release" id="ilg.gnuarmeclipse.managedbuild.cross.builder.489133968" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1924527590" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1026010610" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.364201316" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.482645593" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.573907036" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/inc&quot;"/>
+ 								</option>
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.preprocessor.def.2100708849" name="Defined symbols (-D)" superClass="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.preprocessor.def" valueType="definedSymbols">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1070983880" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
+ 									<listOptionValue builtIn="false" value="__CYU3P_TX__=1"/>
++									<listOptionValue builtIn="false" value="CYU3P_PROFILE_EN=1"/>
+ 								</option>
+-								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input.1566906288" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input"/>
+-							</tool>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.compiler.debug.1545479651" name="ARM Sourcery Windows GCC C++ Compiler" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.compiler.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.cpp.compiler.option.optimization.level.472590743" name="Optimization level" superClass="org.eclipse.cdt.cross.arm.gnu.cpp.compiler.option.optimization.level" value="org.eclipse.cdt.cross.arm.gnu.base.option.optimization.level.none" valueType="enumerated"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.577393058" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
+ 							</tool>
+-							<tool commandLinePattern="${COMMAND} ${INPUTS} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT}" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.linker.debug.842508939" name="ARM Sourcery Windows GCC C Linker" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.linker.debug">
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.link.option.scriptfile.1018180123" name="Script file (-T)" superClass="org.eclipse.cdt.cross.arm.gnu.c.link.option.scriptfile" value="${FX3_INSTALL_PATH}/firmware/common/fx3.ld" valueType="string"/>
+-								<option id="org.eclipse.cdt.cross.arm.gnu.c.link.option.otherflags.1502220995" name="Other flags" superClass="org.eclipse.cdt.cross.arm.gnu.c.link.option.otherflags" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry &quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\lib\fx3_release\cyfxapi.a&quot; &quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\lib\fx3_release\cyu3lpp.a&quot; &quot;${FX3_INSTALL_PATH}\firmware\u3p_firmware\lib\fx3_release\cyu3threadx.a&quot;  &quot;${ARMGCC_INSTALL_PATH}\arm-none-eabi\lib\libc.a&quot; &quot;${ARMGCC_INSTALL_PATH}\lib\gcc\arm-none-eabi\\${ARMGCC_VERSION}\libgcc.a&quot;" valueType="string"/>
+-								<inputType id="org.eclipse.cdt.cross.arm.gnu.c.linker.input.1377515614" superClass="org.eclipse.cdt.cross.arm.gnu.c.linker.input">
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1597279283" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.830319949" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections.1872226632" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart.691420648" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.396867327" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.379846691" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.894448283" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_profile_release&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.478059923" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.980910528" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
+ 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+ 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+ 								</inputType>
+ 							</tool>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.linker.debug.1822396444" name="ARM Sourcery Windows GCC C++ Linker" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.cpp.linker.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.archiver.base.1987604790" name="ARM Sourcery Windows GCC Archiver" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.archiver.base"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createflash.debug.513910389" name="ARM Sourcery Windows GNU Create Flash Image" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createflash.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createlisting.debug.1463716375" name="ARM Sourcery Windows GNU Create Listing" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.createlisting.debug"/>
+-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.printsize.debug.170644450" name="ARM Sourcery Windows GNU Print Size" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.printsize.debug"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1954837994" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1577042975" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart.1429314418" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.663310343" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" valueType="stringList">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_build/fx3_fw/fx3.ld&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1409444416" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs">
++									<listOptionValue builtIn="false" value="cyu3lpp"/>
++									<listOptionValue builtIn="false" value="cyfxapi"/>
++									<listOptionValue builtIn="false" value="cyu3threadx"/>
++									<listOptionValue builtIn="false" value="c"/>
++									<listOptionValue builtIn="false" value="gcc"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.1687556594" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths">
++									<listOptionValue builtIn="false" value="&quot;${FX3_INSTALL_PATH}/fw_lib/${FX3SDKVERSION}/fx3_debug&quot;"/>
++								</option>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other.297347643" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other" value="-Wl,-d -Wl,--no-wchar-size-warning -Wl,--entry,CyU3PFirmwareEntry" valueType="string"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver.1297116850" name="Cross ARM GNU Archiver" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.archiver"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash.115289599" name="Cross ARM GNU Create Flash Image" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createflash"/>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting.1271427132" name="Cross ARM GNU Create Listing" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source.1691654422" name="Display source (--source|-S)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.source" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders.920493732" name="Display all headers (--all-headers|-x)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.allheaders" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle.1431103724" name="Demangle names (--demangle|-C)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.demangle" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers.703912681" name="Display line numbers (--line-numbers|-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.linenumbers" value="true" valueType="boolean"/>
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide.1955308644" name="Wide lines (--wide|-w)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.createlisting.wide" value="true" valueType="boolean"/>
++							</tool>
++							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize.1397720264" name="Cross ARM GNU Print Size" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.printsize">
++								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format.1760793990" name="Size format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.printsize.format"/>
++							</tool>
+ 						</toolChain>
+ 					</folderInfo>
+ 				</configuration>
+ 			</storageModule>
+ 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+-			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
+-			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+ 		</cconfiguration>
+ 	</storageModule>
+ 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+-		<project id="SlaveFifoSync.org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.1477740239" name="ARM Sourcery Windows GCC Application" projectType="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf"/>
++		<project id="SlaveFifoSync32.ilg.gnuarmeclipse.managedbuild.cross.target.elf.1688005412" name="Executable" projectType="ilg.gnuarmeclipse.managedbuild.cross.target.elf"/>
+ 	</storageModule>
+ 	<storageModule moduleId="scannerConfiguration">
+-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile"/>
+-		<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="makefileGenerator">
+-				<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCManagedMakePerProjectProfileC">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-none-linux-gnueabi-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCManagedMakePerProjectProfileCPP">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-none-linux-gnueabi-g++" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCStandardMakePerProjectProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-none-linux-gnueabi-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCStandardMakePerFileProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="makefileGenerator">
+-				<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileC">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-none-eabi-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileCPP">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-none-eabi-g++" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinStandardMakePerProjectProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-none-eabi-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinStandardMakePerFileProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="makefileGenerator">
+-				<runAction arguments="-f ${project_name}_scd.mk" command="cs-make" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCManagedMakePerProjectProfileC">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-elf-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCManagedMakePerProjectProfileCPP">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-elf-g++" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCStandardMakePerProjectProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-elf-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCStandardMakePerFileProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="makefileGenerator">
+-				<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinManagedMakePerProjectProfileC">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-elf-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinManagedMakePerProjectProfileCPP">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-elf-g++" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinStandardMakePerProjectProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="specsFile">
+-				<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-elf-gcc" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinStandardMakePerFileProfile">
+-			<buildOutputProvider>
+-				<openAction enabled="true" filePath=""/>
+-				<parser enabled="true"/>
+-			</buildOutputProvider>
+-			<scannerInfoProvider id="makefileGenerator">
+-				<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-				<parser enabled="true"/>
+-			</scannerInfoProvider>
+-		</profile>
+-		<scannerConfigBuildInfo instanceId="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277;org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277.;org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.assembler.debug.198352821;org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input.1400686871">
+-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileC"/>
+-			<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-none-linux-gnueabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-none-linux-gnueabi-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-none-linux-gnueabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-none-eabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-none-eabi-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-none-eabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="cs-make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-elf-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-elf-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
++		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
++		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362;ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.333711362.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1741707317;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.863005909">
++			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+ 		</scannerConfigBuildInfo>
+-		<scannerConfigBuildInfo instanceId="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277;org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.179877277.;org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.c.compiler.debug.2067292173;org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input.985506140">
+-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileC"/>
+-			<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-none-linux-gnueabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-none-linux-gnueabi-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-none-linux-gnueabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-none-eabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-none-eabi-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-none-eabi-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="cs-make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-elf-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinManagedMakePerProjectProfileC">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinManagedMakePerProjectProfileCPP">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="arm-elf-g++" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinStandardMakePerProjectProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="specsFile">
+-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="arm-elf-gcc" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
+-			<profile id="org.eclipse.cdt.cross.arm.gnu.ARM_GCCWinStandardMakePerFileProfile">
+-				<buildOutputProvider>
+-					<openAction enabled="true" filePath=""/>
+-					<parser enabled="true"/>
+-				</buildOutputProvider>
+-				<scannerInfoProvider id="makefileGenerator">
+-					<runAction arguments="-f ${project_name}_scd.mk" command="make" useDefault="true"/>
+-					<parser enabled="true"/>
+-				</scannerInfoProvider>
+-			</profile>
++		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.2099018375.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.903984857;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1870830185">
++			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+ 		</scannerConfigBuildInfo>
+ 	</storageModule>
++	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
++	<storageModule moduleId="refreshScope"/>
+ </cproject>
+diff -aur ../SlaveFifoSync/cyfxgpif2config.h ./cyfxgpif2config.h
+--- ../SlaveFifoSync/cyfxgpif2config.h	2012-09-03 10:26:10.000000000 +0200
++++ ./cyfxgpif2config.h	2017-05-17 13:32:07.235445000 +0200
+@@ -1,6 +1,6 @@
+ /*
+- * Project Name: sync_slave_fifo_2bit_ANexample.cyfx
+- * Time : 08/31/2012 09:55:27
++ * Project Name: GPIFII_Designer_sync_SlaveFIFO.cyfx
++ * Time : 03/31/2017 15:11:01
+  * Device Type: FX3
+  * Project Type: GPIF2
+  *
+@@ -9,12 +9,12 @@
+  *
+  * This is a generated file and should not be modified
+  * This file need to be included only once in the firmware
+- * This file is generated by Gpif2 designer tool version - 1.0.837.1
++ * This file is generated by Gpif2 designer tool version - 1.0.1198.2
+  * 
+  */
+ 
+-#ifndef _INCLUDED_CYFXGPIF2CONFIG_
+-#define _INCLUDED_CYFXGPIF2CONFIG_
++#ifndef _INCLUDED_GPIFII_DESIGNER_SYNC_SLAVEFIFO_CYDSN_
++#define _INCLUDED_GPIFII_DESIGNER_SYNC_SLAVEFIFO_CYDSN_
+ #include "cyu3types.h"
+ #include "cyu3gpif.h"
+ 
+@@ -82,12 +82,8 @@
+    GPIF II configuration register values.
+  */
+ uint32_t CyFxGpifRegValue[]  = {
+-    0x80000380,  /*  CY_U3P_PIB_GPIF_CONFIG */
+-#if (CY_FX_SLFIFO_GPIF_16_32BIT_CONF_SELECT == 0)
+-    0x000010A7,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG */
+-#else if (CY_FX_SLFIFO_GPIF_16_32BIT_CONF_SELECT ==1)
+-	0x000010AC, /* 32b data- CY_U3P_PIB_GPIF_BUS_CONFIG */
+-#endif
++    0x80000780,  /*  CY_U3P_PIB_GPIF_CONFIG */
++    0x000010AC,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG */
+     0x01070002,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG2 */
+     0x00000044,  /*  CY_U3P_PIB_GPIF_AD_CONFIG */
+     0x00000000,  /*  CY_U3P_PIB_GPIF_STATUS */
+@@ -96,7 +92,7 @@
+     0x00000082,  /*  CY_U3P_PIB_GPIF_SERIAL_IN_CONFIG */
+     0x00000782,  /*  CY_U3P_PIB_GPIF_SERIAL_OUT_CONFIG */
+     0x00011500,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_DIRECTION */
+-    0x0000FE8F,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_DEFAULT */
++    0x0000FEBF,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_DEFAULT */
+     0x000001FF,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_POLARITY */
+     0x00000000,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_TOGGLE */
+     0x00000000,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_SELECT */
+@@ -177,4 +173,4 @@
+     CyFxGpifRegValue
+ };
+ 
+-#endif   /* _INCLUDED_CYFXGPIF2CONFIG_ */
++#endif   /* _INCLUDED_GPIFII_DESIGNER_SYNC_SLAVEFIFO_CYDSN_ */
+diff -aur ../SlaveFifoSync/cyfxslfifosync.c ./cyfxslfifosync.c
+--- ../SlaveFifoSync/cyfxslfifosync.c	2015-02-10 17:11:34.000000000 +0100
++++ ./cyfxslfifosync.c	2017-05-17 13:30:21.167342000 +0200
+@@ -253,7 +253,7 @@
+ #ifdef STREAM_IN_OUT
+     epCfg.burstLen = burstLength;
+ #else
+-    epCfg.burstLen = 1;
++    epCfg.burstLen = burstLength;
+ #endif
+     epCfg.streams = 0;
+     epCfg.pcktSize = size;
+@@ -367,6 +367,10 @@
+ 
+     /* Update the status flag. */
+     glIsApplnActive = CyTrue;
++
++    CyU3PGpioSetValue (26, CyFalse);
++    CyU3PGpioSetValue (27, CyFalse);
++    CyU3PGpioSetValue (58, CyFalse);
+     CyU3PGpioSetValue (59, CyFalse);
+ }
+ 
+@@ -488,6 +492,48 @@
+             }
+         }
+     }
++    // Handle side channel reset
++    else if(bType == CY_U3P_USB_VENDOR_RQT && bTarget == CY_U3P_USB_TARGET_DEVICE) {
++    	// Ensure correct request
++    	if(bRequest == 0x60) {
++    		// Set GPIO according to sent value
++    		// Communication reset
++    		if(wValue & 0x1) {
++    			CyU3PGpioSetValue (26, CyTrue);
++    		}
++    		else {
++    			CyU3PGpioSetValue (26, CyFalse);
++    		}
++
++    		// Logic reset
++    		if(wValue & 0x2) {
++				CyU3PGpioSetValue (27, CyTrue);
++    		}
++			else {
++				CyU3PGpioSetValue (27, CyFalse);
++			}
++
++    		// Flush all DMA channels and associated memory in case of a communication reset
++    		if(wValue & 0x1) {
++				// Flush & reset UtoP
++    			CyU3PDmaChannelReset (&glChHandleSlFifoUtoP);
++				CyU3PUsbFlushEp(CY_FX_EP_PRODUCER);
++				CyU3PUsbResetEp (CY_FX_EP_PRODUCER);
++				CyU3PDmaChannelSetXfer (&glChHandleSlFifoUtoP, CY_FX_SLFIFO_DMA_TX_SIZE);
++
++				// Flush & reset PtoU
++				CyU3PDmaChannelReset (&glChHandleSlFifoPtoU);
++				CyU3PUsbFlushEp(CY_FX_EP_CONSUMER);
++				CyU3PUsbResetEp (CY_FX_EP_CONSUMER);
++				CyU3PDmaChannelSetXfer (&glChHandleSlFifoPtoU, CY_FX_SLFIFO_DMA_RX_SIZE);
++			}
++
++    		// Send acknowledge back to host
++    		CyU3PUsbAckSetup();
++
++    		isHandled = CyTrue;
++    	}
++    }
+ 
+     return isHandled;
+ }
+@@ -643,12 +689,36 @@
+ 		CyFxAppErrorHandler(apiRetStatus);
+ 	}
+ 
+-    /* Configure GPIO 59 as output */
++    /* Configure GPIO 26 as output */
+     gpioConfig.outValue = CyTrue;
+     gpioConfig.driveLowEn = CyTrue;
+     gpioConfig.driveHighEn = CyTrue;
+     gpioConfig.inputEn = CyFalse;
+     gpioConfig.intrMode = CY_U3P_GPIO_NO_INTR;
++    apiRetStatus = CyU3PGpioSetSimpleConfig(26, &gpioConfig);
++    if (apiRetStatus != CY_U3P_SUCCESS)
++    {
++        /* Error handling */
++        CyU3PDebugPrint (4, "CyU3PGpioSetSimpleConfig failed, error code = %d\n",apiRetStatus);
++        CyFxAppErrorHandler(apiRetStatus);
++    }
++    /* Configure GPIO 27 as output */
++    apiRetStatus = CyU3PGpioSetSimpleConfig(27, &gpioConfig);
++    if (apiRetStatus != CY_U3P_SUCCESS)
++    {
++        /* Error handling */
++        CyU3PDebugPrint (4, "CyU3PGpioSetSimpleConfig failed, error code = %d\n",apiRetStatus);
++        CyFxAppErrorHandler(apiRetStatus);
++    }
++    /* Configure GPIO 58 as output */
++    apiRetStatus = CyU3PGpioSetSimpleConfig(58, &gpioConfig);
++    if (apiRetStatus != CY_U3P_SUCCESS)
++    {
++        /* Error handling */
++        CyU3PDebugPrint (4, "CyU3PGpioSetSimpleConfig failed, error code = %d\n",apiRetStatus);
++        CyFxAppErrorHandler(apiRetStatus);
++    }
++    /* Configure GPIO 59 as output */
+     apiRetStatus = CyU3PGpioSetSimpleConfig(59, &gpioConfig);
+     if (apiRetStatus != CY_U3P_SUCCESS)
+     {
+@@ -882,9 +952,9 @@
+     io_cfg.isDQ32Bit = CyTrue;
+     io_cfg.lppMode   = CY_U3P_IO_MATRIX_LPP_DEFAULT;
+ #endif
+-    /* No GPIOs are enabled. */
+-    io_cfg.gpioSimpleEn[0]  = 0;
+-    io_cfg.gpioSimpleEn[1]  = 0x08000000; /* GPIO 59 */
++    /* Enable GPIO 26 & 27. Also enable GPIO 58 & 59 to set them to 'low' (will otherwise be 3.3V) */
++    io_cfg.gpioSimpleEn[0]  = 0x1 << 26 | 0x1 << 27; // GPIO 26 & 27
++    io_cfg.gpioSimpleEn[1]  = 0x1 << 26 | 0x1 << 27; // GPIO 58 & 59
+     io_cfg.gpioComplexEn[0] = 0;
+     io_cfg.gpioComplexEn[1] = 0;
+     status = CyU3PDeviceConfigureIOMatrix (&io_cfg);
+diff -aur ../SlaveFifoSync/cyfxslfifosync.h ./cyfxslfifosync.h
+--- ../SlaveFifoSync/cyfxslfifosync.h	2014-10-06 09:44:16.000000000 +0200
++++ ./cyfxslfifosync.h	2017-05-17 13:30:21.167342000 +0200
+@@ -42,13 +42,13 @@
+ //#define STREAM_IN_OUT
+ 
+ /* set up MANUAL DMA channel for stream IN/OUT transfers */
+-#define MANUAL
++//#define MANUAL
+ 
+ #ifdef LOOPBACK_SHRT_ZLP
+ #define BURST_LEN 1
+-#define DMA_BUF_SIZE						  (1)
+-#define CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U      (2)              /* Slave FIFO P_2_U channel buffer count - Used with AUTO DMA channel */
+-#define CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P 	  (2)			   /* Slave FIFO U_2_P channel buffer count - Used with AUTO DMA channel */
++#define DMA_BUF_SIZE						  (24)
++#define CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U      (4)              /* Slave FIFO P_2_U channel buffer count - Used with AUTO DMA channel */
++#define CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P 	  (4)			   /* Slave FIFO U_2_P channel buffer count - Used with AUTO DMA channel */
+ #endif
+ 
+ #ifdef STREAM_IN_OUT
+diff -aur ../SlaveFifoSync/cyfxslfifousbdscr.c ./cyfxslfifousbdscr.c
+--- ../SlaveFifoSync/cyfxslfifousbdscr.c	2015-02-10 17:10:16.000000000 +0100
++++ ./cyfxslfifousbdscr.c	2017-05-17 13:30:21.167342000 +0200
+@@ -49,7 +49,7 @@
+     0x00,0x00,                      /* Device release number */
+     0x01,                           /* Manufacture string index */
+     0x02,                           /* Product string index */
+-    0x00,                           /* Serial number string index */
++    0x04,                           /* Serial number string index */
+     0x01                            /* Number of configurations */
+ };
+ 
+@@ -68,7 +68,7 @@
+     0x00,0x00,                      /* Device release number */
+     0x01,                           /* Manufacture string index */
+     0x02,                           /* Product string index */
+-    0x00,                           /* Serial number string index */
++    0x04,                           /* Serial number string index */
+     0x01                            /* Number of configurations */
+ };
+ 
+diff -aur ../SlaveFifoSync/makefile ./makefile
+--- ../SlaveFifoSync/makefile	2012-08-16 14:56:00.000000000 +0200
++++ ./makefile	2017-05-17 13:30:21.167342000 +0200
+@@ -14,17 +14,23 @@
+ ## installation root directory path.
+ ##
+ 
+-FX3FWROOT=../..
+-FX3PFWROOT=../../u3p_firmware
++FX3FWROOT=../../..
+ 
+ all:compile
+ 
+-include $(FX3FWROOT)/common/fx3_build_config.mak
++include $(FX3FWROOT)/fw_build/fx3_fw/fx3_build_config.mak
+ 
+-MODULE = cyfxslfifosync
++MODULE = slavefifosync32
+ 
+-SOURCE += $(MODULE).c
+-SOURCE += cyfxslfifousbdscr.c
++SOURCE= $(MODULE).c 		\
++	cyfxslfifousbdscr.c	\
++	cyfxtx.c
++
++ifeq ($(CYFXBUILD),arm)
++SOURCE_ASM=cyfx_startup.S
++else
++SOURCE_ASM=cyfx_gcc_startup.S
++endif
+ 
+ C_OBJECT=$(SOURCE:%.c=./%.o)
+ A_OBJECT=$(SOURCE_ASM:%.S=./%.o)
+@@ -34,7 +40,16 @@
+ $(MODULE).$(EXEEXT): $(A_OBJECT) $(C_OBJECT)
+ 	$(LINK)
+ 
+-$(C_OBJECT) : %.o : %.c cyfxslfifosync.h cyfxgpif_syncsf.h
++cyfxtx.c:
++	cp $(FX3FWROOT)/fw_build/fx3_fw/cyfxtx.c .
++
++cyfx_startup.S:
++	cp $(FX3FWROOT)/fw_build/fx3_fw/cyfx_startup.S .
++
++cyfx_gcc_startup.S:
++	cp $(FX3FWROOT)/fw_build/fx3_fw/cyfx_gcc_startup.S .
++
++$(C_OBJECT) : %.o : %.c
+ 	$(COMPILE)
+ 
+ $(A_OBJECT) : %.o : %.S
+diff -aur ../SlaveFifoSync/.project ./.project
+--- ../SlaveFifoSync/.project	2013-03-28 14:09:06.000000000 +0100
++++ ./.project	2017-05-17 13:30:21.167342000 +0200
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <projectDescription>
+-	<name>SlaveFifoSync</name>
++	<name>SlaveFifoSync32</name>
+ 	<comment></comment>
+ 	<projects>
+ 	</projects>
+@@ -9,66 +9,11 @@
+ 			<name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
+ 			<triggers>clean,full,incremental,</triggers>
+ 			<arguments>
+-				<dictionary>
+-					<key>?name?</key>
+-					<value></value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.append_environment</key>
+-					<value>true</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.autoBuildTarget</key>
+-					<value>all</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.buildArguments</key>
+-					<value></value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.buildCommand</key>
+-					<value>cs-make</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.buildLocation</key>
+-					<value>${workspace_loc:/SlaveFifoSync/Debug}</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
+-					<value>clean</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.contents</key>
+-					<value>org.eclipse.cdt.make.core.activeConfigSettings</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.enableAutoBuild</key>
+-					<value>false</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.enableCleanBuild</key>
+-					<value>true</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.enableFullBuild</key>
+-					<value>true</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.fullBuildTarget</key>
+-					<value>all</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.stopOnError</key>
+-					<value>true</value>
+-				</dictionary>
+-				<dictionary>
+-					<key>org.eclipse.cdt.make.core.useDefaultBuildCmd</key>
+-					<value>true</value>
+-				</dictionary>
+ 			</arguments>
+ 		</buildCommand>
+ 		<buildCommand>
+ 			<name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
++			<triggers>full,incremental,</triggers>
+ 			<arguments>
+ 			</arguments>
+ 		</buildCommand>
+Only in .: .settings
+Only in .: SlaveFifoSync32.patch

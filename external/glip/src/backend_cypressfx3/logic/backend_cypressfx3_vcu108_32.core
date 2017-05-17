@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = glip:backend:cypressfx3-vcu108-32bit
+description = "FX3 backend, constraints for the VCU108 board (32 bit FX3 FIFO width)"
+
+[fileset constraints]
+usage = vivado
+file_type = xdc
+files =
+  boards/vcu108/fmc_hpc1_32.xdc
+  boards/vcu108/fmc_hpc1.xdc
+
+

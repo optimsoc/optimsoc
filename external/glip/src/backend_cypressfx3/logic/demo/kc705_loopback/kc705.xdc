@@ -1,0 +1,21 @@
+set_property PACKAGE_PIN AD12 [get_ports clk_p]
+set_property PACKAGE_PIN AD11 [get_ports clk_n]
+set_property IOSTANDARD LVDS [get_ports clk_p]
+
+# 200 MHz system clock
+create_clock -period 5.000 -name clk_p [get_ports clk_p]
+
+set_property PACKAGE_PIN AB10 [get_ports lcd_en]
+set_property PACKAGE_PIN Y11 [get_ports lcd_rs]
+set_property PACKAGE_PIN AB13 [get_ports lcd_rw]
+set_property PACKAGE_PIN AA13 [get_ports {lcd_data[0]}]
+set_property PACKAGE_PIN AA10 [get_ports {lcd_data[1]}]
+set_property PACKAGE_PIN AA11 [get_ports {lcd_data[2]}]
+set_property PACKAGE_PIN Y10 [get_ports {lcd_data[3]}]
+set_property IOSTANDARD LVCMOS15 [get_ports lcd_en]
+set_property IOSTANDARD LVCMOS15 [get_ports lcd_rs]
+set_property IOSTANDARD LVCMOS15 [get_ports lcd_rw]
+set_property IOSTANDARD LVCMOS15 [get_ports {lcd_data[0]}]
+set_property IOSTANDARD LVCMOS15 [get_ports {lcd_data[1]}]
+set_property IOSTANDARD LVCMOS15 [get_ports {lcd_data[2]}]
+set_property IOSTANDARD LVCMOS15 [get_ports {lcd_data[3]}]

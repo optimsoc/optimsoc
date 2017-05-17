@@ -80,14 +80,22 @@ AM_CONDITIONAL([BACKEND_UART], [test "x$enable_uart" = "xyes"])
 GLIP_CONFIG_BACKEND(uart, UART)
 
 AC_ARG_ENABLE([cypressfx2],
-    AS_HELP_STRING([--enable-cypressfx2], [enable Cypress FX2 USB backend @<:@default=disabled@:>@]),
+    AS_HELP_STRING([--enable-cypressfx2], [enable Cypress FX2 (USB 2.0) backend @<:@default=disabled@:>@]),
     [],
     [enable_cypressfx2=no])
 AM_CONDITIONAL([BACKEND_CYPRESSFX2], [test "x$enable_cypressfx2" = "xyes"])
 
 GLIP_CONFIG_BACKEND(cypressfx2, CYPRESSFX2)
 
-AS_IF([test "x$enable_cypressfx2" = "xyes"], [
+AC_ARG_ENABLE([cypressfx3],
+    AS_HELP_STRING([--enable-cypressfx3], [enable Cypress FX3 (USB 3.0) backend @<:@default=disabled@:>@]),
+    [],
+    [enable_cypressfx3=no])
+AM_CONDITIONAL([BACKEND_CYPRESSFX3], [test "x$enable_cypressfx3" = "xyes"])
+
+GLIP_CONFIG_BACKEND(cypressfx3, CYPRESSFX3)
+
+AS_IF([test "x$enable_cypressfx2" = "xyes" -o "x$enable_cypressfx3" = "xyes"], [
     # check for libusb 1.0
     #
     # The libusb function libusb_error_string() was introduced with libusb 1.0.9.
@@ -105,7 +113,6 @@ AS_IF([test "x$enable_cypressfx2" = "xyes"], [
     AC_SUBST([libusb_CFLAGS])
     AC_SUBST([libusb_LIBS])
 ])
-
 
 AC_ARG_ENABLE([tcp],
     AS_HELP_STRING([--enable-tcp], [enable TCP backend @<:@default=enabled@:>@]),
@@ -184,6 +191,7 @@ AC_MSG_RESULT([
         backends:
         uart                    ${enable_uart}
         cypressfx2              ${enable_cypressfx2}
+        cypressfx3              ${enable_cypressfx3}
         tcp                     ${enable_tcp}
         jtag                    ${enable_jtag}
 ])
