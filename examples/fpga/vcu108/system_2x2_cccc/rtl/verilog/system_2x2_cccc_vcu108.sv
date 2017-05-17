@@ -338,6 +338,7 @@ module system_2x2_cccc_vcu108
          .ddr_awlen   (c_axi_ddr.aw_len),
          .ddr_awsize  (c_axi_ddr.aw_size),
          .ddr_awburst (c_axi_ddr.aw_burst),
+         .ddr_awlock  (1'b0), // unused
          .ddr_awcache (c_axi_ddr.aw_cache),
          .ddr_awprot  (c_axi_ddr.aw_prot),
          .ddr_awqos   (c_axi_ddr.aw_qos),
@@ -357,6 +358,7 @@ module system_2x2_cccc_vcu108
          .ddr_arlen   (c_axi_ddr.ar_len),
          .ddr_arsize  (c_axi_ddr.ar_size),
          .ddr_arburst (c_axi_ddr.ar_burst),
+         .ddr_arlock  (1'b0), // unused
          .ddr_arcache (c_axi_ddr.ar_cache),
          .ddr_arprot  (c_axi_ddr.ar_prot),
          .ddr_arqos   (c_axi_ddr.ar_qos),
