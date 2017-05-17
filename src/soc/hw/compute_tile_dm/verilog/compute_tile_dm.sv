@@ -504,7 +504,7 @@ module compute_tile_dm
 
    generate
       if ((CONFIG.ENABLE_DM) &&
-       (CONFIG.LMEM_STYLE == PLAIN)) begin : gen_sram
+       (CONFIG.LMEM_STYLE == optimsoc::PLAIN)) begin : gen_sram
          /* wb_sram_sp AUTO_TEMPLATE(
           .wb_\(.*\) (wb_mem_\1),
           ); */
