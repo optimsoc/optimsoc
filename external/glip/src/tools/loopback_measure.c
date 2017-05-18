@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2015 by the author(s)
+/* Copyright (c) 2014-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,14 @@
  *
  * ============================================================================
  *
- * libglip is a flexible FIFO-based communication library between an FPGA and
- * a PC.
+ * Loopback speed measurement tool
+ *
+ * Write data to a GLIP-attached device, and read back from it. Verify that the
+ * read data is equal to the written data, and show the speed of the transfer.
+ *
+ * This tool is useful for testing of a new backend, and to check if the bringup
+ * on a board was successful. The demos for different boards provided as part of
+ * GLIP also use this tool.
  *
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
@@ -37,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <assert.h>
 
@@ -45,14 +52,11 @@
 
 /* write block size in bytes,
  * can be any number smaller 256 or multiples of 256 */
-#define WRITE_BLOCK_SIZE 6
+#define WRITE_BLOCK_SIZE_DEFAULT 256
 /* read block size in bytes */
-#define READ_BLOCK_SIZE 2048
+#define READ_BLOCK_SIZE_DEFAULT 2048
 /* timeout for blocking reads */
 #define READ_TIMEOUT_MS 100
-
-extern void parse_options(char* str, struct glip_option* options[],
-                          size_t *num_options);
 
 void display_help(void);
 
@@ -71,12 +75,18 @@ void display_help(void)
            "  number of bytes to be transferred in the test. To get \n"
            "  meaningful results, choose this parameter large enough to \n"
            "  transfer data for a couple of seconds at least.\n"
+           "--write-block-size SIZE\n"
+           "  number of bytes to be transferred in one block (default: %d)\n"
+           "--read-block-size SIZE\n"
+           "  number of bytes to be read in one block (default: %d)\n"
            "\n"
            "-o|--backend-options\n"
            "  options passed to the backend. Options are key=value pairs \n"
            "  separated by a comma.\n"
            "-n|--nonblock\n"
            "  use the non-blocking read/write functions of GLIP\n"
+           "-r|--random-data\n"
+           "  write random data instead of linearly increasing sequences\n"
            "-h|--help\n"
            "  print this help message\n"
            "-v|--version\n"
@@ -87,7 +97,7 @@ void display_help(void)
            "USB device on bus 1 with address 2:\n"
            "$> glip_loopback_measure -b cypressfx2 -ousb_dev_bus=1,"
               "usb_dev_addr=2\n"
-           "\n");
+           "\n", WRITE_BLOCK_SIZE_DEFAULT, READ_BLOCK_SIZE_DEFAULT);
 
     printf("AVAILABLE BACKENDS\n");
     const char** name;
@@ -121,6 +131,10 @@ volatile size_t current_sent;
 volatile size_t current_received;
 volatile int send_done = 0;
 int use_blocking_functions;
+int random_data;
+size_t read_block_size;
+size_t write_block_size;
+uint8_t *write_data;
 
 pthread_t read_thread;
 pthread_t progressbar_thread;
@@ -141,22 +155,28 @@ int main(int argc, char *argv[])
     struct glip_option* backend_options;
     size_t num_backend_options = 0;
     use_blocking_functions = 1;
+    random_data = 0;
+    read_block_size = READ_BLOCK_SIZE_DEFAULT;
+    write_block_size = WRITE_BLOCK_SIZE_DEFAULT;
 
-    assert((WRITE_BLOCK_SIZE < 256) || (WRITE_BLOCK_SIZE % 256 == 0));
+    //assert((WRITE_BLOCK_SIZE < 256) || (WRITE_BLOCK_SIZE % 256 == 0));
 
     while (1) {
         static struct option long_options[] = {
-            {"help",            no_argument,       0, 'h'},
-            {"version",         no_argument,       0, 'v'},
-            {"nonblock",        no_argument,       0, 'n'},
-            {"backend",         required_argument, 0, 'b'},
-            {"backend-options", required_argument, 0, 'o'},
-            {"transfer-size",   required_argument, 0, 's'},
+            {"help",             no_argument,       0, 'h'},
+            {"version",          no_argument,       0, 'v'},
+            {"nonblock",         no_argument,       0, 'n'},
+            {"random-data",      no_argument,       0, 'r'},
+            {"backend",          required_argument, 0, 'b'},
+            {"backend-options",  required_argument, 0, 'o'},
+            {"transfer-size",    required_argument, 0, 's'},
+            {"read-block-size",  required_argument, 0, 'R'},
+            {"write-block-size", required_argument, 0, 'W'},
             {0, 0, 0, 0}
         };
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "is:vnhb:o:s:", long_options,
+        c = getopt_long(argc, argv, "is:vnrhb:o:s:R:W:", long_options,
                         &option_index);
         if (c == -1) {
             break;
@@ -175,14 +195,23 @@ int main(int argc, char *argv[])
             break;
         case 'o':
             backend_optionstring = optarg;
-            parse_options(backend_optionstring, &backend_options,
-                          &num_backend_options);
+            glip_parse_option_string(backend_optionstring, &backend_options,
+                                     &num_backend_options);
             break;
         case 's':
             transfer_size = strtoul(optarg, NULL, 10);
             break;
         case 'n':
             use_blocking_functions = 0;
+            break;
+        case 'r':
+            random_data = 1;
+            break;
+        case 'R':
+            read_block_size = strtoul(optarg, NULL, 10);
+            break;
+        case 'W':
+            write_block_size = strtoul(optarg, NULL, 10);
             break;
         case 'v':
             display_version();
@@ -202,11 +231,20 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    glip_new(&glip_ctx, backend_name, backend_options, num_backend_options);
+    glip_new(&glip_ctx, backend_name, backend_options, num_backend_options,
+             NULL /* log_fn */);
 
     rv = glip_open(glip_ctx, 1);
     if (rv < 0) {
         fprintf(stderr, "ERROR: Cannot open backend\n");
+        return -1;
+    }
+
+    unsigned int fifo_width_bytes = glip_get_fifo_width(glip_ctx);
+    if (transfer_size % fifo_width_bytes != 0) {
+        fprintf(stderr, "ERROR: The transfer size must be a multiple of the "
+                "FIFO width, which is %d bytes for the chosen backend.\n",
+                fifo_width_bytes);
         return -1;
     }
 
@@ -229,30 +267,53 @@ int main(int argc, char *argv[])
     current_sent = 0;
     current_received = 0;
 
-    printf("Running loopback test with %zu bytes of data. This may take a "
-           "while ...\n", transfer_size);
+    printf("Running loopback test with %zu bytes of data, writing %zu bytes "
+           "in one block, \n"
+           "and reading %zu bytes in one block.\n",
+           transfer_size, write_block_size, read_block_size);
 
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    uint8_t data[WRITE_BLOCK_SIZE];
-    for (size_t i = 0; i < WRITE_BLOCK_SIZE; i++) {
-        data[i] = i % 256;
+    /*
+     * create the test data:
+     * write_block_size bytes of data, either linearly increasing between 0x00
+     * and 0xFF, or random.
+     */
+    write_data = calloc(write_block_size, sizeof(uint8_t));
+    assert(write_data);
+
+    if (random_data) {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        srand(tv.tv_sec * 1000 + tv.tv_usec);
+        for (size_t i = 0; i < write_block_size; i++) {
+            write_data[i] = random() % 256;
+        }
+    } else {
+        for (size_t i = 0; i < write_block_size; i++) {
+            write_data[i] = i % 256;
+        }
     }
+
     while (current_sent < transfer_size) {
         size_t size_written;
-        size_t block_size = WRITE_BLOCK_SIZE;
+        size_t block_size = write_block_size;
 
-        if ((current_sent + WRITE_BLOCK_SIZE) > transfer_size) {
+        /*
+         * calculate block_size of the last block of a transfer with all
+         * remaining data (less than a full block)
+         */
+        if ((current_sent + write_block_size) > transfer_size) {
             block_size = transfer_size - current_sent;
         }
 
-        int sub_idx = current_sent % WRITE_BLOCK_SIZE;
+        int sub_idx = current_sent % write_block_size;
         if (use_blocking_functions) {
             rv = glip_write_b(glip_ctx, 0, block_size - sub_idx,
-                              &data[sub_idx], &size_written, 0);
+                              &write_data[sub_idx], &size_written, 0);
         } else {
             rv = glip_write(glip_ctx, 0, block_size - sub_idx,
-                            &data[sub_idx], &size_written);
+                            &write_data[sub_idx], &size_written);
         }
         if (rv != 0 && rv != -ETIMEDOUT) {
             fprintf(stderr, "Error while writing to GLIP. rv = %d\n", rv);
@@ -279,8 +340,8 @@ int main(int argc, char *argv[])
     printf("Sent and received %zu bytes in %.03f seconds = %.01lf kiB/s "
            "(bidirectional)\n",
            current_sent, diff, (current_sent)/diff/1024);
-    printf("Write block size: %u bytes, read block size: %u bytes\n",
-           WRITE_BLOCK_SIZE, READ_BLOCK_SIZE);
+    printf("Write block size: %zu bytes, read block size: %zu bytes\n",
+           write_block_size, read_block_size);
     if (use_blocking_functions) {
         printf("Used blocking function calls (glip_read_b() and glip_write_b())\n");
     } else {
@@ -294,18 +355,19 @@ void* read_from_target(void* ctx_void)
 {
     struct glip_ctx *ctx = ctx_void;
 
-    uint8_t data_read[READ_BLOCK_SIZE] = {0};
+    uint8_t *read_data = calloc(read_block_size, sizeof(uint8_t));
+    assert(read_data);
     size_t size_read;
     uint8_t data_exp = 0;
 
-    int byte = 0;
+    unsigned int byte = 0;
     int rv;
     while (1) {
         if (use_blocking_functions) {
-            rv = glip_read_b(ctx, 0, READ_BLOCK_SIZE, data_read, &size_read,
+            rv = glip_read_b(ctx, 0, read_block_size, read_data, &size_read,
                              READ_TIMEOUT_MS);
         } else {
-            rv = glip_read(ctx, 0, READ_BLOCK_SIZE, data_read, &size_read);
+            rv = glip_read(ctx, 0, read_block_size, read_data, &size_read);
         }
         if (rv != 0 && rv != -ETIMEDOUT) {
             fprintf(stderr, "Error while reading from GLIP. rv = %d\n", rv);
@@ -315,14 +377,14 @@ void* read_from_target(void* ctx_void)
 
         /* verify received data */
         for (size_t i = 0; i < size_read; i++) {
-            if (data_read[i] != data_exp) {
+            data_exp = write_data[byte % write_block_size];
+            if (read_data[i] != data_exp) {
                 fprintf(stderr, "Data verification failed: expected 0x%x, "
-                        "got 0x%x at byte %d\n", data_exp, data_read[i], byte);
+                        "got 0x%x at byte %d. Next byte: 0x%x\n",
+                        data_exp, read_data[i], byte, read_data[i+1]);
                 exit_measurement(1);
             }
             byte++;
-            data_exp = (data_exp + 1) % (WRITE_BLOCK_SIZE < 256 ?
-                                         WRITE_BLOCK_SIZE : 256);
         }
 
         /* done! */

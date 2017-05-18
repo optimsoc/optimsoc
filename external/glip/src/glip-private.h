@@ -54,6 +54,9 @@
 #ifdef BACKEND_CYPRESSFX2_ENABLED
 #include "backend_cypressfx2/sw/backend_cypressfx2.h"
 #endif
+#ifdef BACKEND_CYPRESSFX3_ENABLED
+#include "backend_cypressfx3/sw/backend_cypressfx3.h"
+#endif
 #ifdef BACKEND_TCP_ENABLED
 #include "backend_tcp/sw/backend_tcp.h"
 #endif
@@ -99,6 +102,7 @@ struct glip_backend {
 static struct glip_backend glip_backends[] = {
     BACKEND_UART,
     BACKEND_CYPRESSFX2,
+    BACKEND_CYPRESSFX3,
     BACKEND_TCP,
     BACKEND_JTAG
 };

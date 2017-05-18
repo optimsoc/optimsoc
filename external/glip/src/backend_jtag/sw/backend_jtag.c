@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2015 by the author(s)
+/* Copyright (c) 2014-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,6 +122,47 @@ struct glip_backend_ctx {
 
 /* Control messages */
 #define CTRL_MSG_LOGIC_RESET 0x0001
+
+
+
+static void *poll_thread(void *arg);
+
+static ssize_t write_b(int fildes, const void *buf, size_t nbyte);
+
+static int start_openocd(struct glip_ctx *ctx);
+static int close_openocd(struct glip_ctx *ctx);
+
+static int discover_targetconf(struct glip_ctx *ctx);
+
+static int jtag_drscan(struct glip_ctx *ctx, const uint8_t* req, uint8_t* resp,
+                       const size_t size);
+static int jtag_drscan_read(struct glip_ctx *ctx, uint8_t* resp,
+                            const size_t size);
+static int jtag_drscan_write(struct glip_ctx *ctx, const uint8_t* req,
+                             const size_t size);
+
+static int hexstring_to_binarray_le(char* in, size_t in_size, uint8_t* out);
+static uint8_t hexstring_to_byte(char* in);
+
+static wsize_t calc_payload_len(struct glip_ctx *ctx,
+                                wsize_t wanted_words,
+                                wsize_t *wr_words, wsize_t *rd_words);
+static int build_jtag_req(struct glip_ctx *ctx, wsize_t wr_words,
+                          wsize_t rd_words, uint8_t* req, size_t req_size);
+static void parse_jtag_resp(struct glip_ctx *ctx, uint8_t *resp,
+                            size_t resp_size, wsize_t *acked_words,
+                            wsize_t *read_words);
+
+static wsize_t to_words(struct glip_ctx *ctx, size_t bytes);
+static size_t to_bytes(struct glip_ctx *ctx, wsize_t words);
+static void copy_to_word(struct glip_ctx *ctx, uint32_t value, uint8_t *dest);
+static void copy_from_word(struct glip_ctx *ctx, uint8_t *from, uint32_t *out);
+
+static size_t grow_buf(size_t current_size);
+
+static struct cmdbuf* cmdbuf_new(const size_t buf_size);
+static void cmdbuf_append(struct cmdbuf *buf, const char* data,
+                          const size_t data_size);
 
 /**
  * Initialize the backend (constructor)
@@ -544,7 +585,7 @@ unsigned int gb_jtag_get_fifo_width(struct glip_ctx *ctx)
  *
  * @private
  */
-int discover_targetconf(struct glip_ctx *ctx)
+static int discover_targetconf(struct glip_ctx *ctx)
 {
     static const uint16_t req[3] = { 0xFFFF, 0x0000, 0x0000 };
     uint16_t resp[3];
@@ -583,8 +624,8 @@ int discover_targetconf(struct glip_ctx *ctx)
  *
  * @private
  */
-int jtag_drscan(struct glip_ctx *ctx, const uint8_t* req, uint8_t* resp,
-                const size_t size)
+static int jtag_drscan(struct glip_ctx *ctx, const uint8_t* req, uint8_t* resp,
+                       const size_t size)
 {
     int rv = 0;
 
@@ -621,7 +662,8 @@ unlock_ret:
  *
  * @private
  */
-int jtag_drscan_read(struct glip_ctx *ctx, uint8_t* resp, const size_t size)
+static int jtag_drscan_read(struct glip_ctx *ctx, uint8_t* resp,
+                            const size_t size)
 {
     static const size_t buf_initial_size = 2048;
     int rv = 0;
@@ -703,7 +745,7 @@ free_return:
  * @param out
  * @return
  */
-int hexstring_to_binarray_le(char *in, size_t in_size, uint8_t *out)
+static int hexstring_to_binarray_le(char *in, size_t in_size, uint8_t *out)
 {
     assert(in_size % 2 == 0);
     unsigned int out_pos = 0;
@@ -720,7 +762,7 @@ int hexstring_to_binarray_le(char *in, size_t in_size, uint8_t *out)
  * @param in hexadecimal string (2 characters)
  * @return output value
  */
-uint8_t hexstring_to_byte(char *in)
+static uint8_t hexstring_to_byte(char *in)
 {
     uint8_t retval;
     char tmp[3];
@@ -747,8 +789,8 @@ uint8_t hexstring_to_byte(char *in)
  *
  * @private
  */
-int jtag_drscan_write(struct glip_ctx *ctx, const uint8_t *req,
-                      const size_t size)
+static int jtag_drscan_write(struct glip_ctx *ctx, const uint8_t *req,
+                             const size_t size)
 {
     static const char OOCD_CMDSTART[] = "drscan or1k.fifo ";
     static const char OOCD_CMDEND[] = "\x1a"; /* CTRL-Z == EOF */
@@ -824,7 +866,7 @@ int jtag_drscan_write(struct glip_ctx *ctx, const uint8_t *req,
     return 0;
 }
 
-struct cmdbuf* cmdbuf_new(const size_t buf_size)
+static struct cmdbuf* cmdbuf_new(const size_t buf_size)
 {
     struct cmdbuf *b;
     b = malloc(sizeof(struct cmdbuf) + buf_size * sizeof(char));
@@ -836,14 +878,14 @@ struct cmdbuf* cmdbuf_new(const size_t buf_size)
     return b;
 }
 
-void cmdbuf_append(struct cmdbuf *buf, const char *data, const size_t data_size)
+static void cmdbuf_append(struct cmdbuf *buf, const char *data, const size_t data_size)
 {
     assert(buf->pos + data_size <= buf->buf_size);
     memcpy(&buf->buf[buf->pos], data, data_size);
     buf->pos += data_size;
 }
 
-void* poll_thread(void *arg)
+static void* poll_thread(void *arg)
 {
     struct glip_ctx* ctx = (struct glip_ctx*) arg;
     int rv;
@@ -920,7 +962,7 @@ free_return:
  *
  * @private
  */
-size_t grow_buf(size_t current_size)
+static size_t grow_buf(size_t current_size)
 {
     if (current_size < 32 * 1024) {
         return current_size * 2;
@@ -944,7 +986,7 @@ size_t grow_buf(size_t current_size)
  *
  * @private
  */
-wsize_t calc_payload_len(struct glip_ctx *ctx,
+static wsize_t calc_payload_len(struct glip_ctx *ctx,
                          wsize_t wanted_words,
                          wsize_t *wr_words, wsize_t *rd_words)
 {
@@ -962,17 +1004,17 @@ wsize_t calc_payload_len(struct glip_ctx *ctx,
     return payload_len;
 }
 
-wsize_t to_words(struct glip_ctx *ctx, size_t bytes)
+static wsize_t to_words(struct glip_ctx *ctx, size_t bytes)
 {
     return bytes / ctx->backend_ctx->target_word_width;
 }
 
-size_t to_bytes(struct glip_ctx *ctx, wsize_t words)
+static size_t to_bytes(struct glip_ctx *ctx, wsize_t words)
 {
     return words * ctx->backend_ctx->target_word_width;
 }
 
-void copy_to_word(struct glip_ctx *ctx, uint32_t value, uint8_t *dest)
+static void copy_to_word(struct glip_ctx *ctx, uint32_t value, uint8_t *dest)
 {
     size_t word_width = ctx->backend_ctx->target_word_width;
 
@@ -992,7 +1034,7 @@ void copy_to_word(struct glip_ctx *ctx, uint32_t value, uint8_t *dest)
     }
 }
 
-void copy_from_word(struct glip_ctx *ctx, uint8_t *from, uint32_t *out)
+static void copy_from_word(struct glip_ctx *ctx, uint8_t *from, uint32_t *out)
 {
     size_t word_width = ctx->backend_ctx->target_word_width;
 
@@ -1013,8 +1055,8 @@ void copy_from_word(struct glip_ctx *ctx, uint8_t *from, uint32_t *out)
  * @return -ENOMEM @p req is too small. Reallocate and try again.
  * @return any other negative value indicates an error
  */
-int build_jtag_req(struct glip_ctx *ctx, wsize_t wr_words, wsize_t rd_words,
-                   uint8_t* req, size_t req_size)
+static int build_jtag_req(struct glip_ctx *ctx, wsize_t wr_words,
+                          wsize_t rd_words, uint8_t* req, size_t req_size)
 {
     struct glip_backend_ctx *bctx = ctx->backend_ctx;
     int rv;
@@ -1052,8 +1094,9 @@ int build_jtag_req(struct glip_ctx *ctx, wsize_t wr_words, wsize_t rd_words,
     return transfer_len_bytes;
 }
 
-void parse_jtag_resp(struct glip_ctx *ctx, uint8_t *resp, size_t resp_size,
-                     wsize_t *acked_words, wsize_t *read_words)
+static void parse_jtag_resp(struct glip_ctx *ctx, uint8_t *resp,
+                            size_t resp_size, wsize_t *acked_words,
+                            wsize_t *read_words)
 {
     struct glip_backend_ctx *bctx = ctx->backend_ctx;
     unsigned int word_width = bctx->target_word_width;
@@ -1084,7 +1127,7 @@ void parse_jtag_resp(struct glip_ctx *ctx, uint8_t *resp, size_t resp_size,
  *
  * @private
  */
-int start_openocd(struct glip_ctx *ctx)
+static int start_openocd(struct glip_ctx *ctx)
 {
     const char *oocd_conf_interface;
     const char *oocd_conf_target;
@@ -1232,7 +1275,7 @@ int start_openocd(struct glip_ctx *ctx)
         err(ctx, "Starting OpenOCD failed.\n"
             "The string '%s', indicating successful startup, did not appear "
             "in the OpenOCD output.\n"
-            "Did you load the bitstream to the FPGA and connect all cabled?\n",
+            "Did you load the bitstream to the FPGA and connect all cables?\n",
             search_string);
 
         close_openocd(ctx);
@@ -1251,7 +1294,7 @@ int start_openocd(struct glip_ctx *ctx)
  * @param ctx the library context
  * @return 0 in case of success
  */
-int close_openocd(struct glip_ctx *ctx)
+static int close_openocd(struct glip_ctx *ctx)
 {
     if (ctx->backend_ctx->oocd_pid) {
         /* try to send exit command over Tcl interface */
@@ -1271,7 +1314,7 @@ int close_openocd(struct glip_ctx *ctx)
  * This function wraps the POSIX write() function. It behaves identically, but
  * repeats the write() call until all @p nbyte bytes are written.
  */
-ssize_t write_b(int fildes, const void *buf, size_t nbyte)
+static ssize_t write_b(int fildes, const void *buf, size_t nbyte)
 {
     ssize_t rv;
     size_t nbyte_written = 0;

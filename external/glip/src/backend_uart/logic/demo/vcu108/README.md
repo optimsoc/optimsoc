@@ -1,4 +1,4 @@
-@defgroup backend_uart-examples-VCU108_loopback VCU108 UART Loopback Demo
+@defgroup backend_uart-examples-vcu108_loopback VCU108 UART Loopback Demo
 @ingroup backend_uart-logic
 
 This demo implements a loopback in the device.
