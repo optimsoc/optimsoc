@@ -98,7 +98,7 @@ int osd_new_standalone(struct osd_context_standalone **ctx,
     fnc->send = osd_send_packet_standalone;
     fnc->claim = claim_standalone;
 
-    return glip_new(&c->glip_ctx, backend_name, glip_options, num_glip_options);
+    return glip_new(&c->glip_ctx, backend_name, glip_options, num_glip_options, NULL);
 }
 
 static
