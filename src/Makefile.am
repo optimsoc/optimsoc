@@ -19,6 +19,12 @@ AM_CFLAGS += $(libusb_CFLAGS)
 AM_LDFLAGS += $(libusb_LIBS)
 endif
 
+if BACKEND_CYPRESSFX3
+libglip_la_SOURCES += backend_cypressfx3/sw/backend_cypressfx3.c
+AM_CFLAGS += $(libusb_CFLAGS)
+AM_LDFLAGS += $(libusb_LIBS)
+endif
+
 if BACKEND_TCP
 libglip_la_SOURCES += backend_tcp/sw/backend_tcp.c
 endif
