@@ -252,10 +252,6 @@ module system_2x2_cccc_vcu108
                   .fx3_logic_rst (fx3_logic_rst),
                   .fx3_pmode     (fx3_pmode)
             );
-      end else begin
-         always
-            $fatal(1, "%m: Invalid value for parameter HOST_IF detected: %s",
-                   HOST_IF);
       end
    endgenerate
 
