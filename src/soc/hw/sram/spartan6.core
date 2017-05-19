@@ -2,6 +2,7 @@ CAPI=1
 [main]
 name = optimsoc:sram:spartan6
 description = "Single-Port SRAM implementation for Xilinx Spartan 6 devices"
+depend = optimsoc:base:functions
 
 [fileset src_files]
 file_type = systemVerilogSource
