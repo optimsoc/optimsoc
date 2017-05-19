@@ -111,7 +111,7 @@ module debug_interface
          .clk(clk),
          .rst(rst),
 
-         .id  (1), // SCM must be ID 1 for discovery to work
+         .id  (10'd1), // SCM must be ID 1 for discovery to work
          .debug_in   (dii_out[1]),
          .debug_in_ready (dii_out_ready[1]),
          .debug_out (dii_in[1]),
