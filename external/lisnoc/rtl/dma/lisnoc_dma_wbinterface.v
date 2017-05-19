@@ -89,6 +89,8 @@ module lisnoc_dma_wbinterface(/*AUTOARG*/
    always @(*) begin
       if (wb_if_adr_i[4:0] == 5'h14) begin
          wb_if_dat_o = {31'h0,done[if_valid_pos]};
+      end else begin
+         wb_if_dat_o = 32'h0;
       end
    end
 
