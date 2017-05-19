@@ -209,6 +209,7 @@ void Tracer::traceSoftware(uint64_t timestamp, uint16_t cpu, uint16_t id, uint32
             fwrite(&id, 2, 1, mSoftwareTrace);
             fwrite(&cpu, 2, 1, mSoftwareTrace);
             mSoftwareStates[cpu]->emit(id, mSoftwareTrace);
+            fflush(mSoftwareTrace);
         }
     } catch(SoftwareState::UnknownEventException &) {
         uint16_t evid = 0;
@@ -217,6 +218,7 @@ void Tracer::traceSoftware(uint64_t timestamp, uint16_t cpu, uint16_t id, uint32
         fwrite(&cpu, 2, 1, mSoftwareTrace);
         fwrite(&id, 2, 1, mSoftwareTrace);
         fwrite(&value, 4, 1, mSoftwareTrace);
+        fflush(mSoftwareTrace);
     }
 }
 
@@ -365,5 +367,18 @@ const std::string Tracer::mNoCMetadata =
         "event {\n"
         "    id = 13;\n"
         "    name = 'dma_l2r_resp';\n"
+        "};\n"
+        "event {\n"
+        "    id = 14;\n"
+        "    name = 'dma_r2l_req';\n"
+        "    fields := struct {\n"
+        "        uint8_t size;\n"
+        "        uint32_t raddress;\n"
+        "        uint32_t laddress;\n"
+        "    };\n"
+        "};\n"
+        "event {\n"
+        "    id = 15;\n"
+        "    name = 'dma_r2l_resp';\n"
         "};\n"
         "\n";
