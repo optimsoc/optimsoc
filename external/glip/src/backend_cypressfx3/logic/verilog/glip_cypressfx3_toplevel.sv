@@ -70,7 +70,7 @@ module glip_cypressfx3_toplevel
 );
 
    localparam FORCE_SEND_TIMEOUT = 10000;
-   localparam FX3_EPOUT  = 2'b11;
+   localparam FX3_EPOUT = 2'b11;
    localparam FX3_EPIN = 2'b00;
 
    assign ctrl_logic_rst = fx3_logic_rst;
@@ -78,20 +78,26 @@ module glip_cypressfx3_toplevel
    // pass through I/O clock to FX3
    assign fx3_pclk = clk_io;
 
-   wire                                            int_rst;
+   wire  int_rst;
    assign int_rst = fx3_com_rst | rst;
    assign com_rst = int_rst;
 
    // Interface to the FIFOs from USB side
-   wire                                            int_fifo_in_almost_full;
-   reg                                             int_fifo_in_valid;
-   reg                                             int_fifo_out_ready;
-   wire                                            int_fifo_out_empty;
+   wire  int_fifo_in_almost_full;
+   reg   int_fifo_in_valid;
+   reg   int_fifo_out_ready;
+   wire  int_fifo_out_empty;
 
-   wire                                            fx3_out_almost_empty;
-   wire                                            fx3_out_empty;
-   wire                                            fx3_in_almost_full;
-   wire                                            fx3_in_full;
+   wire  fx3_out_almost_empty;
+   wire  fx3_out_empty;
+   wire  fx3_in_almost_full;
+   wire  fx3_in_full;
+
+   reg       wr;
+   reg       oe;
+   reg       rd;
+   reg [1:0] fifoadr;
+   reg       pktend;
 
    wire [WIDTH-1:0]   fx3_dq_in;
    wire [WIDTH-1:0]   fx3_dq_out;
@@ -138,11 +144,6 @@ module glip_cypressfx3_toplevel
 
    assign fx3_pmode = 3'bz1z;
 
-   reg                  wr;
-   reg                  oe;
-   reg                  rd;
-   reg [1:0]            fifoadr;
-   reg                  pktend;
    assign fx3_sloe_n = ~oe;
    assign fx3_slwr_n = ~wr;
    assign fx3_slrd_n = ~rd;
