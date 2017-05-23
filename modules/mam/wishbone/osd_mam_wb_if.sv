@@ -16,7 +16,13 @@
 
 module osd_mam_wb_if
   #(parameter DATA_WIDTH  = 16, // in bits, must be multiple of 16
-    parameter ADDR_WIDTH  = 32)
+    parameter ADDR_WIDTH  = 32,
+
+    //Byte select width
+    localparam SW = (DATA_WIDTH == 32) ? 4 :
+        (DATA_WIDTH == 16) ? 2 :
+        (DATA_WIDTH ==  8) ? 1 : 'hx
+   )
    (
     input                       clk_i, rst_i,
 
@@ -47,11 +53,6 @@ module osd_mam_wb_if
     output reg [1:0]            bte_o,
     output reg [SW-1:0]         sel_o
     );
-
-    //Byte select width
-   localparam SW = (DATA_WIDTH == 32) ? 4 :
-                   (DATA_WIDTH == 16) ? 2 :
-                   (DATA_WIDTH ==  8) ? 1 : 'hx;
 
    enum { STATE_IDLE, STATE_WRITE_LAST, STATE_WRITE_LAST_WAIT,
           STATE_WRITE, STATE_WRITE_WAIT, STATE_READ,

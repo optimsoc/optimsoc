@@ -35,9 +35,13 @@ module osd_mam_wb
       parameter MEM_SIZE6   = 'x,
       parameter BASE_ADDR6  = 'x,
       parameter MEM_SIZE7   = 'x,
-      parameter BASE_ADDR7  = 'x
-      )
-   (
+      parameter BASE_ADDR7  = 'x,
+
+      //Byte select width
+      localparam SW = (DATA_WIDTH == 32) ? 4 :
+         (DATA_WIDTH == 16) ? 2 :
+         (DATA_WIDTH ==  8) ? 1 : 'hx
+   ) (
     input                   clk_i, rst_i,
 
     input                   dii_flit debug_in, output debug_in_ready,
@@ -56,11 +60,6 @@ module osd_mam_wb
     output [1:0]            bte_o,
     output [SW-1:0]         sel_o
     );
-
-    //Byte select width
-   localparam SW = (DATA_WIDTH == 32) ? 4 :
-                   (DATA_WIDTH == 16) ? 2 :
-                   (DATA_WIDTH ==  8) ? 1 : 'hx;
 
    logic                        req_valid;
    logic                        req_ready;

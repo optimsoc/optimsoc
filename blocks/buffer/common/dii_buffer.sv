@@ -70,11 +70,11 @@ module dii_buffer
       if(FULLPACKET != 0) begin
          logic [BUF_SIZE-1:0] data_last_buf, data_last_shifted;
 
-         always @(posedge clk)
+         always_ff @(posedge clk)
            if(rst)
-             data_last_buf = 0;
+             data_last_buf <= 0;
            else if(flit_in_fire)
-             data_last_buf = {data_last_buf, flit_in.last && flit_in.valid};
+             data_last_buf <= {data_last_buf, flit_in.last && flit_in.valid};
 
          // extra logic to get the packet size in a stable manner
          assign data_last_shifted = data_last_buf << BUF_SIZE - 1 - rp;
