@@ -9,7 +9,7 @@ System Requirements
 
 Please first check the system requirements.
 
-- Supported Linux distribution: Ubuntu 14.04 or 16.04 LTS on x86_64
+- Supported Linux distribution: Ubuntu 16.04 LTS on x86_64
 - 20 GB disk space (mostly for Xilinx Vivado and other tools)
 - 4 GB or more of RAM helps greatly (especially during FPGA synthesis)
 - We recommend not using a VM, but running directly on the hardware.
@@ -30,19 +30,28 @@ First, install all required packages from Ubuntu.
 
 .. code:: sh
 
-   sudo apt-get -y install curl git build-essential tcl libusb-1.0-0-dev \
-      libboost-dev libelf-dev swig python3 python3-yaml python3-pip
+   sudo apt-get -y install apt-get -y install tcl libusb-1.0-0-dev \
+     libboost-dev libelf-dev swig \
+     python3 python3-pip python3-venv libreadline-dev python-dev \
+     curl git build-essential autoconf automake \
+     libtool pkg-config
 
    # optional, but highly recommended: a waveform viewer
    sudo apt-get -y install gtkwave
 
-We build our systems with FuseSoC_, which is a package manager for RTL designs.
+We build our systems with FuseSoC_, a package manager for RTL designs.
 It automatically arranges the sources and writes project files for our systems.
 You can install it simply from the Python package index:
 
 .. code:: sh
 
    sudo pip3 install "fusesoc>=1.6.1"
+
+To run the tests shipped with OpTiMSoC pytest is required.
+Install it through pip (the distribution packages are too old):
+
+.. code:: sh
+   sudo pip3 install pytest
 
 Additionally, we need two things which are not available as Ubuntu packages right now: a recent version of Verilator, and the ``or1k-elf-multicore`` toolchain (compiler, C library, debugger, etc.).
 Install them with our binary installation script:
@@ -67,7 +76,7 @@ This is done by running the following command **in every terminal session that y
 .. note:: Automatically load the prebuilts in every new terminal session by adding it to your ``~/.bashrc`` file:
 
    .. code:: sh
-		    
+
       echo 'source /opt/optimsoc/setup_prebuilt.sh' >> ~/.bashrc
 
 Install OpTiMSoC
@@ -135,7 +144,7 @@ First, you need some additional tools (the "build dependencies"):
 
 .. code:: sh
 
-   sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra
+   sudo apt-get -y install doxygen texlive texlive-latex-extra texlive-fonts-extra
 
 Then get the sources from git:
 
