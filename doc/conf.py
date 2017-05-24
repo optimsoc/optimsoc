@@ -65,16 +65,20 @@ author = u'OpTiMSoC Contributors'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-
-repo = git.repo.Repo(os.path.join(os.path.dirname(__file__), '..'))
-gitdescribe = repo.git.describe()
-lastversion = gitdescribe[1:7]
-if len(gitdescribe) > 7:
-    version = "dev-" + repo.git.rev_parse('--abbrev-ref', 'HEAD')
-    release = "development commit " + repo.git.rev_parse('HEAD')[0:11]
-else:
-    version = lastversion
-    release = lastversion
+try:
+    repo = git.repo.Repo(os.path.join(os.path.dirname(__file__), '..'))
+    gitdescribe = repo.git.describe()
+    lastversion = gitdescribe[1:7]
+    if len(gitdescribe) > 7:
+        version = "dev-" + repo.git.rev_parse('--abbrev-ref', 'HEAD')
+        release = "development commit " + repo.git.rev_parse('HEAD')[0:11]
+    else:
+        version = lastversion
+        release = lastversion
+except:
+    lastversion = 'unknown'
+    version = 'unknown'
+    release = 'unknown'
 
 rst_epilog = """
 .. |lastversion| replace:: {0}
