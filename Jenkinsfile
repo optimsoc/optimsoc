@@ -4,7 +4,7 @@ def lcci = new Modules(steps)
 node('fpga-nexys4ddr') {
   lcci.load(["eda/xilinx/vivado/2016.4",
              "eda/fusesoc/1.6.1",
-             "eda/verilator/3.900",
+             "eda/verilator/3.886",
              "compilers/openrisc/gcc/5.3.0-newlib2.3.0-1",
              "base/python/3.5"])
   
