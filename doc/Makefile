@@ -1,4 +1,4 @@
-OBJDIR?=_build
+OBJDIR?=$(CURDIR)/_build
 SPHINXBUILD?=$(OBJDIR)/.venv/bin/sphinx-build
 
 all: html
