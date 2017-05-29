@@ -51,6 +51,7 @@ To run the tests shipped with OpTiMSoC pytest is required.
 Install it through pip (the distribution packages are too old):
 
 .. code:: sh
+
    sudo pip3 install pytest
 
 Additionally, we need two things which are not available as Ubuntu packages right now: a recent version of Verilator, and the ``or1k-elf-multicore`` toolchain (compiler, C library, debugger, etc.).
