@@ -1,20 +1,20 @@
-SPHINXBUILD?=.venv/bin/sphinx-build
 OBJDIR?=_build
+SPHINXBUILD?=$(OBJDIR)/.venv/bin/sphinx-build
 
 all: html
 
-.env:
-	python3 -m venv .venv
-	.venv/bin/pip install --upgrade pip
-	.venv/bin/pip install --upgrade -r requirements.txt
+$(OBJDIR)/.venv:
+	python3 -m venv $(OBJDIR)/.venv
+	$(OBJDIR)/.venv/bin/pip install --upgrade pip
+	$(OBJDIR)/.venv/bin/pip install --upgrade -r requirements.txt
 
-apidoc:
-	make -C api
+apidoc: $(OBJDIR)/.venv
+	make -C api VENV=$(OBJDIR)/.venv
 
-html: .env apidoc
+html: $(OBJDIR)/.venv apidoc
 	$(SPHINXBUILD) -b html . $(OBJDIR)/html
 
-pdf: .env apidoc
+pdf: $(OBJDIR)/.venv apidoc
 	$(SPHINXBUILD) -b latex . $(OBJDIR)/pdf
 	make -C $(OBJDIR)/pdf/ all-pdf
 

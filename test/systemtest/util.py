@@ -50,7 +50,7 @@ def matches_golden_reference(basedir, testfile, filter_func=None):
 
     if filter_func:
         # filter reference
-        ref_lines = open(path_ref, 'U').readlines()
+        ref_lines = open(path_ref, 'r').readlines()
         ref_lines_filtered = filter_func(ref_lines)
         path_ref_filtered = os.path.join(basedir,
                                           testfile+'.reference.filtered');
@@ -59,7 +59,7 @@ def matches_golden_reference(basedir, testfile, filter_func=None):
         f.close()
 
         # filter test output
-        test_lines = open(path_test, 'U').readlines()
+        test_lines = open(path_test, 'r').readlines()
         test_lines_filtered = filter_func(test_lines)
         path_test_filtered = path_test+'.filtered'
         f = open(path_test_filtered, 'w')
@@ -76,8 +76,8 @@ def matches_golden_reference(basedir, testfile, filter_func=None):
         logger.error("golden reference test: "+
             "test output {} does not match golden reference {}"
             .format(path_test, path_ref))
-        ref_lines = open(path_ref, 'U').readlines()
-        test_lines = open(path_test, 'U').readlines()
+        ref_lines = open(path_ref, 'r').readlines()
+        test_lines = open(path_test, 'r').readlines()
         diff = difflib.unified_diff(ref_lines, test_lines,
                                     fromfile='reference',
                                     tofile='test_output')

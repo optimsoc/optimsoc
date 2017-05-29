@@ -13,6 +13,7 @@ depend =
   opensocdebug:modules:stm_mor1kx
   opensocdebug:modules:ctm_mor1kx
   optimsoc:base:config
+  optimsoc:base:functions
 
 [fileset src_files]
 file_type = systemVerilogSource

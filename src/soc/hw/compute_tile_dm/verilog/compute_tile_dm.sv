@@ -323,7 +323,7 @@ module compute_tile_dm
               u_stm
                 (.clk  (clk),
                  .rst  (rst_dbg),
-                 .id   (DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE),
+                 .id   (10'(DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE)),
                  .debug_in (dii_out[1+c*CONFIG.DEBUG_MODS_PER_CORE]),
                  .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE]),
                  .debug_out (dii_in[1+c*CONFIG.DEBUG_MODS_PER_CORE]),
@@ -334,7 +334,7 @@ module compute_tile_dm
               u_ctm
                 (.clk  (clk),
                  .rst  (rst_dbg),
-                 .id   (DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1),
+                 .id   (10'(DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1)),
                  .debug_in (dii_out[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
                  .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
                  .debug_out (dii_in[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
@@ -427,7 +427,7 @@ module compute_tile_dm
            .debug_in_ready(dii_out_ready[0]),
            .debug_out(dii_in[0]),
            .debug_out_ready(dii_in_ready[0]),
-           .id (DEBUG_BASEID),
+           .id (10'(DEBUG_BASEID)),
            .stb_o(mam_dm_stb_o),
            .cyc_o(mam_dm_cyc_o),
            .ack_i(mam_dm_ack_i),
@@ -507,7 +507,7 @@ module compute_tile_dm
 
    generate
       if ((CONFIG.ENABLE_DM) &&
-       (CONFIG.LMEM_STYLE == PLAIN)) begin : gen_sram
+       (CONFIG.LMEM_STYLE == optimsoc::PLAIN)) begin : gen_sram
          /* wb_sram_sp AUTO_TEMPLATE(
           .wb_\(.*\) (wb_mem_\1),
           ); */

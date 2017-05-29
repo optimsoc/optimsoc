@@ -80,11 +80,15 @@ module wb_decode
     /* User parameters */
     // Set the number of slaves
     parameter SLAVES = 1,
-    
+
     // Set bus address and data width in bits
     // DATA_WIDTH must be a multiple of 8 (full bytes)!
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32,
+
+    /* Derived local parameters */
+    // Width of byte select registers
+    localparam SEL_WIDTH = DATA_WIDTH >> 3,
 
     // Memory range definitions, see above
     // The number of parameters actually limits the number of slaves as
@@ -125,7 +129,7 @@ module wb_decode
     /* Ports */
     input                              clk_i,
     input                              rst_i,
-   
+
     input [ADDR_WIDTH-1:0]             m_adr_i,
     input [DATA_WIDTH-1:0]             m_dat_i,
     input                              m_cyc_i,
@@ -154,13 +158,10 @@ module wb_decode
     input [SLAVES-1:0]                 s_err_i,
     input [SLAVES-1:0]                 s_rty_i
     );
-   
-   /* Derived local parameters */
-   // Width of byte select registers
-   localparam SEL_WIDTH = DATA_WIDTH >> 3;   
+
 
    wire [SLAVES-1:0]               s_select;
-   
+
    // Generate the slave select signals based on the master bus
    // address and the memory range parameters
    generate
@@ -185,13 +186,13 @@ module wb_decode
       if (SLAVES > 9)
         assign s_select[9] = S9_ENABLE & (m_adr_i[ADDR_WIDTH-1 -: S9_RANGE_WIDTH] == S9_RANGE_MATCH[S9_RANGE_WIDTH-1:0]);
    endgenerate
-   
+
    // If two s_select are high or none, we might have an bus error
    wire                            bus_error;
    assign bus_error = ~^s_select;
 
    reg                             m_ack, m_err, m_rty;
-   
+
    // Mux the slave bus based on the slave select signal (one hot!)
    always @(*) begin : bus_s_mux
       integer i;
@@ -222,5 +223,5 @@ module wb_decode
    assign m_ack_o = m_ack & !bus_error;
    assign m_err_o = m_err | bus_error;
    assign m_rty_o = m_rty & !bus_error;
-   
+
 endmodule // wb_sselect
