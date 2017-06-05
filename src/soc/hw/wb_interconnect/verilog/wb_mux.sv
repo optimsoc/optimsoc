@@ -44,17 +44,21 @@ module wb_mux
     /* User parameters */
     // Set the number of slaves
     parameter MASTERS = 1,
-    
+
     // Set bus address and data width in bits
     // DATA_WIDTH must be a multiple of 8 (full bytes)!
     parameter DATA_WIDTH = 32,
-    parameter ADDR_WIDTH = 32
+    parameter ADDR_WIDTH = 32,
+
+   /* Derived local parameters */
+   // Width of byte select registers
+   localparam SEL_WIDTH = DATA_WIDTH >> 3
     )
    (
     /* Ports */
     input                               clk_i,
     input                               rst_i,
-   
+
     input [ADDR_WIDTH*MASTERS-1:0]      m_adr_i,
     input [DATA_WIDTH*MASTERS-1:0]      m_dat_i,
     input [MASTERS-1:0]                 m_cyc_i,
@@ -87,10 +91,6 @@ module wb_mux
     output reg                          bus_hold_ack
     );
 
-   /* Derived local parameters */
-   // Width of byte select registers
-   localparam SEL_WIDTH = DATA_WIDTH >> 3;   
-
    // The granted master is one hot encoded
    wire [MASTERS-1:0]     grant;
    // The granted master from previous cycle (register)
@@ -108,11 +108,11 @@ module wb_mux
    // This is the arbitration net from round robin
    wire [MASTERS-1:0] arb_grant;
    reg [MASTERS-1:0] prev_arb_grant;
-   
+
    // It is masked with the bus_hold_ack to hold back the arbitration
    // as long as the bus is held
    assign grant = arb_grant & {MASTERS{!bus_hold_ack}};
-   
+
    always @(*) begin
       if (|(m_cyc_i & prev_grant)) begin
          // The bus is not released this cycle
@@ -130,7 +130,7 @@ module wb_mux
       if (rst_i) begin
          prev_arb_grant <= {{MASTERS-1{1'b0}},1'b1};
          prev_grant <= {{MASTERS-1{1'b0}},1'b1};
-      end else begin   
+      end else begin
          prev_arb_grant <= arb_grant;
          prev_grant <= grant;
       end
@@ -161,7 +161,7 @@ module wb_mux
       s_bte_o = 2'bx;
       s_cyc_o = 1'b0;
       s_stb_o = 1'b0;
-      
+
       for (i = 0; i < MASTERS; i = i + 1) begin
          m_dat_o[i*DATA_WIDTH +: DATA_WIDTH] = s_dat_i;
          m_ack_o[i] = grant[i] & s_ack_i;
@@ -179,7 +179,7 @@ module wb_mux
             s_stb_o = m_stb_i[i];
          end
       end
-      
+
    end
 
 

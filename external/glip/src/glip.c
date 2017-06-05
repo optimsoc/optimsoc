@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 by the author(s)
+/* Copyright (c) 2014-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -107,6 +107,8 @@ const struct glip_version * glip_get_version(void)
  * @param[in]  backend_options options (key/value pairs) for the library and the
  *                          backend
  * @param[in]  num_backend_options  number of entries in the @p options array
+ * @param[in]  log_fn       the logging function to send all log messages to
+ *                          if set to NULL, all logs will go to STDERR
  * @return     0 if the call was successful
  * @return     -GLIP_EUNKNOWNBACKEND the specified @p backend_name is not
  *             available
@@ -117,7 +119,7 @@ const struct glip_version * glip_get_version(void)
 API_EXPORT
 int glip_new(struct glip_ctx **ctx, char* backend_name,
              struct glip_option backend_options[],
-             size_t num_backend_options)
+             size_t num_backend_options, glip_log_fn log_fn)
 {
     struct glip_ctx *c = calloc(1, sizeof(struct glip_ctx));
     if (!c) {
@@ -130,7 +132,11 @@ int glip_new(struct glip_ctx **ctx, char* backend_name,
     /*
      * Setup the logging infrastructure
      */
-    c->log_fn = log_stderr;
+    if (log_fn == NULL) {
+        c->log_fn = log_stderr;
+    } else {
+        c->log_fn = log_fn;
+    }
     c->log_priority = LOG_ERR;
 
     /* environment overwrites config */
@@ -472,7 +478,7 @@ int glip_open(struct glip_ctx *ctx, unsigned int num_channels)
 
     rv = ctx->backend_functions.open(ctx, num_channels);
     if (rv != 0) {
-        err(ctx, "Cannot open backend\n");
+        err(ctx, "Cannot open backend (rv=%d)\n", rv);
         return -1;
     }
 
@@ -771,7 +777,7 @@ int glip_option_get_uint32(struct glip_ctx* ctx, const char* option_name,
     }
 
     if (!found) {
-        info(ctx, "Option with key '%s' not found.\n", option_name);
+        dbg(ctx, "Option with key '%s' not found.\n", option_name);
         return -1;
     }
 
@@ -876,9 +882,88 @@ int glip_option_get_char(struct glip_ctx* ctx, const char* option_name,
     }
 
     if (!found) {
-        info(ctx, "Option with key '%s' not found.\n", option_name);
+        dbg(ctx, "Option with key '%s' not found.\n", option_name);
         return -1;
     }
+
+    return 0;
+}
+
+/**
+ * Parse a string of name=value pairs commonly used as backend options in GLIP
+ *
+ * This function is provided for conveniently getting a list of glip_option
+ * structs to be passed to glip_new() from a string of options in the format
+ * name=value,name2=value2,name3=value3
+ *
+ * @code{.c}
+ * char *backend_optionstring;
+ * struct glip_option* backend_options;
+ * size_t num_backend_options = 0;
+ *
+ * // obtain backend_optionstring from somewhere (e.g. Getopt or Argp)
+ * // ...
+ *
+ * // parse backend options
+ * glip_parse_option_string(backend_optionstring, &backend_options,
+ *                          &num_backend_options);
+ *
+ * // initialize GLIP library as usual
+ * glip_new(&glip_ctx, backend_name, backend_options, num_backend_options);
+ * @endcode
+ *
+ * @param[in]   str input string
+ * @param[out]  options input string
+ * @param[out]  num_options size of @p options
+ * @return      0 if the call was successful, or an error code if something went
+ *              wrong
+ *
+ * @ingroup utilities
+ */
+API_EXPORT
+int glip_parse_option_string(char* str, struct glip_option* options[],
+                             size_t *num_options)
+{
+    char *opt;
+    int count = 0;
+
+    /* count the number of options */
+    char *strcp = strdup(str);
+    opt = strtok(strcp, ",");
+    if (opt != 0) {
+        count++;
+        while (strtok(0, ",") != 0) {
+            count++;
+        }
+    }
+    free(strcp);
+
+    *num_options = count;
+    if (count <= 0) {
+        return 0;
+    }
+
+    struct glip_option *optvec;
+    optvec = calloc(count, sizeof(struct glip_option));
+
+    strcp = strdup(str);
+    opt = strtok(str, ",");
+    int i = 0;
+    do {
+        char *sep = index(opt, '=');
+        if (sep) {
+            optvec[i].name = strndup(opt, sep - opt);
+            optvec[i].value = strndup(sep + 1, opt + strlen(opt) - sep);
+        } else {
+            optvec[i].name = strdup(opt);
+            optvec[i].value = 0;
+        }
+        opt = strtok(0, ",");
+        i++;
+    } while (opt);
+
+    free(strcp);
+    *options = optvec;
 
     return 0;
 }

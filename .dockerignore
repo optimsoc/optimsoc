@@ -1,0 +1,9 @@
+/objdir
+
+# test caches
+.cache
+
+# compiled python
+*.pyc
+**/__pycache__/
+

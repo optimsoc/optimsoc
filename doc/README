@@ -1,27 +1,13 @@
 This folder contains documentation for OpTiMSoC.
 
-Currently, the following documentation is available:
-- OpTiMSoC User Guide (in the folder user_guide)
+Prerequisites: You need python3 and python3-venv installed.
 
-The documentation is written in LaTeX. It needs to be transformed into PDF or
-HTML for easier reading. For this task, a Makefile is added to each
-documentation folder.
+To generate the PDF run:
 
-But first, install all required tools:
-- a LaTeX distribution (e.g. texlive)
-- LaTeXML (for HTML output)
+    make pdf
 
-On Debian/Ubuntu, the following command should install all prerequisites:
-$> sudo apt-get install latexml texlive-latex-recommended
+To build the HTML pages run:
 
-To build the documentation, change into the documentation folder and run make.
+    make html
 
-Example: Building the User Guide
-$> cd user_guide
-$> make
-
-After building, you can view the user_guide.pdf in your preferred PDF viewer
-or run
-$> firefox html/user_guide.xhtml
-to open the User Guide in HTML format in Firefox.
-
+To build the documentation into another path than the default (`_build`), append `OBJDIR=/your/objdir`. Note that the path must be an absolute path!

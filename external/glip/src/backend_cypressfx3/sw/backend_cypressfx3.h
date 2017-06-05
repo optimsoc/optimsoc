@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 by the author(s)
+/* Copyright (c) 2014-2015 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,55 +28,32 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
+#ifndef __BACKEND_CYPRESSFX3_H__
+#define __BACKEND_CYPRESSFX3_H__
+
 #include <libglip.h>
 
-#include <string.h>
-#include <stdlib.h>
+#include <stddef.h>
 
-void parse_options(char* str, struct glip_option* options[],
-                   size_t *num_options);
+int gb_cypressfx3_new(struct glip_ctx* ctx);
 
-void parse_options(char* str, struct glip_option* options[],
-                   size_t *num_options)
-{
-    char *opt;
-    int count = 0;
+int gb_cypressfx3_open(struct glip_ctx *ctx, unsigned int num_channels);
+int gb_cypressfx3_close(struct glip_ctx *ctx);
 
-    /* count the number of options */
-    char *strcp = strdup(str);
-    opt = strtok(strcp, ",");
-    if (opt != 0) {
-        count++;
-        while (strtok(0, ",") != 0) {
-            count++;
-        }
-    }
-    free(strcp);
+int gb_cypressfx3_logic_reset(struct glip_ctx *ctx);
 
-    *num_options = count;
-    if (count <= 0) {
-        return;
-    }
+int gb_cypressfx3_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
+                       uint8_t *data, size_t *size_read);
+int gb_cypressfx3_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
+                         uint8_t *data, size_t *size_read,
+                         unsigned int timeout);
+int gb_cypressfx3_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
+                        uint8_t *data, size_t *size_written);
+int gb_cypressfx3_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
+                          uint8_t *data, size_t *size_written,
+                          unsigned int timeout);
 
-    struct glip_option *optvec;
-    optvec = calloc(count, sizeof(struct glip_option));
+unsigned int gb_cypressfx3_get_channel_count(struct glip_ctx *ctx);
+unsigned int gb_cypressfx3_get_fifo_width(struct glip_ctx *ctx);
 
-    strcp = strdup(str);
-    opt = strtok(str, ",");
-    int i = 0;
-    do {
-        char *sep = index(opt, '=');
-        if (sep) {
-            optvec[i].name = strndup(opt, sep - opt);
-            optvec[i].value = strndup(sep + 1, opt + strlen(opt) - sep);
-        } else {
-            optvec[i].name = strdup(opt);
-            optvec[i].value = 0;
-        }
-        opt = strtok(0, ",");
-        i++;
-    } while (opt);
-
-    free(strcp);
-    *options = optvec;
-}
+#endif /* __BACKEND_CYPRESSFX3_H__ */

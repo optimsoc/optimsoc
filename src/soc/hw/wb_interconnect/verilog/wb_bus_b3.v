@@ -115,13 +115,17 @@ module wb_bus_b3
     parameter S8_RANGE_MATCH = 1'b0,
     parameter S9_ENABLE = 1,
     parameter S9_RANGE_WIDTH = 1,
-    parameter S9_RANGE_MATCH = 1'b0
+    parameter S9_RANGE_MATCH = 1'b0,
+
+   /* Derived local parameters */
+   // Width of byte select registers
+   localparam SEL_WIDTH = DATA_WIDTH >> 3
     )
    (
        /* Ports */
        input                           clk_i,
        input                           rst_i,
-   
+
        input [ADDR_WIDTH*MASTERS-1:0]  m_adr_i,
        input [DATA_WIDTH*MASTERS-1:0]  m_dat_i,
        input [MASTERS-1:0]             m_cyc_i,
@@ -159,9 +163,6 @@ module wb_bus_b3
        output                          bus_hold_ack
     );
 
-   /* Derived local parameters */
-   // Width of byte select registers
-   localparam SEL_WIDTH = DATA_WIDTH >> 3;
 
    wire [ADDR_WIDTH-1:0] bus_adr;
    wire [DATA_WIDTH-1:0] bus_wdat;
@@ -176,7 +177,7 @@ module wb_bus_b3
    wire                  bus_ack;
    wire                  bus_err;
    wire                  bus_rty;
-   
+
    /* wb_mux AUTO_TEMPLATE(
     .s_dat_o    (bus_wdat),
     .s_dat_i    (bus_rdat),
@@ -274,7 +275,7 @@ module wb_bus_b3
             .s_ack_i                    (s_ack_i[SLAVES-1:0]),
             .s_err_i                    (s_err_i[SLAVES-1:0]),
             .s_rty_i                    (s_rty_i[SLAVES-1:0]));
-   
+
    // Snoop address comes direct from master bus
    assign snoop_adr_o = bus_adr;
    // Snoop on acknowledge and write. Mask with strobe to be sure
