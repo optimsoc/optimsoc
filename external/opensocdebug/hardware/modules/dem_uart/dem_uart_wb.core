@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = opensocdebug:modules:dem_uart_wb
+depend =
+  opensocdebug:interfaces:dii_channel
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  common/osd_dem_uart_wb.sv
+  common/osd_dem_uart_16550.sv
+  common/osd_dem_uart.sv
