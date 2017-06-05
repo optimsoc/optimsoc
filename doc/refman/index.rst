@@ -8,4 +8,5 @@ Reference Manual
 
    porting
    configuration
+   networkonchip
    maintainer/release-howto.rst
