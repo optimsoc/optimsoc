@@ -53,6 +53,7 @@ module tb_compute_tile(
    parameter USE_DEBUG = 0;
    parameter integer NUM_CORES = 1;
    parameter integer LMEM_SIZE = 128*1024*1024;
+   parameter HOST_TILE = 0;
 
    localparam base_config_t
      BASE_CONFIG = '{ NUMTILES: 1,
@@ -96,13 +97,13 @@ module tb_compute_tile(
 `endif
 
    wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0]  noc_in_flit;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_last;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_valid;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_ready;
+   wire [CONFIG.NOC_CHANNELS-1:0]                             noc_in_last;
+   wire [CONFIG.NOC_CHANNELS-1:0]                             noc_in_valid;
+   wire [CONFIG.NOC_CHANNELS-1:0]                             noc_in_ready;
    wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0]  noc_out_flit;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_last;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_valid;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_ready;
+   wire [CONFIG.NOC_CHANNELS-1:0]                             noc_out_last;
+   wire [CONFIG.NOC_CHANNELS-1:0]                             noc_out_valid;
+   wire [CONFIG.NOC_CHANNELS-1:0]                             noc_out_ready;
 
    assign noc_in_flit   = {CONFIG.NOC_FLIT_WIDTH*CONFIG.NOC_CHANNELS{1'bx}};
    assign noc_in_last   = {CONFIG.NOC_CHANNELS{1'bx}};
@@ -177,7 +178,7 @@ module tb_compute_tile(
          debug_interface
             #(
                .SYSTEMID    (1),
-               .NUM_MODULES (CONFIG.DEBUG_NUM_MODS) // This number contains the SCM
+               .NUM_MODULES (CONFIG.DEBUG_NUM_MODS + HOST_TILE) // This number contains the SCM
             )
             u_debuginterface(
                .clk           (clk),
@@ -214,7 +215,8 @@ module tb_compute_tile(
       #(.CONFIG(CONFIG),
         .ID(0),
         .MEM_FILE("ct.vmem"),
-        .DEBUG_BASEID(2))
+        .DEBUG_BASEID(2),
+	.ENABLE_UART (HOST_TILE))
       u_compute_tile(
                      // Debug ring ports
                      .debug_ring_in(debug_ring_in),

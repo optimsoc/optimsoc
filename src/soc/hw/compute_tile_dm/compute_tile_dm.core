@@ -12,6 +12,7 @@ depend =
   opensocdebug:interfaces:mor1kx_trace_exec
   opensocdebug:modules:stm_mor1kx
   opensocdebug:modules:ctm_mor1kx
+  opensocdebug:modules:dem_uart_wb
   optimsoc:base:config
   optimsoc:base:functions
 

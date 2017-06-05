@@ -40,39 +40,41 @@ module compute_tile_dm
 
     parameter DEBUG_BASEID = 'x,
 
-    parameter MEM_FILE = 'x
+    parameter MEM_FILE = 'x,
+
+    parameter ENABLE_UART = 0
     )
    (
-   input                                 dii_flit [1:0] debug_ring_in,
-   output [1:0]                          debug_ring_in_ready,
-   output                                dii_flit [1:0] debug_ring_out,
-   input [1:0]                           debug_ring_out_ready,
+   input 				 dii_flit [1:0] debug_ring_in,
+   output [1:0] 			 debug_ring_in_ready,
+   output 				 dii_flit [1:0] debug_ring_out,
+   input [1:0] 				 debug_ring_out_ready,
 
-   output [31:0]                         wb_ext_adr_i,
-   output                                wb_ext_cyc_i,
-   output [31:0]                         wb_ext_dat_i,
-   output [3:0]                          wb_ext_sel_i,
-   output                                wb_ext_stb_i,
-   output                                wb_ext_we_i,
-   output                                wb_ext_cab_i,
-   output [2:0]                          wb_ext_cti_i,
-   output [1:0]                          wb_ext_bte_i,
-   input                                 wb_ext_ack_o,
-   input                                 wb_ext_rty_o,
-   input                                 wb_ext_err_o,
-   input [31:0]                          wb_ext_dat_o,
+   output [31:0] 			 wb_ext_adr_i,
+   output 				 wb_ext_cyc_i,
+   output [31:0] 			 wb_ext_dat_i,
+   output [3:0] 			 wb_ext_sel_i,
+   output 				 wb_ext_stb_i,
+   output 				 wb_ext_we_i,
+   output 				 wb_ext_cab_i,
+   output [2:0] 			 wb_ext_cti_i,
+   output [1:0] 			 wb_ext_bte_i,
+   input 				 wb_ext_ack_o,
+   input 				 wb_ext_rty_o,
+   input 				 wb_ext_err_o,
+   input [31:0] 			 wb_ext_dat_o,
 
-   input                                 clk,
-   input                                 rst_cpu, rst_sys, rst_dbg,
+   input 				 clk,
+   input 				 rst_cpu, rst_sys, rst_dbg,
 
    input [CHANNELS-1:0][FLIT_WIDTH-1:0]  noc_in_flit,
-   input [CHANNELS-1:0]                  noc_in_last,
-   input [CHANNELS-1:0]                  noc_in_valid,
-   output [CHANNELS-1:0]                 noc_in_ready,
+   input [CHANNELS-1:0] 		 noc_in_last,
+   input [CHANNELS-1:0] 		 noc_in_valid,
+   output [CHANNELS-1:0] 		 noc_in_ready,
    output [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_out_flit,
-   output [CHANNELS-1:0]                 noc_out_last,
-   output [CHANNELS-1:0]                 noc_out_valid,
-   input [CHANNELS-1:0]                  noc_out_ready
+   output [CHANNELS-1:0] 		 noc_out_last,
+   output [CHANNELS-1:0] 		 noc_out_valid,
+   input [CHANNELS-1:0] 		 noc_out_ready
    );
 
    import functions::*;
@@ -81,11 +83,12 @@ module compute_tile_dm
    localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
-   localparam NR_SLAVES = 4;
+   localparam NR_SLAVES = 5;
    localparam SLAVE_DM   = 0;
    localparam SLAVE_PGAS = 1;
    localparam SLAVE_NA   = 2;
    localparam SLAVE_BOOT = 3;
+   localparam SLAVE_UART = 4;
 
    mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
@@ -107,7 +110,8 @@ module compute_tile_dm
    logic         wb_mem_err_o;
    logic [31:0]  wb_mem_dat_o;
 
-   localparam DEBUG_NUM_NONZERO = (CONFIG.DEBUG_NUM_MODS == 0) ? 1 : CONFIG.DEBUG_NUM_MODS;
+   localparam CT_DEBUG_NUM_MODS = CONFIG.DEBUG_NUM_MODS + ENABLE_UART;
+   localparam DEBUG_NUM_NONZERO = (CONFIG.DEBUG_NUM_MODS == 0) ? 1 : CT_DEBUG_NUM_MODS;
 
    dii_flit [DEBUG_NUM_NONZERO-1:0] dii_in;
    logic [DEBUG_NUM_NONZERO-1:0] dii_in_ready;
@@ -117,13 +121,13 @@ module compute_tile_dm
    generate
       if (CONFIG.USE_DEBUG == 1) begin
          genvar i;
-         logic [CONFIG.DEBUG_NUM_MODS-1:0][9:0] id_map;
-         for (i = 0; i < CONFIG.DEBUG_NUM_MODS; i = i+1) begin
+         logic [CT_DEBUG_NUM_MODS-1:0][9:0] id_map;
+         for (i = 0; i < CT_DEBUG_NUM_MODS; i = i+1) begin
             assign id_map[i][9:0] = 10'(DEBUG_BASEID+i);
          end
 
          debug_ring_expand
-           #(.PORTS(CONFIG.DEBUG_MODS_PER_TILE))
+           #(.PORTS(CONFIG.DEBUG_MODS_PER_TILE + ENABLE_UART))
          u_debug_ring_segment
            (.*,
             .rst           (rst_dbg),
@@ -344,6 +348,39 @@ module compute_tile_dm
       end
    endgenerate
 
+   generate
+      if (ENABLE_UART != 0) begin
+	 if (CONFIG.USE_DEBUG != 0) begin
+	    localparam debug_index = 1 + CONFIG.CORES_PER_TILE * CONFIG.DEBUG_MODS_PER_CORE;
+	    osd_dem_uart_wb
+	      u_uart
+		(.*,
+		 .rst (rst_sys),
+		 .irq (),
+		 .id (10'(DEBUG_BASEID + debug_index[9:0])),
+		 .debug_in (dii_out[debug_index]),
+		 .debug_in_ready (dii_out_ready[debug_index]),
+		 .debug_out (dii_in[debug_index]),
+		 .debug_out_ready (dii_in_ready[debug_index]),
+		 .wb_adr_i (bussl_adr_i[SLAVE_UART]),
+		 .wb_cyc_i (bussl_cyc_i[SLAVE_UART]),
+		 .wb_dat_i (bussl_dat_i[SLAVE_UART]),
+		 .wb_sel_i (bussl_sel_i[SLAVE_UART]),
+		 .wb_stb_i (bussl_stb_i[SLAVE_UART]),
+		 .wb_we_i  (bussl_we_i[SLAVE_UART]),
+		 .wb_cti_i (bussl_cti_i[SLAVE_UART]),
+		 .wb_bte_i (bussl_bte_i[SLAVE_UART]),
+		 .wb_ack_o (bussl_ack_o[SLAVE_UART]),
+		 .wb_err_o (bussl_err_o[SLAVE_UART]),
+		 .wb_rty_o (bussl_rty_o[SLAVE_UART]),
+		 .wb_dat_o (bussl_dat_o[SLAVE_UART]));
+
+	 end else begin
+	    // TODO: integrate default UART block
+	 end
+      end
+   endgenerate
+
    /* wb_bus_b3 AUTO_TEMPLATE(
     .clk_i      (clk),
     .rst_i      (rst_sys),
@@ -364,7 +401,9 @@ module compute_tile_dm
        .S1_RANGE_WIDTH(CONFIG.PGAS_RANGE_WIDTH),.S1_RANGE_MATCH(CONFIG.PGAS_RANGE_MATCH),
        .S2_RANGE_WIDTH(4),.S2_RANGE_MATCH(4'he),
        .S3_ENABLE(CONFIG.ENABLE_BOOTROM),
-       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf))
+       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf),
+       .S4_ENABLE(ENABLE_UART),
+       .S4_RANGE_WIDTH(28), .S4_RANGE_MATCH(28'h9000000))
    u_bus(/*AUTOINST*/
          // Outputs
          .m_dat_o                       (busms_dat_i_flat),      // Templated
