@@ -136,7 +136,9 @@ module system_2x2_cccc_vcu108
          NA_DMA_ENTRIES: 4,
          USE_DEBUG: 1,
          DEBUG_STM: 1,
-         DEBUG_CTM: 1
+         DEBUG_CTM: 1,
+         DEBUG_SUBNET_BITS: 6,
+         DEBUG_LOCAL_SUBNET: 0
       };
 
    localparam config_t CONFIG = derive_config(BASE_CONFIG);

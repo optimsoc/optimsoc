@@ -78,7 +78,9 @@ module tb_compute_tile(
                       NA_DMA_ENTRIES: 4,
                       USE_DEBUG: 1'(USE_DEBUG),
                       DEBUG_STM: 1,
-                      DEBUG_CTM: 1
+                      DEBUG_CTM: 1,
+                      DEBUG_SUBNET_BITS: 6,
+                      DEBUG_LOCAL_SUBNET: 0
                       };
 
    localparam config_t CONFIG = derive_config(BASE_CONFIG);
@@ -176,8 +178,11 @@ module tb_compute_tile(
          // System Interface
          debug_interface
             #(
-               .SYSTEMID    (1),
-               .NUM_MODULES (CONFIG.DEBUG_NUM_MODS) // This number contains the SCM
+               .SYSTEM_VENDOR_ID   (2),
+               .SYSTEM_DEVICE_ID   (1),
+               .NUM_MODULES (CONFIG.DEBUG_NUM_MODS),
+               .SUBNET_BITS (CONFIG.DEBUG_SUBNET_BITS),
+               .LOCAL_SUBNET (CONFIG.DEBUG_LOCAL_SUBNET)
             )
             u_debuginterface(
                .clk           (clk),
@@ -214,7 +219,7 @@ module tb_compute_tile(
       #(.CONFIG(CONFIG),
         .ID(0),
         .MEM_FILE("ct.vmem"),
-        .DEBUG_BASEID(2))
+        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 2))
       u_compute_tile(
                      // Debug ring ports
                      .debug_ring_in(debug_ring_in),
