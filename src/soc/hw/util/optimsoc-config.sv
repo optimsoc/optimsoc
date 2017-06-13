@@ -82,6 +82,8 @@ package optimsoc;
       logic              USE_DEBUG;
       logic              DEBUG_STM;
       logic              DEBUG_CTM;
+      integer            DEBUG_SUBNET_BITS;
+      integer            DEBUG_LOCAL_SUBNET;
    } base_config_t;
 
    typedef struct packed {
@@ -127,6 +129,8 @@ package optimsoc;
       logic              USE_DEBUG;
       logic              DEBUG_STM;
       logic              DEBUG_CTM;
+      integer            DEBUG_SUBNET_BITS;
+      integer            DEBUG_LOCAL_SUBNET;
       // -> derived
       integer            DEBUG_MODS_PER_CORE;
       integer            DEBUG_MODS_PER_TILE;
@@ -159,6 +163,8 @@ package optimsoc;
       derive_config.USE_DEBUG = conf.USE_DEBUG;
       derive_config.DEBUG_STM = conf.DEBUG_STM;
       derive_config.DEBUG_CTM = conf.DEBUG_CTM;
+      derive_config.DEBUG_SUBNET_BITS = conf.DEBUG_SUBNET_BITS;
+      derive_config.DEBUG_LOCAL_SUBNET = conf.DEBUG_LOCAL_SUBNET;
 
       // Derive the other parameters
       derive_config.TOTAL_NUM_CORES = conf.NUMCTS * conf.CORES_PER_TILE;

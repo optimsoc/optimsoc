@@ -107,26 +107,32 @@ module compute_tile_dm
    logic         wb_mem_err_o;
    logic [31:0]  wb_mem_dat_o;
 
-   localparam DEBUG_NUM_NONZERO = (CONFIG.DEBUG_NUM_MODS == 0) ? 1 : CONFIG.DEBUG_NUM_MODS;
+   // create DI ring segment with routers
+   localparam DEBUG_MODS_PER_TILE_NONZERO = (CONFIG.DEBUG_MODS_PER_TILE == 0) ? 1 : CONFIG.DEBUG_MODS_PER_TILE;
 
-   dii_flit [DEBUG_NUM_NONZERO-1:0] dii_in;
-   logic [DEBUG_NUM_NONZERO-1:0] dii_in_ready;
-   dii_flit [DEBUG_NUM_NONZERO-1:0] dii_out;
-   logic [DEBUG_NUM_NONZERO-1:0] dii_out_ready;
+   dii_flit [DEBUG_MODS_PER_TILE_NONZERO-1:0] dii_in;
+   logic [DEBUG_MODS_PER_TILE_NONZERO-1:0] dii_in_ready;
+   dii_flit [DEBUG_MODS_PER_TILE_NONZERO-1:0] dii_out;
+   logic [DEBUG_MODS_PER_TILE_NONZERO-1:0] dii_out_ready;
 
    generate
       if (CONFIG.USE_DEBUG == 1) begin
          genvar i;
-         logic [CONFIG.DEBUG_NUM_MODS-1:0][9:0] id_map;
-         for (i = 0; i < CONFIG.DEBUG_NUM_MODS; i = i+1) begin
-            assign id_map[i][9:0] = 10'(DEBUG_BASEID+i);
+         logic [CONFIG.DEBUG_MODS_PER_TILE-1:0][15:0] id_map;
+         for (i = 0; i < CONFIG.DEBUG_MODS_PER_TILE; i = i+1) begin
+            assign id_map[i][15:0] = 16'(DEBUG_BASEID+i);
          end
 
          debug_ring_expand
            #(.PORTS(CONFIG.DEBUG_MODS_PER_TILE))
          u_debug_ring_segment
-           (.*,
+           (.clk           (clk),
             .rst           (rst_dbg),
+            .id_map        (id_map),
+            .dii_in        (dii_in),
+            .dii_in_ready  (dii_in_ready),
+            .dii_out       (dii_out),
+            .dii_out_ready (dii_out_ready),
             .ext_in        (debug_ring_in),
             .ext_in_ready  (debug_ring_in_ready),
             .ext_out       (debug_ring_out),
@@ -323,7 +329,7 @@ module compute_tile_dm
               u_stm
                 (.clk  (clk),
                  .rst  (rst_dbg),
-                 .id   (10'(DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE)),
+                 .id   (16'(DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE)),
                  .debug_in (dii_out[1+c*CONFIG.DEBUG_MODS_PER_CORE]),
                  .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE]),
                  .debug_out (dii_in[1+c*CONFIG.DEBUG_MODS_PER_CORE]),
@@ -334,7 +340,7 @@ module compute_tile_dm
               u_ctm
                 (.clk  (clk),
                  .rst  (rst_dbg),
-                 .id   (10'(DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1)),
+                 .id   (16'(DEBUG_BASEID + 1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1)),
                  .debug_in (dii_out[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
                  .debug_in_ready (dii_out_ready[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
                  .debug_out (dii_in[1 + c*CONFIG.DEBUG_MODS_PER_CORE + 1]),
@@ -427,7 +433,7 @@ module compute_tile_dm
            .debug_in_ready(dii_out_ready[0]),
            .debug_out(dii_in[0]),
            .debug_out_ready(dii_in_ready[0]),
-           .id (10'(DEBUG_BASEID)),
+           .id (16'(DEBUG_BASEID)),
            .stb_o(mam_dm_stb_o),
            .cyc_o(mam_dm_cyc_o),
            .ack_i(mam_dm_ack_i),
