@@ -1,6 +1,6 @@
-# We cannot update to Sphinx >= 1.6 until a Breathe bug is fixed.
+Sphinx
+# Fix breathe version so that we can hotfix to support Sphinx >= 1.6
 # Remove restriction once https://github.com/michaeljones/breathe/pull/334
 # is merged and released.
-Sphinx<1.6
-breathe
+breathe==4.6.0
 gitpython
