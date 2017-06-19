@@ -38,8 +38,11 @@ needs_sphinx = '1.3'
 extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
+#    'sphinx.ext.imgconverter', # add after we bump to Sphinx 1.6
     'local_toctree',
-    'breathe'
+    'breathe',
+    'rstFlatTable',
+    'cairosvgconverter'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -85,6 +88,8 @@ rst_epilog = """
 .. |dl_base| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-base.tar.gz
 .. |dl_examples| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-examples.tar.gz
 """.format(lastversion)
+
+numfig = True
 
 def setup(app):
     app.add_config_value('lastversion', '', 'env')

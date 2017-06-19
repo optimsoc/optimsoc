@@ -53,6 +53,7 @@ module tb_system_2x2_cccc(
    import functions::*;
 
    parameter USE_DEBUG = 0;
+   parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1*1; // bug in verilator would give a warning
    parameter integer LMEM_SIZE = 32*1024*1024;
 
@@ -63,8 +64,7 @@ module tb_system_2x2_cccc(
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
-                      NOC_DATA_WIDTH: 32,
-                      NOC_TYPE_WIDTH: 2,
+                      NOC_ENABLE_VCHANNELS: ENABLE_VCHANNELS,
                       LMEM_SIZE: LMEM_SIZE,
                       LMEM_STYLE: PLAIN,
                       ENABLE_BOOTROM: 0,

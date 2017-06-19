@@ -4,3 +4,4 @@ Sphinx
 # is merged and released.
 breathe==4.6.0
 gitpython
+cairosvg

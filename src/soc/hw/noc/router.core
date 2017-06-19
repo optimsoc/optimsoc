@@ -1,0 +1,20 @@
+CAPI=1
+[main]
+name = optimsoc:noc:router
+description = "NoC Router"
+depend =
+  optimsoc:noc:mux
+  optimsoc:noc:vc_mux
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/router/noc_router.sv
+  verilog/router/noc_router_input.sv
+  verilog/router/noc_router_lookup.sv
+  verilog/router/noc_router_lookup_slice.sv
+  verilog/router/noc_router_output.sv
+
+
+
