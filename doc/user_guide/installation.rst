@@ -30,11 +30,11 @@ First, install all required packages from Ubuntu.
 
 .. code:: sh
 
-   sudo apt-get -y install apt-get -y install tcl libusb-1.0-0-dev \
+   sudo apt-get -y install tcl libusb-1.0-0-dev \
      libboost-dev libelf-dev swig \
      python3 python3-pip python3-venv libreadline-dev python-dev \
      curl git build-essential autoconf automake \
-     libtool pkg-config
+     libtool pkg-config python-cffi libffi-dev
 
    # optional, but highly recommended: a waveform viewer
    sudo apt-get -y install gtkwave
