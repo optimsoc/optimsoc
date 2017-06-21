@@ -78,19 +78,19 @@ module noc_router_output
 	    .out_valid (buffer_valid),
 	    .out_ready (buffer_ready));
 
-	 noc_buffer
-	   #(.FLIT_WIDTH (FLIT_WIDTH))
-	 u_buffer
-	   (.*,
-	    .in_flit   (buffer_flit),
-	    .in_last   (buffer_last),
-	    .in_valid  (buffer_valid),
-	    .in_ready  (buffer_ready),
-	    .out_flit  (channel_flit[v]),
-	    .out_last  (channel_last[v]),
-	    .out_valid (channel_valid[v]),
-	    .out_ready (channel_ready[v])
-	    );
+         noc_buffer
+           #(.FLIT_WIDTH (FLIT_WIDTH), .DEPTH(BUFFER_DEPTH))
+         u_buffer
+           (.*,
+            .in_flit   (buffer_flit),
+            .in_last   (buffer_last),
+            .in_valid  (buffer_valid),
+            .in_ready  (buffer_ready),
+            .out_flit  (channel_flit[v]),
+            .out_last  (channel_last[v]),
+            .out_valid (channel_valid[v]),
+            .out_ready (channel_ready[v])
+            );
       end // for (v = 0; v < VCHANNELS; v++)
 
       if (VCHANNELS > 1) begin : vc_mux
