@@ -78,7 +78,7 @@ module noc_router_lookup
      (.*,
       .in_valid (valid));
 
-   always_comb @(*) begin
+   always_comb begin
       nxt_worm = worm;
       valid = 0;
       
