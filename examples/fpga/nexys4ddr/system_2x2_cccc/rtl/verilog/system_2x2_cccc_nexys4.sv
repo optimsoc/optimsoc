@@ -59,6 +59,7 @@ module system_2x2_cccc_nexys4
    output                ddr2_we_n
    );
 
+   parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1;
    localparam integer LMEM_SIZE = 32*1024*1024;
 
@@ -75,8 +76,7 @@ module system_2x2_cccc_nexys4
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
-                      NOC_DATA_WIDTH: 32,
-                      NOC_TYPE_WIDTH: 2,
+                      NOC_ENABLE_VCHANNELS: ENABLE_VCHANNELS,
                       LMEM_SIZE: LMEM_SIZE,
                       LMEM_STYLE: EXTERNAL,
                       ENABLE_BOOTROM: 0,

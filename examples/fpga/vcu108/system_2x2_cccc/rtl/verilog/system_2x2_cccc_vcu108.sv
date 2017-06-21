@@ -87,6 +87,7 @@ module system_2x2_cccc_vcu108
    output [2:0]          fx3_pmode
    );
 
+   parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1;
    localparam integer LMEM_SIZE = 128*1024*1024;
 
@@ -118,8 +119,7 @@ module system_2x2_cccc_vcu108
          CORES_PER_TILE: NUM_CORES,
          GMEM_SIZE: 0,
          GMEM_TILE: 'x,
-         NOC_DATA_WIDTH: 32,
-         NOC_TYPE_WIDTH: 2,
+         NOC_ENABLE_VCHANNELS: ENABLE_VCHANNELS,
          LMEM_SIZE: LMEM_SIZE,
          LMEM_STYLE: EXTERNAL,
          ENABLE_BOOTROM: 0,
