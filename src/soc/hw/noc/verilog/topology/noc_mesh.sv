@@ -39,17 +39,17 @@ module noc_mesh
     parameter Y = 'x
     )
    (
-    input 					     clk, rst,
+    input                                            clk, rst,
 
     input [NODES-1:0][CHANNELS-1:0][FLIT_WIDTH-1:0]  in_flit,
-    input [NODES-1:0][CHANNELS-1:0] 		     in_last,
-    input [NODES-1:0][CHANNELS-1:0] 		     in_valid,
-    output [NODES-1:0][CHANNELS-1:0] 		     in_ready,
+    input [NODES-1:0][CHANNELS-1:0]                  in_last,
+    input [NODES-1:0][CHANNELS-1:0]                  in_valid,
+    output [NODES-1:0][CHANNELS-1:0]                 in_ready,
 
     output [NODES-1:0][CHANNELS-1:0][FLIT_WIDTH-1:0] out_flit,
-    output [NODES-1:0][CHANNELS-1:0] 		     out_last,
-    output [NODES-1:0][CHANNELS-1:0] 		     out_valid,
-    input [NODES-1:0][CHANNELS-1:0] 		     out_ready
+    output [NODES-1:0][CHANNELS-1:0]                 out_last,
+    output [NODES-1:0][CHANNELS-1:0]                 out_valid,
+    input [NODES-1:0][CHANNELS-1:0]                  out_ready
     );
 
    localparam NODES = X*Y;
@@ -73,143 +73,143 @@ module noc_mesh
    // Number of physical channels between routers. This is essentially
    // the number of flits (and last) between the routers.
    localparam PCHANNELS = ENABLE_VCHANNELS ? 1 : CHANNELS;
-   
-   genvar 					    c, p, x, y;
-   
+
+   genvar                                           c, p, x, y;
+
    generate
       // With virtual channels, we generate one router per node and
       // then add a virtual channel muxer between the tiles and the
       // local router input. On the output the "demux" is plain
       // wiring.
-      
+
       // Arrays of wires between the routers. Each router has a
       // pair of NoC wires per direction and below those are hooked
       // up.
       wire [4:0][PCHANNELS-1:0][FLIT_WIDTH-1:0]     node_in_flit [0:NODES-1];
-      wire [4:0][PCHANNELS-1:0] 		    node_in_last [0:NODES-1];
-      wire [4:0][CHANNELS-1:0] 			    node_in_valid [0:NODES-1];
-      wire [4:0][CHANNELS-1:0] 			    node_in_ready [0:NODES-1];
+      wire [4:0][PCHANNELS-1:0]                     node_in_last [0:NODES-1];
+      wire [4:0][CHANNELS-1:0]                      node_in_valid [0:NODES-1];
+      wire [4:0][CHANNELS-1:0]                      node_in_ready [0:NODES-1];
       wire [4:0][PCHANNELS-1:0][FLIT_WIDTH-1:0]     node_out_flit [0:NODES-1];
-      wire [4:0][PCHANNELS-1:0] 		    node_out_last [0:NODES-1];
-      wire [4:0][CHANNELS-1:0] 			    node_out_valid [0:NODES-1];
-      wire [4:0][CHANNELS-1:0] 			    node_out_ready [0:NODES-1];
-      
+      wire [4:0][PCHANNELS-1:0]                     node_out_last [0:NODES-1];
+      wire [4:0][CHANNELS-1:0]                      node_out_valid [0:NODES-1];
+      wire [4:0][CHANNELS-1:0]                      node_out_ready [0:NODES-1];
+
       for (y = 0; y < Y; y++) begin : ydir
-	 for (x = 0; x < X; x++) begin : xdir
-	    if (ENABLE_VCHANNELS) begin
-	       // Mux inputs to virtual channels
-	       noc_vchannel_mux
-		 #(.FLIT_WIDTH (FLIT_WIDTH),
-	           .CHANNELS   (CHANNELS))
-	       u_vc_mux
-		 (.*,
-		  .in_flit   (in_flit[nodenum(x,y)]),
-		  .in_last   (in_last[nodenum(x,y)]),
-		  .in_valid  (in_valid[nodenum(x,y)]),
-		  .in_ready  (in_ready[nodenum(x,y)]),
-		  .out_flit  (node_in_flit[nodenum(x,y)][LOCAL][0]),
-		  .out_last  (node_in_last[nodenum(x,y)][LOCAL][0]),
-		  .out_valid (node_in_valid[nodenum(x,y)][LOCAL]),
-		  .out_ready (node_in_ready[nodenum(x,y)][LOCAL])
-		  );
-	       
-	       // Replicate the flit to all output channels and the
-	       // rest is just wiring
-	       for (c = 0; c < CHANNELS; c++) begin : flit_demux
-		  assign out_flit[nodenum(x,y)][c] = node_out_flit[nodenum(x,y)][LOCAL][0];
-		  assign out_last[nodenum(x,y)][c] = node_out_last[nodenum(x,y)][LOCAL][0];
-	       end
-	       assign out_valid[nodenum(x,y)] = node_out_valid[nodenum(x,y)][LOCAL];
-	       assign node_out_ready[nodenum(x,y)][LOCAL] = out_ready[nodenum(x,y)];	       
-	       
-	       // Instantiate the router. We call a function to
-	       // generate the routing table
-	       noc_router
-		 #(.FLIT_WIDTH (FLIT_WIDTH),
-		   .VCHANNELS  (CHANNELS),
-		   .INPUTS     (5),
-		   .OUTPUTS    (5),
-		   .DESTS      (NODES),
-		   .ROUTES     (genroutes(x,y)))
-	       u_router
-		 (.*,
-		  .in_flit   (node_in_flit[nodenum(x,y)]),
-		  .in_last   (node_in_last[nodenum(x,y)]),
-		  .in_valid  (node_in_valid[nodenum(x,y)]),
-		  .in_ready  (node_in_ready[nodenum(x,y)]),
-		  .out_flit  (node_out_flit[nodenum(x,y)]),
-		  .out_last  (node_out_last[nodenum(x,y)]),
-		  .out_valid (node_out_valid[nodenum(x,y)]),
-		  .out_ready (node_out_ready[nodenum(x,y)])
-		  );
-	    end else begin // if (ENABLE_VCHANNELS == 1)
-	       assign out_flit[nodenum(x,y)] = node_out_flit[nodenum(x,y)][LOCAL];
-	       assign out_last[nodenum(x,y)] = node_out_last[nodenum(x,y)][LOCAL];
-	       assign out_valid[nodenum(x,y)] = node_out_valid[nodenum(x,y)][LOCAL];
-	       assign node_out_ready[nodenum(x,y)][LOCAL] = out_ready[nodenum(x,y)];	       
-	       assign node_in_flit[nodenum(x,y)][LOCAL] = in_flit[nodenum(x,y)];	       
-	       assign node_in_last[nodenum(x,y)][LOCAL] = in_last[nodenum(x,y)];	       
-	       assign node_in_valid[nodenum(x,y)][LOCAL] = in_valid[nodenum(x,y)];
-	       assign in_ready[nodenum(x,y)] = node_in_ready[nodenum(x,y)][LOCAL];
+         for (x = 0; x < X; x++) begin : xdir
+            if (ENABLE_VCHANNELS) begin
+               // Mux inputs to virtual channels
+               noc_vchannel_mux
+                 #(.FLIT_WIDTH (FLIT_WIDTH),
+                   .CHANNELS   (CHANNELS))
+               u_vc_mux
+                 (.*,
+                  .in_flit   (in_flit[nodenum(x,y)]),
+                  .in_last   (in_last[nodenum(x,y)]),
+                  .in_valid  (in_valid[nodenum(x,y)]),
+                  .in_ready  (in_ready[nodenum(x,y)]),
+                  .out_flit  (node_in_flit[nodenum(x,y)][LOCAL][0]),
+                  .out_last  (node_in_last[nodenum(x,y)][LOCAL][0]),
+                  .out_valid (node_in_valid[nodenum(x,y)][LOCAL]),
+                  .out_ready (node_in_ready[nodenum(x,y)][LOCAL])
+                  );
 
-	       for (c = 0; c < CHANNELS; c++) begin
-		  // First we just need to re-arrange the wires a bit
-		  // because the array structure varies a bit here:
-		  // The directions and channels and differently
-		  // multiplexed here. Hence create some helper
-		  // arrays.
-		  wire [4:0][FLIT_WIDTH-1:0] phys_in_flit;
-		  wire [4:0] 		     phys_in_last;
-		  wire [4:0] 		     phys_in_valid;
-		  wire [4:0] 		     phys_in_ready;
-		  wire [4:0][FLIT_WIDTH-1:0] phys_out_flit;
-		  wire [4:0] 		     phys_out_last;
-		  wire [4:0] 		     phys_out_valid;
-		  wire [4:0] 		     phys_out_ready;
+               // Replicate the flit to all output channels and the
+               // rest is just wiring
+               for (c = 0; c < CHANNELS; c++) begin : flit_demux
+                  assign out_flit[nodenum(x,y)][c] = node_out_flit[nodenum(x,y)][LOCAL][0];
+                  assign out_last[nodenum(x,y)][c] = node_out_last[nodenum(x,y)][LOCAL][0];
+               end
+               assign out_valid[nodenum(x,y)] = node_out_valid[nodenum(x,y)][LOCAL];
+               assign node_out_ready[nodenum(x,y)][LOCAL] = out_ready[nodenum(x,y)];
 
-		  // Re-wire the ports
-		  for (p = 0; p < 5; p++) begin
-		     assign phys_in_flit[p] = node_in_flit[nodenum(x,y)][p][c];
-		     assign phys_in_last[p] = node_in_last[nodenum(x,y)][p][c];
-		     assign phys_in_valid[p] = node_in_valid[nodenum(x,y)][p][c];
-		     assign node_in_ready[nodenum(x,y)][p][c] = phys_in_ready[p];
-		     assign node_out_flit[nodenum(x,y)][p][c] = phys_out_flit[p];
-		     assign node_out_last[nodenum(x,y)][p][c] = phys_out_last[p];
-		     assign node_out_valid[nodenum(x,y)][p][c] = phys_out_valid[p];
-		     assign phys_out_ready[p] = node_out_ready[nodenum(x,y)][p][c];
-		  end
+               // Instantiate the router. We call a function to
+               // generate the routing table
+               noc_router
+                 #(.FLIT_WIDTH (FLIT_WIDTH),
+                   .VCHANNELS  (CHANNELS),
+                   .INPUTS     (5),
+                   .OUTPUTS    (5),
+                   .DESTS      (NODES),
+                   .ROUTES     (genroutes(x,y)))
+               u_router
+                 (.*,
+                  .in_flit   (node_in_flit[nodenum(x,y)]),
+                  .in_last   (node_in_last[nodenum(x,y)]),
+                  .in_valid  (node_in_valid[nodenum(x,y)]),
+                  .in_ready  (node_in_ready[nodenum(x,y)]),
+                  .out_flit  (node_out_flit[nodenum(x,y)]),
+                  .out_last  (node_out_last[nodenum(x,y)]),
+                  .out_valid (node_out_valid[nodenum(x,y)]),
+                  .out_ready (node_out_ready[nodenum(x,y)])
+                  );
+            end else begin // if (ENABLE_VCHANNELS == 1)
+               assign out_flit[nodenum(x,y)] = node_out_flit[nodenum(x,y)][LOCAL];
+               assign out_last[nodenum(x,y)] = node_out_last[nodenum(x,y)][LOCAL];
+               assign out_valid[nodenum(x,y)] = node_out_valid[nodenum(x,y)][LOCAL];
+               assign node_out_ready[nodenum(x,y)][LOCAL] = out_ready[nodenum(x,y)];
+               assign node_in_flit[nodenum(x,y)][LOCAL] = in_flit[nodenum(x,y)];
+               assign node_in_last[nodenum(x,y)][LOCAL] = in_last[nodenum(x,y)];
+               assign node_in_valid[nodenum(x,y)][LOCAL] = in_valid[nodenum(x,y)];
+               assign in_ready[nodenum(x,y)] = node_in_ready[nodenum(x,y)][LOCAL];
 
-		  // Instantiate the router. We call a function to
-		  // generate the routing table
-		  noc_router
-			#(.FLIT_WIDTH (FLIT_WIDTH),
-		          .VCHANNELS  (1),
-		          .INPUTS     (5),
-		          .OUTPUTS    (5),
-		          .DESTS      (NODES),
-		          .ROUTES     (genroutes(x,y)))
-		  u_router
-			(.*,
-		         .in_flit   (phys_in_flit),
-		         .in_last   (phys_in_last),
-		         .in_valid  (phys_in_valid),
-			 .in_ready  (phys_in_ready),
-			 .out_flit  (phys_out_flit),
-			 .out_last  (phys_out_last),
-			 .out_valid (phys_out_valid),
-			 .out_ready (phys_out_ready)
-			 );
-	       end
-	    end
-	    
-	    // The following are all the connections of the routers
-	    // in the four directions. If the router is on an outer
-	    // border, tie off.
-	    if (y > 0) begin
-	       assign node_in_flit[nodenum(x,y)][SOUTH] = node_out_flit[southof(x,y)][NORTH];
-	       assign node_in_last[nodenum(x,y)][SOUTH] = node_out_last[southof(x,y)][NORTH];
-	       assign node_in_valid[nodenum(x,y)][SOUTH] = node_out_valid[southof(x,y)][NORTH];
-	       assign node_out_ready[nodenum(x,y)][SOUTH] = node_in_ready[southof(x,y)][NORTH];
+               for (c = 0; c < CHANNELS; c++) begin
+                  // First we just need to re-arrange the wires a bit
+                  // because the array structure varies a bit here:
+                  // The directions and channels and differently
+                  // multiplexed here. Hence create some helper
+                  // arrays.
+                  wire [4:0][FLIT_WIDTH-1:0] phys_in_flit;
+                  wire [4:0]                 phys_in_last;
+                  wire [4:0]                 phys_in_valid;
+                  wire [4:0]                 phys_in_ready;
+                  wire [4:0][FLIT_WIDTH-1:0] phys_out_flit;
+                  wire [4:0]                 phys_out_last;
+                  wire [4:0]                 phys_out_valid;
+                  wire [4:0]                 phys_out_ready;
+
+                  // Re-wire the ports
+                  for (p = 0; p < 5; p++) begin
+                     assign phys_in_flit[p] = node_in_flit[nodenum(x,y)][p][c];
+                     assign phys_in_last[p] = node_in_last[nodenum(x,y)][p][c];
+                     assign phys_in_valid[p] = node_in_valid[nodenum(x,y)][p][c];
+                     assign node_in_ready[nodenum(x,y)][p][c] = phys_in_ready[p];
+                     assign node_out_flit[nodenum(x,y)][p][c] = phys_out_flit[p];
+                     assign node_out_last[nodenum(x,y)][p][c] = phys_out_last[p];
+                     assign node_out_valid[nodenum(x,y)][p][c] = phys_out_valid[p];
+                     assign phys_out_ready[p] = node_out_ready[nodenum(x,y)][p][c];
+                  end
+
+                  // Instantiate the router. We call a function to
+                  // generate the routing table
+                  noc_router
+                        #(.FLIT_WIDTH (FLIT_WIDTH),
+                          .VCHANNELS  (1),
+                          .INPUTS     (5),
+                          .OUTPUTS    (5),
+                          .DESTS      (NODES),
+                          .ROUTES     (genroutes(x,y)))
+                  u_router
+                        (.*,
+                         .in_flit   (phys_in_flit),
+                         .in_last   (phys_in_last),
+                         .in_valid  (phys_in_valid),
+                         .in_ready  (phys_in_ready),
+                         .out_flit  (phys_out_flit),
+                         .out_last  (phys_out_last),
+                         .out_valid (phys_out_valid),
+                         .out_ready (phys_out_ready)
+                         );
+               end
+            end
+
+            // The following are all the connections of the routers
+            // in the four directions. If the router is on an outer
+            // border, tie off.
+            if (y > 0) begin
+               assign node_in_flit[nodenum(x,y)][SOUTH] = node_out_flit[southof(x,y)][NORTH];
+               assign node_in_last[nodenum(x,y)][SOUTH] = node_out_last[southof(x,y)][NORTH];
+               assign node_in_valid[nodenum(x,y)][SOUTH] = node_out_valid[southof(x,y)][NORTH];
+               assign node_out_ready[nodenum(x,y)][SOUTH] = node_in_ready[southof(x,y)][NORTH];
             end else begin
                assign node_in_flit[nodenum(x,y)][SOUTH] = 'x;
                assign node_in_last[nodenum(x,y)][SOUTH] = 'x;
@@ -313,5 +313,5 @@ module noc_mesh
       end
    endfunction
 
-		   
+
 endmodule // mesh
