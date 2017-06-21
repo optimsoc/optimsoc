@@ -11,8 +11,8 @@ module noc_vchannel_mux
     input [CHANNELS-1:0] 		 in_valid,
     output [CHANNELS-1:0] 		 in_ready,
    
-    output [FLIT_WIDTH-1:0] 		 out_flit,
-    output 				 out_last,
+    output reg [FLIT_WIDTH-1:0]          out_flit,
+    output reg				 out_last,
     output [CHANNELS-1:0] 		 out_valid,
     input [CHANNELS-1:0] 		 out_ready
     );
