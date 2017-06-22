@@ -429,34 +429,31 @@ module mpbuffer_endpoint
       end
    end
 
-   wire [CONFIG.NOC_FLIT_WIDTH+1:0] egress_buffer_flit;
-   assign egress_flit = egress_buffer_flit[CONFIG.NOC_FLIT_WIDTH-1:0];
-   assign egress_last = egress_buffer_flit[CONFIG.NOC_FLIT_WIDTH+1];
-   
    // The output packet buffer
-   lisnoc_packet_buffer
-     #(.fifo_depth(SIZE))
+   noc_buffer
+     #(.DEPTH(SIZE), .FLIT_WIDTH(CONFIG.NOC_FLIT_WIDTH), .FULLPACKET(1))
    u_packetbuffer_out(.*,
                       .in_ready         (out_ready),
-                      .in_flit          ({out_last, 1'b0, out_flit}),
+                      .in_flit          (out_flit),
+                      .in_last          (out_last),
                       .in_valid         (out_valid),
-                      .out_size         (),
-                      .out_flit         (egress_buffer_flit),
+                      .packet_size      (),
+                      .out_flit         (egress_flit),
+                      .out_last         (egress_last),
                       .out_valid        (egress_valid),
                       .out_ready        (egress_ready));
 
-   wire [CONFIG.NOC_FLIT_WIDTH+1:0] in_buffer_flit;
-   assign in_flit = in_buffer_flit[CONFIG.NOC_FLIT_WIDTH-1:0];
-   assign in_last = in_buffer_flit[CONFIG.NOC_FLIT_WIDTH+1];
-
-   lisnoc_packet_buffer
-     #(.fifo_depth(SIZE))
+   // The input packet buffer
+   noc_buffer
+     #(.DEPTH(SIZE), .FLIT_WIDTH(CONFIG.NOC_FLIT_WIDTH), .FULLPACKET(1))
    u_packetbuffer_in(.*,
                      .in_ready          (ingress_ready),
-                     .in_flit           ({ingress_last, 1'b0, ingress_flit}),
+                     .in_flit           (ingress_flit),
+                     .in_last           (ingress_last),
                      .in_valid          (ingress_valid),
-                     .out_size          (size_in),
-                     .out_flit          (in_buffer_flit),
+                     .packet_size       (size_in),
+                     .out_flit          (in_flit),
+                     .out_last          (in_last),
                      .out_valid         (in_valid),
                      .out_ready         (in_ready));
 
