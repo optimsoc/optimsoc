@@ -63,7 +63,7 @@ module mpbuffer_endpoint
     input                                  noc_in_last,
     input                                  noc_in_valid,
     output reg                             noc_in_ready,
-    
+
     // Bus side (generic)
     input [31:0]                           bus_addr,
     input                                  bus_we,
@@ -79,13 +79,13 @@ module mpbuffer_endpoint
    import functions::*;
 
    localparam SIZE_WIDTH = clog2_width(SIZE);
-   
+
    // Connect from the outgoing state machine to the packet buffer
    wire [CONFIG.NOC_FLIT_WIDTH-1:0] out_flit;
    reg                              out_last;
    reg                              out_valid;
    wire                             out_ready;
-   
+
    wire [CONFIG.NOC_FLIT_WIDTH-1:0] in_flit;
    wire                             in_last;
    wire                             in_valid;
@@ -97,7 +97,7 @@ module mpbuffer_endpoint
    assign irq = in_valid;
 
    assign out_flit = bus_data_in;
-   
+
    reg        if_fifo_in_en;
    reg        if_fifo_in_ack;
    reg [31:0] if_fifo_in_data;
@@ -363,7 +363,7 @@ module mpbuffer_endpoint
    reg                             ingress_last;
    reg                             ingress_valid;
    wire                            ingress_ready;
-   
+
    wire [CONFIG.NOC_FLIT_WIDTH-1:0] egress_flit;
    wire                             egress_last;
    wire                             egress_valid;

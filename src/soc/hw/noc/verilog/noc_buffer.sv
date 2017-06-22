@@ -32,22 +32,22 @@ module noc_buffer
     parameter DEPTH = 16,
     parameter FULLPACKET = 0)
    (
-    input                   clk,
-    input                   rst,
+    input                       clk,
+    input                       rst,
 
     // FIFO input side
-    input [FLIT_WIDTH-1:0]  in_flit,
-    input                   in_last,
-    input                   in_valid,
-    output                  in_ready,
+    input [FLIT_WIDTH-1:0]      in_flit,
+    input                       in_last,
+    input                       in_valid,
+    output                      in_ready,
 
     //FIFO output side
-    output [FLIT_WIDTH-1:0] out_flit,
-    output                  out_last,
-    output                  out_valid,
-    input                   out_ready,
+    output reg [FLIT_WIDTH-1:0] out_flit,
+    output reg                  out_last,
+    output reg                  out_valid,
+    input                       out_ready,
 
-    output [ID_W-1:0]       packet_size
+    output [ID_W-1:0]           packet_size
     );
 
    localparam ID_W = $clog2(DEPTH); // the width of the index
