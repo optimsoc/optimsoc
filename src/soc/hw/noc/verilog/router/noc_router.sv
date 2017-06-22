@@ -34,6 +34,7 @@ module noc_router
     parameter VCHANNELS = 1,
     parameter INPUTS = 'x,
     parameter OUTPUTS = 'x,
+    parameter BUFFER_DEPTH = 4,
     parameter DESTS = 'x,
     parameter [OUTPUTS*DESTS-1:0] ROUTES = {DESTS*OUTPUTS{1'b0}}
     )
@@ -71,21 +72,22 @@ module noc_router
    genvar 				 i, v, o;
    generate
       for (i = 0; i < INPUTS; i++) begin : inputs
-	 // The input stages
-	 noc_router_input
-	   #(.FLIT_WIDTH(FLIT_WIDTH), .VCHANNELS(VCHANNELS),
-	     .DESTS(DESTS), .OUTPUTS(OUTPUTS), .ROUTES(ROUTES))
-	 u_input
-	   (.*,
-	    .in_flit   (in_flit[i]),
-	    .in_last   (in_last[i]),
-	    .in_valid  (in_valid[i]),
-	    .in_ready  (in_ready[i]),
-	    .out_flit  (switch_in_flit[i]),
-	    .out_last  (switch_in_last[i]),
-	    .out_valid (switch_in_valid[i]),
-	    .out_ready (switch_in_ready[i])	    
-	   );
+         // The input stages
+         noc_router_input
+           #(.FLIT_WIDTH(FLIT_WIDTH), .VCHANNELS(VCHANNELS),
+             .DESTS(DESTS), .OUTPUTS(OUTPUTS), .ROUTES(ROUTES),
+	     .BUFFER_DEPTH (BUFFER_DEPTH))
+         u_input
+           (.*,
+            .in_flit   (in_flit[i]),
+            .in_last   (in_last[i]),
+            .in_valid  (in_valid[i]),
+            .in_ready  (in_ready[i]),
+            .out_flit  (switch_in_flit[i]),
+            .out_last  (switch_in_last[i]),
+            .out_valid (switch_in_valid[i]),
+            .out_ready (switch_in_ready[i])
+           );
       end // block: inputs
 
       // The switching logic

@@ -76,8 +76,7 @@ module compute_tile_dm_vcu108
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
-                      NOC_DATA_WIDTH: 32,
-                      NOC_TYPE_WIDTH: 2,
+                      NOC_ENABLE_VCHANNELS: 0,
                       LMEM_SIZE: LMEM_SIZE,
                       LMEM_STYLE: EXTERNAL,
                       ENABLE_BOOTROM: 0,
@@ -124,15 +123,19 @@ module compute_tile_dm_vcu108
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
 
    // terminate NoC connection
-   logic [CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit;
-   logic [CONFIG.NOC_VCHANNELS-1:0] noc_in_valid;
-   logic [CONFIG.NOC_VCHANNELS-1:0] noc_in_ready;
-   logic [CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit;
-   logic [CONFIG.NOC_VCHANNELS-1:0] noc_out_valid;
-   logic [CONFIG.NOC_VCHANNELS-1:0] noc_out_ready;
+   logic [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit;
+   logic [CONFIG.NOC_CHANNELS-1:0]                            noc_in_last;
+   logic [CONFIG.NOC_CHANNELS-1:0]                            noc_in_valid;
+   logic [CONFIG.NOC_CHANNELS-1:0]                            noc_in_ready;
+   logic [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit;
+   logic [CONFIG.NOC_CHANNELS-1:0]                            noc_out_last;
+   logic [CONFIG.NOC_CHANNELS-1:0]                            noc_out_valid;
+   logic [CONFIG.NOC_CHANNELS-1:0]                            noc_out_ready;
 
-   assign noc_in_valid = 0;
-   assign noc_out_ready = 0;
+   assign noc_in_flit   = {CONFIG.NOC_FLIT_WIDTH*CONFIG.NOC_CHANNELS{1'bx}};
+   assign noc_in_last   = {CONFIG.NOC_CHANNELS{1'bx}};
+   assign noc_in_valid  = {CONFIG.NOC_CHANNELS{1'b0}};
+   assign noc_out_ready = {CONFIG.NOC_CHANNELS{1'b0}};
 
    // Debug system
    glip_channel c_glip_in(.clk(sys_clk));
@@ -212,11 +215,13 @@ module compute_tile_dm_vcu108
          .rst_dbg       (logic_rst),
 
          .noc_in_flit   (noc_in_flit),
-         .noc_in_ready  (noc_in_ready),
+         .noc_in_last   (noc_in_last),
          .noc_in_valid  (noc_in_valid),
+         .noc_in_ready  (noc_in_ready),
          .noc_out_flit  (noc_out_flit),
-         .noc_out_ready (noc_out_ready),
+         .noc_out_last  (noc_out_last),
          .noc_out_valid (noc_out_valid),
+         .noc_out_ready (noc_out_ready),
 
          .debug_ring_in(debug_ring_in),
          .debug_ring_in_ready(debug_ring_in_ready),
