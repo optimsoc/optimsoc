@@ -39,3 +39,8 @@ hw_device = xc7a100t_0
 datatype = int
 paramtype = vlogparam
 scope = public
+
+[parameter ENABLE_VCHANNELS]
+datatype = int
+paramtype = vlogparam
+scope = public

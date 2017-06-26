@@ -32,6 +32,11 @@ datatype = int
 paramtype = vlogparam
 scope = public
 
+[parameter ENABLE_VCHANNELS]
+datatype = int
+paramtype = vlogparam
+scope = public
+
 [parameter UART0_SOURCE]
 datatype = str
 paramtype = vlogparam

@@ -6,7 +6,8 @@ RUN apt-get -y install texlive texlive-latex-extra texlive-fonts-extra
 RUN apt-get -y install curl git build-essential autoconf automake \
     libtool pkg-config 
 RUN apt-get -y install tcl libusb-1.0-0-dev libboost-dev libelf-dev swig \
-    python3 python3-pip libreadline-dev python-dev python3-venv doxygen
+    python3 python3-pip libreadline-dev python-dev python3-venv doxygen \
+    latexmk python-cffi libffi-dev
 
 # install fusesoc
 RUN pip3 install --upgrade pip
