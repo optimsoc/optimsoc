@@ -61,6 +61,7 @@ module compute_tile_dm_nexys4
    );
 
    parameter integer NUM_CORES = 1;
+   parameter integer HOST_TILE = 0;
    localparam integer LMEM_SIZE = 128*1024*1024;
 
    localparam AXI_ID_WIDTH = 4;
@@ -200,7 +201,8 @@ module compute_tile_dm_nexys4
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
       #(.CONFIG(CONFIG),
-        .DEBUG_BASEID(2)
+        .DEBUG_BASEID(2),
+        .ENABLE_UART(HOST_TILE)
       )
       u_compute_tile
         (
