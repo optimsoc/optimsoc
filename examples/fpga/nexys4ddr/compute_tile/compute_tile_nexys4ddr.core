@@ -33,6 +33,7 @@ top_module = tb_compute_tile_nexys4ddr
 part = xc7a100tcsg324-1
 
 [vivado]
+top_module = compute_tile_dm_nexys4
 part = "xc7a100tcsg324-1"
 hw_device = xc7a100t_0
 
