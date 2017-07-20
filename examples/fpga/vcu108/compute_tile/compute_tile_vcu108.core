@@ -23,6 +23,7 @@ files =
   rtl/verilog/compute_tile_dm_vcu108.sv
 
 [vivado]
+top_module = compute_tile_dm_vcu108
 part = "xcvu095-ffva2104-2-e"
 hw_device = xcvu095_0
 
