@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 by the author(s)
+/* Copyright (c) 2016-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,10 @@
  *
  * =============================================================================
  *
- * Toplevel: compute_tile_dm on a Nexys 4 DDR board
+ * Toplevel: system_2x2_cccc on a Nexys 4 DDR board
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
@@ -61,13 +61,13 @@ module system_2x2_cccc_nexys4
 
    parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1;
+   parameter integer HOST_TILE = 0;
    localparam integer LMEM_SIZE = 32*1024*1024;
 
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 27;
    localparam DDR_DATA_WIDTH = 32;
    localparam TILE_ADDR_WIDTH = 25;
-
 
    localparam base_config_t
      BASE_CONFIG = '{ NUMTILES: 4,
@@ -167,7 +167,7 @@ module system_2x2_cccc_nexys4
 
    // Single compute tile with all memory mapped to the DRAM
    system_2x2_cccc_dm
-      #(.CONFIG(CONFIG))
+      #(.CONFIG(CONFIG), .HOST_TILE(HOST_TILE))
    u_system
      (
       .clk           (sys_clk),

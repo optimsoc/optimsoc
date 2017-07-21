@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016 by the author(s)
+/* Copyright (c) 2012-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
  * A 2x2 distributed memory system with four compute tiles (CCCC)
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
 `include "dbg_config.vh"
@@ -53,6 +53,7 @@ module system_2x2_cccc_dm(
    );
 
    parameter config_t CONFIG = 'x;
+   parameter HOST_TILE = 0;
 
    dii_flit [1:0] debug_ring_in [0:3];
    dii_flit [1:0] debug_ring_out [0:3];
@@ -64,7 +65,7 @@ module system_2x2_cccc_dm(
    debug_interface
       #(
          .SYSTEMID    (1),
-         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS)
+         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS + HOST_TILE)
       )
       u_debuginterface
         (
@@ -125,7 +126,8 @@ module system_2x2_cccc_dm(
             #(.CONFIG (CONFIG),
               .ID(i),
               .COREBASE(i*CONFIG.CORES_PER_TILE),
-              .DEBUG_BASEID(2+i*CONFIG.DEBUG_MODS_PER_TILE))
+              .DEBUG_BASEID(2+i*CONFIG.DEBUG_MODS_PER_TILE),
+              .ENABLE_UART ((i==0) ? HOST_TILE : 0))
          u_ct(.clk                        (clk),
               .rst_cpu                    (rst_cpu),
               .rst_sys                    (rst_sys),
@@ -162,5 +164,3 @@ module system_2x2_cccc_dm(
    endgenerate
 
 endmodule
-
-
