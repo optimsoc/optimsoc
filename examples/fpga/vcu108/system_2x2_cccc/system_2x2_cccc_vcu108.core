@@ -53,3 +53,8 @@ datatype = str
 paramtype = vlogparam
 scope = public
 
+[parameter HOST_TILE]
+datatype = int
+paramtype = vlogparam
+scope = public
+

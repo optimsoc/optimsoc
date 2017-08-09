@@ -31,3 +31,8 @@ hw_device = xcvu095_0
 datatype = int
 paramtype = vlogparam
 scope = public
+
+[parameter HOST_TILE]
+datatype = int
+paramtype = vlogparam
+scope = public

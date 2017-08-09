@@ -89,6 +89,7 @@ module system_2x2_cccc_vcu108
 
    parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1;
+   parameter integer HOST_TILE = 0;
    localparam integer LMEM_SIZE = 128*1024*1024;
 
    // off-chip host interface
@@ -258,7 +259,7 @@ module system_2x2_cccc_vcu108
 
    // 2x2 distributed memory system with all memory mapped to DDR
    system_2x2_cccc_dm
-      #(.CONFIG(CONFIG))
+      #(.CONFIG(CONFIG), .HOST_TILE(HOST_TILE))
       u_system
       (
          .clk           (sys_clk),
