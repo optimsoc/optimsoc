@@ -54,6 +54,7 @@ module tb_system_2x2_cccc(
 
    parameter USE_DEBUG = 0;
    parameter ENABLE_VCHANNELS = 1*1;
+   parameter integer HOST_TILE = 1*1;
    parameter integer NUM_CORES = 1*1; // bug in verilator would give a warning
    parameter integer LMEM_SIZE = 32*1024*1024;
 
@@ -196,7 +197,7 @@ module tb_system_2x2_cccc(
    endgenerate
 
    system_2x2_cccc_dm
-     #(.CONFIG(CONFIG))
+     #(.CONFIG(CONFIG), .HOST_TILE(HOST_TILE))
    u_system
      (.clk (clk),
       .rst (rst | logic_rst),
