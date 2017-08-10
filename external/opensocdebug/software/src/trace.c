@@ -229,6 +229,8 @@ static void ctm_log_handler (struct osd_context *ctx, void* arg, uint16_t* packe
             }
         }
     }
+
+    fflush(log->fh);
     return;
 }
 
