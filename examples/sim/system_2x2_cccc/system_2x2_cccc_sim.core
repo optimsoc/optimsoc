@@ -16,7 +16,7 @@ files =
   tb_system_2x2_cccc.sv
 
 [verilator]
-verilator_options = --trace -Wno-fatal -CFLAGS "-std=c++11" -LDFLAGS "-pthread"
+verilator_options = -O3 --x-assign fast --noassert --trace -Wno-fatal -CFLAGS "-O3 -std=c++11" -LDFLAGS "-pthread"
 tb_toplevel = tb_system_2x2_cccc.cpp
 top_module = tb_system_2x2_cccc
 depend = wallento:simutil:verilator
