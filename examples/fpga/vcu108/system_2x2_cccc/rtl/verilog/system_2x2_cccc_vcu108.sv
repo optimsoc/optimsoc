@@ -69,7 +69,7 @@ module system_2x2_cccc_vcu108
    inout  [7:0]          c0_ddr4_dqs_c,
 
 
-   // Cypress FX3 connected to FMC HPC0 (left, next to the USB jacks)
+   // Cypress FX3 connected to FMC HPC1 (next to the power plug)
    output                fx3_pclk,
    inout [15:0]          fx3_dq,
    output                fx3_slcs_n,
