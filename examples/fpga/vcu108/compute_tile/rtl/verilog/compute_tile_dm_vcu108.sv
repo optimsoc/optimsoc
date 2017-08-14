@@ -40,10 +40,17 @@ module compute_tile_dm_vcu108
    input                 cpu_reset,
 
    // all following UART signals are from a DTE (the PC) point-of-view
+   // USB UART (onboard)
    output                usb_uart_rx,
    input                 usb_uart_tx,
    output                usb_uart_cts, // active low (despite the name)
    input                 usb_uart_rts, // active low (despite the name)
+
+   // UART over PMOD (bottom row of J52)
+   output                pmod_uart_rx,
+   input                 pmod_uart_tx,
+   output                pmod_uart_cts, // active low (despite the name)
+   input                 pmod_uart_rts, // active low (despite the name)
 
    // DDR
    output                c0_ddr4_act_n,
@@ -59,12 +66,44 @@ module compute_tile_dm_vcu108
    inout  [7:0]          c0_ddr4_dm_dbi_n,
    inout  [63:0]         c0_ddr4_dq,
    inout  [7:0]          c0_ddr4_dqs_t,
-   inout  [7:0]          c0_ddr4_dqs_c
+   inout  [7:0]          c0_ddr4_dqs_c,
+
+
+   // Cypress FX3 connected to FMC HPC1 (next to the power plug)
+   output                fx3_pclk,
+   inout [15:0]          fx3_dq,
+   output                fx3_slcs_n,
+   output                fx3_sloe_n,
+   output                fx3_slrd_n,
+   output                fx3_slwr_n,
+   output                fx3_pktend_n,
+   output [1:0]          fx3_a,
+   input                 fx3_flaga_n,
+   input                 fx3_flagb_n,
+   input                 fx3_flagc_n,
+   input                 fx3_flagd_n,
+   input                 fx3_com_rst,
+   input                 fx3_logic_rst,
+   output [2:0]          fx3_pmode
    );
 
    parameter integer NUM_CORES = 1;
    parameter integer HOST_TILE = 0;
    localparam integer LMEM_SIZE = 128*1024*1024;
+
+   // source of the UART connection
+   // onboard: Use the UART chip on the VCU108 board
+   // pmod: Connect a pmodusbuart module to J52 (bottom row)
+   parameter UART0_SOURCE = "pmod";
+
+   // onboard: 921600, max. for CP2105
+   // pmod: 3 MBaud, max. for FT232R
+   parameter UART0_BAUD = (UART0_SOURCE == "pmod" ? 3000000 : 921600);
+
+   // off-chip host interface
+   // uart: use a UART connection (see UART0_SOURCE for connectivity options)
+   // usb3: use a USB 3 connection (through a Cypress FX3 chip)
+   parameter HOST_IF = "uart";
 
    localparam AXI_ID_WIDTH = 4;
    localparam DDR_ADDR_WIDTH = 30;
@@ -149,33 +188,72 @@ module compute_tile_dm_vcu108
    logic logic_rst;
    assign logic_rst = sys_rst | glip_ctrl_logic_rst;
 
-   // Off-chip UART communication interface for debug
-   glip_uart_toplevel
-      #(.FREQ_CLK_IO(50000000),
-        .BAUD(921600),
-        .WIDTH(16),
-        .BUFFER_OUT_DEPTH(256*1024))
-      u_glip(
-         .clk_io(sys_clk),
-         .clk(sys_clk),
-         .rst(sys_rst),
-         .com_rst(glip_com_rst),
-         .ctrl_logic_rst(glip_ctrl_logic_rst),
 
-         .error(/* XXX: connect this to a LED */),
+   // Host (off-chip) interface through GLIP (mostly for debug)
+   generate
+      if (HOST_IF == "uart") begin
+         glip_uart_toplevel
+            #(.FREQ_CLK_IO(32'd50_000_000),
+               .BAUD(UART0_BAUD),
+               .WIDTH(16),
+               .BUFFER_OUT_DEPTH(256*1024))
+            u_glip(
+               .clk_io(sys_clk),
+               .clk(sys_clk),
+               .rst(sys_rst_board),
+               .com_rst(glip_com_rst),
+               .ctrl_logic_rst(glip_ctrl_logic_rst),
 
-         .fifo_out_data(c_glip_out.data),
-         .fifo_out_ready(c_glip_out.ready),
-         .fifo_out_valid(c_glip_out.valid),
-         .fifo_in_data(c_glip_in.data),
-         .fifo_in_ready(c_glip_in.ready),
-         .fifo_in_valid(c_glip_in.valid),
+               .error(/* XXX: connect this to a LED */),
 
-         .uart_rx(uart_rx),
-         .uart_tx(uart_tx),
-         .uart_rts_n(uart_rts_n),
-         .uart_cts_n(uart_cts_n)
-      );
+               .fifo_out_data(c_glip_out.data),
+               .fifo_out_ready(c_glip_out.ready),
+               .fifo_out_valid(c_glip_out.valid),
+               .fifo_in_data(c_glip_in.data),
+               .fifo_in_ready(c_glip_in.ready),
+               .fifo_in_valid(c_glip_in.valid),
+
+               .uart_rx(uart_rx),
+               .uart_tx(uart_tx),
+               .uart_rts_n(uart_rts_n),
+               .uart_cts_n(uart_cts_n)
+            );
+      end else if (HOST_IF == "usb3") begin
+         glip_cypressfx3_toplevel
+            #(.WIDTH(16),
+               .FREQ_CLK_IO(32'd50_000_000))
+            u_glip(
+               .clk(sys_clk),
+               .clk_io(sys_clk),
+               .rst(sys_rst_board),
+               .com_rst(glip_com_rst),
+               .ctrl_logic_rst(glip_ctrl_logic_rst),
+
+               .fifo_out_data(c_glip_out.data),
+               .fifo_out_ready(c_glip_out.ready),
+               .fifo_out_valid(c_glip_out.valid),
+               .fifo_in_data(c_glip_in.data),
+               .fifo_in_ready(c_glip_in.ready),
+               .fifo_in_valid(c_glip_in.valid),
+
+               .fx3_pclk      (fx3_pclk),
+               .fx3_dq        (fx3_dq),
+               .fx3_slcs_n    (fx3_slcs_n),
+               .fx3_sloe_n    (fx3_sloe_n),
+               .fx3_slrd_n    (fx3_slrd_n),
+               .fx3_slwr_n    (fx3_slwr_n),
+               .fx3_pktend_n  (fx3_pktend_n),
+               .fx3_a         (fx3_a[1:0]),
+               .fx3_flaga_n   (fx3_flaga_n),
+               .fx3_flagb_n   (fx3_flagb_n),
+               .fx3_flagc_n   (fx3_flagc_n),
+               .fx3_flagd_n   (fx3_flagd_n),
+               .fx3_com_rst   (fx3_com_rst),
+               .fx3_logic_rst (fx3_logic_rst),
+               .fx3_pmode     (fx3_pmode)
+            );
+      end
+   endgenerate
 
    logic dbg_sys_rst, dbg_cpu_rst;
 
@@ -248,7 +326,8 @@ module compute_tile_dm_vcu108
    // Nexys 4 board wrapper
    vcu108
       #(
-         .NUM_UART(1)
+         .NUM_UART(1),
+         .UART0_SOURCE(UART0_SOURCE)
       )
       u_board(
          // FPGA/board interface
