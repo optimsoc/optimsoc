@@ -27,6 +27,7 @@ package opensocdebug;
       logic [31:0] wbdata;
       logic [4:0]  wbreg;
       logic        wben;
+      logic [1:0]  prv;
    } mor1kx_trace_exec;
 
 endpackage // opensocdebug

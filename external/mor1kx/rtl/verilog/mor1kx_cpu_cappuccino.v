@@ -147,6 +147,7 @@ module mor1kx_cpu_cappuccino
     output [OPTION_OPERAND_WIDTH-1:0] traceport_exec_wbdata_o,
     output [OPTION_RF_ADDR_WIDTH-1:0] traceport_exec_wbreg_o,
     output                            traceport_exec_wben_o,
+    output reg [1:0]                  traceport_exec_prv_o,
 
     // SPR accesses to external units (cache, mmu, etc.)
     output [15:0] 		      spr_bus_addr_o,
@@ -1536,6 +1537,7 @@ module mor1kx_cpu_cappuccino
             end
 
             traceport_exec_pc_o <= pc_execute_to_ctrl;
+            traceport_exec_prv_o <= {0, spr_sr_o[`OR1K_SPR_SR_SM]};
 
             if (!traceport_waitexec) begin
                if (padv_ctrl_o & !ctrl_bubble_o) begin
@@ -1565,6 +1567,7 @@ module mor1kx_cpu_cappuccino
          traceport_exec_insn_o <= {`OR1K_INSN_WIDTH{1'b0}};
          traceport_exec_pc_o <= 32'h0;
          traceport_exec_valid_o <= 1'b0;
+         traceport_exec_prv_o <= 2'b0;
       end
    end
 

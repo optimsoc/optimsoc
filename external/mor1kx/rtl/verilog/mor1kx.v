@@ -156,7 +156,8 @@ module mor1kx
     output [`OR1K_INSN_WIDTH-1:0]     traceport_exec_insn_o,
     output [OPTION_OPERAND_WIDTH-1:0] traceport_exec_wbdata_o,
     output [OPTION_RF_ADDR_WIDTH-1:0] traceport_exec_wbreg_o,
-    output                           traceport_exec_wben_o,
+    output                            traceport_exec_wben_o,
+    output [1:0]                      traceport_exec_prv_o,
 
     // The multicore core identifier
     input [OPTION_OPERAND_WIDTH-1:0]  multicore_coreid_i,
@@ -429,6 +430,7 @@ module mor1kx
       .traceport_exec_wbdata_o          (traceport_exec_wbdata_o[OPTION_OPERAND_WIDTH-1:0]),
       .traceport_exec_wbreg_o           (traceport_exec_wbreg_o[OPTION_RF_ADDR_WIDTH-1:0]),
       .traceport_exec_wben_o            (traceport_exec_wben_o),
+      .traceport_exec_prv_o             (traceport_exec_prv_o),
       .spr_bus_addr_o			(spr_bus_addr_o[15:0]),
       .spr_bus_we_o			(spr_bus_we_o),
       .spr_bus_stb_o			(spr_bus_stb_o),

@@ -63,6 +63,7 @@ module osd_ctm_mor1kx
    assign trace_npc = trace_port.jbtarget;
    assign trace_jal = trace_port.jal;
    assign trace_jalr = trace_port.jr;
+   assign trace_prv = trace_port.prv;
 
 
 endmodule // osd_stm_mor1kx

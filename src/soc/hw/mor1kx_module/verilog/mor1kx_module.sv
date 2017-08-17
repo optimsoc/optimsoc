@@ -143,6 +143,7 @@ module mor1kx_module
            .traceport_exec_wbdata_o     (trace_exec.wbdata),
            .traceport_exec_wbreg_o      (trace_exec.wbreg),
            .traceport_exec_wben_o       (trace_exec.wben),
+           .traceport_exec_prv_o        (trace_exec.prv),
            // Inputs
            .clk                         (clk_i),
            .rst                         (rst_i),
