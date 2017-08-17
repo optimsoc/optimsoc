@@ -45,7 +45,7 @@ They are essentially transformed versions of the ELF file, i.e. the software bin
 Now you have everything you need to run the hello world example on a simulated SoC hardware:
 
 .. code:: sh
-	  
+
    $OPTIMSOC/examples/sim/compute_tile/compute_tile_sim_singlecore --meminit=hello.vmem
 
 And you'll get roughly this output:
@@ -84,9 +84,9 @@ Congratulations, you've ran your first OpTiMSoC system!
 
    .. code:: c
 
-      void sim_putc(unsigned char c) {
-        asm("l.addi\tr3,%0,0": :"r" (c));
-        asm("l.nop %0": :"K" (NOP_PUTC));
+      static void sim_putc(unsigned char c) {
+          asm("l.addi r3,%0,0" : : "r" (c) : "r3");
+          asm("l.nop 4");
       }
 
    This function is called from printf as write function.
@@ -97,7 +97,7 @@ Congratulations, you've ran your first OpTiMSoC system!
    .. code:: c
 
       #define OPTIMSOC_TRACE(id,v)                \
-         asm("l.addi\tr3,%0,0": :"r" (v) : "r3"); \
+         asm("l.addi r3,%0,0" : : "r" (v) : "r3"); \
          asm("l.nop %0": :"K" (id));
 
 See the Waves
@@ -109,7 +109,7 @@ It instructs Verilator to write all signals into a file.
 You can then start a waveform viewer, like GTKWave to display it.
 
 .. code:: sh
-	  
+
    $OPTIMSOC/examples/sim/compute_tile/compute_tile_sim_singlecore --meminit=hello.vmem --vcd
 
 This command will run the hello world example like it did before, but this time Verilator additionally writes a ``sim.vcd`` waveform file.
@@ -360,7 +360,7 @@ Now let's run our hello world software on the SoC.
   This step is not strictly necessary, but is helpful to check that the memory write was successful indeed.
 
   ::
-    
+
      osd> mem loadelf hello.elf 2 -verify
      Verify: 1
      Load program header 0
@@ -376,14 +376,14 @@ Now let's run our hello world software on the SoC.
   This makes the CTM logs much nicer to read (at least for humans).
 
   ::
-	  
+
      osd> stm log stm000.log 3
      osd> ctm log ctm000.log 4 hello.elf
 
 - Finally, we are ready to start the system, i.e. lower the reset signal.
 
   ::
-	  
+
      osd> start
      osd> [STM 003] 004616b5 Hello World! Core 0 of 2 in tile 0, my absolute core id is: 0
      [STM 003] 0046266e There are 4 compute tiles:
@@ -608,7 +608,7 @@ Core 0 exits as last after printing to the output in ``stdout.000``:
    [              179834, 0] Received from 3
 
 Under the Hood: Simulation Tracing
-==================================   
+==================================
 
 So far we have used "printf-debuggging", the most popular way of debugging embedded programs.
 It is pretty simple to add, but not very performant or structured.
