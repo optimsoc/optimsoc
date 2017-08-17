@@ -650,6 +650,7 @@ def build_externals_glip_software(options):
         "--enable-cypressfx2 "
         "--enable-cypressfx3 "
         "--enable-jtag "
+        "--enable-debug "
         "--enable-uart "
         "--enable-tcp").format(src, prefix)
     run_command(cmd, cwd=objdir)
