@@ -351,16 +351,28 @@ module glip_cypressfx3_toplevel
          end
 
          STATE_WRITE_DRAIN_1: begin
-            fifoadr = FX3_EPIN;
-            wr = 1;
-            int_fifo_out_ready = 1;
-            nxt_state = STATE_WRITE_DRAIN_2;
+            if (int_fifo_out_empty) begin
+               wr = 0;
+               int_fifo_out_ready = 0;
+               nxt_idle_counter = FORCE_SEND_TIMEOUT;
+               nxt_state = STATE_IDLE;
+            end else begin
+               fifoadr = FX3_EPIN;
+               wr = 1;
+               int_fifo_out_ready = 1;
+               nxt_state = STATE_WRITE_DRAIN_2;
+            end
          end
 
          STATE_WRITE_DRAIN_2: begin
-            fifoadr = FX3_EPIN;
-            wr = 1;
-            int_fifo_out_ready = 1;
+            if (int_fifo_out_empty) begin
+               wr = 0;
+               int_fifo_out_ready = 0;
+            end else begin
+               fifoadr = FX3_EPIN;
+               wr = 1;
+               int_fifo_out_ready = 1;
+            end
             nxt_idle_counter = FORCE_SEND_TIMEOUT;
             nxt_state = STATE_IDLE;
          end

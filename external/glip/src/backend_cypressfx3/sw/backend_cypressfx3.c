@@ -624,7 +624,7 @@ int gb_cypressfx3_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 /**
  * Write to the target device
  *
- * All data is written through USB 2.0 bulk transfers to the target. Since
+ * All data is written through USB bulk transfers to the target. Since
  * those transfers are most efficient when sending large amounts of data, we
  * do a client-side buffering of data. The buffer is flushed if one of the
  * two conditions hold:
@@ -637,7 +637,7 @@ int gb_cypressfx3_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
  * USB transfer.
  *
  * @todo Add a "flush buffer" API call to send off immediately a transfer even
- *       through none of the conditions a) or b) hold.
+ *       though neither condition a) nor condition b) hold.
  *
  * @see glip_write()
  */
@@ -654,7 +654,8 @@ int gb_cypressfx3_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
     unsigned int buf_size_free = cbuf_free_level(bctx->write_buf);
     *size_written = (size > buf_size_free ? buf_size_free : size);
 
-    cbuf_write(bctx->write_buf, data, *size_written);
+    int rv = cbuf_write(bctx->write_buf, data, *size_written);
+    assert(rv == 0);
 
     /*
      * If half of the write buffer is filled we trigger the USB sending thread
@@ -844,7 +845,8 @@ static void* usb_write_thread(void* ctx_void)
         }
 #endif
 
-        cbuf_discard(bctx->write_buf, transfer_len_sent);
+        rv = cbuf_discard(bctx->write_buf, transfer_len_sent);
+        assert(rv == 0);
 
         /*
          * We have just transmitted a full packet (i.e. a multiple of
@@ -918,7 +920,8 @@ static void* usb_read_thread(void* ctx_void)
         /*
          * Reserve this amount of space in the read buffer
          */
-        cbuf_reserve(bctx->read_buf, &buf, buf_size);
+        rv = cbuf_reserve(bctx->read_buf, &buf, buf_size);
+        assert(rv == 0);
 
         /*
          * Read up to buf_size bytes from the USB device. If that much data
@@ -943,8 +946,8 @@ static void* usb_read_thread(void* ctx_void)
                 rv, buf_size);
             continue;
         }
-
-        cbuf_commit(bctx->read_buf, buf, received);
+        rv = cbuf_commit(bctx->read_buf, buf, received);
+        assert(rv == 0);
     }
 
     return NULL;
