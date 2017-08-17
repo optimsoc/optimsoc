@@ -186,8 +186,7 @@ module compute_tile_dm_vcu108
    logic glip_com_rst, glip_ctrl_logic_rst;
 
    logic logic_rst;
-   assign logic_rst = sys_rst | glip_ctrl_logic_rst;
-
+   assign logic_rst = sys_rst | glip_ctrl_logic_rst | glip_com_rst;
 
    // Host (off-chip) interface through GLIP (mostly for debug)
    generate
