@@ -1537,7 +1537,7 @@ module mor1kx_cpu_cappuccino
             end
 
             traceport_exec_pc_o <= pc_execute_to_ctrl;
-            traceport_exec_prv_o <= {0, spr_sr_o[`OR1K_SPR_SR_SM]};
+            traceport_exec_prv_o <= {1'b0, spr_sr_o[`OR1K_SPR_SR_SM]};
 
             if (!traceport_waitexec) begin
                if (padv_ctrl_o & !ctrl_bubble_o) begin
