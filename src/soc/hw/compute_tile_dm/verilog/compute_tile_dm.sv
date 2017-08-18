@@ -170,7 +170,7 @@ module compute_tile_dm
    wire [31:0]   snoop_adr;
 
    wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
-   assign pic_ints_i[0][31:4] = 28'h0;
+   assign pic_ints_i[0][31:5] = 27'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
 
    genvar        c, m, s;
@@ -356,7 +356,7 @@ module compute_tile_dm
 	      u_uart
 		(.*,
 		 .rst (rst_sys),
-		 .irq (),
+		 .irq (pic_ints_i[0][4]),
 		 .id (10'(DEBUG_BASEID + debug_index[9:0])),
 		 .debug_in (dii_out[debug_index]),
 		 .debug_in_ready (dii_out_ready[debug_index]),
