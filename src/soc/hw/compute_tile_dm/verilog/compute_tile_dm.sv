@@ -350,34 +350,34 @@ module compute_tile_dm
 
    generate
       if (ENABLE_UART != 0) begin
-	 if (CONFIG.USE_DEBUG != 0) begin
-	    localparam debug_index = 1 + CONFIG.CORES_PER_TILE * CONFIG.DEBUG_MODS_PER_CORE;
-	    osd_dem_uart_wb
-	      u_uart
-		(.*,
-		 .rst (rst_sys),
-		 .irq (pic_ints_i[0][4]),
-		 .id (10'(DEBUG_BASEID + debug_index[9:0])),
-		 .debug_in (dii_out[debug_index]),
-		 .debug_in_ready (dii_out_ready[debug_index]),
-		 .debug_out (dii_in[debug_index]),
-		 .debug_out_ready (dii_in_ready[debug_index]),
-		 .wb_adr_i (bussl_adr_i[SLAVE_UART]),
-		 .wb_cyc_i (bussl_cyc_i[SLAVE_UART]),
-		 .wb_dat_i (bussl_dat_i[SLAVE_UART]),
-		 .wb_sel_i (bussl_sel_i[SLAVE_UART]),
-		 .wb_stb_i (bussl_stb_i[SLAVE_UART]),
-		 .wb_we_i  (bussl_we_i[SLAVE_UART]),
-		 .wb_cti_i (bussl_cti_i[SLAVE_UART]),
-		 .wb_bte_i (bussl_bte_i[SLAVE_UART]),
-		 .wb_ack_o (bussl_ack_o[SLAVE_UART]),
-		 .wb_err_o (bussl_err_o[SLAVE_UART]),
-		 .wb_rty_o (bussl_rty_o[SLAVE_UART]),
-		 .wb_dat_o (bussl_dat_o[SLAVE_UART]));
+         if (CONFIG.USE_DEBUG != 0) begin
+            localparam debug_index = 1 + CONFIG.CORES_PER_TILE * CONFIG.DEBUG_MODS_PER_CORE;
+            osd_dem_uart_wb
+              u_uart
+                (.*,
+                 .rst (rst_sys),
+                 .irq (pic_ints_i[0][2]),
+                 .id (10'(DEBUG_BASEID + debug_index[9:0])),
+                 .debug_in (dii_out[debug_index]),
+                 .debug_in_ready (dii_out_ready[debug_index]),
+                 .debug_out (dii_in[debug_index]),
+                 .debug_out_ready (dii_in_ready[debug_index]),
+                 .wb_adr_i (bussl_adr_i[SLAVE_UART]),
+                 .wb_cyc_i (bussl_cyc_i[SLAVE_UART]),
+                 .wb_dat_i (bussl_dat_i[SLAVE_UART]),
+                 .wb_sel_i (bussl_sel_i[SLAVE_UART]),
+                 .wb_stb_i (bussl_stb_i[SLAVE_UART]),
+                 .wb_we_i  (bussl_we_i[SLAVE_UART]),
+                 .wb_cti_i (bussl_cti_i[SLAVE_UART]),
+                 .wb_bte_i (bussl_bte_i[SLAVE_UART]),
+                 .wb_ack_o (bussl_ack_o[SLAVE_UART]),
+                 .wb_err_o (bussl_err_o[SLAVE_UART]),
+                 .wb_rty_o (bussl_rty_o[SLAVE_UART]),
+                 .wb_dat_o (bussl_dat_o[SLAVE_UART]));
 
-	 end else begin
-	    // TODO: integrate default UART block
-	 end
+         end else begin
+            // TODO: integrate default UART block
+         end
       end
    endgenerate
 
@@ -619,7 +619,7 @@ module compute_tile_dm
            .wbs_rty_o                   (bussl_rty_o[SLAVE_NA]),
            .wbs_err_o                   (bussl_err_o[SLAVE_NA]),
            .wbs_dat_o                   (bussl_dat_o[SLAVE_NA]),
-           .irq                         (pic_ints_i[0][3:2]),
+           .irq                         (pic_ints_i[0][4:3]),
            // Inputs
            .clk                         (clk),
            .rst                         (rst_sys),
@@ -672,5 +672,3 @@ module compute_tile_dm
       end // else: !if(CONFIG.ENABLE_BOOTROM)
    endgenerate
 endmodule
-
-

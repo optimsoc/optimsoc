@@ -96,8 +96,8 @@ static uint16_t _num_endpoints;
 
 void optimsoc_mp_simple_init(void) {
     // Register interrupt
-    or1k_interrupt_handler_add(3, &_irq_handler, 0);
-    or1k_interrupt_enable(3);
+    or1k_interrupt_handler_add(4, &_irq_handler, 0);
+    or1k_interrupt_enable(4);
 
     // Reset class handler
     for (int i=0;i<OPTIMSOC_CLASS_NUM;i++) {
