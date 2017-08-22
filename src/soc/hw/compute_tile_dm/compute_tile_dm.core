@@ -16,7 +16,7 @@ depend =
   optimsoc:base:functions
 
 [fileset src_files]
-file_type = systemVerilogSource
+file_type = systemVerilogSource-2009
 usage = sim synth
 files =
   verilog/compute_tile_dm.sv

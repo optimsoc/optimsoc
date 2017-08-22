@@ -6,9 +6,7 @@ depend =
   optimsoc:base:config
 
 [fileset src_files]
-file_type = systemVerilogSource
+file_type = systemVerilogSource-2009
 usage = sim synth
 files =
   verilog/noc_buffer.sv
-
-

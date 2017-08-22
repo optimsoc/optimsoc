@@ -30,8 +30,10 @@
 module noc_buffer
   #(parameter FLIT_WIDTH = 32,
     parameter DEPTH = 16,
-    parameter FULLPACKET = 0)
-   (
+    parameter FULLPACKET = 0,
+
+    localparam ID_W = $clog2(DEPTH) // the width of the index
+   )(
     input                       clk,
     input                       rst,
 
@@ -49,8 +51,6 @@ module noc_buffer
 
     output [ID_W-1:0]           packet_size
     );
-
-   localparam ID_W = $clog2(DEPTH); // the width of the index
 
    // internal shift register
    reg [DEPTH-1:0][FLIT_WIDTH:0] data;
@@ -88,9 +88,9 @@ module noc_buffer
 
          always @(posedge clk)
            if(rst)
-             data_last_buf = 0;
+             data_last_buf <= 0;
            else if(in_fire)
-             data_last_buf = {data_last_buf, in_last && in_valid};
+             data_last_buf <= {data_last_buf, in_last && in_valid};
 
          // extra logic to get the packet size in a stable manner
          assign data_last_shifted = data_last_buf << DEPTH - 1 - rp;

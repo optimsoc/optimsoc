@@ -54,9 +54,9 @@ module noc_demux
 
    wire [2:0]                                         packet_class;
    reg [CHANNELS-1:0]                                 select;
-   
+
    assign packet_class = in_flit[NOC_CLASS_MSB:NOC_CLASS_LSB];
-   
+
    always @(*) begin : gen_select
       select = MAPPING[8*packet_class +: CHANNELS];
       if (select == 0) begin
@@ -66,7 +66,7 @@ module noc_demux
 
    assign out_flit = {CHANNELS{in_flit}};
    assign out_last = {CHANNELS{in_last}};
-   
+
    always @(*) begin
       nxt_active = active;
 
@@ -89,14 +89,14 @@ module noc_demux
          end
       end
    end
-   
+
    always @(posedge clk)
      if (rst) begin
         active <= '0;
      end else begin
         active <= nxt_active;
      end
-   
+
 endmodule // noc_demux
 
 
