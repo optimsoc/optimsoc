@@ -40,7 +40,10 @@ module compute_tile_dm
 
     parameter DEBUG_BASEID = 'x,
 
-    parameter MEM_FILE = 'x
+    parameter MEM_FILE = 'x,
+
+    localparam CHANNELS = CONFIG.NOC_CHANNELS,
+    localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH
     )
    (
    input                                 dii_flit [1:0] debug_ring_in,
@@ -76,9 +79,6 @@ module compute_tile_dm
    );
 
    import functions::*;
-
-   localparam CHANNELS = CONFIG.NOC_CHANNELS;
-   localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
    localparam NR_SLAVES = 4;

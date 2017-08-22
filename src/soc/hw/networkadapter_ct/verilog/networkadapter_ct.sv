@@ -35,7 +35,10 @@ module networkadapter_ct
     parameter config_t CONFIG = 'x,
 
     parameter TILEID = 'x,
-    parameter COREBASE = 'x
+    parameter COREBASE = 'x,
+
+    localparam CHANNELS = CONFIG.NOC_CHANNELS,
+    localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH
     )
    (
 `ifdef OPTIMSOC_CLOCKDOMAINS
@@ -86,9 +89,6 @@ module networkadapter_ct
 
     output [1:0]                          irq
     );
-
-   localparam CHANNELS = CONFIG.NOC_CHANNELS;
-   localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH;
 
    // Those are the actual channels from the modules
    localparam MODCHANNELS = 4;
