@@ -62,7 +62,7 @@ module osd_dem_uart_16550
 
    assign irq = irq_ls | irq_rbf | irq_tbe;
 
-   assign irq_tbe = etbei & out_ready;
+   assign irq_tbe = etbei & (out_ready | drop);
    assign irq_rbf = erbfi & in_valid;
    assign irq_ls = 0;
 
@@ -118,7 +118,9 @@ module osd_dem_uart_16550
                     end
                  end
                  REG_IIR_FCR: begin
-                    bus_rdata[7:3] <= 5'h0;
+                    bus_rdata[7:6] <= {fifo_enable, fifo_enable};
+                    bus_rdata[5:3] <= 3'h0;
+
                     if (irq_ls)
                       bus_rdata[2:0] <= 3'b110;
                     else if (irq_rbf)

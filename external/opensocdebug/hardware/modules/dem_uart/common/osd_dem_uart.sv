@@ -19,20 +19,21 @@ import dii_package::dii_flit;
 module osd_dem_uart
   (input clk, rst,
 
-   input           dii_flit debug_in, output debug_in_ready,
-   output          dii_flit debug_out, input debug_out_ready,
+   input            dii_flit debug_in, output debug_in_ready,
+   output           dii_flit debug_out, input debug_out_ready,
 
-   input [9:0]     id,
+   input [9:0]      id,
 
-   output          drop,
+   output           drop,
 
-   input [7:0]     out_char,
-   input           out_valid,
-   output reg      out_ready,
+   input [7:0]      out_char,
+   input            out_valid,
+   output reg       out_ready,
 
    output reg [7:0] in_char,
-   output reg      in_valid,
-   input           in_ready);
+   output reg       in_valid,
+   input            in_ready
+   );
 
    logic        reg_request;
    logic        reg_write;
@@ -62,7 +63,10 @@ module osd_dem_uart
                .module_out (c_uart_in),
                .module_out_ready (c_uart_in_ready));
 
-   enum         { STATE_IDLE, STATE_HEADER, STATE_XFER } stateTx, stateRx;
+   enum         { STATE_IDLE, STATE_DEST, STATE_HEADER, STATE_XFER } stateTx, stateRx;
+
+   reg [7:0]    out_char_buf;
+
    always @(posedge clk) begin
       if (rst) begin
          stateTx <= STATE_IDLE;
@@ -70,7 +74,13 @@ module osd_dem_uart
       end else begin
          case (stateTx)
            STATE_IDLE: begin
-              if (out_valid & !stall & c_uart_out_ready) begin
+              if (out_valid & !stall) begin
+                 stateTx <= STATE_DEST;
+                 out_char_buf <= out_char;
+              end
+           end
+           STATE_DEST: begin
+              if (c_uart_out_ready) begin
                  stateTx <= STATE_HEADER;
               end
            end
@@ -114,7 +124,10 @@ module osd_dem_uart
 
       case (stateTx)
         STATE_IDLE: begin
-           c_uart_out.valid = out_valid & !stall;
+           out_ready = !stall;
+        end
+        STATE_DEST: begin
+           c_uart_out.valid = 1;
            c_uart_out.data = 0;
         end
         STATE_HEADER: begin
@@ -123,9 +136,8 @@ module osd_dem_uart
         end
         STATE_XFER: begin
            c_uart_out.valid = 1;
-           c_uart_out.data = {8'h0, out_char};
+           c_uart_out.data = {8'h0, out_char_buf};
            c_uart_out.last = 1;
-           out_ready = c_uart_out_ready;
         end
       endcase // case (stateTx)
 

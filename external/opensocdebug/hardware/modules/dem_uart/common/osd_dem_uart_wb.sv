@@ -18,56 +18,53 @@ import dii_package::dii_flit;
 
 module osd_dem_uart_wb
    (
-    input 	  clk, rst,
+    input         clk, rst,
 
     input [9:0]   id,
 
-    (* mark_debug = "yes" *) output 	  irq,
+    output        irq,
 
-    (* mark_debug = "yes" *) input [3:0]   wb_adr_i,
-    (* mark_debug = "yes" *) input 	  wb_cyc_i,
-    (* mark_debug = "yes" *) input [31:0]  wb_dat_i,
-    (* mark_debug = "yes" *) input [3:0]   wb_sel_i,
-    (* mark_debug = "yes" *) input 	  wb_stb_i,
-    (* mark_debug = "yes" *) input 	  wb_we_i,
-    (* mark_debug = "yes" *) input [2:0]   wb_cti_i,
-    (* mark_debug = "yes" *) input [1:0]   wb_bte_i,
-    (* mark_debug = "yes" *) output 	  wb_ack_o,
-    (* mark_debug = "yes" *) output 	  wb_rty_o,
-    (* mark_debug = "yes" *) output 	  wb_err_o,
-    (* mark_debug = "yes" *) output [31:0] wb_dat_o,
+    input [3:0]   wb_adr_i,
+    input         wb_cyc_i,
+    input [31:0]  wb_dat_i,
+    input [3:0]   wb_sel_i,
+    input         wb_stb_i,
+    input         wb_we_i,
+    input [2:0]   wb_cti_i,
+    input [1:0]   wb_bte_i,
+    output        wb_ack_o,
+    output        wb_rty_o,
+    output        wb_err_o,
+    output [31:0] wb_dat_o,
 
 
-    (* mark_debug = "yes" *) input 	  dii_flit debug_in,
-    (* mark_debug = "yes" *) output 	  debug_in_ready,
-    (* mark_debug = "yes" *) output 	  dii_flit debug_out,
-    (* mark_debug = "yes" *) input 	  debug_out_ready
+    input dii_flit debug_in,
+    output        debug_in_ready,
+    output dii_flit debug_out,
+    input         debug_out_ready
     );
 
-   (* mark_debug = "yes" *) logic 	 bus_req;
-   (* mark_debug = "yes" *) logic [2:0] 	 bus_addr;
-   (* mark_debug = "yes" *) logic 	 bus_write;
-   (* mark_debug = "yes" *) logic [7:0] 	 bus_wdata;
-   (* mark_debug = "yes" *) logic 	 bus_ack;
-   (* mark_debug = "yes" *) logic [7:0] 	 bus_rdata;
-   
-   (* mark_debug = "yes" *) logic 	 drop;
-   
-   (* mark_debug = "yes" *) logic 	 out_valid;
-   (* mark_debug = "yes" *) logic [7:0] 	 out_char;
-   (* mark_debug = "yes" *) logic 	 out_ready;
-   (* mark_debug = "yes" *) logic 	 in_valid;
-   (* mark_debug = "yes" *) logic [7:0] 	 in_char;
-   (* mark_debug = "yes" *) logic 	 in_ready;
+   logic          bus_req;
+   logic [2:0]    bus_addr;
+   logic          bus_write;
+   logic [7:0]    bus_wdata;
+   logic          bus_ack;
+   logic [7:0]    bus_rdata;
 
-   // .* doesn't exactly make understanding code easier ...
+   logic          drop;
+
+   logic          out_valid;
+   logic [7:0]    out_char;
+   logic          out_ready;
+   logic          in_valid;
+   logic [7:0]    in_char;
+   logic          in_ready;
+
    osd_dem_uart_16550
      u_16550(.*);
 
    osd_dem_uart
      u_uart_emul(.*);
-
-   //assign irq = in_valid;
 
    assign bus_req = wb_cyc_i & wb_stb_i;
    assign bus_addr = { wb_adr_i[2], (wb_sel_i[0] ? 2'b11 : (wb_sel_i[1] ? 2'b10 : (wb_sel_i[2] ? 2'b01 : 2'b00))) };
