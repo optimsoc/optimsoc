@@ -365,39 +365,6 @@ uint32_t optimsoc_get_seed(void);
  */
 
 /**
- * This is a convenience function that disables interrupts
- *
- * The external interrupts and timer interrupts are disabled.
- * optimsoc_critical_end can be used to enable those interrupts again. When
- * calling the latter function the status of the external interrupts and the
- * tick timer before entering this function needs to be restored. Therefore
- * this function returns this value.
- *
- * \code
- * uint32_t restore = optimsoc_critical_begin();
- * // Critical section code
- * optimsoc_critical_end(restore);
- * \endcode
- *
- * \note This only disables the interrupts but does neither manipulate the
- * interrupt mask vector (what you would not expect) and also does not actually
- * stop the timer (what you might expect)
- *
- * \return The current status of enabled interrupts and tick timer
- */
-extern uint32_t optimsoc_critical_begin(void);
-
-/**
- * Leave critical section
- *
- * End a critical section and restore interrupt enables. Read the documentation
- * of optimsoc_critical_begin for more details.
- *
- * \param restore Restore vector of interrupt and tick timer enable
- */
-extern void optimsoc_critical_end(uint32_t restore);
-
-/**
  * The mutex data type
  *
  * The mutex data type which is actually hidden on purpose.
