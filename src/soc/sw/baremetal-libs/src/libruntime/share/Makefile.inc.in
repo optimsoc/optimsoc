@@ -32,8 +32,11 @@ BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-baremetal-run
 all: $(PROGRAM).elf $(PROGRAM).dis $(PROGRAM).bin $(PROGRAM).vmem
 pgas: $(PROGRAM)-pgas.bin $(PROGRAM)-pgas.vmem
 
-LIBS = $(shell pkg-config --libs --static optimsoc-baremetal-runtime)
-INCS = $(shell pkg-config --cflags optimsoc-baremetal-runtime)
+LIBS = $(EXTRA_LIBS)
+INCS = $(EXTRA_INCS)
+
+LIBS += $(shell pkg-config --libs --static optimsoc-baremetal-runtime)
+INCS += $(shell pkg-config --cflags optimsoc-baremetal-runtime)
 ifdef ENABLE_MCAPI
 LIBS += $(shell pkg-config --libs --static optimsoc-baremetal-mcapi-simple-runtime)
 INCS += $(shell pkg-config --cflags optimsoc-baremetal-mcapi-simple-runtime)
@@ -46,7 +49,7 @@ $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 
 $(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS) $(EXTRA_DEPS)
 	$(CC_FOR_TARGET) $(CFLAGS) -Wall \
-	$(PROGRAM).o -o $@ \
+	$(PROGRAM).o $(EXTRA_OBJS) -o $@ \
 	$(LIBS)
 
 %.dis: %.elf

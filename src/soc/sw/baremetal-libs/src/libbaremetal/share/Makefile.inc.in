@@ -32,8 +32,8 @@ BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-baremetal)
 all: $(PROGRAM).elf $(PROGRAM).dis $(PROGRAM).bin $(PROGRAM).vmem
 pgas: $(PROGRAM)-pgas.bin $(PROGRAM)-pgas.vmem
 
-LIBS =
-INCS =
+LIBS = $(EXTRA_LIBS)
+INCS = $(EXTRA_INCS)
 ifdef ENABLE_MP
 LIBS += $(shell pkg-config --libs --static optimsoc-baremetal-mp)
 INCS += $(shell pkg-config --cflags optimsoc-baremetal-mp)
