@@ -65,6 +65,34 @@ module compute_tile_dm
    input                                 wb_ext_err_o,
    input [31:0]                          wb_ext_dat_o,
 
+   output [31:0]                         wb_ess_adr_i,
+   output                                wb_ess_cyc_i,
+   output [31:0]                         wb_ess_dat_i,
+   output [3:0]                          wb_ess_sel_i,
+   output                                wb_ess_stb_i,
+   output                                wb_ess_we_i,
+   output                                wb_ess_cab_i,
+   output [2:0]                          wb_ess_cti_i,
+   output [1:0]                          wb_ess_bte_i,
+   input                                 wb_ess_ack_o,
+   input                                 wb_ess_rty_o,
+   input                                 wb_ess_err_o,
+   input [31:0]                          wb_ess_dat_o,
+
+   output [31:0]                         wb_fifo_adr_i,
+   output                                wb_fifo_cyc_i,
+   output [31:0]                         wb_fifo_dat_i,
+   output [3:0]                          wb_fifo_sel_i,
+   output                                wb_fifo_stb_i,
+   output                                wb_fifo_we_i,
+   output                                wb_fifo_cab_i,
+   output [2:0]                          wb_fifo_cti_i,
+   output [1:0]                          wb_fifo_bte_i,
+   input                                 wb_fifo_ack_o,
+   input                                 wb_fifo_rty_o,
+   input                                 wb_fifo_err_o,
+   input [31:0]                          wb_fifo_dat_o,
+
    input                                 clk,
    input                                 rst_cpu, rst_sys, rst_dbg,
 
@@ -75,17 +103,22 @@ module compute_tile_dm
    output [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_out_flit,
    output [CHANNELS-1:0]                 noc_out_last,
    output [CHANNELS-1:0]                 noc_out_valid,
-   input [CHANNELS-1:0]                  noc_out_ready
+   input [CHANNELS-1:0]                  noc_out_ready,
+   
+   input eth_irq
    );
 
    import functions::*;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
-   localparam NR_SLAVES = 4;
+   localparam NR_SLAVES = 6;
    localparam SLAVE_DM   = 0;
    localparam SLAVE_PGAS = 1;
    localparam SLAVE_NA   = 2;
    localparam SLAVE_BOOT = 3;
+   // eth
+   localparam SLAVE_ESS = 4;
+   localparam SLAVE_FIFO = 5;
 
    mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
@@ -166,8 +199,11 @@ module compute_tile_dm
    wire [31:0]   snoop_adr;
 
    wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
-   assign pic_ints_i[0][31:4] = 28'h0;
+   assign pic_ints_i[0][31:5] = 27'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
+   
+   // ETH interrupt is IRQ 4
+   assign pic_ints_i[0][4] = eth_irq;
 
    genvar        c, m, s;
 
@@ -358,13 +394,30 @@ module compute_tile_dm
     ); */
    wb_bus_b3
      #(.MASTERS(NR_MASTERS),.SLAVES(NR_SLAVES),
+        
+        // DM: 0x0000_0000 - 0x
        .S0_ENABLE(CONFIG.ENABLE_DM),
        .S0_RANGE_WIDTH(CONFIG.DM_RANGE_WIDTH),.S0_RANGE_MATCH(CONFIG.DM_RANGE_MATCH),
+       
+       // PGAS: somewhere ...(disabled anyways)
        .S1_ENABLE(CONFIG.ENABLE_PGAS),
        .S1_RANGE_WIDTH(CONFIG.PGAS_RANGE_WIDTH),.S1_RANGE_MATCH(CONFIG.PGAS_RANGE_MATCH),
+       
+       // Network Adapter: 0xE000_0000 - 0xEFFFF_FFFF
        .S2_RANGE_WIDTH(4),.S2_RANGE_MATCH(4'he),
+       
+       // Bootrom: 0xF000_0000 - 0xFFFF_FFFF
        .S3_ENABLE(CONFIG.ENABLE_BOOTROM),
-       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf))
+       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf),
+       
+       // ESS: 18 bit: 0xD000_0000 - 0xDFFF_FFFF
+       .S4_ENABLE(1'b1),
+       .S4_RANGE_WIDTH(4),.S4_RANGE_MATCH(4'hd),
+       
+       // FIFO: 7 bit: 0xC000_0000 - 0xCFFF_FFFF
+       .S5_ENABLE(1'b1),
+       .S5_RANGE_WIDTH(4),.S5_RANGE_MATCH(4'hc)  
+       )
    u_bus(/*AUTOINST*/
          // Outputs
          .m_dat_o                       (busms_dat_i_flat),      // Templated
@@ -632,6 +685,38 @@ module compute_tile_dm
          assign bussl_rty_o[SLAVE_BOOT] = 1'b0;
       end // else: !if(CONFIG.ENABLE_BOOTROM)
    endgenerate
+   
+   // Ethernet
+   // ESS
+   assign wb_ess_adr_i = bussl_adr_i[SLAVE_ESS];
+   assign wb_ess_cyc_i = bussl_cyc_i[SLAVE_ESS];
+   assign wb_ess_dat_i = bussl_dat_i[SLAVE_ESS];
+   assign wb_ess_sel_i = bussl_sel_i[SLAVE_ESS];
+   assign wb_ess_stb_i = bussl_stb_i[SLAVE_ESS];
+   assign wb_ess_we_i = bussl_we_i[SLAVE_ESS];
+   assign wb_ess_cab_i = bussl_cab_i[SLAVE_ESS];
+   assign wb_ess_cti_i = bussl_cti_i[SLAVE_ESS];
+   assign wb_ess_bte_i = bussl_bte_i[SLAVE_ESS];
+   assign bussl_ack_o[SLAVE_ESS] = wb_ess_ack_o;
+   assign bussl_rty_o[SLAVE_ESS] = wb_ess_rty_o;
+   assign bussl_err_o[SLAVE_ESS] = wb_ess_err_o;
+   assign bussl_dat_o[SLAVE_ESS] = wb_ess_dat_o;
+   
+   // FIFO
+   assign wb_fifo_adr_i = bussl_adr_i[SLAVE_FIFO];
+   assign wb_fifo_cyc_i = bussl_cyc_i[SLAVE_FIFO];
+   assign wb_fifo_dat_i = bussl_dat_i[SLAVE_FIFO];
+   assign wb_fifo_sel_i = bussl_sel_i[SLAVE_FIFO];
+   assign wb_fifo_stb_i = bussl_stb_i[SLAVE_FIFO];
+   assign wb_fifo_we_i = bussl_we_i[SLAVE_FIFO];
+   assign wb_fifo_cab_i = bussl_cab_i[SLAVE_FIFO];
+   assign wb_fifo_cti_i = bussl_cti_i[SLAVE_FIFO];
+   assign wb_fifo_bte_i = bussl_bte_i[SLAVE_FIFO];
+   assign bussl_ack_o[SLAVE_FIFO] = wb_fifo_ack_o;
+   assign bussl_rty_o[SLAVE_FIFO] = wb_fifo_rty_o;
+   assign bussl_err_o[SLAVE_FIFO] = wb_fifo_err_o;
+   assign bussl_dat_o[SLAVE_FIFO] = wb_fifo_dat_o;   
+   
 endmodule
 
 

@@ -61,6 +61,10 @@ module nexys4ddr
    // System Interface
    output                sys_clk,
    output                sys_rst,
+   
+   output                clk_50mhz,
+   output                clk_50mhz_45deg,
+   output                clk_125mhz,
 
    input [3:0]           ddr_awid,
    input [27:0]          ddr_awaddr,
@@ -138,6 +142,18 @@ module nexys4ddr
         .locked      (clk_ddr_locked),
         .reset       (rst)
         );
+     
+  wire clk_eth_locked;
+
+  clk_gen_eth
+     u_clk_gen_eth
+     (.clk_ddr_sys        (clk_ddr_sys),
+        .clk_50mhz        (clk_50mhz),
+        .clk_50mhz_45deg  (clk_50mhz_45deg),
+        .clk_125mhz       (clk_125mhz),
+        .locked           (clk_eth_locked),
+        .reset            (rst)
+     );
 
 /*   clk_gen_sys
      u_clk_gen_sys
@@ -189,7 +205,7 @@ module nexys4ddr
         .init_calib_complete            (ddr_calib_done),
         .sys_clk_i                      (clk_ddr_sys),
 //        .clk_ref_i                      (clk_ddr_ref),
-        .sys_rst                        (clk_ddr_locked | rst),
+        .sys_rst                        (clk_eth_locked | clk_ddr_locked | rst),
 
         // Application interface ports
         .ui_clk                         (mig_ui_clk),
