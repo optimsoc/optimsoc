@@ -65,36 +65,8 @@ module compute_tile_dm
    input                                 wb_ext_err_o,
    input [31:0]                          wb_ext_dat_o,
 
-   output [31:0]                         wb_ess_adr_i,
-   output                                wb_ess_cyc_i,
-   output [31:0]                         wb_ess_dat_i,
-   output [3:0]                          wb_ess_sel_i,
-   output                                wb_ess_stb_i,
-   output                                wb_ess_we_i,
-   output                                wb_ess_cab_i,
-   output [2:0]                          wb_ess_cti_i,
-   output [1:0]                          wb_ess_bte_i,
-   input                                 wb_ess_ack_o,
-   input                                 wb_ess_rty_o,
-   input                                 wb_ess_err_o,
-   input [31:0]                          wb_ess_dat_o,
-
-   output [31:0]                         wb_fifo_adr_i,
-   output                                wb_fifo_cyc_i,
-   output [31:0]                         wb_fifo_dat_i,
-   output [3:0]                          wb_fifo_sel_i,
-   output                                wb_fifo_stb_i,
-   output                                wb_fifo_we_i,
-   output                                wb_fifo_cab_i,
-   output [2:0]                          wb_fifo_cti_i,
-   output [1:0]                          wb_fifo_bte_i,
-   input                                 wb_fifo_ack_o,
-   input                                 wb_fifo_rty_o,
-   input                                 wb_fifo_err_o,
-   input [31:0]                          wb_fifo_dat_o,
-
-   input                                 clk,
-   input                                 rst_cpu, rst_sys, rst_dbg,
+   input                                 clk, // clk == sys_clk
+   input                                 rst_cpu, rst_sys, rst_dbg, // rst_dbg == sys_rst
 
    input [CHANNELS-1:0][FLIT_WIDTH-1:0]  noc_in_flit,
    input [CHANNELS-1:0]                  noc_in_last,
@@ -104,8 +76,24 @@ module compute_tile_dm
    output [CHANNELS-1:0]                 noc_out_last,
    output [CHANNELS-1:0]                 noc_out_valid,
    input [CHANNELS-1:0]                  noc_out_ready,
+   // eth
    
-   input eth_irq
+   // input eth_irq,
+
+   output [3:0]                          mii_txd,
+   output                                mii_tx_en,
+   output                                mii_tx_er,
+   input                                 mii_tx_clk,
+   input                                 mii_rx_clk,
+   input  [3:0]                          mii_rxd,
+   input                                 mii_rx_dv,
+   input                                 mii_rx_er,      
+   
+   output                                eth_mdc,        
+   inout                                 eth_mdio,
+   output                                phy_rst_n,   
+   
+   input                                 clk_125mhz
    );
 
    import functions::*;
@@ -199,6 +187,7 @@ module compute_tile_dm
    wire [31:0]   snoop_adr;
 
    wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
+   
    assign pic_ints_i[0][31:5] = 27'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
    
@@ -716,6 +705,66 @@ module compute_tile_dm
    assign bussl_rty_o[SLAVE_FIFO] = wb_fifo_rty_o;
    assign bussl_err_o[SLAVE_FIFO] = wb_fifo_err_o;
    assign bussl_dat_o[SLAVE_FIFO] = wb_fifo_dat_o;   
+   
+   wire eth_irq;
+   
+   // Network Adapter  na_etherent_xilinx
+   na_etherent_xilinx
+      u_na_ethernet_xilinx
+      (
+         .sys_rst             (rst_dbg), // same as sys_rst
+         .sys_clk             (clk),
+         .clk_125mhz          (clk_125mhz),
+      
+         // interrupt
+         .eth_irq             (eth_irq),
+      
+         // WB bus (TX/RX) - to AXI Stream FIFO
+         .wb_fifo_adr_i       (wb_fifo_adr_i),
+         .wb_fifo_cyc_i       (wb_fifo_cyc_i),
+         .wb_fifo_dat_i       (wb_fifo_dat_i),
+         .wb_fifo_sel_i       (wb_fifo_sel_i),
+         .wb_fifo_stb_i       (wb_fifo_stb_i ),
+         .wb_fifo_we_i        (wb_fifo_we_i),
+         .wb_fifo_cti_i       (wb_fifo_cti_i),
+         .wb_fifo_bte_i       (wb_fifo_bte_i),
+         .wb_fifo_ack_o       (wb_fifo_ack_o),
+         .wb_fifo_rty_o       (wb_fifo_rty_o),
+         .wb_fifo_err_o       (wb_fifo_err_o),
+         .wb_fifo_dat_o       (wb_fifo_dat_o),
+      
+         // WB bus (Control - AXI4_Lite System) - to AXI4 Ethernet Subsystem
+         .wb_ess_adr_i        (wb_ess_adr_i),
+         .wb_ess_cyc_i        (wb_ess_cyc_i),
+         .wb_ess_dat_i        (wb_ess_dat_i),
+         .wb_ess_sel_i        (wb_ess_sel_i),
+         .wb_ess_stb_i        (wb_ess_stb_i),
+         .wb_ess_we_i         (wb_ess_we_i),
+         .wb_ess_cti_i        (wb_ess_cti_i),
+         .wb_ess_bte_i        (wb_ess_bte_i),
+         .wb_ess_ack_o        (wb_ess_ack_o),
+         .wb_ess_rty_o        (wb_ess_rty_o),
+         .wb_ess_err_o        (wb_ess_err_o),
+         .wb_ess_dat_o        (wb_ess_dat_o),   
+  
+         // MII Output
+         .mii_txd             (mii_txd),
+         .mii_tx_en           (mii_tx_en),
+         .mii_tx_er           (mii_tx_er),
+         .mii_tx_clk          (mii_tx_clk),
+         .mii_rx_clk          (mii_rx_clk),
+         .mii_rxd             (mii_rxd),
+         .mii_rx_dv           (mii_rx_dv),
+         .mii_rx_er           (mii_rx_er),   
+      
+         // MDIO Interface - Ethernet
+         .eth_mdc             (eth_mdc),        
+         .eth_mdio            (eth_mdio),
+      
+         .phy_rst_n           (phy_rst_n)
+      );               
+   
+   
    
 endmodule
 

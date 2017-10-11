@@ -123,15 +123,15 @@ module compute_tile_dm_ethernet_nexys4
        .DATA_WIDTH (DDR_DATA_WIDTH))
    c_wb_ddr();
 
-   wb_channel
-     #(.ADDR_WIDTH (32),
-       .DATA_WIDTH (32))
-     c_wb_ess();
+   //wb_channel
+   //  #(.ADDR_WIDTH (32),
+   //    .DATA_WIDTH (32))
+   //  c_wb_ess();
 
-   wb_channel
-     #(.ADDR_WIDTH (32),
-       .DATA_WIDTH (32))
-     c_wb_fifo();
+   //wb_channel
+   //  #(.ADDR_WIDTH (32),
+   //    .DATA_WIDTH (32))
+   //  c_wb_fifo();
 
      
    // clocks and reset
@@ -233,7 +233,7 @@ module compute_tile_dm_ethernet_nexys4
       );
 
 
-    (* mark_debug = "true" *)   wire eth_irq;
+   // wire eth_irq;
      
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
@@ -261,7 +261,7 @@ module compute_tile_dm_ethernet_nexys4
          .debug_ring_out(debug_ring_out),
          .debug_ring_out_ready(debug_ring_out_ready),
          
-         .eth_irq (eth_irq),
+         // .eth_irq       (eth_irq),
 
          .wb_ext_adr_i  (c_wb_ddr.adr_o),
          .wb_ext_cyc_i  (c_wb_ddr.cyc_o),
@@ -276,34 +276,22 @@ module compute_tile_dm_ethernet_nexys4
          .wb_ext_rty_o  (c_wb_ddr.rty_i),
          .wb_ext_err_o  (c_wb_ddr.err_i),
          .wb_ext_dat_o  (c_wb_ddr.dat_i),
+         
+         .mii_txd       (mii_txd),
+         .mii_tx_en     (mii_tx_en),
+         .mii_tx_er     (mii_tx_er),
+         .mii_tx_clk    (mii_tx_clk),
+         .mii_rx_clk    (mii_rx_clk),
+         .mii_rxd       (mii_rxd),
+         .mii_rx_dv     (mii_rx_dv),
+         .mii_rx_er     (mii_rx_er),      
+   
+         .eth_mdc       (eth_mdc),        
+         .eth_mdio      (eth_mdio),
+         .phy_rst_n     (phy_rst_n),           
 
-         // Ethernet Subsystem Control
-         .wb_ess_adr_i  (c_wb_ess.adr_o),
-         .wb_ess_cyc_i  (c_wb_ess.cyc_o),
-         .wb_ess_dat_i  (c_wb_ess.dat_o),
-         .wb_ess_sel_i  (c_wb_ess.sel_o),
-         .wb_ess_stb_i  (c_wb_ess.stb_o),
-         .wb_ess_we_i   (c_wb_ess.we_o),
-         .wb_ess_cti_i  (c_wb_ess.cti_o),
-         .wb_ess_bte_i  (c_wb_ess.bte_o),
-         .wb_ess_ack_o  (c_wb_ess.ack_i),
-         .wb_ess_rty_o  (c_wb_ess.rty_i),
-         .wb_ess_err_o  (c_wb_ess.err_i),
-         .wb_ess_dat_o  (c_wb_ess.dat_i),
-
-         // Ethernet Subsystem Data
-         .wb_fifo_adr_i  (c_wb_fifo.adr_o),
-         .wb_fifo_cyc_i  (c_wb_fifo.cyc_o),
-         .wb_fifo_dat_i  (c_wb_fifo.dat_o),
-         .wb_fifo_sel_i  (c_wb_fifo.sel_o),
-         .wb_fifo_stb_i  (c_wb_fifo.stb_o),
-         .wb_fifo_we_i   (c_wb_fifo.we_o),
-         .wb_fifo_cti_i  (c_wb_fifo.cti_o),
-         .wb_fifo_bte_i  (c_wb_fifo.bte_o),
-         .wb_fifo_ack_o  (c_wb_fifo.ack_i),
-         .wb_fifo_rty_o  (c_wb_fifo.rty_i),
-         .wb_fifo_err_o  (c_wb_fifo.err_i),
-         .wb_fifo_dat_o  (c_wb_fifo.dat_i)
+         .clk_125mhz    (clk_125mhz)
+         
       );
       
 
@@ -444,184 +432,16 @@ module compute_tile_dm_ethernet_nexys4
       .m_axi_rready    (c_axi_ddr.r_ready)
       );
 
-// tri-state assignment for mdio
-     wire eth_mdio_t;
-     wire eth_mdio_i;
-     wire eth_mdio_o;
-     //assign eth_mdio = eth_mdio_t ? eth_mdio_i : eth_mdio_o;
-     
-     IOBUF 
-        mdio_io_iobuf ( 
-           .I (eth_mdio_o ), 
-           .IO(eth_mdio   ), 
-           .O (eth_mdio_i ), 
-           .T (eth_mdio_t ));
-        
      // PHY needs 50 Mhz clock shifted 45 deg compared to RMII 2 MII
      // See Nexys 4 DDR board documentation for details.
      assign eth_refclk = clk_50mhz_45deg;
      
      
 // AXI Ethernet Subsystem
+      assign eth_rstn = phy_rst_n;
      
-     wire phy_rst_n;
-     assign eth_rstn = phy_rst_n;
-     
-     // wires MII2RMII Converter to Ethernet Subsystem
-        (* mark_debug = "true" *) wire [3:0] mii_txd;
-        (* mark_debug = "true" *) wire mii_tx_en;
-        (* mark_debug = "true" *) wire mii_tx_er;
-        (* mark_debug = "true" *) wire mii_tx_clk;
-        (* mark_debug = "true" *) wire mii_rx_clk;
-        (* mark_debug = "true" *) wire [3:0] mii_rxd;
-        (* mark_debug = "true" *) wire mii_rx_dv;
-        (* mark_debug = "true" *) wire mii_rx_er;
-                 
-     // wires AXI4Stream FIFO to Ethernet Subsystem
-        (* mark_debug = "true" *)   wire [31:0] s_axis_txc_tdata;
-        (* mark_debug = "true" *)   wire [3:0]  s_axis_txc_tkeep; // not in use
-        (* mark_debug = "true" *)   wire s_axis_txc_tlast;
-        (* mark_debug = "true" *)   wire s_axis_txc_tready;
-        (* mark_debug = "true" *)   wire s_axis_txc_tvalid;
-        
-        (* mark_debug = "true" *)   wire [31:0] s_axis_txd_tdata;
-        (* mark_debug = "true" *)   wire [3:0]  s_axis_txd_tkeep; // not in use
-        (* mark_debug = "true" *)   wire s_axis_txd_tlast;
-        (* mark_debug = "true" *)   wire s_axis_txd_tready;
-        (* mark_debug = "true" *)   wire s_axis_txd_tvalid;
-        
-        (* mark_debug = "true" *)   wire [31:0] m_axis_rxd_tdata;
-        (* mark_debug = "true" *)   wire [3:0]  m_axis_rxd_tkeep;
-        (* mark_debug = "true" *)   wire m_axis_rxd_tlast;
-        (* mark_debug = "true" *)   wire m_axis_rxd_tready;
-        (* mark_debug = "true" *)   wire m_axis_rxd_tvalid;         
-        
 
-       // wire AXI4 Ethernet Subsystem to WB2AXI Converter
-      //wire s_axi_aclk; // noch nicht verbunden!
-      //wire s_axi_aresetn;// noch nicht verbunden!
-        (* mark_debug = "true" *)wire [31:0] s_axi_awaddr;
-        (* mark_debug = "true" *)wire s_axi_awvalid;
-        (* mark_debug = "true" *)wire s_axi_awready;
-        (* mark_debug = "true" *)wire [31:0]s_axi_wdata;
-        (* mark_debug = "true" *)wire [3:0]s_axi_wstrb;
-        (* mark_debug = "true" *)wire s_axi_wvalid;
-        (* mark_debug = "true" *) wire s_axi_wready;
-        (* mark_debug = "true" *)wire [1:0]  s_axi_bresp;
-        (* mark_debug = "true" *)wire s_axi_bvalid;
-        (* mark_debug = "true" *)wire s_axi_bready;
-        (* mark_debug = "true" *)wire [31:0] s_axi_araddr;
-        (* mark_debug = "true" *)wire s_axi_arvalid;
-        (* mark_debug = "true" *)wire s_axi_arready;
-        (* mark_debug = "true" *)wire [31:0] s_axi_rdata;
-        (* mark_debug = "true" *)wire [1:0] s_axi_rresp;
-        (* mark_debug = "true" *)wire s_axi_rvalid;
-        (* mark_debug = "true" *)wire s_axi_rready;
-        (* mark_debug = "true" *)wire [3:0] s_axi_wstrb;
-                  
-   // wire AXI4 Stream FIFO to WB2AXI Converter
-   //wire fifo_s_axi_aclk; // noch nicht verbunden!
-   //wire fifo_s_axi_aresetn;// noch nicht verbunden!
-   (* mark_debug = "true" *)   wire [31:0] fifo_s_axi_awaddr;
-   (* mark_debug = "true" *)   wire fifo_s_axi_awvalid;
-   (* mark_debug = "true" *)   wire fifo_s_axi_awready;
-   (* mark_debug = "true" *)   wire [31:0] fifo_s_axi_wdata;
-   (* mark_debug = "true" *)   wire [3:0] fifo_s_axi_wstrb;
-   (* mark_debug = "true" *)   wire fifo_s_axi_wvalid;
-   (* mark_debug = "true" *)   wire fifo_s_axi_wready;
-   (* mark_debug = "true" *)   wire [1:0] fifo_s_axi_bresp;
-   (* mark_debug = "true" *)   wire fifo_s_axi_bvalid;
-   (* mark_debug = "true" *)   wire fifo_s_axi_bready;
-   (* mark_debug = "true" *)   wire [31:0] fifo_s_axi_araddr;
-   (* mark_debug = "true" *)    wire fifo_s_axi_arvalid;
-   (* mark_debug = "true" *)   wire fifo_s_axi_arready;
-   (* mark_debug = "true" *)   wire [31:0] fifo_s_axi_rdata;
-   (* mark_debug = "true" *)   wire [1:0] fifo_s_axi_rresp;
-   (* mark_debug = "true" *)   wire fifo_s_axi_rvalid;
-   (* mark_debug = "true" *)   wire fifo_s_axi_rready;       
-
-   // ASSUME THIS IS CORRECT!?
-   assign s_axis_txd_tkeep = 4'b1111;
-   assign s_axis_txc_tkeep = 4'b1111;
    
-     axi_ethernet_0
-        u_axi_ethernet
-        (
-           // AXI Lite control interface
-           .s_axi_lite_clk      (sys_clk      ) ,
-           .s_axi_lite_resetn   (~sys_rst   ),
-           .s_axi_araddr        (s_axi_araddr      ),
-           .s_axi_arready       (s_axi_arready     ),
-           .s_axi_arvalid       (s_axi_arvalid     ),
-           .s_axi_awaddr        (s_axi_awaddr      ),
-           .s_axi_awready       (s_axi_awready     ),
-           .s_axi_awvalid       (s_axi_awvalid     ),
-           .s_axi_bready        (s_axi_bready      ),
-           .s_axi_bresp         (s_axi_bresp       ),
-           .s_axi_bvalid        (s_axi_bvalid      ),
-           .s_axi_rdata         (s_axi_rdata       ),
-           .s_axi_rready        (s_axi_rready      ),
-           .s_axi_rresp         (s_axi_rresp       ),
-           .s_axi_rvalid        (s_axi_rvalid      ),
-           .s_axi_wdata         (s_axi_wdata       ),
-           .s_axi_wready        (s_axi_wready      ),
-           .s_axi_wvalid        (s_axi_wvalid      ),
-           .s_axi_wstrb         (s_axi_wstrb       ),
-
-           // AXI Stream TX/RX interface
-           .axis_clk            (sys_clk          ),
-
-           .axi_txc_arstn       (~sys_rst         ),
-           .s_axis_txc_tdata    (s_axis_txc_tdata  ),
-           .s_axis_txc_tkeep    (s_axis_txc_tkeep  ),
-           .s_axis_txc_tlast    (s_axis_txc_tlast  ),
-           .s_axis_txc_tready   (s_axis_txc_tready ),
-           .s_axis_txc_tvalid   (s_axis_txc_tvalid ),
-
-           .axi_txd_arstn       (~sys_rst         ),
-           .s_axis_txd_tdata    (s_axis_txd_tdata  ),
-           .s_axis_txd_tkeep    (s_axis_txd_tkeep  ),
-           .s_axis_txd_tlast    (s_axis_txd_tlast  ),
-           .s_axis_txd_tready   (s_axis_txd_tready ),
-           .s_axis_txd_tvalid   (s_axis_txd_tvalid ),
-
-           .axi_rxd_arstn       (~sys_rst         ),
-           .m_axis_rxd_tdata    (m_axis_rxd_tdata  ),
-           .m_axis_rxd_tkeep    (m_axis_rxd_tkeep  ),
-           .m_axis_rxd_tlast    (m_axis_rxd_tlast  ),
-           .m_axis_rxd_tready   (m_axis_rxd_tready ),
-           .m_axis_rxd_tvalid   (m_axis_rxd_tvalid ),
-        
-           .axi_rxs_arstn       (~sys_rst         ), // not in use only for DMA
-           .m_axis_rxs_tdata    (  ), // not in use only for DMA
-           .m_axis_rxs_tkeep    (  ), // not in use only for DMA
-           .m_axis_rxs_tlast    (  ), // not in use only for DMA
-           .m_axis_rxs_tready   (1'b1 ), // not in use only for DMA
-           .m_axis_rxs_tvalid   ( ), // not in use only for DMA
-
-           // MII Interface
-           .mii_txd             (mii_txd           ),
-           .mii_tx_en           (mii_tx_en         ),
-           .mii_tx_er           (mii_tx_er         ),
-           .mii_tx_clk          (mii_tx_clk        ),
-           .mii_rx_clk          (mii_rx_clk        ),
-           .mii_rxd             (mii_rxd           ),
-           .mii_rx_dv           (mii_rx_dv         ),
-           .mii_rx_er           (mii_rx_er         ),
-
-           // Ethernet PHY connections
-           .mdio_mdc            (eth_mdc           ),
-           .mdio_mdio_i         (eth_mdio_i        ),
-           .mdio_mdio_o         (eth_mdio_o        ),
-           .mdio_mdio_t         (eth_mdio_t            ),
-           .phy_rst_n           (phy_rst_n         ), 
-
-           .gtx_clk             (clk_125mhz    )
-
-        );
-
-        
-        
 // MII to RMII Converter
       mii_to_rmii_0
          u_mii_to_rmii_0 
@@ -645,163 +465,4 @@ module compute_tile_dm_ethernet_nexys4
               .rmii2phy_tx_en    (eth_txen )
               
            );
-// AXI4Stream FIFO
-      axi_fifo_mm_s_0
-         u_axi_fifo_mm_s_0
-         (
-            .s_axi_aclk            (sys_clk    ),
-            .s_axi_aresetn         (~sys_rst),
-            
-            .s_axi_awaddr          (fifo_s_axi_awaddr  ),
-            .s_axi_awvalid         (fifo_s_axi_awvalid ),
-            .s_axi_awready         (fifo_s_axi_awready ),
-            .s_axi_wdata           (fifo_s_axi_wdata   ),
-            .s_axi_wstrb           (fifo_s_axi_wstrb   ),
-            .s_axi_wvalid          (fifo_s_axi_wvalid  ),
-            .s_axi_wready          (fifo_s_axi_wready  ),
-            .s_axi_bresp           (fifo_s_axi_bresp   ),
-            .s_axi_bvalid          (fifo_s_axi_bvalid  ),
-            .s_axi_bready          (fifo_s_axi_bready  ),
-            .s_axi_araddr          (fifo_s_axi_araddr  ),
-            .s_axi_arvalid         (fifo_s_axi_arvalid ),
-            .s_axi_arready         (fifo_s_axi_arready ),
-            .s_axi_rdata           (fifo_s_axi_rdata   ),
-            .s_axi_rresp           (fifo_s_axi_rresp   ),
-            .s_axi_rvalid          (fifo_s_axi_rvalid  ),
-            .s_axi_rready          (fifo_s_axi_rready  ),
-            .mm2s_prmry_reset_out_n(),
-            .axi_str_txd_tvalid    (s_axis_txd_tvalid  ),
-            .axi_str_txd_tready    (s_axis_txd_tready  ),
-            .axi_str_txd_tlast     (s_axis_txd_tlast   ),
-            .axi_str_txd_tdata     (s_axis_txd_tdata   ),
-            .mm2s_cntrl_reset_out_n(),
-            .axi_str_txc_tvalid    (s_axis_txc_tvalid  ),
-            .axi_str_txc_tready    (s_axis_txc_tready  ),
-            .axi_str_txc_tlast     (s_axis_txc_tlast   ),
-            .axi_str_txc_tdata     (s_axis_txc_tdata   ),
-            .s2mm_prmry_reset_out_n(),
-            .axi_str_rxd_tvalid    (m_axis_rxd_tvalid  ),
-            .axi_str_rxd_tready    (m_axis_rxd_tready  ),
-            .axi_str_rxd_tlast     (m_axis_rxd_tlast   ),
-            .axi_str_rxd_tdata     (m_axis_rxd_tdata   ),
-            
-            .interrupt             (eth_irq)
-         );
-            
-         // Memory interface: convert WishBone signals from system to AXI for AXI4FIFO
-         wb2axi
-            #(.ADDR_WIDTH (32), // vielleich??
-               .DATA_WIDTH (32),// vielleich??
-               .AXI_ID_WIDTH (AXI_ID_WIDTH))// vielleich??
-            u_wb2axi_fifo
-            (.clk             (sys_clk),
-             .rst             (sys_rst),
-             .wb_cyc_i        (c_wb_fifo.cyc_o),
-             .wb_stb_i        (c_wb_fifo.stb_o),
-             .wb_we_i         (c_wb_fifo.we_o),
-             .wb_adr_i        (c_wb_fifo.adr_o),
-             .wb_dat_i        (c_wb_fifo.dat_o),
-             .wb_sel_i        (c_wb_fifo.sel_o),
-             .wb_cti_i        (c_wb_fifo.cti_o),
-             .wb_bte_i        (c_wb_fifo.bte_o),
-             .wb_ack_o        (c_wb_fifo.ack_i),
-             .wb_err_o        (c_wb_fifo.err_i),
-             .wb_rty_o        (c_wb_fifo.rty_i),
-             .wb_dat_o        (c_wb_fifo.dat_i),
-             .m_axi_awid      (),
-             .m_axi_awaddr    (fifo_s_axi_awaddr),
-             .m_axi_awlen     (),
-             .m_axi_awsize    (),
-             .m_axi_awburst   (),
-             .m_axi_awcache   (),
-             .m_axi_awprot    (),
-             .m_axi_awqos     (),
-             .m_axi_awvalid   (fifo_s_axi_awvalid),
-             .m_axi_awready   (fifo_s_axi_awready),
-             .m_axi_wdata     (fifo_s_axi_wdata),
-             .m_axi_wstrb     (fifo_s_axi_wstrb),
-             .m_axi_wlast     (),
-             .m_axi_wvalid    (fifo_s_axi_wvalid),
-             .m_axi_wready    (fifo_s_axi_wready),
-             .m_axi_bid       (),
-             .m_axi_bresp     (fifo_s_axi_bresp),
-             .m_axi_bvalid    (fifo_s_axi_bvalid),
-             .m_axi_bready    (fifo_s_axi_bready),
-             .m_axi_arid      (),
-             .m_axi_araddr    (fifo_s_axi_araddr),
-             .m_axi_arlen     (),
-             .m_axi_arsize    (),
-             .m_axi_arburst   (),
-             .m_axi_arcache   (),
-             .m_axi_arprot    (),
-             .m_axi_arqos     (),
-             .m_axi_arvalid   (fifo_s_axi_arvalid),
-             .m_axi_arready   (fifo_s_axi_arready),
-             .m_axi_rid       (),
-             .m_axi_rdata     (fifo_s_axi_rdata),
-             .m_axi_rresp     (fifo_s_axi_rresp),
-             .m_axi_rlast     (),
-             .m_axi_rvalid    (fifo_s_axi_rvalid),
-             .m_axi_rready    (fifo_s_axi_rready)
-            );
-
-            
-// Memory interface: convert WishBone signals from system to AXI for AXI Ethernet Subsystem
-            wb2axi
-               #(.ADDR_WIDTH (32), // vielleich??
-                  .DATA_WIDTH (32),// vielleich??
-                  .AXI_ID_WIDTH (AXI_ID_WIDTH))// vielleich??
-               u_wb2axi_ess
-               (.clk             (sys_clk),
-                  .rst             (sys_rst),
-                  .wb_cyc_i        (c_wb_ess.cyc_o),
-                  .wb_stb_i        (c_wb_ess.stb_o),
-                  .wb_we_i         (c_wb_ess.we_o),
-                  .wb_adr_i        (c_wb_ess.adr_o),
-                  .wb_dat_i        (c_wb_ess.dat_o),
-                  .wb_sel_i        (c_wb_ess.sel_o),
-                  .wb_cti_i        (c_wb_ess.cti_o),
-                  .wb_bte_i        (c_wb_ess.bte_o),
-                  .wb_ack_o        (c_wb_ess.ack_i),
-                  .wb_err_o        (c_wb_ess.err_i),
-                  .wb_rty_o        (c_wb_ess.rty_i),
-                  .wb_dat_o        (c_wb_ess.dat_i),
-                  .m_axi_awid      (),
-                  .m_axi_awaddr    (s_axi_awaddr),
-                  .m_axi_awlen     (),
-                  .m_axi_awsize    (),
-                  .m_axi_awburst   (),
-                  .m_axi_awcache   (),
-                  .m_axi_awprot    (),
-                  .m_axi_awqos     (),
-                  .m_axi_awvalid   (s_axi_awvalid),
-                  .m_axi_awready   (s_axi_awready),
-                  .m_axi_wdata     (s_axi_wdata),
-                  .m_axi_wstrb     (s_axi_wstrb),
-                  .m_axi_wlast     (),
-                  .m_axi_wvalid    (s_axi_wvalid),
-                  .m_axi_wready    (s_axi_wready),
-                  .m_axi_bid       (),
-                  .m_axi_bresp     (s_axi_bresp),
-                  .m_axi_bvalid    (s_axi_bvalid),
-                  .m_axi_bready    (s_axi_bready),
-                  .m_axi_arid      (),
-                  .m_axi_araddr    (s_axi_araddr),
-                  .m_axi_arlen     (),
-                  .m_axi_arsize    (),
-                  .m_axi_arburst   (),
-                  .m_axi_arcache   (),
-                  .m_axi_arprot    (),
-                  .m_axi_arqos     (),
-                  .m_axi_arvalid   (s_axi_arvalid),
-                  .m_axi_arready   (s_axi_arready),
-                  .m_axi_rid       (),
-                  .m_axi_rdata     (s_axi_rdata),
-                  .m_axi_rresp     (s_axi_rresp),
-                  .m_axi_rlast     (),
-                  .m_axi_rvalid    (s_axi_rvalid),
-                  .m_axi_rready    (s_axi_rready)
-               );            
-     
-     
 endmodule
