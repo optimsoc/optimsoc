@@ -70,9 +70,9 @@ module compute_tile_dm_ethernet_nexys4
     output                eth_mdc,
     inout                 eth_mdio,
     output                eth_rstn,
-    output                eth_refclk,
+    output                eth_refclk
    
-   output [15:0] led
+   // output [15:0] led
    
    );
 
@@ -122,17 +122,6 @@ module compute_tile_dm_ethernet_nexys4
      #(.ADDR_WIDTH (DDR_ADDR_WIDTH),
        .DATA_WIDTH (DDR_DATA_WIDTH))
    c_wb_ddr();
-
-   //wb_channel
-   //  #(.ADDR_WIDTH (32),
-   //    .DATA_WIDTH (32))
-   //  c_wb_ess();
-
-   //wb_channel
-   //  #(.ADDR_WIDTH (32),
-   //    .DATA_WIDTH (32))
-   //  c_wb_fifo();
-
      
    // clocks and reset
    // clk is the 100 MHz board clock
@@ -232,9 +221,10 @@ module compute_tile_dm_ethernet_nexys4
          .ring_in_ready  (debug_ring_out_ready)
       );
 
-
-   // wire eth_irq;
      
+    wire  [3:0]  mii_rxd;
+    wire  [3:0]  mii_txd;
+    
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
       #(.CONFIG(CONFIG),
@@ -293,8 +283,9 @@ module compute_tile_dm_ethernet_nexys4
          .clk_125mhz    (clk_125mhz)
          
       );
+   
+   assign eth_rstn = phy_rst_n;
       
-
    // Nexys 4 board wrapper
    nexys4ddr
       #(
@@ -372,7 +363,23 @@ module compute_tile_dm_ethernet_nexys4
          .ddr_rdata   (c_axi_ddr.r_data),
          .ddr_rlast   (c_axi_ddr.r_last),
          .ddr_rvalid  (c_axi_ddr.r_valid),
-         .ddr_rready  (c_axi_ddr.r_ready)
+         .ddr_rready  (c_axi_ddr.r_ready),
+         
+         // eth
+         .phy_rst_n   (eth_rstn),
+         .mii_tx_en   (mii_tx_en),
+         .mii_txd     (mii_txd),
+         .mii_tx_er   (mii_tx_er),
+         .mii_tx_clk  (mii_tx_clk),
+         .mii_rx_clk  (mii_rx_clk), 
+         .mii_rx_dv   (mii_rx_dv),
+         .mii_rx_er   (mii_rx_er),
+         .mii_rxd     (mii_rxd),
+         .eth_crsdv   (eth_crsdv),
+         .eth_rxerr   (eth_rxerr),
+         .eth_rxd     (eth_rxd),
+         .eth_txd     (eth_txd),
+         .eth_txen    (eth_txen)            
       );
 
    // Memory interface: convert WishBone signals from system to AXI for DRAM
@@ -435,34 +442,6 @@ module compute_tile_dm_ethernet_nexys4
      // PHY needs 50 Mhz clock shifted 45 deg compared to RMII 2 MII
      // See Nexys 4 DDR board documentation for details.
      assign eth_refclk = clk_50mhz_45deg;
-     
-     
-// AXI Ethernet Subsystem
-      assign eth_rstn = phy_rst_n;
-     
 
-   
-// MII to RMII Converter
-      mii_to_rmii_0
-         u_mii_to_rmii_0 
-         (
-              .ref_clk           (clk_50mhz),
-              .rst_n             (phy_rst_n),
-              .mac2rmii_tx_en    (mii_tx_en         ),
-              .mac2rmii_txd      (mii_txd           ),
-              .mac2rmii_tx_er    (mii_tx_er         ),
-              .rmii2mac_tx_clk   (mii_tx_clk        ),
-              .rmii2mac_rx_clk   (mii_rx_clk        ),
-              .rmii2mac_col      (),
-              .rmii2mac_crs      (led[0]), // debug only; carrier sense led
-              .rmii2mac_rx_dv    (mii_rx_dv         ),
-              .rmii2mac_rx_er    (mii_rx_er),
-              .rmii2mac_rxd      (mii_rxd           ),
-              .phy2rmii_crs_dv   (eth_crsdv),
-              .phy2rmii_rx_er    (eth_rxerr),
-              .phy2rmii_rxd      (eth_rxd  ),
-              .rmii2phy_txd      (eth_txd  ),
-              .rmii2phy_tx_en    (eth_txen )
-              
-           );
+
 endmodule

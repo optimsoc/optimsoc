@@ -5,7 +5,6 @@ description = "Xilinx/Digilent Nexys4 DDR board with compute tile and Ethernet s
 depend =
   optimsoc:examples:compute_tile_ethernet_nexys4ddr-axi_ethernet_0
   optimsoc:examples:compute_tile_ethernet_nexys4ddr-axi_fifo_mm_s_0
-  optimsoc:examples:compute_tile_ethernet_nexys4ddr-mii_to_rmii_0
   wallento:boards:nexys4ddr
   wallento:svchannels:nasti
   wallento:svchannels:wishbone

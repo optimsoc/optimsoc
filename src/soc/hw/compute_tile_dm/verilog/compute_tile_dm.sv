@@ -46,7 +46,7 @@ module compute_tile_dm
     localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH
     )
    (
-   input                                 dii_flit [1:0] debug_ring_in,
+   input                                 dii_flit [1:0] debug_ring_in, // wire
    output [1:0]                          debug_ring_in_ready,
    output                                dii_flit [1:0] debug_ring_out,
    input [1:0]                           debug_ring_out_ready,
@@ -78,8 +78,6 @@ module compute_tile_dm
    input [CHANNELS-1:0]                  noc_out_ready,
    // eth
    
-   // input eth_irq,
-
    output [3:0]                          mii_txd,
    output                                mii_tx_en,
    output                                mii_tx_er,
@@ -192,8 +190,10 @@ module compute_tile_dm
    assign pic_ints_i[0][1:0] = 2'b00;
    
    // ETH interrupt is IRQ 4
-   assign pic_ints_i[0][4] = eth_irq;
+   // wire eth_irq;
+   // assign ; //  = eth_irq;
 
+    
    genvar        c, m, s;
 
    wire [32*NR_MASTERS-1:0] busms_adr_o_flat;
@@ -677,47 +677,45 @@ module compute_tile_dm
    
    // Ethernet
    // ESS
-   assign wb_ess_adr_i = bussl_adr_i[SLAVE_ESS];
-   assign wb_ess_cyc_i = bussl_cyc_i[SLAVE_ESS];
-   assign wb_ess_dat_i = bussl_dat_i[SLAVE_ESS];
-   assign wb_ess_sel_i = bussl_sel_i[SLAVE_ESS];
-   assign wb_ess_stb_i = bussl_stb_i[SLAVE_ESS];
-   assign wb_ess_we_i = bussl_we_i[SLAVE_ESS];
-   assign wb_ess_cab_i = bussl_cab_i[SLAVE_ESS];
-   assign wb_ess_cti_i = bussl_cti_i[SLAVE_ESS];
-   assign wb_ess_bte_i = bussl_bte_i[SLAVE_ESS];
-   assign bussl_ack_o[SLAVE_ESS] = wb_ess_ack_o;
-   assign bussl_rty_o[SLAVE_ESS] = wb_ess_rty_o;
-   assign bussl_err_o[SLAVE_ESS] = wb_ess_err_o;
-   assign bussl_dat_o[SLAVE_ESS] = wb_ess_dat_o;
+   wire [31:0]           wb_ess_adr_i; 
+   wire                  wb_ess_cyc_i;  
+   wire [31:0]           wb_ess_dat_i; 
+   wire [3:0]            wb_ess_sel_i; 
+   wire                  wb_ess_stb_i;
+   wire                  wb_ess_we_i; 
+   wire                  wb_ess_cab_i; 
+   wire  [2:0]           wb_ess_cti_i; 
+   wire  [1:0]           wb_ess_bte_i; 
+   //wire                  wb_ess_ack_o;
+   //wire                  wb_ess_rty_o;
+   //wire                  wb_ess_err_o;
+   //wire [31:0]           wb_ess_dat_o;  
    
    // FIFO
-   assign wb_fifo_adr_i = bussl_adr_i[SLAVE_FIFO];
-   assign wb_fifo_cyc_i = bussl_cyc_i[SLAVE_FIFO];
-   assign wb_fifo_dat_i = bussl_dat_i[SLAVE_FIFO];
-   assign wb_fifo_sel_i = bussl_sel_i[SLAVE_FIFO];
-   assign wb_fifo_stb_i = bussl_stb_i[SLAVE_FIFO];
-   assign wb_fifo_we_i = bussl_we_i[SLAVE_FIFO];
-   assign wb_fifo_cab_i = bussl_cab_i[SLAVE_FIFO];
-   assign wb_fifo_cti_i = bussl_cti_i[SLAVE_FIFO];
-   assign wb_fifo_bte_i = bussl_bte_i[SLAVE_FIFO];
-   assign bussl_ack_o[SLAVE_FIFO] = wb_fifo_ack_o;
-   assign bussl_rty_o[SLAVE_FIFO] = wb_fifo_rty_o;
-   assign bussl_err_o[SLAVE_FIFO] = wb_fifo_err_o;
-   assign bussl_dat_o[SLAVE_FIFO] = wb_fifo_dat_o;   
-   
-   wire eth_irq;
+   wire [31:0]         wb_fifo_adr_i;
+   wire                wb_fifo_cyc_i;
+   wire [31:0]         wb_fifo_dat_i;
+   wire [3:0]          wb_fifo_sel_i;
+   wire                wb_fifo_stb_i;
+   wire                wb_fifo_we_i;
+   wire                wb_fifo_cab_i;
+   wire [2:0]          wb_fifo_cti_i;
+   wire [1:0]          wb_fifo_bte_i;
+   //wire                wb_fifo_ack_o;
+   //wire                wb_fifo_rty_o;
+   //wire                wb_fifo_err_o;
+   //wire [31:0]         wb_fifo_dat_o;     
    
    // Network Adapter  na_etherent_xilinx
    na_etherent_xilinx
       u_na_ethernet_xilinx
       (
-         .sys_rst             (rst_dbg), // same as sys_rst
-         .sys_clk             (clk),
+         .sys_rst             (rst_sys), // same as sys_rst
+         .sys_clk             (clk), // same as sys_clk
          .clk_125mhz          (clk_125mhz),
       
          // interrupt
-         .eth_irq             (eth_irq),
+         .eth_irq             (pic_ints_i[0][4]),
       
          // WB bus (TX/RX) - to AXI Stream FIFO
          .wb_fifo_adr_i       (wb_fifo_adr_i),
@@ -728,10 +726,10 @@ module compute_tile_dm
          .wb_fifo_we_i        (wb_fifo_we_i),
          .wb_fifo_cti_i       (wb_fifo_cti_i),
          .wb_fifo_bte_i       (wb_fifo_bte_i),
-         .wb_fifo_ack_o       (wb_fifo_ack_o),
-         .wb_fifo_rty_o       (wb_fifo_rty_o),
-         .wb_fifo_err_o       (wb_fifo_err_o),
-         .wb_fifo_dat_o       (wb_fifo_dat_o),
+         .wb_fifo_ack_o       (bussl_ack_o[SLAVE_FIFO]),
+         .wb_fifo_rty_o       (bussl_rty_o[SLAVE_FIFO]),
+         .wb_fifo_err_o       (bussl_err_o[SLAVE_FIFO]),
+         .wb_fifo_dat_o       (bussl_dat_o[SLAVE_FIFO]),
       
          // WB bus (Control - AXI4_Lite System) - to AXI4 Ethernet Subsystem
          .wb_ess_adr_i        (wb_ess_adr_i),
@@ -742,10 +740,10 @@ module compute_tile_dm
          .wb_ess_we_i         (wb_ess_we_i),
          .wb_ess_cti_i        (wb_ess_cti_i),
          .wb_ess_bte_i        (wb_ess_bte_i),
-         .wb_ess_ack_o        (wb_ess_ack_o),
-         .wb_ess_rty_o        (wb_ess_rty_o),
-         .wb_ess_err_o        (wb_ess_err_o),
-         .wb_ess_dat_o        (wb_ess_dat_o),   
+         .wb_ess_ack_o        (bussl_ack_o[SLAVE_ESS]),
+         .wb_ess_rty_o        (bussl_rty_o[SLAVE_ESS]),
+         .wb_ess_err_o        (bussl_err_o[SLAVE_ESS]),
+         .wb_ess_dat_o        (bussl_dat_o[SLAVE_ESS]),   
   
          // MII Output
          .mii_txd             (mii_txd),
@@ -762,7 +760,39 @@ module compute_tile_dm
          .eth_mdio            (eth_mdio),
       
          .phy_rst_n           (phy_rst_n)
-      );               
+      );     
+      
+   // ESS
+   assign wb_ess_adr_i = bussl_adr_i[SLAVE_ESS];
+   assign wb_ess_cyc_i = bussl_cyc_i[SLAVE_ESS];
+   assign wb_ess_dat_i = bussl_dat_i[SLAVE_ESS];
+   assign wb_ess_sel_i = bussl_sel_i[SLAVE_ESS];
+   assign wb_ess_stb_i = bussl_stb_i[SLAVE_ESS];
+   assign wb_ess_we_i = bussl_we_i[SLAVE_ESS];
+   assign wb_ess_cab_i = bussl_cab_i[SLAVE_ESS];
+   assign wb_ess_cti_i = bussl_cti_i[SLAVE_ESS];
+   assign wb_ess_bte_i = bussl_bte_i[SLAVE_ESS];
+   //assign bussl_ack_o[SLAVE_ESS] = wb_ess_ack_o;
+   //assign bussl_rty_o[SLAVE_ESS] = wb_ess_rty_o;
+   //assign bussl_err_o[SLAVE_ESS] = wb_ess_err_o;
+   //assign bussl_dat_o[SLAVE_ESS] = wb_ess_dat_o;
+   
+   // FIFO
+   assign wb_fifo_adr_i = bussl_adr_i[SLAVE_FIFO];
+   assign wb_fifo_cyc_i = bussl_cyc_i[SLAVE_FIFO];
+   assign wb_fifo_dat_i = bussl_dat_i[SLAVE_FIFO];
+   assign wb_fifo_sel_i = bussl_sel_i[SLAVE_FIFO];
+   assign wb_fifo_stb_i = bussl_stb_i[SLAVE_FIFO];
+   assign wb_fifo_we_i = bussl_we_i[SLAVE_FIFO];
+   assign wb_fifo_cab_i = bussl_cab_i[SLAVE_FIFO];
+   assign wb_fifo_cti_i = bussl_cti_i[SLAVE_FIFO];
+   assign wb_fifo_bte_i = bussl_bte_i[SLAVE_FIFO];
+   //assign bussl_ack_o[SLAVE_FIFO] = wb_fifo_ack_o;
+   //assign bussl_rty_o[SLAVE_FIFO] = wb_fifo_rty_o;
+   //assign bussl_err_o[SLAVE_FIFO] = wb_fifo_err_o;
+   //assign bussl_dat_o[SLAVE_FIFO] = wb_fifo_dat_o;   
+   
+          
    
    
    

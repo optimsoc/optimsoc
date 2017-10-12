@@ -39,7 +39,7 @@ module na_etherent_xilinx
       input                 clk_125mhz,
       
       // interrupt
-      input                 eth_irq,
+      output                 eth_irq,
       
       // WB bus (TX/RX) - to AXI Stream FIFO 
       // (Bennenung aus Slave Sicht)
@@ -163,54 +163,54 @@ module na_etherent_xilinx
 
    assign s_axis_txd_tkeep = 4'b1111;
    assign s_axis_txc_tkeep = 4'b1111;
-   
+     
    axi_ethernet_0
       u_axi_ethernet
       (
          // AXI Lite control interface
-         .s_axi_lite_clk      (sys_clk      ) ,
-         .s_axi_lite_resetn   (~sys_rst   ),
-         .s_axi_araddr        (s_axi_araddr      ),
-         .s_axi_arready       (s_axi_arready     ),
-         .s_axi_arvalid       (s_axi_arvalid     ),
-         .s_axi_awaddr        (s_axi_awaddr      ),
-         .s_axi_awready       (s_axi_awready     ),
-         .s_axi_awvalid       (s_axi_awvalid     ),
-         .s_axi_bready        (s_axi_bready      ),
-         .s_axi_bresp         (s_axi_bresp       ),
-         .s_axi_bvalid        (s_axi_bvalid      ),
-         .s_axi_rdata         (s_axi_rdata       ),
-         .s_axi_rready        (s_axi_rready      ),
-         .s_axi_rresp         (s_axi_rresp       ),
-         .s_axi_rvalid        (s_axi_rvalid      ),
-         .s_axi_wdata         (s_axi_wdata       ),
-         .s_axi_wready        (s_axi_wready      ),
-         .s_axi_wvalid        (s_axi_wvalid      ),
-         .s_axi_wstrb         (s_axi_wstrb       ),
+         .s_axi_lite_clk      (sys_clk      ) , // input to ess
+         .s_axi_lite_resetn   (~sys_rst   ), // input to ess
+         .s_axi_araddr        (s_axi_araddr      ), // input to ess
+         .s_axi_arready       (s_axi_arready     ), // output to ess
+         .s_axi_arvalid       (s_axi_arvalid     ), // input to ess
+         .s_axi_awaddr        (s_axi_awaddr      ), // input to ess
+         .s_axi_awready       (s_axi_awready     ), // output to ess
+         .s_axi_awvalid       (s_axi_awvalid     ), // input to ess
+         .s_axi_bready        (s_axi_bready      ), // input to ess
+         .s_axi_bresp         (s_axi_bresp       ), // output to ess
+         .s_axi_bvalid        (s_axi_bvalid      ), // output to ess
+         .s_axi_rdata         (s_axi_rdata       ), // output to ess
+         .s_axi_rready        (s_axi_rready      ), // input to ess
+         .s_axi_rresp         (s_axi_rresp       ), // output to ess
+         .s_axi_rvalid        (s_axi_rvalid      ), // output to ess
+         .s_axi_wdata         (s_axi_wdata       ), // input to ess
+         .s_axi_wready        (s_axi_wready      ), // output to ess
+         .s_axi_wvalid        (s_axi_wvalid      ), // input to ess
+         .s_axi_wstrb         (s_axi_wstrb       ), // input to ess
 
          // AXI Stream TX/RX interface
-         .axis_clk            (sys_clk          ),
+         .axis_clk            (sys_clk          ), // input to ess
 
-         .axi_txc_arstn       (~sys_rst         ),
-         .s_axis_txc_tdata    (s_axis_txc_tdata  ),
-         .s_axis_txc_tkeep    (s_axis_txc_tkeep  ),
-         .s_axis_txc_tlast    (s_axis_txc_tlast  ),
-         .s_axis_txc_tready   (s_axis_txc_tready ),
-         .s_axis_txc_tvalid   (s_axis_txc_tvalid ),
+         .axi_txc_arstn       (~sys_rst         ), // input to ess
+         .s_axis_txc_tdata    (s_axis_txc_tdata  ), // input to ess
+         .s_axis_txc_tkeep    (s_axis_txc_tkeep  ), // input to ess
+         .s_axis_txc_tlast    (s_axis_txc_tlast  ), // input to ess
+         .s_axis_txc_tready   (s_axis_txc_tready ), // output to ess
+         .s_axis_txc_tvalid   (s_axis_txc_tvalid ), // input to ess
 
-         .axi_txd_arstn       (~sys_rst         ),
-         .s_axis_txd_tdata    (s_axis_txd_tdata  ),
-         .s_axis_txd_tkeep    (s_axis_txd_tkeep  ),
-         .s_axis_txd_tlast    (s_axis_txd_tlast  ),
-         .s_axis_txd_tready   (s_axis_txd_tready ),
-         .s_axis_txd_tvalid   (s_axis_txd_tvalid ),
+         .axi_txd_arstn       (~sys_rst         ), // input to ess
+         .s_axis_txd_tdata    (s_axis_txd_tdata  ), // input to ess
+         .s_axis_txd_tkeep    (s_axis_txd_tkeep  ), // input to ess
+         .s_axis_txd_tlast    (s_axis_txd_tlast  ), // input to ess
+         .s_axis_txd_tready   (s_axis_txd_tready ), // output to ess
+         .s_axis_txd_tvalid   (s_axis_txd_tvalid ), // input to ess
 
-         .axi_rxd_arstn       (~sys_rst         ),
-         .m_axis_rxd_tdata    (m_axis_rxd_tdata  ),
-         .m_axis_rxd_tkeep    (m_axis_rxd_tkeep  ),
-         .m_axis_rxd_tlast    (m_axis_rxd_tlast  ),
-         .m_axis_rxd_tready   (m_axis_rxd_tready ),
-         .m_axis_rxd_tvalid   (m_axis_rxd_tvalid ),
+         .axi_rxd_arstn       (~sys_rst         ), // input to ess
+         .m_axis_rxd_tdata    (m_axis_rxd_tdata  ), // output to ess
+         .m_axis_rxd_tkeep    (m_axis_rxd_tkeep  ), // output to ess
+         .m_axis_rxd_tlast    (m_axis_rxd_tlast  ), // output to ess
+         .m_axis_rxd_tready   (m_axis_rxd_tready ), // input to ess
+         .m_axis_rxd_tvalid   (m_axis_rxd_tvalid ), // output to ess
         
          .axi_rxs_arstn       (~sys_rst         ), // not in use only for DMA
          .m_axis_rxs_tdata    (  ), // not in use only for DMA
@@ -220,24 +220,25 @@ module na_etherent_xilinx
          .m_axis_rxs_tvalid   ( ), // not in use only for DMA
 
          // MII Interface
-         .mii_txd             (mii_txd           ),
-         .mii_tx_en           (mii_tx_en         ),
-         .mii_tx_er           (mii_tx_er         ),
-         .mii_tx_clk          (mii_tx_clk        ),
-         .mii_rx_clk          (mii_rx_clk        ),
-         .mii_rxd             (mii_rxd           ),
-         .mii_rx_dv           (mii_rx_dv         ),
-         .mii_rx_er           (mii_rx_er         ),
+         .mii_txd             (mii_txd           ), // output to ess
+         .mii_tx_en           (mii_tx_en         ), // output to ess
+         .mii_tx_er           (mii_tx_er         ), // output to ess
+         .mii_tx_clk          (mii_tx_clk        ), // input to ess
+         .mii_rx_clk          (mii_rx_clk        ), // input to ess
+         .mii_rxd             (mii_rxd           ), // input to ess
+         .mii_rx_dv           (mii_rx_dv         ), // input to ess
+         .mii_rx_er           (mii_rx_er         ), // input to ess
 
          // AXI Ethernet Output
-         .mdio_mdc            (eth_mdc          ),
-         .mdio_mdio_i         (eth_mdio_i       ),
+         .mdio_mdc            (eth_mdc          ), // output to ess
+         .mdio_mdio_i         (eth_mdio_i       ), 
          .mdio_mdio_o         (eth_mdio_o       ),
          .mdio_mdio_t         (eth_mdio_t       ),
-         .phy_rst_n           (phy_rst_n         ), 
+         .phy_rst_n           (phy_rst_n         ), // output to ess
 
-         .gtx_clk             (clk_125mhz    )
-
+         .gtx_clk             (clk_125mhz    ), // input to ess
+         .mac_irq             (), // output to ess
+         .interrupt           () // output to ess
       );
 
         
@@ -246,43 +247,43 @@ module na_etherent_xilinx
    axi_fifo_mm_s_0
       u_axi_fifo_mm_s_0
       (
-         .s_axi_aclk            (sys_clk    ),
-         .s_axi_aresetn         (~sys_rst),
+         .s_axi_aclk            (sys_clk    ), // input to fifo 1
+         .s_axi_aresetn         (~sys_rst), // input to fifo 1
             
-         .s_axi_awaddr          (fifo_s_axi_awaddr  ),
-         .s_axi_awvalid         (fifo_s_axi_awvalid ),
-         .s_axi_awready         (fifo_s_axi_awready ),
-         .s_axi_wdata           (fifo_s_axi_wdata   ),
-         .s_axi_wstrb           (fifo_s_axi_wstrb   ),
-         .s_axi_wvalid          (fifo_s_axi_wvalid  ),
-         .s_axi_wready          (fifo_s_axi_wready  ),
-         .s_axi_bresp           (fifo_s_axi_bresp   ),
-         .s_axi_bvalid          (fifo_s_axi_bvalid  ),
-         .s_axi_bready          (fifo_s_axi_bready  ),
-         .s_axi_araddr          (fifo_s_axi_araddr  ),
-         .s_axi_arvalid         (fifo_s_axi_arvalid ),
-         .s_axi_arready         (fifo_s_axi_arready ),
-         .s_axi_rdata           (fifo_s_axi_rdata   ),
-         .s_axi_rresp           (fifo_s_axi_rresp   ),
-         .s_axi_rvalid          (fifo_s_axi_rvalid  ),
-         .s_axi_rready          (fifo_s_axi_rready  ),
+         .s_axi_awaddr          (fifo_s_axi_awaddr  ), // input to fifo
+         .s_axi_awvalid         (fifo_s_axi_awvalid ), // input to fifo
+         .s_axi_awready         (fifo_s_axi_awready ), // output to fifo
+         .s_axi_wdata           (fifo_s_axi_wdata   ), // input to fifo
+         .s_axi_wstrb           (fifo_s_axi_wstrb   ), // input to fifo
+         .s_axi_wvalid          (fifo_s_axi_wvalid  ), // input to fifo
+         .s_axi_wready          (fifo_s_axi_wready  ), // output to fifo
+         .s_axi_bresp           (fifo_s_axi_bresp   ), // output to fifo
+         .s_axi_bvalid          (fifo_s_axi_bvalid  ), // output to fifo
+         .s_axi_bready          (fifo_s_axi_bready  ), // input to fifo
+         .s_axi_araddr          (fifo_s_axi_araddr  ), // input to fifo
+         .s_axi_arvalid         (fifo_s_axi_arvalid ), // input to fifo
+         .s_axi_arready         (fifo_s_axi_arready ), // output to fifo
+         .s_axi_rdata           (fifo_s_axi_rdata   ), // output to fifo
+         .s_axi_rresp           (fifo_s_axi_rresp   ), // output to fifo
+         .s_axi_rvalid          (fifo_s_axi_rvalid  ), // output to fifo
+         .s_axi_rready          (fifo_s_axi_rready  ), // input to fifo
          .mm2s_prmry_reset_out_n(),
-         .axi_str_txd_tvalid    (s_axis_txd_tvalid  ),
-         .axi_str_txd_tready    (s_axis_txd_tready  ),
-         .axi_str_txd_tlast     (s_axis_txd_tlast   ),
-         .axi_str_txd_tdata     (s_axis_txd_tdata   ),
+         .axi_str_txd_tvalid    (s_axis_txd_tvalid  ), // input to fifo
+         .axi_str_txd_tready    (s_axis_txd_tready  ), // input to fifo
+         .axi_str_txd_tlast     (s_axis_txd_tlast   ), // output to fifo
+         .axi_str_txd_tdata     (s_axis_txd_tdata   ), // output to fifo
          .mm2s_cntrl_reset_out_n(),
-         .axi_str_txc_tvalid    (s_axis_txc_tvalid  ),
-         .axi_str_txc_tready    (s_axis_txc_tready  ),
-         .axi_str_txc_tlast     (s_axis_txc_tlast   ),
-         .axi_str_txc_tdata     (s_axis_txc_tdata   ),
+         .axi_str_txc_tvalid    (s_axis_txc_tvalid  ), // output to fifo
+         .axi_str_txc_tready    (s_axis_txc_tready  ), // input to fifo
+         .axi_str_txc_tlast     (s_axis_txc_tlast   ), // output to fifo
+         .axi_str_txc_tdata     (s_axis_txc_tdata   ), // output to fifo
          .s2mm_prmry_reset_out_n(),
-         .axi_str_rxd_tvalid    (m_axis_rxd_tvalid  ),
-         .axi_str_rxd_tready    (m_axis_rxd_tready  ),
-         .axi_str_rxd_tlast     (m_axis_rxd_tlast   ),
-         .axi_str_rxd_tdata     (m_axis_rxd_tdata   ),
+         .axi_str_rxd_tvalid    (m_axis_rxd_tvalid  ), // input to fifo
+         .axi_str_rxd_tready    (m_axis_rxd_tready  ), // output to fifo
+         .axi_str_rxd_tlast     (m_axis_rxd_tlast   ), // input to fifo
+         .axi_str_rxd_tdata     (m_axis_rxd_tdata   ), // input to fifo
             
-         .interrupt             (eth_irq)
+         .interrupt             (eth_irq) // output to fifo
       );
             
    // Memory interface: convert WishBone signals from system to AXI for AXI4FIFO

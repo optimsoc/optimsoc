@@ -116,11 +116,28 @@ module nexys4ddr
    output [NUM_UART-1:0] uart_rx,
    input [NUM_UART-1:0]  uart_tx,
    output [NUM_UART-1:0] uart_cts_n,
-   input [NUM_UART-1:0]  uart_rts_n
+   input [NUM_UART-1:0]  uart_rts_n,
 
 /*   output [23*8-1:0]     gpio_in,
    input [23*8-1:0]      gpio_out,
    input [23*8-1:0]      gpio_oe*/
+   
+   
+   // eth
+   input                phy_rst_n,
+   input                mii_tx_en,
+   input  [3:0]         mii_txd,
+   input                mii_tx_er,
+   output               mii_tx_clk,
+   output               mii_rx_clk, 
+   output               mii_rx_dv,
+   output               mii_rx_er,
+   output [3:0]         mii_rxd,
+   input                eth_crsdv,
+   input                eth_rxerr,
+   input  [1:0]         eth_rxd  ,
+   output [1:0]         eth_txd  ,
+   output               eth_txen    
    );
 
    logic         rst;
@@ -270,5 +287,28 @@ module nexys4ddr
         .s_axi_rvalid                   (ddr_rvalid),
         .s_axi_rready                   (ddr_rready)
         );
-
+    
+     // MII to RMII Converter
+     mii_to_rmii_0
+        u_mii_to_rmii_0 
+        (
+           .ref_clk           (clk_50mhz),
+           .rst_n             (phy_rst_n),
+           .mac2rmii_tx_en    (mii_tx_en         ),
+           .mac2rmii_txd      (mii_txd           ),
+           .mac2rmii_tx_er    (mii_tx_er         ),
+           .rmii2mac_tx_clk   (mii_tx_clk        ),
+           .rmii2mac_rx_clk   (mii_rx_clk        ),
+           .rmii2mac_col      (),
+           .rmii2mac_crs      (), 
+           .rmii2mac_rx_dv    (mii_rx_dv         ),
+           .rmii2mac_rx_er    (mii_rx_er),
+           .rmii2mac_rxd      (mii_rxd           ),
+           .phy2rmii_crs_dv   (eth_crsdv),
+           .phy2rmii_rx_er    (eth_rxerr),
+           .phy2rmii_rxd      (eth_rxd  ),
+           .rmii2phy_txd      (eth_txd  ),
+           .rmii2phy_tx_en    (eth_txen )
+        );     
+ 
 endmodule // nexys4ddr
