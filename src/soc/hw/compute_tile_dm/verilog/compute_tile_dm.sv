@@ -32,24 +32,24 @@ import opensocdebug::mor1kx_trace_exec;
 import optimsoc::config_t;
 
 module compute_tile_dm
-  #(
-    parameter config_t CONFIG = 'x,
+   #(
+      parameter config_t CONFIG = 'x,
 
-    parameter ID       = 'x,
-    parameter COREBASE = 'x,
+      parameter ID       = 'x,
+      parameter COREBASE = 'x,
 
-    parameter DEBUG_BASEID = 'x,
+      parameter DEBUG_BASEID = 'x,
 
-    parameter MEM_FILE = 'x,
+      parameter MEM_FILE = 'x,
 
-    localparam CHANNELS = CONFIG.NOC_CHANNELS,
-    localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH
+      localparam CHANNELS = CONFIG.NOC_CHANNELS,
+      localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH
     )
    (
-   input                                 dii_flit [1:0] debug_ring_in, // wire
+   input                                 dii_flit [1:0] debug_ring_in,
    output [1:0]                          debug_ring_in_ready,
    output                                dii_flit [1:0] debug_ring_out,
-   input [1:0]                           debug_ring_out_ready,
+   input  [1:0]                          debug_ring_out_ready,
 
    output [31:0]                         wb_ext_adr_i,
    output                                wb_ext_cyc_i,
@@ -63,31 +63,31 @@ module compute_tile_dm
    input                                 wb_ext_ack_o,
    input                                 wb_ext_rty_o,
    input                                 wb_ext_err_o,
-   input [31:0]                          wb_ext_dat_o,
+   input  [31:0]                         wb_ext_dat_o,
 
-   input                                 clk, // clk == sys_clk
-   input                                 rst_cpu, rst_sys, rst_dbg, // rst_dbg == sys_rst
+   input                                 clk,
+   input                                 rst_cpu, rst_sys, rst_dbg,
 
-   input [CHANNELS-1:0][FLIT_WIDTH-1:0]  noc_in_flit,
-   input [CHANNELS-1:0]                  noc_in_last,
-   input [CHANNELS-1:0]                  noc_in_valid,
+   input  [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_in_flit,
+   input  [CHANNELS-1:0]                 noc_in_last,
+   input  [CHANNELS-1:0]                 noc_in_valid,
    output [CHANNELS-1:0]                 noc_in_ready,
    output [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_out_flit,
    output [CHANNELS-1:0]                 noc_out_last,
    output [CHANNELS-1:0]                 noc_out_valid,
-   input [CHANNELS-1:0]                  noc_out_ready,
-   // eth
+   input  [CHANNELS-1:0]                 noc_out_ready,
+
+   // Ethernet
+   output [3:0]                          phy_mii_txd,
+   output                                phy_mii_tx_en,
+   output                                phy_mii_tx_er,
+   input                                 phy_mii_tx_clk,
+   input                                 phy_mii_rx_clk,
+   input  [3:0]                          phy_mii_rxd,
+   input                                 phy_mii_rx_dv,
+   input                                 phy_mii_rx_er,      
    
-   output [3:0]                          mii_txd,
-   output                                mii_tx_en,
-   output                                mii_tx_er,
-   input                                 mii_tx_clk,
-   input                                 mii_rx_clk,
-   input  [3:0]                          mii_rxd,
-   input                                 mii_rx_dv,
-   input                                 mii_rx_er,      
-   
-   output                                eth_mdc,        
+   output                                phy_mdc,        
    inout                                 eth_mdio,
    output                                phy_rst_n,   
    
@@ -102,9 +102,8 @@ module compute_tile_dm
    localparam SLAVE_PGAS = 1;
    localparam SLAVE_NA   = 2;
    localparam SLAVE_BOOT = 3;
-   // eth
-   localparam SLAVE_ESS = 4;
-   localparam SLAVE_FIFO = 5;
+   localparam SLAVE_ETH_CTRL = 4;  // Ethernet
+   localparam SLAVE_ETH_DATA = 5; // Ethernet
 
    mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
@@ -188,12 +187,7 @@ module compute_tile_dm
    
    assign pic_ints_i[0][31:5] = 27'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
-   
-   // ETH interrupt is IRQ 4
-   // wire eth_irq;
-   // assign ; //  = eth_irq;
 
-    
    genvar        c, m, s;
 
    wire [32*NR_MASTERS-1:0] busms_adr_o_flat;
@@ -677,34 +671,34 @@ module compute_tile_dm
    
    // Ethernet
    // ESS
-   wire [31:0]           wb_ess_adr_i; 
-   wire                  wb_ess_cyc_i;  
-   wire [31:0]           wb_ess_dat_i; 
-   wire [3:0]            wb_ess_sel_i; 
-   wire                  wb_ess_stb_i;
-   wire                  wb_ess_we_i; 
-   wire                  wb_ess_cab_i; 
-   wire  [2:0]           wb_ess_cti_i; 
-   wire  [1:0]           wb_ess_bte_i; 
-   //wire                  wb_ess_ack_o;
-   //wire                  wb_ess_rty_o;
-   //wire                  wb_ess_err_o;
-   //wire [31:0]           wb_ess_dat_o;  
+   wire [31:0]           wb_ctrl_adr_i; 
+   wire                  wb_ctrl_cyc_i;  
+   wire [31:0]           wb_ctrl_dat_i; 
+   wire [3:0]            wb_ctrl_sel_i; 
+   wire                  wb_ctrl_stb_i;
+   wire                  wb_ctrl_we_i; 
+   wire                  wb_ctrl_cab_i; 
+   wire  [2:0]           wb_ctrl_cti_i; 
+   wire  [1:0]           wb_ctrl_bte_i; 
+   wire                  wb_ctrl_ack_o;
+   wire                  wb_ctrl_rty_o;
+   wire                  wb_ctrl_err_o;
+   wire [31:0]           wb_ctrl_dat_o;  
    
    // FIFO
-   wire [31:0]         wb_fifo_adr_i;
-   wire                wb_fifo_cyc_i;
-   wire [31:0]         wb_fifo_dat_i;
-   wire [3:0]          wb_fifo_sel_i;
-   wire                wb_fifo_stb_i;
-   wire                wb_fifo_we_i;
-   wire                wb_fifo_cab_i;
-   wire [2:0]          wb_fifo_cti_i;
-   wire [1:0]          wb_fifo_bte_i;
-   //wire                wb_fifo_ack_o;
-   //wire                wb_fifo_rty_o;
-   //wire                wb_fifo_err_o;
-   //wire [31:0]         wb_fifo_dat_o;     
+   wire [31:0]         wb_data_adr_i;
+   wire                wb_data_cyc_i;
+   wire [31:0]         wb_data_dat_i;
+   wire [3:0]          wb_data_sel_i;
+   wire                wb_data_stb_i;
+   wire                wb_data_we_i;
+   wire                wb_data_cab_i;
+   wire [2:0]          wb_data_cti_i;
+   wire [1:0]          wb_data_bte_i;
+   wire                wb_data_ack_o;
+   wire                wb_data_rty_o;
+   wire                wb_data_err_o;
+   wire [31:0]         wb_data_dat_o;     
    
    // Network Adapter  na_etherent_xilinx
    na_etherent_xilinx
@@ -718,79 +712,79 @@ module compute_tile_dm
          .eth_irq             (pic_ints_i[0][4]),
       
          // WB bus (TX/RX) - to AXI Stream FIFO
-         .wb_fifo_adr_i       (wb_fifo_adr_i),
-         .wb_fifo_cyc_i       (wb_fifo_cyc_i),
-         .wb_fifo_dat_i       (wb_fifo_dat_i),
-         .wb_fifo_sel_i       (wb_fifo_sel_i),
-         .wb_fifo_stb_i       (wb_fifo_stb_i ),
-         .wb_fifo_we_i        (wb_fifo_we_i),
-         .wb_fifo_cti_i       (wb_fifo_cti_i),
-         .wb_fifo_bte_i       (wb_fifo_bte_i),
-         .wb_fifo_ack_o       (bussl_ack_o[SLAVE_FIFO]),
-         .wb_fifo_rty_o       (bussl_rty_o[SLAVE_FIFO]),
-         .wb_fifo_err_o       (bussl_err_o[SLAVE_FIFO]),
-         .wb_fifo_dat_o       (bussl_dat_o[SLAVE_FIFO]),
+         .wb_data_adr_i       (wb_data_adr_i),
+         .wb_data_cyc_i       (wb_data_cyc_i),
+         .wb_data_dat_i       (wb_data_dat_i),
+         .wb_data_sel_i       (wb_data_sel_i),
+         .wb_data_stb_i       (wb_data_stb_i ),
+         .wb_data_we_i        (wb_data_we_i),
+         .wb_data_cti_i       (wb_data_cti_i),
+         .wb_data_bte_i       (wb_data_bte_i),
+         .wb_data_ack_o       (wb_data_ack_o),
+         .wb_data_rty_o       (wb_data_rty_o),
+         .wb_data_err_o       (wb_data_err_o),
+         .wb_data_dat_o       (wb_data_dat_o),
       
          // WB bus (Control - AXI4_Lite System) - to AXI4 Ethernet Subsystem
-         .wb_ess_adr_i        (wb_ess_adr_i),
-         .wb_ess_cyc_i        (wb_ess_cyc_i),
-         .wb_ess_dat_i        (wb_ess_dat_i),
-         .wb_ess_sel_i        (wb_ess_sel_i),
-         .wb_ess_stb_i        (wb_ess_stb_i),
-         .wb_ess_we_i         (wb_ess_we_i),
-         .wb_ess_cti_i        (wb_ess_cti_i),
-         .wb_ess_bte_i        (wb_ess_bte_i),
-         .wb_ess_ack_o        (bussl_ack_o[SLAVE_ESS]),
-         .wb_ess_rty_o        (bussl_rty_o[SLAVE_ESS]),
-         .wb_ess_err_o        (bussl_err_o[SLAVE_ESS]),
-         .wb_ess_dat_o        (bussl_dat_o[SLAVE_ESS]),   
+         .wb_ctrl_adr_i        (wb_ctrl_adr_i),
+         .wb_ctrl_cyc_i        (wb_ctrl_cyc_i),
+         .wb_ctrl_dat_i        (wb_ctrl_dat_i),
+         .wb_ctrl_sel_i        (wb_ctrl_sel_i),
+         .wb_ctrl_stb_i        (wb_ctrl_stb_i),
+         .wb_ctrl_we_i         (wb_ctrl_we_i),
+         .wb_ctrl_cti_i        (wb_ctrl_cti_i),
+         .wb_ctrl_bte_i        (wb_ctrl_bte_i),
+         .wb_ctrl_ack_o        (wb_ctrl_ack_o),
+         .wb_ctrl_rty_o        (wb_ctrl_rty_o),
+         .wb_ctrl_err_o        (wb_ctrl_err_o),
+         .wb_ctrl_dat_o        (wb_ctrl_dat_o),   
   
          // MII Output
-         .mii_txd             (mii_txd),
-         .mii_tx_en           (mii_tx_en),
-         .mii_tx_er           (mii_tx_er),
-         .mii_tx_clk          (mii_tx_clk),
-         .mii_rx_clk          (mii_rx_clk),
-         .mii_rxd             (mii_rxd),
-         .mii_rx_dv           (mii_rx_dv),
-         .mii_rx_er           (mii_rx_er),   
+         .phy_mii_txd             (phy_mii_txd),
+         .phy_mii_tx_en           (phy_mii_tx_en),
+         .phy_mii_tx_er           (phy_mii_tx_er),
+         .phy_mii_tx_clk          (phy_mii_tx_clk),
+         .phy_mii_rx_clk          (phy_mii_rx_clk),
+         .phy_mii_rxd             (phy_mii_rxd),
+         .phy_mii_rx_dv           (phy_mii_rx_dv),
+         .phy_mii_rx_er           (phy_mii_rx_er),   
       
          // MDIO Interface - Ethernet
-         .eth_mdc             (eth_mdc),        
+         .phy_mdc             (phy_mdc),        
          .eth_mdio            (eth_mdio),
       
          .phy_rst_n           (phy_rst_n)
       );     
       
    // ESS
-   assign wb_ess_adr_i = bussl_adr_i[SLAVE_ESS];
-   assign wb_ess_cyc_i = bussl_cyc_i[SLAVE_ESS];
-   assign wb_ess_dat_i = bussl_dat_i[SLAVE_ESS];
-   assign wb_ess_sel_i = bussl_sel_i[SLAVE_ESS];
-   assign wb_ess_stb_i = bussl_stb_i[SLAVE_ESS];
-   assign wb_ess_we_i = bussl_we_i[SLAVE_ESS];
-   assign wb_ess_cab_i = bussl_cab_i[SLAVE_ESS];
-   assign wb_ess_cti_i = bussl_cti_i[SLAVE_ESS];
-   assign wb_ess_bte_i = bussl_bte_i[SLAVE_ESS];
-   //assign bussl_ack_o[SLAVE_ESS] = wb_ess_ack_o;
-   //assign bussl_rty_o[SLAVE_ESS] = wb_ess_rty_o;
-   //assign bussl_err_o[SLAVE_ESS] = wb_ess_err_o;
-   //assign bussl_dat_o[SLAVE_ESS] = wb_ess_dat_o;
+   assign wb_ctrl_adr_i = bussl_adr_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_cyc_i = bussl_cyc_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_dat_i = bussl_dat_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_sel_i = bussl_sel_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_stb_i = bussl_stb_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_we_i = bussl_we_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_cab_i = bussl_cab_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_cti_i = bussl_cti_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_bte_i = bussl_bte_i[SLAVE_ETH_CTRL];
+   assign bussl_ack_o[SLAVE_ETH_CTRL] = wb_ctrl_ack_o;
+   assign bussl_rty_o[SLAVE_ETH_CTRL] = wb_ctrl_rty_o;
+   assign bussl_err_o[SLAVE_ETH_CTRL] = wb_ctrl_err_o;
+   assign bussl_dat_o[SLAVE_ETH_CTRL] = wb_ctrl_dat_o;
    
    // FIFO
-   assign wb_fifo_adr_i = bussl_adr_i[SLAVE_FIFO];
-   assign wb_fifo_cyc_i = bussl_cyc_i[SLAVE_FIFO];
-   assign wb_fifo_dat_i = bussl_dat_i[SLAVE_FIFO];
-   assign wb_fifo_sel_i = bussl_sel_i[SLAVE_FIFO];
-   assign wb_fifo_stb_i = bussl_stb_i[SLAVE_FIFO];
-   assign wb_fifo_we_i = bussl_we_i[SLAVE_FIFO];
-   assign wb_fifo_cab_i = bussl_cab_i[SLAVE_FIFO];
-   assign wb_fifo_cti_i = bussl_cti_i[SLAVE_FIFO];
-   assign wb_fifo_bte_i = bussl_bte_i[SLAVE_FIFO];
-   //assign bussl_ack_o[SLAVE_FIFO] = wb_fifo_ack_o;
-   //assign bussl_rty_o[SLAVE_FIFO] = wb_fifo_rty_o;
-   //assign bussl_err_o[SLAVE_FIFO] = wb_fifo_err_o;
-   //assign bussl_dat_o[SLAVE_FIFO] = wb_fifo_dat_o;   
+   assign wb_data_adr_i = bussl_adr_i[SLAVE_ETH_DATA];
+   assign wb_data_cyc_i = bussl_cyc_i[SLAVE_ETH_DATA];
+   assign wb_data_dat_i = bussl_dat_i[SLAVE_ETH_DATA];
+   assign wb_data_sel_i = bussl_sel_i[SLAVE_ETH_DATA];
+   assign wb_data_stb_i = bussl_stb_i[SLAVE_ETH_DATA];
+   assign wb_data_we_i = bussl_we_i[SLAVE_ETH_DATA];
+   assign wb_data_cab_i = bussl_cab_i[SLAVE_ETH_DATA];
+   assign wb_data_cti_i = bussl_cti_i[SLAVE_ETH_DATA];
+   assign wb_data_bte_i = bussl_bte_i[SLAVE_ETH_DATA];
+   assign bussl_ack_o[SLAVE_ETH_DATA] = wb_data_ack_o;
+   assign bussl_rty_o[SLAVE_ETH_DATA] = wb_data_rty_o;
+   assign bussl_err_o[SLAVE_ETH_DATA] = wb_data_err_o;
+   assign bussl_dat_o[SLAVE_ETH_DATA] = wb_data_dat_o;   
    
           
    

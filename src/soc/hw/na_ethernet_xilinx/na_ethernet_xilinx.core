@@ -3,8 +3,8 @@ CAPI=1
 name = optimsoc:ethernet:na_ethernet_xilinx
 description = "Network Adapter for Ethernet"
 depend =
-  optimsoc:examples:compute_tile_ethernet_nexys4ddr-axi_ethernet_0
-  optimsoc:examples:compute_tile_ethernet_nexys4ddr-axi_fifo_mm_s_0
+  optimsoc:examples:na_ethernet_xilinx-axi_ethernet_0
+  optimsoc:examples:na_ethernet_xilinx-axi_fifo_mm_s_0
   wallento:wb2axi:wb2axi
 
 [fileset src_files]

@@ -3,8 +3,6 @@ CAPI=1
 name = optimsoc:examples:compute_tile_ethernet_nexys4ddr
 description = "Xilinx/Digilent Nexys4 DDR board with compute tile and Ethernet support"
 depend =
-  optimsoc:examples:compute_tile_ethernet_nexys4ddr-axi_ethernet_0
-  optimsoc:examples:compute_tile_ethernet_nexys4ddr-axi_fifo_mm_s_0
   wallento:boards:nexys4ddr
   wallento:svchannels:nasti
   wallento:svchannels:wishbone

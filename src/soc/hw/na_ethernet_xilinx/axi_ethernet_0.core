@@ -1,6 +1,6 @@
 CAPI=1
 [main]
-name = optimsoc:examples:compute_tile_ethernet_nexys4ddr-axi_ethernet_0
+name = optimsoc:examples:na_ethernet_xilinx-axi_ethernet_0
 depend =
 
 [fileset xci]

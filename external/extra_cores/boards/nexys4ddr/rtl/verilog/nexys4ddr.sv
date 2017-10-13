@@ -62,7 +62,6 @@ module nexys4ddr
    output                sys_clk,
    output                sys_rst,
    
-   output                clk_50mhz,
    output                clk_50mhz_45deg,
    output                clk_125mhz,
 
@@ -123,21 +122,26 @@ module nexys4ddr
    input [23*8-1:0]      gpio_oe*/
    
    
-   // eth
-   input                phy_rst_n,
-   input                mii_tx_en,
-   input  [3:0]         mii_txd,
-   input                mii_tx_er,
-   output               mii_tx_clk,
-   output               mii_rx_clk, 
-   output               mii_rx_dv,
-   output               mii_rx_er,
-   output [3:0]         mii_rxd,
-   input                eth_crsdv,
-   input                eth_rxerr,
-   input  [1:0]         eth_rxd  ,
-   output [1:0]         eth_txd  ,
-   output               eth_txen    
+   // Ethernet Signals
+   input                 phy_rst_n,
+   input                 eth_crsdv,
+   input                 eth_rxerr,
+   input  [1:0]          eth_rxd,
+   
+   output [1:0]          eth_txd,
+   output                eth_txen,
+
+   // MII Signals
+   input                 phy_mii_tx_en,
+   input  [3:0]          phy_mii_txd,
+   input                 phy_mii_tx_er,
+   output                phy_mii_tx_clk,
+
+   output                phy_mii_rx_clk, 
+   output                phy_mii_rx_dv,
+   output                phy_mii_rx_er,
+   output [3:0]          phy_mii_rxd
+   
    );
 
    logic         rst;
@@ -150,7 +154,7 @@ module nexys4ddr
    logic        ddr_mmcm_locked;
    logic        mig_ui_clk; // clock from MIG UI (1/4 of clk_ddr_ref = 50 MHz)
    logic        mig_ui_rst; // Synchronized reset
-
+   // Clock Generation DDR
    clk_gen_ddr
      u_clk_gen_ddr
        (.clk_in      (clk),
@@ -160,18 +164,18 @@ module nexys4ddr
         .reset       (rst)
         );
      
-  wire clk_eth_locked;
-
-  clk_gen_eth
-     u_clk_gen_eth
-     (.clk_ddr_sys        (clk_ddr_sys),
-        .clk_50mhz        (clk_50mhz),
-        .clk_50mhz_45deg  (clk_50mhz_45deg),
-        .clk_125mhz       (clk_125mhz),
-        .locked           (clk_eth_locked),
-        .reset            (rst)
-     );
-
+   wire clk_eth_locked;
+      // Clock Generation Ethernet
+   clk_gen_eth
+      u_clk_gen_eth
+         (.clk_ddr_sys        (clk_ddr_sys),
+          .clk_50mhz        (clk_50mhz),
+          .clk_50mhz_45deg  (clk_50mhz_45deg),
+          .clk_125mhz       (clk_125mhz),
+          .locked           (clk_eth_locked),
+          .reset            (rst)
+        );
+// Clock Generation System
 /*   clk_gen_sys
      u_clk_gen_sys
        (.clk_in  (mig_ui_clk),
@@ -180,8 +184,6 @@ module nexys4ddr
         .locked  (clk_sys_locked));*/
    assign sys_clk = mig_ui_clk;
    assign sys_rst = !(ddr_mmcm_locked & ddr_calib_done);
-
-
 
    // UART
    initial begin
@@ -217,98 +219,96 @@ module nexys4ddr
       );*/
 
    mig_7series
-     u_mig_7series
-       (.*,
-        .init_calib_complete            (ddr_calib_done),
-        .sys_clk_i                      (clk_ddr_sys),
-//        .clk_ref_i                      (clk_ddr_ref),
-        .sys_rst                        (clk_eth_locked | clk_ddr_locked | rst),
+      u_mig_7series
+         (.*,
+          .init_calib_complete            (ddr_calib_done),
+          .sys_clk_i                      (clk_ddr_sys),
+          //.clk_ref_i                    (clk_ddr_ref),
+          .sys_rst                        (clk_eth_locked | clk_ddr_locked | rst),
 
-        // Application interface ports
-        .ui_clk                         (mig_ui_clk),
-        .ui_clk_sync_rst                (mig_ui_rst),
-        .mmcm_locked                    (ddr_mmcm_locked),
-        .aresetn                        (!sys_rst),
-        .app_sr_req                     (0),
-        .app_ref_req                    (0),
-        .app_zq_req                     (0),
-        .app_sr_active                  (),
-        .app_ref_ack                    (),
-        .app_zq_ack                     (),
+          // Application interface ports
+          .ui_clk                         (mig_ui_clk),
+          .ui_clk_sync_rst                (mig_ui_rst),
+          .mmcm_locked                    (ddr_mmcm_locked),
+          .aresetn                        (!sys_rst),
+          .app_sr_req                     (0),
+          .app_ref_req                    (0),
+          .app_zq_req                     (0),
+          .app_sr_active                  (),
+          .app_ref_ack                    (),
+          .app_zq_ack                     (),
 
-        .ui_addn_clk_0                  (),
-        .ui_addn_clk_1                  (),
-        .ui_addn_clk_2                  (),
-        .ui_addn_clk_3                  (),
-        .ui_addn_clk_4                  (),
+          .ui_addn_clk_0                  (),
+          .ui_addn_clk_1                  (),
+          .ui_addn_clk_2                  (),
+          .ui_addn_clk_3                  (),
+          .ui_addn_clk_4                  (),
 
-        .device_temp_i                  (0),
+          .device_temp_i                  (0),
 
-        // Slave Interface Write Address Ports
-        .s_axi_awid                     (ddr_awid),
-        .s_axi_awaddr                   (ddr_awaddr),
-        .s_axi_awlen                    (ddr_awlen),
-        .s_axi_awsize                   (ddr_awsize),
-        .s_axi_awburst                  (ddr_awburst),
-        .s_axi_awlock                   (0),
-        .s_axi_awcache                  (ddr_awcache),
-        .s_axi_awprot                   (ddr_awprot),
-        .s_axi_awqos                    (ddr_awqos),
-        .s_axi_awvalid                  (ddr_awvalid),
-        .s_axi_awready                  (ddr_awready),
-        // Slave Interface Write Data Ports
-        .s_axi_wdata                    (ddr_wdata),
-        .s_axi_wstrb                    (ddr_wstrb),
-        .s_axi_wlast                    (ddr_wlast),
-        .s_axi_wvalid                   (ddr_wvalid),
-        .s_axi_wready                   (ddr_wready),
-        // Slave Interface Write Response Ports
-        .s_axi_bid                      (ddr_bid),
-        .s_axi_bresp                    (ddr_bresp),
-        .s_axi_bvalid                   (ddr_bvalid),
-        .s_axi_bready                   (ddr_bready),
-        // Slave Interface Read Address Ports
-        .s_axi_arid                     (ddr_arid),
-        .s_axi_araddr                   (ddr_araddr),
-        .s_axi_arlen                    (ddr_arlen),
-        .s_axi_arsize                   (ddr_arsize),
-        .s_axi_arburst                  (ddr_arburst),
-        .s_axi_arlock                   (0),
-        .s_axi_arcache                  (ddr_arcache),
-        .s_axi_arprot                   (ddr_arprot),
-        .s_axi_arqos                    (ddr_arqos),
-        .s_axi_arvalid                  (ddr_arvalid),
-        .s_axi_arready                  (ddr_arready),
-        // Slave Interface Read Data Ports
-        .s_axi_rid                      (ddr_rid),
-        .s_axi_rdata                    (ddr_rdata),
-        .s_axi_rresp                    (ddr_rresp),
-        .s_axi_rlast                    (ddr_rlast),
-        .s_axi_rvalid                   (ddr_rvalid),
-        .s_axi_rready                   (ddr_rready)
-        );
+          // Slave Interface Write Address Ports
+          .s_axi_awid                     (ddr_awid),
+          .s_axi_awaddr                   (ddr_awaddr),
+          .s_axi_awlen                    (ddr_awlen),
+          .s_axi_awsize                   (ddr_awsize),
+          .s_axi_awburst                  (ddr_awburst),
+          .s_axi_awlock                   (0),
+          .s_axi_awcache                  (ddr_awcache),
+          .s_axi_awprot                   (ddr_awprot),
+          .s_axi_awqos                    (ddr_awqos),
+          .s_axi_awvalid                  (ddr_awvalid),
+          .s_axi_awready                  (ddr_awready),
+          // Slave Interface Write Data Ports
+          .s_axi_wdata                    (ddr_wdata),
+          .s_axi_wstrb                    (ddr_wstrb),
+          .s_axi_wlast                    (ddr_wlast),
+          .s_axi_wvalid                   (ddr_wvalid),
+          .s_axi_wready                   (ddr_wready),
+          // Slave Interface Write Response Ports
+          .s_axi_bid                      (ddr_bid),
+          .s_axi_bresp                    (ddr_bresp),
+          .s_axi_bvalid                   (ddr_bvalid),
+          .s_axi_bready                   (ddr_bready),
+          // Slave Interface Read Address Ports
+          .s_axi_arid                     (ddr_arid),
+          .s_axi_araddr                   (ddr_araddr),
+          .s_axi_arlen                    (ddr_arlen),
+          .s_axi_arsize                   (ddr_arsize),
+          .s_axi_arburst                  (ddr_arburst),
+          .s_axi_arlock                   (0),
+          .s_axi_arcache                  (ddr_arcache),
+          .s_axi_arprot                   (ddr_arprot),
+          .s_axi_arqos                    (ddr_arqos),
+          .s_axi_arvalid                  (ddr_arvalid),
+          .s_axi_arready                  (ddr_arready),
+          // Slave Interface Read Data Ports
+          .s_axi_rid                      (ddr_rid),
+          .s_axi_rdata                    (ddr_rdata),
+          .s_axi_rresp                    (ddr_rresp),
+          .s_axi_rlast                    (ddr_rlast),
+          .s_axi_rvalid                   (ddr_rvalid),
+          .s_axi_rready                   (ddr_rready)
+          );
     
      // MII to RMII Converter
-     mii_to_rmii_0
-        u_mii_to_rmii_0 
-        (
-           .ref_clk           (clk_50mhz),
-           .rst_n             (phy_rst_n),
-           .mac2rmii_tx_en    (mii_tx_en         ),
-           .mac2rmii_txd      (mii_txd           ),
-           .mac2rmii_tx_er    (mii_tx_er         ),
-           .rmii2mac_tx_clk   (mii_tx_clk        ),
-           .rmii2mac_rx_clk   (mii_rx_clk        ),
-           .rmii2mac_col      (),
-           .rmii2mac_crs      (), 
-           .rmii2mac_rx_dv    (mii_rx_dv         ),
-           .rmii2mac_rx_er    (mii_rx_er),
-           .rmii2mac_rxd      (mii_rxd           ),
-           .phy2rmii_crs_dv   (eth_crsdv),
-           .phy2rmii_rx_er    (eth_rxerr),
-           .phy2rmii_rxd      (eth_rxd  ),
-           .rmii2phy_txd      (eth_txd  ),
-           .rmii2phy_tx_en    (eth_txen )
+   mii_to_rmii_0
+      u_mii_to_rmii_0 
+         (.ref_clk                        (clk_50mhz),
+          .rst_n                          (phy_rst_n),
+          .mac2rmii_tx_en                 (phy_mii_tx_en),
+          .mac2rmii_txd                   (phy_mii_txd),
+          .mac2rmii_tx_er                 (phy_mii_tx_er),
+          .rmii2mac_tx_clk                (phy_mii_tx_clk),
+          .rmii2mac_rx_clk                (phy_mii_rx_clk),
+          .rmii2mac_col                   (),
+          .rmii2mac_crs                   (), 
+          .rmii2mac_rx_dv                 (phy_mii_rx_dv),
+          .rmii2mac_rx_er                 (phy_mii_rx_er),
+          .rmii2mac_rxd                   (phy_mii_rxd),
+          .phy2rmii_crs_dv                (eth_crsdv),
+          .phy2rmii_rx_er                 (eth_rxerr),
+          .phy2rmii_rxd                   (eth_rxd),
+          .rmii2phy_txd                   (eth_txd),
+          .rmii2phy_tx_en                 (eth_txen)
         );     
- 
 endmodule // nexys4ddr

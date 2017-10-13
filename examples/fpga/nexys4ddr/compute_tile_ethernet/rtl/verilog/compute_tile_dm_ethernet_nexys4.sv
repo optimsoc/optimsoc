@@ -59,8 +59,7 @@ module compute_tile_dm_ethernet_nexys4
    output                ddr2_odt,
    output                ddr2_ras_n,
    output                ddr2_we_n,
-   
-   
+
    // Ethernet
     input                 eth_crsdv,
     input                 eth_rxerr,
@@ -71,9 +70,6 @@ module compute_tile_dm_ethernet_nexys4
     inout                 eth_mdio,
     output                eth_rstn,
     output                eth_refclk
-   
-   // output [15:0] led
-   
    );
 
    parameter integer NUM_CORES = 1;
@@ -84,7 +80,7 @@ module compute_tile_dm_ethernet_nexys4
    localparam DDR_DATA_WIDTH = 32;
 
    localparam base_config_t
-     BASE_CONFIG = '{ NUMTILES: 1,
+      BASE_CONFIG = '{NUMTILES: 1,
                       NUMCTS: 1,
                       CTLIST: {{63{16'hx}}, 16'h0},
                       CORES_PER_TILE: NUM_CORES,
@@ -124,20 +120,20 @@ module compute_tile_dm_ethernet_nexys4
    c_wb_ddr();
      
    // clocks and reset
+
    // clk is the 100 MHz board clock
    // cpu_resetn is a push button on the board (active low)
 
-   // system clock: 50 MHz
+     // system clock: 50 MHz
    logic sys_clk;
 
    // system reset
    logic sys_rst;
    
-   // 50 MHz fixed clock (for eth)
-   logic clk_50mhz;
    // 50 MHz fixed clock with 45 degree phase shift (relative to clk_50mhz, 
    // for eth phy)
    logic clk_50mhz_45deg;
+   
    // 125 MHz clock
    logic clk_125mhz;
 
@@ -193,10 +189,9 @@ module compute_tile_dm_ethernet_nexys4
          .uart_tx(uart_tx),
          .uart_rts_n(uart_rts_n),
          .uart_cts_n(uart_cts_n)
-      );
+         );
 
    logic dbg_sys_rst, dbg_cpu_rst;
-
    dii_flit [1:0] debug_ring_in;
    dii_flit [1:0] debug_ring_out;
    logic [1:0] debug_ring_in_ready;
@@ -208,8 +203,7 @@ module compute_tile_dm_ethernet_nexys4
          .NUM_MODULES (CONFIG.DEBUG_NUM_MODS)
       )
       u_debuginterface
-        (
-         .clk            (sys_clk),
+        (.clk            (sys_clk),
          .rst            (sys_rst),
          .sys_rst        (dbg_sys_rst),
          .cpu_rst        (dbg_cpu_rst),
@@ -219,11 +213,18 @@ module compute_tile_dm_ethernet_nexys4
          .ring_out_ready (debug_ring_in_ready),
          .ring_in        (debug_ring_out),
          .ring_in_ready  (debug_ring_out_ready)
-      );
+         );
 
-     
-    wire  [3:0]  mii_rxd;
-    wire  [3:0]  mii_txd;
+    // wires for RMII2MII Converter
+    wire  [3:0]  phy_mii_txd;
+    wire         phy_mii_tx_en;
+    wire         phy_mii_tx_er;
+    wire         phy_mii_tx_clk;
+    wire         phy_mii_rx_clk;
+    wire  [3:0]  phy_mii_rxd;
+    wire         phy_mii_rx_dv;
+    wire         phy_mii_rx_er;
+    
     
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
@@ -231,7 +232,7 @@ module compute_tile_dm_ethernet_nexys4
         .DEBUG_BASEID(2)
       )
       u_compute_tile
-        (
+         (
          .clk           (sys_clk),
          .rst_cpu       (dbg_cpu_rst | sys_rst),
          .rst_sys       (dbg_sys_rst | sys_rst),
@@ -251,8 +252,6 @@ module compute_tile_dm_ethernet_nexys4
          .debug_ring_out(debug_ring_out),
          .debug_ring_out_ready(debug_ring_out_ready),
          
-         // .eth_irq       (eth_irq),
-
          .wb_ext_adr_i  (c_wb_ddr.adr_o),
          .wb_ext_cyc_i  (c_wb_ddr.cyc_o),
          .wb_ext_dat_i  (c_wb_ddr.dat_o),
@@ -267,29 +266,27 @@ module compute_tile_dm_ethernet_nexys4
          .wb_ext_err_o  (c_wb_ddr.err_i),
          .wb_ext_dat_o  (c_wb_ddr.dat_i),
          
-         .mii_txd       (mii_txd),
-         .mii_tx_en     (mii_tx_en),
-         .mii_tx_er     (mii_tx_er),
-         .mii_tx_clk    (mii_tx_clk),
-         .mii_rx_clk    (mii_rx_clk),
-         .mii_rxd       (mii_rxd),
-         .mii_rx_dv     (mii_rx_dv),
-         .mii_rx_er     (mii_rx_er),      
+         .phy_mii_txd       (phy_mii_txd),
+         .phy_mii_tx_en     (phy_mii_tx_en),
+         .phy_mii_tx_er     (phy_mii_tx_er),
+         .phy_mii_tx_clk    (phy_mii_tx_clk),
+         .phy_mii_rx_clk    (phy_mii_rx_clk),
+         .phy_mii_rxd       (phy_mii_rxd),
+         .phy_mii_rx_dv     (phy_mii_rx_dv),
+         .phy_mii_rx_er     (phy_mii_rx_er),      
    
-         .eth_mdc       (eth_mdc),        
+         .phy_mdc       (eth_mdc),        
          .eth_mdio      (eth_mdio),
          .phy_rst_n     (phy_rst_n),           
 
          .clk_125mhz    (clk_125mhz)
-         
       );
-   
+      
    assign eth_rstn = phy_rst_n;
       
    // Nexys 4 board wrapper
    nexys4ddr
-      #(
-         .NUM_UART(1)
+      #(.NUM_UART(1)
       )
       u_board(
          // FPGA/board interface
@@ -320,7 +317,6 @@ module compute_tile_dm_ethernet_nexys4
          .sys_clk     (sys_clk),
          .sys_rst     (sys_rst),
          
-         .clk_50mhz   (clk_50mhz),
          .clk_50mhz_45deg (clk_50mhz_45deg),
          .clk_125mhz(clk_125mhz),
 
@@ -365,79 +361,82 @@ module compute_tile_dm_ethernet_nexys4
          .ddr_rvalid  (c_axi_ddr.r_valid),
          .ddr_rready  (c_axi_ddr.r_ready),
          
-         // eth
-         .phy_rst_n   (eth_rstn),
-         .mii_tx_en   (mii_tx_en),
-         .mii_txd     (mii_txd),
-         .mii_tx_er   (mii_tx_er),
-         .mii_tx_clk  (mii_tx_clk),
-         .mii_rx_clk  (mii_rx_clk), 
-         .mii_rx_dv   (mii_rx_dv),
-         .mii_rx_er   (mii_rx_er),
-         .mii_rxd     (mii_rxd),
+         // Ethernet
+         .phy_rst_n   (phy_rst_n), // eth_rstn
          .eth_crsdv   (eth_crsdv),
          .eth_rxerr   (eth_rxerr),
          .eth_rxd     (eth_rxd),
+         
          .eth_txd     (eth_txd),
-         .eth_txen    (eth_txen)            
-      );
+         .eth_txen    (eth_txen),
+         
+         .phy_mii_tx_en   (phy_mii_tx_en),
+         .phy_mii_txd     (phy_mii_txd),
+         .phy_mii_tx_er   (phy_mii_tx_er),
+         .phy_mii_tx_clk  (phy_mii_tx_clk),
+         
+         .phy_mii_rx_clk  (phy_mii_rx_clk), 
+         .phy_mii_rx_dv   (phy_mii_rx_dv),
+         .phy_mii_rx_er   (phy_mii_rx_er),
+         .phy_mii_rxd     (phy_mii_rxd)
+         );
 
    // Memory interface: convert WishBone signals from system to AXI for DRAM
    wb2axi
-     #(.ADDR_WIDTH (DDR_ADDR_WIDTH),
-       .DATA_WIDTH (DDR_DATA_WIDTH),
-       .AXI_ID_WIDTH (AXI_ID_WIDTH))
-   u_wb2axi_ddr
-     (.clk             (sys_clk),
-      .rst             (sys_rst),
-      .wb_cyc_i        (c_wb_ddr.cyc_o),
-      .wb_stb_i        (c_wb_ddr.stb_o),
-      .wb_we_i         (c_wb_ddr.we_o),
-      .wb_adr_i        (c_wb_ddr.adr_o),
-      .wb_dat_i        (c_wb_ddr.dat_o),
-      .wb_sel_i        (c_wb_ddr.sel_o),
-      .wb_cti_i        (c_wb_ddr.cti_o),
-      .wb_bte_i        (c_wb_ddr.bte_o),
-      .wb_ack_o        (c_wb_ddr.ack_i),
-      .wb_err_o        (c_wb_ddr.err_i),
-      .wb_rty_o        (c_wb_ddr.rty_i),
-      .wb_dat_o        (c_wb_ddr.dat_i),
-      .m_axi_awid      (c_axi_ddr.aw_id),
-      .m_axi_awaddr    (c_axi_ddr.aw_addr),
-      .m_axi_awlen     (c_axi_ddr.aw_len),
-      .m_axi_awsize    (c_axi_ddr.aw_size),
-      .m_axi_awburst   (c_axi_ddr.aw_burst),
-      .m_axi_awcache   (c_axi_ddr.aw_cache),
-      .m_axi_awprot    (c_axi_ddr.aw_prot),
-      .m_axi_awqos     (c_axi_ddr.aw_qos),
-      .m_axi_awvalid   (c_axi_ddr.aw_valid),
-      .m_axi_awready   (c_axi_ddr.aw_ready),
-      .m_axi_wdata     (c_axi_ddr.w_data),
-      .m_axi_wstrb     (c_axi_ddr.w_strb),
-      .m_axi_wlast     (c_axi_ddr.w_last),
-      .m_axi_wvalid    (c_axi_ddr.w_valid),
-      .m_axi_wready    (c_axi_ddr.w_ready),
-      .m_axi_bid       (c_axi_ddr.b_id),
-      .m_axi_bresp     (c_axi_ddr.b_resp),
-      .m_axi_bvalid    (c_axi_ddr.b_valid),
-      .m_axi_bready    (c_axi_ddr.b_ready),
-      .m_axi_arid      (c_axi_ddr.ar_id),
-      .m_axi_araddr    (c_axi_ddr.ar_addr),
-      .m_axi_arlen     (c_axi_ddr.ar_len),
-      .m_axi_arsize    (c_axi_ddr.ar_size),
-      .m_axi_arburst   (c_axi_ddr.ar_burst),
-      .m_axi_arcache   (c_axi_ddr.ar_cache),
-      .m_axi_arprot    (c_axi_ddr.ar_prot),
-      .m_axi_arqos     (c_axi_ddr.ar_qos),
-      .m_axi_arvalid   (c_axi_ddr.ar_valid),
-      .m_axi_arready   (c_axi_ddr.ar_ready),
-      .m_axi_rid       (c_axi_ddr.r_id),
-      .m_axi_rdata     (c_axi_ddr.r_data),
-      .m_axi_rresp     (c_axi_ddr.r_resp),
-      .m_axi_rlast     (c_axi_ddr.r_last),
-      .m_axi_rvalid    (c_axi_ddr.r_valid),
-      .m_axi_rready    (c_axi_ddr.r_ready)
-      );
+      #(.ADDR_WIDTH (DDR_ADDR_WIDTH),
+        .DATA_WIDTH (DDR_DATA_WIDTH),
+        .AXI_ID_WIDTH (AXI_ID_WIDTH))
+      u_wb2axi_ddr
+         (.clk             (sys_clk),
+          .rst             (sys_rst),
+          .wb_cyc_i        (c_wb_ddr.cyc_o),
+          .wb_stb_i        (c_wb_ddr.stb_o),
+          .wb_we_i         (c_wb_ddr.we_o),
+          .wb_adr_i        (c_wb_ddr.adr_o),
+          .wb_dat_i        (c_wb_ddr.dat_o),
+          .wb_sel_i        (c_wb_ddr.sel_o),
+          .wb_cti_i        (c_wb_ddr.cti_o),
+          .wb_bte_i        (c_wb_ddr.bte_o),
+          .wb_ack_o        (c_wb_ddr.ack_i),
+          .wb_err_o        (c_wb_ddr.err_i),
+          .wb_rty_o        (c_wb_ddr.rty_i),
+          .wb_dat_o        (c_wb_ddr.dat_i),
+          .m_axi_awid      (c_axi_ddr.aw_id),
+          .m_axi_awaddr    (c_axi_ddr.aw_addr),
+          .m_axi_awlen     (c_axi_ddr.aw_len),
+          .m_axi_awsize    (c_axi_ddr.aw_size),
+          .m_axi_awburst   (c_axi_ddr.aw_burst),
+          .m_axi_awcache   (c_axi_ddr.aw_cache),
+          .m_axi_awprot    (c_axi_ddr.aw_prot),
+          .m_axi_awqos     (c_axi_ddr.aw_qos),
+          .m_axi_awvalid   (c_axi_ddr.aw_valid),
+          .m_axi_awready   (c_axi_ddr.aw_ready),
+          .m_axi_wdata     (c_axi_ddr.w_data),
+          .m_axi_wstrb     (c_axi_ddr.w_strb),
+          .m_axi_wlast     (c_axi_ddr.w_last),
+          .m_axi_wvalid    (c_axi_ddr.w_valid),
+          .m_axi_wready    (c_axi_ddr.w_ready),
+          .m_axi_bid       (c_axi_ddr.b_id),
+          .m_axi_bresp     (c_axi_ddr.b_resp),
+          .m_axi_bvalid    (c_axi_ddr.b_valid),
+          .m_axi_bready    (c_axi_ddr.b_ready),
+          .m_axi_arid      (c_axi_ddr.ar_id),
+          .m_axi_araddr    (c_axi_ddr.ar_addr),
+          .m_axi_arlen     (c_axi_ddr.ar_len),
+          .m_axi_arsize    (c_axi_ddr.ar_size),
+          .m_axi_arburst   (c_axi_ddr.ar_burst),
+          .m_axi_arcache   (c_axi_ddr.ar_cache),
+          .m_axi_arprot    (c_axi_ddr.ar_prot),
+          .m_axi_arqos     (c_axi_ddr.ar_qos),
+          .m_axi_arvalid   (c_axi_ddr.ar_valid),
+          .m_axi_arready   (c_axi_ddr.ar_ready),
+          .m_axi_rid       (c_axi_ddr.r_id),
+          .m_axi_rdata     (c_axi_ddr.r_data),
+          .m_axi_rresp     (c_axi_ddr.r_resp),
+          .m_axi_rlast     (c_axi_ddr.r_last),
+          .m_axi_rvalid    (c_axi_ddr.r_valid),
+          .m_axi_rready    (c_axi_ddr.r_ready)
+         );
 
      // PHY needs 50 Mhz clock shifted 45 deg compared to RMII 2 MII
      // See Nexys 4 DDR board documentation for details.
