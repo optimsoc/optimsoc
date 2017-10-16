@@ -322,7 +322,7 @@ module na_etherent_xilinx
       .s_axi_aclk            (sys_clk    ), // input to fifo 1
       .s_axi_aresetn         (~sys_rst), // input to fifo 1
             
-      .s_axi_awaddr          (axi_data_awaddr  ), // input to fifo
+      .s_axi_awaddr          (axi_data_awaddr), // input to fifo
       .s_axi_awvalid         (axi_data_awvalid ), // input to fifo
       .s_axi_awready         (axi_data_awready ), // output to fifo
       .s_axi_wdata           (axi_data_wdata   ), // input to fifo
@@ -332,7 +332,7 @@ module na_etherent_xilinx
       .s_axi_bresp           (axi_data_bresp   ), // output to fifo
       .s_axi_bvalid          (axi_data_bvalid  ), // output to fifo
       .s_axi_bready          (axi_data_bready  ), // input to fifo
-      .s_axi_araddr          (axi_data_araddr  ), // input to fifo
+      .s_axi_araddr          (axi_data_araddr), // input to fifo
       .s_axi_arvalid         (axi_data_arvalid ), // input to fifo
       .s_axi_arready         (axi_data_arready ), // output to fifo
       .s_axi_rdata           (axi_data_rdata   ), // output to fifo
@@ -345,10 +345,10 @@ module na_etherent_xilinx
       .axi_str_txd_tlast     (axis_data_txd_tlast   ), // output to fifo
       .axi_str_txd_tdata     (axis_data_txd_tdata   ), // output to fifo
       .mm2s_cntrl_reset_out_n(),
-      .axi_str_txc_tvalid    (s_axis_txc_tvalid  ), // output to fifo
-      .axi_str_txc_tready    (s_axis_txc_tready  ), // input to fifo
-      .axi_str_txc_tlast     (s_axis_txc_tlast   ), // output to fifo
-      .axi_str_txc_tdata     (s_axis_txc_tdata   ), // output to fifo
+      .axi_str_txc_tvalid    (axis_data_txc_tvalid  ), // output to fifo
+      .axi_str_txc_tready    (axis_data_txc_tready  ), // input to fifo
+      .axi_str_txc_tlast     (axis_data_txc_tlast   ), // output to fifo
+      .axi_str_txc_tdata     (axis_data_txc_tdata   ), // output to fifo
       .s2mm_prmry_reset_out_n(),
       .axi_str_rxd_tvalid    (axis_data_rxd_tvalid  ), // input to fifo
       .axi_str_rxd_tready    (axis_data_rxd_tready  ), // output to fifo
