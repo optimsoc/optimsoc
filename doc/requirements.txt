@@ -5,3 +5,4 @@ Sphinx
 breathe==4.6.0
 gitpython
 cairosvg
+pyyaml

@@ -15,6 +15,8 @@
 import sys
 import os
 import git
+from datetime import date
+import yaml
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -61,15 +63,16 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'OpTiMSoC'
-copyright = u'2017, OpTiMSoC Contributors'
+copyright = str(date.today().year) + u', OpTiMSoC Contributors'
 author = u'OpTiMSoC Contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
+topsrcdir = os.path.join(os.path.dirname(__file__), '..')
 try:
-    repo = git.repo.Repo(os.path.join(os.path.dirname(__file__), '..'))
+    repo = git.repo.Repo(topsrcdir)
     gitdescribe = repo.git.describe()
     lastversion = gitdescribe[1:7]
     if len(gitdescribe) > 7:
@@ -88,6 +91,14 @@ rst_epilog = """
 .. |dl_base| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-base.tar.gz
 .. |dl_examples| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-examples.tar.gz
 """.format(lastversion)
+
+# Add minimum versions of required tools as variables for use inside the
+# documentation.
+requirement_versions = {}
+with open(os.path.join(topsrcdir, "requirement_versions.yml"), 'r') as yaml_fp:
+    requirement_versions = yaml.safe_load(yaml_fp)
+for tool, version in requirement_versions.items():
+    rst_epilog += ".. |requirement_versions.{}| replace:: {}\n".format(tool, version)
 
 numfig = True
 
