@@ -1,6 +1,6 @@
-*****************************
+****************************
 Installation & Configuration
-*****************************
+****************************
 
 Installing an OpTiMSoC release should not take more than 10 minutes (if you have a decent internet connection), so let's get started!
 
@@ -14,7 +14,8 @@ Please first check the system requirements.
 - 4 GB or more of RAM helps greatly (especially during FPGA synthesis)
 - We recommend not using a VM, but running directly on the hardware.
   Using a VM is possible, but will result in significantly slower compilation and synthesis runs.
-- (optional, only if you want to do FPGA synthesis) Xilinx Vivado 2016.2 (the free WebPack edition is sufficient for most use cases)
+- (optional, only if you want to do FPGA synthesis) Xilinx Vivado |requirement_versions.vivado|.
+  The free WebPack edition is sufficient for most use cases.
 
 .. note:: Some external tools, especially EDA tools for synthesis and simulators, might be required that are in some cases proprietary and cost some money.
    Although OpTiMSoC is developed at an university with access to many EDA tools, we aim to always provide tool flows and support for open and free tools.
@@ -34,27 +35,28 @@ First, install all required packages from Ubuntu.
      libboost-dev libelf-dev swig \
      python3 python3-pip python3-venv libreadline-dev python-dev \
      curl git build-essential autoconf automake \
-     libtool pkg-config python-cffi libffi-dev
+     libtool pkg-config python-cffi libffi-dev python3-packaging python3-yaml
 
    # optional, but highly recommended: a waveform viewer
    sudo apt-get -y install gtkwave
 
-We build our systems with FuseSoC_, a package manager for RTL designs.
+We build our systems with `FuseSoC <https://github.com/olofk/fusesoc>`_, a package manager for RTL designs.
 It automatically arranges the sources and writes project files for our systems.
-You can install it simply from the Python package index:
+At least FuseSoC version |requirement_versions.fusesoc| is required, you can install it from the Python package index:
 
 .. code:: sh
 
-   sudo pip3 install "fusesoc>=1.6.1"
+   sudo pip3 install --upgrade fusesoc
 
 To run the tests shipped with OpTiMSoC pytest is required.
 Install it through pip (the distribution packages are too old):
 
 .. code:: sh
 
-   sudo pip3 install pytest
+   sudo pip3 install --upgrade pytest
 
-Additionally, we need two things which are not available as Ubuntu packages right now: a recent version of Verilator, and the ``or1k-elf-multicore`` toolchain (compiler, C library, debugger, etc.).
+Additionally, we need two things which are not available as Ubuntu packages right now:
+a recent version of Verilator (>= |requirement_versions.verilator|), and the ``or1k-elf-multicore`` toolchain (compiler, C library, debugger, etc.).
 Install them with our binary installation script:
 
 .. code:: sh
@@ -65,7 +67,7 @@ Install them with our binary installation script:
 
    # download and install the prebuilt tools
    curl -O https://raw.githubusercontent.com/optimsoc/prebuilts/master/optimsoc-prebuilt-deploy.py
-   sudo python optimsoc-prebuilt-deploy.py -d /opt/optimsoc verilator or1kelf
+   python optimsoc-prebuilt-deploy.py -d /opt/optimsoc verilator or1kelf
 
 To use the prebuilt tools some environment variables need to be adjusted.
 This is done by running the following command **in every terminal session that you want to use OpTiMSoC in**:
