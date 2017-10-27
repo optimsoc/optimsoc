@@ -7,12 +7,11 @@ RUN apt-get -y install curl git build-essential autoconf automake \
     libtool pkg-config 
 RUN apt-get -y install tcl libusb-1.0-0-dev libboost-dev libelf-dev swig \
     python3 python3-pip libreadline-dev python-dev python3-venv doxygen \
-    latexmk python-cffi libffi-dev
+    latexmk python-cffi libffi-dev python3-packaging python3-yaml
 
 # install fusesoc
 RUN pip3 install --upgrade pip
-RUN pip3 install pyyaml
-RUN pip3 install "fusesoc>=1.6.1"
+RUN pip3 install fusesoc
 
 # make sources available in docker image
 RUN mkdir -p /src
