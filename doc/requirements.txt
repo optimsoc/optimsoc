@@ -1,8 +1,5 @@
 Sphinx
-# Fix breathe version so that we can hotfix to support Sphinx >= 1.6
-# Remove restriction once https://github.com/michaeljones/breathe/pull/334
-# is merged and released.
-breathe==4.6.0
+breathe>=4.7.3
 gitpython
 cairosvg
 pyyaml
