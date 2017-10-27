@@ -13,7 +13,7 @@ depend =
 simulators = verilator xsim
 
 [fileset testbench]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
   tb_compute_tile.sv

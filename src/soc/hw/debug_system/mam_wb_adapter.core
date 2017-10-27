@@ -3,13 +3,13 @@ CAPI=1
 name = optimsoc:debug_system:mam_wb_adapter
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
   verilog/mam_wb_adapter.sv
 
 [fileset include_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 is_include_file = true
 usage = sim synth
 files =
