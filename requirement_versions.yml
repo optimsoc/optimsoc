@@ -1,0 +1,10 @@
+# Minimum versions of our tool dependencies
+#
+# This data is used in the build process and in the documentation
+#
+# Please enclose all version numbers in quotation marks to make sure they're
+# parsed as string, not as float!
+
+fusesoc: "1.7"
+vivado: "2016.4"
+verilator: "3.902"

@@ -40,12 +40,16 @@
 #
 
 import errno
+from packaging import version
+import multiprocessing
 from optparse import OptionParser
 import os
+import re
 import subprocess
 import shutil
 import sys
-import multiprocessing
+import traceback
+import yaml
 
 ###############################################################################
 # Logging
@@ -60,7 +64,7 @@ on the command line.
 In any case, the message is also added to the build log.
 """
 def dbg(msg):
-    write_to_build_log(msg+"\n")
+    write_to_build_log(msg + "\n")
 
     if logging_verbose:
         print("(D) {}".format(msg))
@@ -71,7 +75,7 @@ Prints an info message prepended by (I) on the command line.
 Also adds the same message to the build log.
 """
 def info(msg):
-    write_to_build_log(msg+"\n")
+    write_to_build_log(msg + "\n")
 
     # we only print bold in verbose mode to make our messages more visible
     if console_colors and logging_verbose:
@@ -85,7 +89,7 @@ Prints a warning message prepended by (W) on the command line.
 Also adds the same message to the build log.
 """
 def warn(msg):
-    write_to_build_log(msg+"\n")
+    write_to_build_log(msg + "\n")
 
     if console_colors:
         print("\033[93m(W) {}\033[0m".format(msg))
@@ -98,7 +102,7 @@ Prints an error message prepended by (E) on the command line.
 Also adds the same message to the build log.
 """
 def error(msg):
-    write_to_build_log(msg+"\n")
+    write_to_build_log(msg + "\n")
 
     if console_colors:
         print("\033[91m(E) {}\033[0m".format(msg))
@@ -135,13 +139,16 @@ def check_dir_accessible_rw(directory):
 
 """Check for existence of program
 
-The program is called with --version. It will also fail if the program does not
-have a --version option
+The program is called with |version_arg|. If the tested program does not have
+this option the check will fail as well.
+The output of the program run is returned.
 """
-def check_program(program):
+def check_program(program, version_arg='--version'):
     try:
-        cmd = "{} --version".format(program)
-        subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+        cmd = "{} {}".format(program, version_arg)
+        return subprocess.check_output(cmd, stderr=subprocess.STDOUT,
+                                       shell=True,
+                                       universal_newlines=True).strip()
     except subprocess.CalledProcessError:
         fatal("'{}' not found".format(program))
 
@@ -163,6 +170,50 @@ def check_autotools():
     check_program("autoconf")
     check_program("automake")
     check_program("autoreconf")
+
+"""Check for fusesoc
+"""
+def check_fusesoc(min_version):
+    found_version = check_program("fusesoc")
+
+    if version.parse(found_version) < version.parse(min_version):
+        fatal("OpTiMSoC requires at least FuseSoC version {}, version {} found. "
+              "Use 'pip3 install --upgrade fusesoc' to update."
+              .format(min_version, found_version))
+    else:
+        dbg("Found FuseSoC version " + found_version)
+
+"""Check for fusesoc
+"""
+def check_vivado(min_version):
+    ver_str = check_program('vivado', '-version')
+    # XXX: most likely doesn't cover service releases, extend if we see one of
+    # those.
+    m = re.search('Vivado v(\d{4}\.\d) ', ver_str)
+    found_version = m.group(1)
+
+    if version.parse(found_version) < version.parse(min_version):
+        fatal("OpTiMSoC requires at least Xilinx Vivado {}, {} found. "
+              .format(min_version, found_version))
+    else:
+        dbg("Found Vivado version " + found_version)
+
+"""Check for verilator
+"""
+def check_verilator(min_version):
+    ver_str = check_program("verilator")
+    m = re.search('^Verilator ([^\s]+) ', ver_str)
+    found_version = m.group(1)
+
+    if version.parse(found_version) < version.parse(min_version):
+        fatal("OpTiMSoC requires at least Verilator version {}, version {} "
+              "found. Please upgrade your OpTiMSoC prebuilts or manually "
+              "update Verilator."
+              .format(min_version, found_version))
+    else:
+        dbg("Found Verilator version " + found_version)
+
+
 
 ###############################################################################
 # Helper functions
@@ -419,6 +470,8 @@ def build_examples_sim(options, env):
     dist = os.path.join(objdir, "dist")
 
     info("Build examples (Verilator-based simulation)")
+    check_fusesoc(options.requirement_versions['fusesoc'])
+    check_verilator(options.requirement_versions['verilator'])
 
     exsrc = os.path.join(src, "examples", "sim")
     exobjdir = os.path.join(objdir, "examples", "sim")
@@ -481,6 +534,8 @@ def build_examples_fpga(options, env):
     dist = os.path.join(objdir, "dist")
 
     info("Build FPGA examples")
+    check_fusesoc(options.requirement_versions['fusesoc'])
+    check_vivado(options.requirement_versions['vivado'])
 
     exsrc = os.path.join(src, "examples", "fpga")
     exobjdir = os.path.join(objdir, "examples", "fpga")
@@ -816,6 +871,13 @@ def get_version(src):
                                      stderr=subprocess.STDOUT, shell=True)
     return output.decode("utf-8").split("\n", 1)[0]
 
+"""Get minimum versions of our tool dependencies
+"""
+def get_requirement_versions(src):
+    with open(os.path.join(src, "requirement_versions.yml"), 'r') as yaml_fp:
+        requirement_versions = yaml.safe_load(yaml_fp)
+    return requirement_versions
+
 """Parse boolean yes/no command-line options
 """
 def optparse_parse_boolean(option, opt_str, value, parser):
@@ -900,6 +962,8 @@ if __name__ == '__main__':
     # open the build log file
     build_log_fp = open(os.path.join(options.objdir, 'build.log'), 'w');
 
+    options.requirement_versions = get_requirement_versions(options.src)
+
     info("Building OpTiMSoC")
     info(" version: {}".format(options.version))
     info(" source: {}".format(options.src))
@@ -955,7 +1019,8 @@ if __name__ == '__main__':
             build_log_fp.close()
             raise
         else:
-            fatal(e)
+            fatal('An exception in the build script occurred.\n'
+                  + traceback.format_exc())
 
 
     info("Build finished.")
