@@ -12,6 +12,7 @@ depend =
   opensocdebug:interconnect:debug_ring
   glip:backend:uart
   glip:backend:cypressfx3
+  glip:backend:cypressfx3-vcu108-16bit
   optimsoc:base:config
 
 backend = vivado
@@ -29,5 +30,20 @@ hw_device = xcvu095_0
 
 [parameter NUM_CORES]
 datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter UART0_SOURCE]
+datatype = str
+paramtype = vlogparam
+scope = public
+
+[parameter UART0_BAUD]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter HOST_IF]
+datatype = str
 paramtype = vlogparam
 scope = public

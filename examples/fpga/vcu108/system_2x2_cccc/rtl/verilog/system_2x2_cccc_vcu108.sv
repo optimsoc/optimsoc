@@ -69,7 +69,7 @@ module system_2x2_cccc_vcu108
    inout  [7:0]          c0_ddr4_dqs_c,
 
 
-   // Cypress FX3 connected to FMC HPC0 (left, next to the USB jacks)
+   // Cypress FX3 connected to FMC HPC1 (right, next to the Ethernet port)
    output                fx3_pclk,
    inout [15:0]          fx3_dq,
    output                fx3_slcs_n,
@@ -165,8 +165,10 @@ module system_2x2_cccc_vcu108
 
    logic glip_com_rst, glip_ctrl_logic_rst;
 
+   // system clock: 100 MHz
+   logic sys_clk_100;
    // system clock: 50 MHz
-   logic sys_clk;
+   logic sys_clk_50;
 
    // reset from the board and the memory subsystem. Held low until the MIGs
    // are ready.
@@ -186,8 +188,8 @@ module system_2x2_cccc_vcu108
    logic uart_rx, uart_tx, uart_cts_n, uart_rts_n;
 
    // Debug system
-   glip_channel c_glip_in(.clk(sys_clk));
-   glip_channel c_glip_out(.clk(sys_clk));
+   glip_channel c_glip_in(.clk(sys_clk_50));
+   glip_channel c_glip_out(.clk(sys_clk_50));
 
    // Host (off-chip) interface through GLIP (mostly for debug)
    generate
@@ -198,8 +200,8 @@ module system_2x2_cccc_vcu108
               .WIDTH(16),
               .BUFFER_OUT_DEPTH(256*1024))
             u_glip(
-                  .clk_io(sys_clk),
-                  .clk(sys_clk),
+                  .clk_io(sys_clk_50),
+                  .clk(sys_clk_50),
                   .rst(sys_rst_board),
                   .com_rst(glip_com_rst),
                   .ctrl_logic_rst(glip_ctrl_logic_rst),
@@ -220,11 +222,10 @@ module system_2x2_cccc_vcu108
             );
       end else if (HOST_IF == "usb3") begin
          glip_cypressfx3_toplevel
-            #(.WIDTH(16),
-              .FREQ_CLK_IO(32'd50_000_000))
+            #(.WIDTH(16))
             u_glip(
-                  .clk(sys_clk),
-                  .clk_io(sys_clk),
+                  .clk(sys_clk_50),
+                  .clk_io_100(sys_clk_100),
                   .rst(sys_rst_board),
                   .com_rst(glip_com_rst),
                   .ctrl_logic_rst(glip_ctrl_logic_rst),
@@ -261,7 +262,7 @@ module system_2x2_cccc_vcu108
       #(.CONFIG(CONFIG))
       u_system
       (
-         .clk           (sys_clk),
+         .clk           (sys_clk_50),
          .rst           (sys_rst),
 
          .c_glip_in     (c_glip_in),
@@ -321,7 +322,8 @@ module system_2x2_cccc_vcu108
          .c0_ddr4_dqs_t          (c0_ddr4_dqs_t),
 
          // system interface
-         .sys_clk     (sys_clk),
+         .sys_clk_100 (sys_clk_100),
+         .sys_clk_50  (sys_clk_50),
          .sys_rst     (sys_rst_board),
 
          .uart_rx     (uart_rx),
@@ -376,7 +378,7 @@ module system_2x2_cccc_vcu108
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr0
-     (.clk             (sys_clk),
+     (.clk             (sys_clk_50),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr0.cyc_o),
       .wb_stb_i        (c_wb_ddr0.stb_o),
@@ -429,7 +431,7 @@ module system_2x2_cccc_vcu108
 
 xilinx_axi_register_slice
    u_slice0
-     (.aclk(sys_clk),
+     (.aclk(sys_clk_50),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile0.aw_addr),
       .s_axi_awlen(c_axi_tile0.aw_len),
@@ -509,7 +511,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr1
-     (.clk             (sys_clk),
+     (.clk             (sys_clk_50),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr1.cyc_o),
       .wb_stb_i        (c_wb_ddr1.stb_o),
@@ -562,7 +564,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice1
-     (.aclk(sys_clk),
+     (.aclk(sys_clk_50),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile1.aw_addr),
       .s_axi_awlen(c_axi_tile1.aw_len),
@@ -642,7 +644,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr2
-     (.clk             (sys_clk),
+     (.clk             (sys_clk_50),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr2.cyc_o),
       .wb_stb_i        (c_wb_ddr2.stb_o),
@@ -695,7 +697,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice2
-     (.aclk(sys_clk),
+     (.aclk(sys_clk_50),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile2.aw_addr),
       .s_axi_awlen(c_axi_tile2.aw_len),
@@ -775,7 +777,7 @@ wb2axi
       .DATA_WIDTH (DDR_DATA_WIDTH),
       .AXI_ID_WIDTH (0))
    u_wb2axi_ddr3
-     (.clk             (sys_clk),
+     (.clk             (sys_clk_50),
       .rst             (sys_rst),
       .wb_cyc_i        (c_wb_ddr3.cyc_o),
       .wb_stb_i        (c_wb_ddr3.stb_o),
@@ -828,7 +830,7 @@ wb2axi
 
 xilinx_axi_register_slice
    u_slice3
-     (.aclk(sys_clk),
+     (.aclk(sys_clk_50),
       .aresetn(!sys_rst),
       .s_axi_awaddr(c_axi_tile3.aw_addr),
       .s_axi_awlen(c_axi_tile3.aw_len),
@@ -905,11 +907,11 @@ xilinx_axi_register_slice
 xilinx_axi_interconnect_4to1
    u_axi_interconnect
    (
-      .INTERCONNECT_ACLK    (sys_clk),
+      .INTERCONNECT_ACLK    (sys_clk_50),
       .INTERCONNECT_ARESETN (!sys_rst),
 
       .S00_AXI_ARESET_OUT_N (),
-      .S00_AXI_ACLK         (sys_clk),
+      .S00_AXI_ACLK         (sys_clk_50),
       .S00_AXI_AWID         (0),
       .S00_AXI_AWADDR       ({2'b00, c_axi_ddr0.aw_addr}),
       .S00_AXI_AWLEN        (c_axi_ddr0.aw_len),
@@ -949,7 +951,7 @@ xilinx_axi_interconnect_4to1
       .S00_AXI_RREADY       (c_axi_ddr0.r_ready),
 
       .S01_AXI_ARESET_OUT_N (),
-      .S01_AXI_ACLK         (sys_clk),
+      .S01_AXI_ACLK         (sys_clk_50),
       .S01_AXI_AWID         (0),
       .S01_AXI_AWADDR       ({2'b01, c_axi_ddr1.aw_addr}),
       .S01_AXI_AWLEN        (c_axi_ddr1.aw_len),
@@ -989,7 +991,7 @@ xilinx_axi_interconnect_4to1
       .S01_AXI_RREADY       (c_axi_ddr1.r_ready),
 
       .S02_AXI_ARESET_OUT_N (),
-      .S02_AXI_ACLK         (sys_clk),
+      .S02_AXI_ACLK         (sys_clk_50),
       .S02_AXI_AWID         (0),
       .S02_AXI_AWADDR       ({2'b10, c_axi_ddr2.aw_addr}),
       .S02_AXI_AWLEN        (c_axi_ddr2.aw_len),
@@ -1029,7 +1031,7 @@ xilinx_axi_interconnect_4to1
       .S02_AXI_RREADY       (c_axi_ddr2.r_ready),
 
       .S03_AXI_ARESET_OUT_N (),
-      .S03_AXI_ACLK         (sys_clk),
+      .S03_AXI_ACLK         (sys_clk_50),
       .S03_AXI_AWID         (0),
       .S03_AXI_AWADDR       ({2'b11, c_axi_ddr3.aw_addr}),
       .S03_AXI_AWLEN        (c_axi_ddr3.aw_len),
@@ -1069,7 +1071,7 @@ xilinx_axi_interconnect_4to1
       .S03_AXI_RREADY       (c_axi_ddr3.r_ready),
 
       .M00_AXI_ARESET_OUT_N (),
-      .M00_AXI_ACLK         (sys_clk),
+      .M00_AXI_ACLK         (sys_clk_50),
       .M00_AXI_AWID         (c_axi_ddr.aw_id),
       .M00_AXI_AWADDR       (c_axi_ddr.aw_addr),
       .M00_AXI_AWLEN        (c_axi_ddr.aw_len),
