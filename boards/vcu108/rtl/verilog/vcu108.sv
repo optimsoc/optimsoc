@@ -78,7 +78,8 @@ module vcu108
    //
    // System Interface
    //
-   output                sys_clk, // 50 MHz system clock
+   output                sys_clk_100, // 100 MHz system clock
+   output                sys_clk_50, // 50 MHz system clock
    output                sys_rst, // system reset (active high)
 
    // DRAM AXI interface
@@ -160,7 +161,21 @@ module vcu108
          .IS_I_INVERTED(1'b0)    // Optional inversion for I
       )
       BUFGCE_DIV_CLK1_inst (
-         .O(sys_clk),      // 1-bit output: Buffer
+         .O(sys_clk_50),   // 1-bit output: Buffer
+         .CE(1'b1),        // 1-bit input: Buffer enable
+         .CLR(1'b0),       // 1-bit input: Asynchronous clear
+         .I(mig_ui_clk)    // 1-bit input: Buffer
+      );
+
+   BUFGCE_DIV #(
+         .BUFGCE_DIVIDE(3.0),    // 1-8
+         // Programmable Inversion Attributes: Specifies built-in programmable inversion on specific pins
+         .IS_CE_INVERTED(1'b0),  // Optional inversion for CE
+         .IS_CLR_INVERTED(1'b0), // Optional inversion for CLR
+         .IS_I_INVERTED(1'b0)    // Optional inversion for I
+      )
+      BUFGCE_DIV_CLK2_inst (
+         .O(sys_clk_100),  // 1-bit output: Buffer
          .CE(1'b1),        // 1-bit input: Buffer enable
          .CLR(1'b0),       // 1-bit input: Asynchronous clear
          .I(mig_ui_clk)    // 1-bit input: Buffer
@@ -350,7 +365,7 @@ module vcu108
          .s_axi_rlast(ddr_rlast),
          .s_axi_rid(ddr_rid),
          /**************** System Signals ****************/
-         .s_axi_aclk(sys_clk),
+         .s_axi_aclk(sys_clk_50),
          .s_axi_aresetn(sys_rst_n),
 
 
