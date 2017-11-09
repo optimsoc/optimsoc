@@ -1,6 +1,6 @@
 diff -aur ../SlaveFifoSync/.cproject ./.cproject
 --- ../SlaveFifoSync/.cproject	2014-09-29 17:13:26.000000000 +0200
-+++ ./.cproject	2017-05-17 13:30:21.167342000 +0200
++++ ./.cproject	2017-09-20 17:19:56.484248219 +0200
 @@ -1,871 +1,486 @@
  <?xml version="1.0" encoding="UTF-8" standalone="no"?>
  <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
@@ -1302,7 +1302,7 @@ diff -aur ../SlaveFifoSync/.cproject ./.cproject
  </cproject>
 diff -aur ../SlaveFifoSync/cyfxgpif2config.h ./cyfxgpif2config.h
 --- ../SlaveFifoSync/cyfxgpif2config.h	2012-09-03 10:26:10.000000000 +0200
-+++ ./cyfxgpif2config.h	2017-05-17 13:32:07.235445000 +0200
++++ ./cyfxgpif2config.h	2017-09-20 17:19:56.484248219 +0200
 @@ -1,6 +1,6 @@
  /*
 - * Project Name: sync_slave_fifo_2bit_ANexample.cyfx
@@ -1360,7 +1360,7 @@ diff -aur ../SlaveFifoSync/cyfxgpif2config.h ./cyfxgpif2config.h
 +#endif   /* _INCLUDED_GPIFII_DESIGNER_SYNC_SLAVEFIFO_CYDSN_ */
 diff -aur ../SlaveFifoSync/cyfxslfifosync.c ./cyfxslfifosync.c
 --- ../SlaveFifoSync/cyfxslfifosync.c	2015-02-10 17:11:34.000000000 +0100
-+++ ./cyfxslfifosync.c	2017-05-17 13:30:21.167342000 +0200
++++ ./cyfxslfifosync.c	2017-09-20 17:20:17.440320856 +0200
 @@ -253,7 +253,7 @@
  #ifdef STREAM_IN_OUT
      epCfg.burstLen = burstLength;
@@ -1430,6 +1430,18 @@ diff -aur ../SlaveFifoSync/cyfxslfifosync.c ./cyfxslfifosync.c
  
      return isHandled;
  }
+@@ -616,9 +662,9 @@
+         CyFxAppErrorHandler(apiRetStatus);
+     }
+ 
+-    CyU3PGpifSocketConfigure (0,CY_U3P_PIB_SOCKET_0,6,CyFalse,1);
++    CyU3PGpifSocketConfigure (0,CY_U3P_PIB_SOCKET_0,4,CyFalse,1);
+ 
+-   CyU3PGpifSocketConfigure (3,CY_U3P_PIB_SOCKET_3,6,CyFalse,1);
++    CyU3PGpifSocketConfigure (3,CY_U3P_PIB_SOCKET_3,4,CyFalse,1);
+ 
+     /* Start the state machine. */
+     apiRetStatus = CyU3PGpifSMStart (RESET,ALPHA_RESET);
 @@ -643,12 +689,36 @@
  		CyFxAppErrorHandler(apiRetStatus);
  	}
@@ -1483,7 +1495,7 @@ diff -aur ../SlaveFifoSync/cyfxslfifosync.c ./cyfxslfifosync.c
      status = CyU3PDeviceConfigureIOMatrix (&io_cfg);
 diff -aur ../SlaveFifoSync/cyfxslfifosync.h ./cyfxslfifosync.h
 --- ../SlaveFifoSync/cyfxslfifosync.h	2014-10-06 09:44:16.000000000 +0200
-+++ ./cyfxslfifosync.h	2017-05-17 13:30:21.167342000 +0200
++++ ./cyfxslfifosync.h	2017-09-20 17:19:56.484248219 +0200
 @@ -42,13 +42,13 @@
  //#define STREAM_IN_OUT
  
@@ -1504,7 +1516,7 @@ diff -aur ../SlaveFifoSync/cyfxslfifosync.h ./cyfxslfifosync.h
  #ifdef STREAM_IN_OUT
 diff -aur ../SlaveFifoSync/cyfxslfifousbdscr.c ./cyfxslfifousbdscr.c
 --- ../SlaveFifoSync/cyfxslfifousbdscr.c	2015-02-10 17:10:16.000000000 +0100
-+++ ./cyfxslfifousbdscr.c	2017-05-17 13:30:21.167342000 +0200
++++ ./cyfxslfifousbdscr.c	2017-09-20 17:19:56.484248219 +0200
 @@ -49,7 +49,7 @@
      0x00,0x00,                      /* Device release number */
      0x01,                           /* Manufacture string index */
@@ -1525,7 +1537,7 @@ diff -aur ../SlaveFifoSync/cyfxslfifousbdscr.c ./cyfxslfifousbdscr.c
  
 diff -aur ../SlaveFifoSync/makefile ./makefile
 --- ../SlaveFifoSync/makefile	2012-08-16 14:56:00.000000000 +0200
-+++ ./makefile	2017-05-17 13:30:21.167342000 +0200
++++ ./makefile	2017-09-20 17:19:56.484248219 +0200
 @@ -14,17 +14,23 @@
  ## installation root directory path.
  ##
@@ -1576,7 +1588,7 @@ diff -aur ../SlaveFifoSync/makefile ./makefile
  $(A_OBJECT) : %.o : %.S
 diff -aur ../SlaveFifoSync/.project ./.project
 --- ../SlaveFifoSync/.project	2013-03-28 14:09:06.000000000 +0100
-+++ ./.project	2017-05-17 13:30:21.167342000 +0200
++++ ./.project	2017-09-20 17:19:56.484248219 +0200
 @@ -1,6 +1,6 @@
  <?xml version="1.0" encoding="UTF-8"?>
  <projectDescription>
@@ -1653,5 +1665,4 @@ diff -aur ../SlaveFifoSync/.project ./.project
  			<arguments>
  			</arguments>
  		</buildCommand>
-Only in .: .settings
 Only in .: SlaveFifoSync32.patch

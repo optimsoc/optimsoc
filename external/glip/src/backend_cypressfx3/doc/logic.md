@@ -13,29 +13,28 @@ needed for the external interface towards the GPIF-II of the FX3 chip. All
 signals with the `_n` suffix are active low, following the FX3 default. Be
 careful as the output polarity can be changed in the FX3 firmware!
 
-| Port Name     | Width    | Direction | Description                          |
-|---------------|:--------:|:---------:|--------------------------------------|
-| clk_io        | 1        | IN        | I/O clock (forwarded to fx3_pclk)    |
-| fx3_pclk      | 1        | OUT       | interface clock (supplied by FPGA)   |
-| fx3_dq        | 16/32    | INOUT     | data bus. Can be 16 or 32 bit wide   |
-| fx3_slcs_n    | 1        | OUT       | chip select                          |
-| fx3_slwr_n    | 1        | OUT       | write strobe                         |
-| fx3_sloe_n    | 1        | OUT       | enable FX3 output on data bus        |
-| fx3_slrd_n    | 1        | OUT       | read strobe                          |
-| fx3_pktend_n  | 1        | OUT       | packet end signal for short packet   |
-| fx3_a         | 2        | OUT       | select GPIF-II socket                |
-| fx3_flaga_n   | 1        | IN        | GPIF-II socket 0 buffer full         |
-| fx3_flagb_n   | 1        | IN        | GPIF-II socket 0 buffer almost full  |
-| fx3_flagc_n   | 1        | IN        | GPIF-II socket 3 buffer empty        |
-| fx3_flagd_n   | 1        | IN        | GPIF-II socket 3 buffer almost empty |
-| fx3_com_rst   | 1        | IN        | communication reset                  |
-| fx3_logic_rst | 1        | IN        | logic reset                          |
+| Port Name     | Width    | Direction | Description                                |
+|---------------|:--------:|:---------:|--------------------------------------------|
+| clk_io_100    | 1        | IN        | 100MHz I/O clock (forwarded to fx3_pclk)   |
+| fx3_pclk      | 1        | OUT       | interface clock (supplied by FPGA)         |
+| fx3_dq        | 16/32    | INOUT     | data bus. Can be 16 or 32 bit wide         |
+| fx3_slcs_n    | 1        | OUT       | chip select                                |
+| fx3_slwr_n    | 1        | OUT       | write strobe                               |
+| fx3_sloe_n    | 1        | OUT       | enable FX3 output on data bus              |
+| fx3_slrd_n    | 1        | OUT       | read strobe                                |
+| fx3_pktend_n  | 1        | OUT       | packet end signal for short packet         |
+| fx3_a         | 2        | OUT       | select GPIF-II socket                      |
+| fx3_flaga_n   | 1        | IN        | GPIF-II socket 0 buffer full               |
+| fx3_flagb_n   | 1        | IN        | GPIF-II socket 0 buffer almost full        |
+| fx3_flagc_n   | 1        | IN        | GPIF-II socket 3 buffer empty              |
+| fx3_flagd_n   | 1        | IN        | GPIF-II socket 3 buffer almost empty       |
+| fx3_com_rst   | 1        | IN        | communication reset                        |
+| fx3_logic_rst | 1        | IN        | logic reset                                |
 
 The following parameters are available.
 
 | Name         | Description                         |
 |--------------|-------------------------------------|
-| FREQ_CLK_IO  | Frequency of the I/O clock `clk_io` |
 | WIDTH        | Width of the FIFO (`fifo_*`) ports. Supported values: 16 and 32. Default: 16. You need to use the corresponding firmware for the chosen width! |
 | BUFFER_DEPTH | Size of the input and output buffers on the FPGA in bytes. Default: 512 bytes |
 
