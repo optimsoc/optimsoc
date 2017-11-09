@@ -135,7 +135,7 @@ module glip_uart_toplevel
    wire               ingress_ctrl_out_ready;
 
    wire               ingress_cdc_wr_full;
-   wire               ingress_cdc_empty;
+   wire               ingress_cdc_rd_empty;
    wire               ingress_cdc_rd_en;
    wire               ingress_cdc_wr_en;
    wire [7:0]         ingress_cdc_wr_data;
