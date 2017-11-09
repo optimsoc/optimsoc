@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 /** A single entry in the list of well-known USB devices */
 struct usb_dev_entry {
@@ -454,6 +455,28 @@ int gb_cypressfx3_close(struct glip_ctx *ctx)
         return -1;
     }
 
+    /* ensure the write buffer is empty before closing the connection */
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+    size_t write_buf_fill_level = cbuf_fill_level(bctx->write_buf);
+    if (write_buf_fill_level > 0) {
+        struct timespec ts;
+        /* get current time */
+        clock_gettime(CLOCK_REALTIME, &ts);
+        /* add 100ms as timeout */
+        timespec_add_ns(&ts, 100 * 1000 * 1000);
+        int res = 0;
+        while (write_buf_fill_level > 0 && res == 0) {
+            res = cbuf_timedwait_for_level_change(bctx->write_buf,
+                                                  write_buf_fill_level, &ts);
+            write_buf_fill_level = cbuf_fill_level(bctx->write_buf);
+        }
+        /*
+         * Wait to ensure the data that has been written using glip_write() is
+         * written out to the USB device.
+         */
+        usleep(5 * 1000);
+    }
+
     /* tear down event notifications */
     sem_destroy(&ctx->backend_ctx->write_notification_sem);
     sem_destroy(&ctx->backend_ctx->read_notification_sem);
@@ -818,8 +841,6 @@ static void* usb_write_thread(void* ctx_void)
         rv = libusb_bulk_transfer(bctx->usb_dev_handle, USB_WR_EP,
                                   transfer_data, transfer_len,
                                   (int*)&transfer_len_sent, USB_TX_TIMEOUT_MS);
-        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-        pthread_testcancel();
 
         if (rv != 0 && rv != LIBUSB_ERROR_TIMEOUT) {
             /*
@@ -831,7 +852,7 @@ static void* usb_write_thread(void* ctx_void)
             assert(transfer_len_sent == 0);
             info(ctx, "Unable to transfer data to USB device. Error code: %d\n",
                  rv);
-            continue;
+            goto next_pkg;
         }
 
 #ifdef DEBUG
@@ -866,6 +887,10 @@ static void* usb_write_thread(void* ctx_void)
                                       (int*)&transfer_len_sent,
                                       USB_TX_TIMEOUT_MS);
         }
+
+next_pkg:
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+        pthread_testcancel();
     }
 
     return NULL;
