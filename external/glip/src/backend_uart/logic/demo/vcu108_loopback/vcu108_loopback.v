@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2016 by the author(s)
+/* Copyright (c) 2015-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,14 @@
  *
  * =============================================================================
  *
- * VCU108 board demo
+ * VCU108 loopback demo
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  *   Max Koenen <max.koenen@tum.de>
  */
 
-module vcu108
+module vcu108_loopback
   (
    // 125 MHz clock & CPU Reset button
    input        CLK_125MHZ_P,
@@ -36,10 +36,17 @@ module vcu108
 
    // UART Interface
    // The signals here are named from the host point-of-view.
+   // USB UART (onboard)
    input        USB_UART_TX,
    output       USB_UART_RX,
    input        USB_UART_RTS,
    output       USB_UART_CTS,
+
+   // UART over PMOD (bottom row of J52)
+   output       PMOD_UART_RX,
+   input        PMOD_UART_TX,
+   output       PMOD_UART_CTS, // active low (despite the name)
+   input        PMOD_UART_RTS, // active low (despite the name)
 
    // GPIO DIP Switches SW0-SW3
    input [3:0]  GPIO_DIP_SW,
@@ -57,8 +64,16 @@ module vcu108
 
    parameter WIDTH = 16;
 
+   // source of the UART connection
+   // onboard: Use the UART chip on the VCU108 board
+   // pmod: Connect a pmodusbuart module to J52 (bottom row)
+   parameter UART0_SOURCE = "pmod";
+
+   // onboard: 921600, max. for CP2105
+   // pmod: 3 MBaud, max. for FT232R
+   parameter UART0_BAUD = (UART0_SOURCE == "pmod" ? 3000000 : 921600);
+
    localparam FREQ = 125000000; // frequency of clk [Hz]
-   localparam BAUD = 921600;
 
    // Match pins for this demo:
    wire     rst;
@@ -69,13 +84,27 @@ module vcu108
    assign   clkp = CLK_125MHZ_P;
    assign   clkn = CLK_125MHZ_N;
    wire     uart_rx;
-   assign   uart_rx = USB_UART_TX; // wires are named from FPGA point of view
    wire     uart_tx;
-   assign   USB_UART_RX = uart_tx; // wires are named from FPGA point of view
    wire     uart_cts_n;
-   assign   uart_cts_n = USB_UART_RTS; // toplevel is active low
    wire     uart_rts_n;
-   assign   USB_UART_CTS = uart_rts_n; // toplevel is active low
+
+   // Important note: We change to a different view of naming here.
+   // The signals from/to the board are seen from a DTE (host PC) point of view,
+   // all internally used signals are seen from a DCE (FPGA) point of view
+   // (i.e. from our view).
+   generate
+      if (UART0_SOURCE == "onboard") begin
+         assign uart_rx = USB_UART_TX;
+         assign USB_UART_RX = uart_tx;
+         assign USB_UART_CTS = uart_rts_n;
+         assign uart_cts_n = USB_UART_RTS;
+      end else if (UART0_SOURCE == "pmod") begin
+         assign uart_rx = PMOD_UART_TX;
+         assign PMOD_UART_RX = uart_tx;
+         assign PMOD_UART_CTS = uart_rts_n;
+         assign uart_cts_n = PMOD_UART_RTS;
+      end
+   endgenerate
 
 
    wire [WIDTH-1:0] in_data;
@@ -122,7 +151,7 @@ module vcu108
 
    glip_uart_toplevel
      #(.FREQ_CLK_IO(FREQ),
-       .BAUD(BAUD),
+       .BAUD(UART0_BAUD),
        .WIDTH(WIDTH))
    u_uart(.clk_io         (clk),
           .clk            (clk),

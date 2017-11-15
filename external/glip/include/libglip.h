@@ -126,6 +126,7 @@ int glip_get_log_priority(struct glip_ctx *ctx);
 void glip_set_log_priority(struct glip_ctx *ctx, int priority);
 
 unsigned int glip_get_fifo_width(struct glip_ctx *ctx);
+int glip_set_fifo_width(struct glip_ctx *ctx, unsigned int fifo_width_bytes);
 unsigned int glip_get_channel_count(struct glip_ctx *ctx);
 
 int glip_get_backends(const char ***name, size_t *count);

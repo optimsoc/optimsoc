@@ -65,16 +65,16 @@ if { $::argc > 0 } {
 }
 
 # Set the directory path for the original project from where this script was exported
-set orig_proj_dir "[file normalize "$origin_dir/vcu108"]"
+set orig_proj_dir "[file normalize "$origin_dir/vcu108_stress_test"]"
 
 # Create project
-create_project vcu108 ./vivado
+create_project vcu108_stress_test ./vivado
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
-set obj [get_projects vcu108]
+set obj [get_projects vcu108_stress_test]
 set_property "default_lib" "xil_defaultlib" $obj
 set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property "sim.ip.auto_export_scripts" "1" $obj
@@ -89,13 +89,15 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
- "[file normalize "$origin_dir/vcu108.v"]"\
+ "[file normalize "$origin_dir/vcu108_stress_test.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_toplevel.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_control.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_control_egress.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_control_ingress.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_receive.v"]"\
  "[file normalize "$origin_dir/../../verilog/glip_uart_transmit.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/stress_test/io_stress_test.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/stress_test/stress_test_lfsr.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/credit/verilog/creditor.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/credit/verilog/debtor.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/scaler/verilog/glip_downscale.sv"]"\
@@ -119,7 +121,8 @@ add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
-set_property "top" "vcu108" $obj
+set_property "generic" "UART0_BAUD=pmod" $obj
+set_property "top" "vcu108_stress_test" $obj
 
 # Create 'constrs_1' fileset (if not found)
 if {[string equal [get_filesets -quiet constrs_1] ""]} {
@@ -152,7 +155,7 @@ set obj [get_filesets sim_1]
 
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
-set_property "top" "vcu108" $obj
+set_property "top" "vcu108_stress_test" $obj
 set_property "xelab.nosort" "1" $obj
 set_property "xelab.unifast" "" $obj
 
@@ -164,17 +167,6 @@ if {[string equal [get_runs -quiet synth_1] ""]} {
   set_property flow "Vivado Synthesis 2015" [get_runs synth_1]
 }
 set obj [get_runs synth_1]
-set_property "part" "xcvu095-ffva2104-2-e" $obj
-set_property -name {steps.synth_design.args.more options} -value {-generic WIDTH=8} -objects $obj
-
-# Create 'synth_2' run (if not found)
-if {[string equal [get_runs -quiet synth_2] ""]} {
-  create_run -name synth_2 -part xcvu095-ffva2104-2-e -flow {Vivado Synthesis 2015} -strategy "Vivado Synthesis Defaults" -constrset constrs_1
-} else {
-  set_property strategy "Vivado Synthesis Defaults" [get_runs synth_2]
-  set_property flow "Vivado Synthesis 2015" [get_runs synth_2]
-}
-set obj [get_runs synth_2]
 set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property -name {steps.synth_design.args.more options} -value {-generic WIDTH=16} -objects $obj
 
@@ -189,18 +181,6 @@ if {[string equal [get_runs -quiet impl_1] ""]} {
   set_property flow "Vivado Implementation 2015" [get_runs impl_1]
 }
 set obj [get_runs impl_1]
-set_property "part" "xcvu095-ffva2104-2-e" $obj
-set_property "steps.write_bitstream.args.readback_file" "0" $obj
-set_property "steps.write_bitstream.args.verbose" "0" $obj
-
-# Create 'impl_2' run (if not found)
-if {[string equal [get_runs -quiet impl_2] ""]} {
-  create_run -name impl_2 -part xcvu095-ffva2104-2-e -flow {Vivado Implementation 2015} -strategy "Vivado Implementation Defaults" -constrset constrs_1 -parent_run synth_2
-} else {
-  set_property strategy "Vivado Implementation Defaults" [get_runs impl_2]
-  set_property flow "Vivado Implementation 2015" [get_runs impl_2]
-}
-set obj [get_runs impl_2]
 set_property "part" "xcvu095-ffva2104-2-e" $obj
 set_property "steps.write_bitstream.args.readback_file" "0" $obj
 set_property "steps.write_bitstream.args.verbose" "0" $obj

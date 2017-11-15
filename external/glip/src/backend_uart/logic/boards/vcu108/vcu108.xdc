@@ -37,6 +37,14 @@ set_property -dict {PACKAGE_PIN BF24 IOSTANDARD LVCMOS18} [get_ports USB_UART_CT
 set_property -dict {PACKAGE_PIN BD22 IOSTANDARD LVCMOS18} [get_ports USB_UART_RTS]
 
 
+# UART via PMOD
+# Connect a Digilent pmodusbuart module to J52, bottom row (PMOD0[4] - PMOD0[7])
+set_property -dict { PACKAGE_PIN BC13 IOSTANDARD LVCMOS18 }   [get_ports PMOD_UART_RTS]
+set_property -dict { PACKAGE_PIN BF7  IOSTANDARD LVCMOS18 }   [get_ports PMOD_UART_RX]
+set_property -dict { PACKAGE_PIN AW12 IOSTANDARD LVCMOS18 }   [get_ports PMOD_UART_TX]
+set_property -dict { PACKAGE_PIN BC16 IOSTANDARD LVCMOS18 }   [get_ports PMOD_UART_CTS]
+
+
 ## User LEDs
 
 set_property -dict {PACKAGE_PIN AT32 IOSTANDARD LVCMOS12} [get_ports {GPIO_LED[0]}]

@@ -1,8 +1,8 @@
 all: vivado-project
 
-vivado-project: vivado/vcu108.xpr
+vivado-project: vivado/vcu108_loopback.xpr
 
-vivado/vcu108.xpr:
+vivado/vcu108_loopback.xpr:
 	vivado -mode batch -source vivado.tcl
 
 clean: clean-vivado

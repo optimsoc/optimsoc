@@ -240,6 +240,14 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    // The UART backend has no way to auto-discover the width of the FIFO
+    // on the target side. The loopback measure hardware demo uses 8 bit FIFOs,
+    // tell GLIP about that.
+    if (strcmp(backend_name, "uart") == 0) {
+        rv = glip_set_fifo_width(glip_ctx, 1);
+        assert(rv == 0);
+    }
+
     unsigned int fifo_width_bytes = glip_get_fifo_width(glip_ctx);
     if (transfer_size % fifo_width_bytes != 0) {
         fprintf(stderr, "ERROR: The transfer size must be a multiple of the "

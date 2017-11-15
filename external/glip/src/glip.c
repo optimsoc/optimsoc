@@ -254,8 +254,15 @@ void* glip_get_caller_ctx(struct glip_ctx *ctx)
  * chunks of at least one FIFO width, so make sure to always transfer at least
  * as many bytes as the FIFO is wide.
  *
+ * Some backends support variable FIFO widths, but have no way of telling the
+ * host software the FIFO width. In this case this function returns 0. You
+ * need to set the FIFO width explicitly using glip_set_fifo_width().
+ *
  * @param ctx the library context
- * @return the width of the FIFO on the target side in bytes
+ * @return the width of the FIFO on the target side in bytes, or 0 if
+ *         the width is unknown.
+ *
+ * @see glip_set_fifo_width()
  *
  * @ingroup utilities
  */
@@ -263,6 +270,32 @@ API_EXPORT
 unsigned int glip_get_fifo_width(struct glip_ctx *ctx)
 {
     return ctx->backend_functions.get_fifo_width(ctx);
+}
+
+/**
+ * Set the width of the FIFO on the target side (if supported by the backend)
+ *
+ * Some backends have no way of informing the host software about the FIFO width
+ * on the target side. In this case the FIFO width must be known by the user
+ * of the GLIP API and set explicitly.
+ *
+ * In most cases for most backends this functionality is not needed.
+ *
+ * @param ctx the library context
+ * @return 0 if setting the width succeeded, -1 if not supported by the backend
+ *
+ * @see glip_get_fifo_width()
+ *
+ * @ingroup utilities
+ */
+API_EXPORT
+int glip_set_fifo_width(struct glip_ctx *ctx, unsigned int fifo_width_bytes)
+{
+    if (!ctx->backend_functions.set_fifo_width) {
+        err(ctx, "Function glip_set_fifo_width() is unsupported by backend.\n");
+        return -1;
+    }
+    return ctx->backend_functions.set_fifo_width(ctx, fifo_width_bytes);
 }
 
 /**
