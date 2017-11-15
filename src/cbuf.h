@@ -64,6 +64,8 @@ int cbuf_wait_for_level_change(struct cbuf *buf, size_t level);
 int cbuf_timedwait_for_level_change(struct cbuf *buf, size_t level,
                                     const struct timespec *abs_timeout);
 
+size_t cbuf_size(struct cbuf* buf);
+
 #endif /* CBUF_H_ */
 
 /**@}*/

@@ -1,12 +1,13 @@
-@defgroup backend_uart-examples-vcu108_loopback VCU108 UART Loopback Demo
+@defgroup backend_uart-examples-vcu108_stress_test VCU108 UART Stress Test Demo
 @ingroup backend_uart-logic
 
-This demo implements a loopback in the device.
-Also a small demo using the pushbuttons, user DIP switch and GPIO LEDs is implemented.
+This demo implements a stress test in the device.
 
 @note The VCU108 board provides only a rather slow UART chip. In theory,
 it should be able to provide up to 2 MBaud/s, but in our testing only speeds
-up to roughly 1 MBaud/s work reliably.
+up to roughly 1 MBaud/s work reliably. However, it is also possible to use a
+PmodUSBUART module to achieve a higher speed. By default the demo uses such a
+module, connected to the bottom row of J52, which can reach up to 3 MBaud/s.
 
 Prerequisites
 -------------
@@ -17,6 +18,10 @@ For this demo you need:
 
 * [Xilinx Vivado](http://www.xilinx.com/products/design-tools/vivado/)
   version 2016.3 or higher
+  
+Optional:
+
+* [Pmod USBUART: USB to UART interface](http://store.digilentinc.com/pmod-usbuart-usb-to-uart-interface/)
 
 
 Download and compile glip
@@ -38,9 +43,9 @@ Synthesize the design
 
 Synthesize the example design with Xilinx Vivado.
 
-    cd GLIP_SOURCES/src/backend_uart/logic/demo/nexys4ddr
+    cd GLIP_SOURCES/src/backend_uart/logic/demo/vcu108_stress_test
     make vivado-project
-    vivado vivado/vcu108.xpr
+    vivado vivado/vcu108_stress_test.xpr
 
 In vivado run the implementation and generate the bitstream.
 
@@ -52,11 +57,11 @@ When the bitstream has been succesfully generated, open the Hardware
 Manager in Vivado, turn the board on and program the device.
 
 
-Execute the loopback measurement tool
---------------------------------------
+Execute the stress test tool
+----------------------------
 
-Execute the GLIP tool "Loopback Measure" that measures the loopback
-performance.
+Execute the GLIP tool "I/O Stress Test" that measures the performance when
+streaming to/from the device.
 
 The VC108 board provides a UART to serial bridge using the a Silicon Labs
 CP2105 Dual USB to UART Bridge Controller. This device provides two serial ports
@@ -74,9 +79,16 @@ First, prepare the connection:
 
 Now you can run the loopback measurement tool:
 
-    glip_loopback_measure -b uart -ospeed=921600,device=/dev/ttyUSB1
+    glip_io_stress_test -b uart -ospeed=921600,device=/dev/ttyUSB1
 
 You should get around 75 KByte/s when running this test.
+
+When using the PmodUSBUART module you will only see one serial device, usually
+`/dev/ttyUSB0`. In this case run the loopback measurement tool:
+
+    glip_io_stress_test -b uart -ospeed=3000000,device=/dev/ttyUSB0
+
+You should get around 250 KByte/s when running this test.
 
 ### Notes for debugging
 

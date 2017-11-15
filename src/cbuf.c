@@ -761,4 +761,15 @@ unlock_return:
     return -rv;
 }
 
+/**
+ * Get the size of the buffer in bytes
+ *
+ * @param buf the buffer
+ * @return the size of the buffer in bytes
+ */
+size_t cbuf_size(struct cbuf* buf)
+{
+    return buf->size;
+}
+
 /**@}*/ /* end of doxygen group development-cbuf */

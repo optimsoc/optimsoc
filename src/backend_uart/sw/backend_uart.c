@@ -127,15 +127,13 @@ static void update_debt(struct glip_backend_ctx* ctx, uint8_t first,
                         uint8_t second);
 
 /**
- * Give credit to logic
+ * Inform the target about the number of bytes we can receive
  *
  * @private
- * Increase credit of logic by tranche
  *
  * @param ctx Context
- * @param tranche Value to add to credit
  */
-static int send_credit(struct glip_backend_ctx* ctx, uint16_t tranche);
+static int update_credit(struct glip_backend_ctx* ctx);
 
 /**
  * Reset the backend
@@ -169,10 +167,13 @@ void parse_buffer(struct glip_backend_ctx *ctx, uint8_t *buffer,
                   size_t size);
 
 /** Maximum tranche we can give in a message */
-static const uint16_t UART_MAX_TRANCHE = 0x3fff;
+static const size_t UART_MAX_TRANCHE = 0x3fff;
 
 /** Temporary buffer size */
-static const uint16_t TMP_BUFFER_SIZE = 256;
+static const size_t TMP_BUFFER_SIZE = 256;
+
+/** Size in bytes of the read/write buffer */
+static const size_t UART_BUF_SIZE = 32 * 1024; // bytes
 
 /**
  * GLIP backend context for the UART backend
@@ -181,10 +182,9 @@ struct glip_backend_ctx {
     char *device; /**< Device name */
     int fd; /**< Terminal file */
     uint32_t speed; /**< Baud rate */
+    unsigned int fifo_width; /**< Width of the FIFO on the target in bytes */
 
     pthread_t thread; /**< Thread instance */
-
-    size_t buffer_size; /**< Size of circular buffers */
 
     struct cbuf *input_buffer; /**< Input buffer */
     struct cbuf *output_buffer; /**< Output buffer */
@@ -223,17 +223,20 @@ int gb_uart_new(struct glip_ctx *ctx)
     ctx->backend_functions.write = gb_uart_write;
     ctx->backend_functions.write_b = gb_uart_write_b;
     ctx->backend_functions.get_fifo_width = gb_uart_get_fifo_width;
+    ctx->backend_functions.set_fifo_width = gb_uart_set_fifo_width;
     ctx->backend_functions.get_channel_count = gb_uart_get_channel_count;
+
+    /* Initially the FIFO width is unknown */
+    c->fifo_width = 0;
 
     ctx->backend_ctx = c;
 
     /* Set the local buffer sizes and initialize */
-    c->buffer_size = 32768;
-    if (cbuf_init(&c->input_buffer, c->buffer_size) != 0) {
+    if (cbuf_init(&c->input_buffer, UART_BUF_SIZE) != 0) {
         return -1;
     }
 
-    if (cbuf_init(&c->output_buffer, c->buffer_size) != 0) {
+    if (cbuf_init(&c->output_buffer, UART_BUF_SIZE) != 0) {
         return -1;
     }
 
@@ -511,6 +514,8 @@ int gb_uart_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
     size_t fill_level = cbuf_fill_level(bctx->input_buffer);
     /* We read as much as possible up to size */
     size_t size_read_req = min(fill_level, size);
+    /* Ensure reading only full words */
+    size_read_req -= size_read_req % gb_uart_get_fifo_width(ctx);
 
     /* Read from buffer */
     int rv = cbuf_read(bctx->input_buffer, data, size_read_req);
@@ -552,14 +557,15 @@ int gb_uart_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         return -1;
     }
 
-    if (size > bctx->buffer_size) {
+    if (size > cbuf_size(bctx->input_buffer)) {
         /*
          * This is not a problem for non-blocking reads, but blocking reads will
          * block forever in this case as the maximum amount of data ever
          * available is limited by the buffer size.
          * @todo: This can be solved by loop-reading until timeout
          */
-        err(ctx, "The read size cannot be larger than %lu bytes.", bctx->buffer_size);
+        err(ctx, "The read size cannot be larger than %lu bytes.",
+            cbuf_size(bctx->input_buffer));
         return -1;
     }
 
@@ -712,7 +718,24 @@ unsigned int gb_uart_get_channel_count(struct glip_ctx *ctx)
  */
 unsigned int gb_uart_get_fifo_width(struct glip_ctx *ctx)
 {
-    return 1;
+    return ctx->backend_ctx->fifo_width;
+}
+
+/**
+ * Set the width of the FIFO on the target side in bytes
+ *
+ * The UART backend has no way to auto-detect the WIDTH parameter as its used
+ * on the glip_uart_toplevel on the target. API users therefore must set the
+ * width manually.
+ */
+int gb_uart_set_fifo_width(struct glip_ctx *ctx, unsigned int fifo_width_bytes)
+{
+    if (fifo_width_bytes != 1 && fifo_width_bytes != 2) {
+        err(ctx, "The UART backend supports only 1 and 2 byte wide FIFOs.\n");
+        return -1;
+    }
+    ctx->backend_ctx->fifo_width = fifo_width_bytes;
+    return 0;
 }
 
 static int reset_logic(struct glip_ctx *ctx, uint8_t state)
@@ -741,9 +764,8 @@ static int reset_com(struct glip_ctx *ctx, uint8_t state)
     return write_blocking(bctx->fd, reset, 2, &written, 0);
 }
 
-int total = 0;
-
-void parse_buffer(struct glip_backend_ctx *ctx, uint8_t *buffer, size_t size)
+void parse_buffer(struct glip_backend_ctx *ctx, uint8_t *buffer,
+                  size_t size)
 {
     size_t actual, i;
     int rv;
@@ -778,6 +800,14 @@ void parse_buffer(struct glip_backend_ctx *ctx, uint8_t *buffer, size_t size)
             } else {
                 /* If the next item was not in buffer, read another one,
                  * we can now reuse the buffer */
+
+                /* Make sure that the target has enough credits to send the
+                 * second data item. */
+                while (ctx->credit < 2) {
+                    usleep(10);
+                    update_credit(ctx);
+                }
+
                 rv = read_blocking(ctx->fd, buffer, 1, &actual, 0);
                 assert(rv == 0);
 
@@ -881,11 +911,8 @@ static void* thread_func(void *ctx_void)
         }
 
         /* Update credit if necessary */
-        if (bctx->credit < bctx->buffer_size - UART_MAX_TRANCHE) {
-            /* Give new credit */
-            bctx->credit += UART_MAX_TRANCHE;
-
-            send_credit(bctx, UART_MAX_TRANCHE);
+        if (bctx->credit < UART_MAX_TRANCHE) {
+            update_credit(bctx);
         }
     }
 
@@ -997,19 +1024,30 @@ static void update_debt(struct glip_backend_ctx* ctx, uint8_t first,
     ctx->debt += (((first >> 1) & 0x7f) << 8) | second;
 }
 
-static int send_credit(struct glip_backend_ctx* ctx, uint16_t tranche)
+static int update_credit(struct glip_backend_ctx* ctx)
 {
     uint8_t credit[3];
     size_t written;
+    size_t target_credit_add;
+
+    /* calculate how many credits we can give to the target */
+    target_credit_add = min(cbuf_free_level(ctx->input_buffer) - ctx->credit,
+                            UART_MAX_TRANCHE);
+    if (target_credit_add == 0) {
+        return -1;
+    }
 
     /* Assemble the message datagrams */
     credit[0] = 0xfe;
-    credit[1] = 0x1 | ((tranche >> 8) << 1);
-    credit[2] = tranche & 0xff;
+    credit[1] = 0x1 | ((target_credit_add >> 8) << 1);
+    credit[2] = target_credit_add & 0xff;
 
     if (write_blocking(ctx->fd, credit, 3, &written, 0) != 0) {
         return -1;
     }
+
+    /* update local representation of the credit counter */
+    ctx->credit += target_credit_add;
 
     return 0;
 }
@@ -1045,11 +1083,10 @@ static int reset(struct glip_ctx* ctx)
     assert(rv == 0);
 
     /* Reset values to defaults */
-    bctx->credit = UART_MAX_TRANCHE;
     bctx->debt = 0;
 
     /* Send our initial credit tranche to the logic */
-    send_credit(bctx, UART_MAX_TRANCHE);
+    update_credit(bctx);
 
     /* Read the debt from the logic */
     uint8_t debt[3];

@@ -201,19 +201,15 @@ struct glip_backend_if {
                    size_t* /*size_written */, unsigned int /* timeout */);
 
     /**
-     * Get the width of the FIFO on the logic side in bytes
-     *
-     * Depending on the used backend and possibly the logic configuration
-     * different FIFO widths on the logic side are possible. Data is always
-     * transferred in chunks of at least one FIFO width, so make sure to always
-     * transfer at least as many bytes as the FIFO is wide.
-     *
-     * @param ctx the library context
-     * @return the width of the FIFO on the target side in bytes
-     *
      * @see glip_get_fifo_width()
      */
     unsigned int (*get_fifo_width)(struct glip_ctx* /* ctx */);
+
+    /**
+     * @see glip_set_fifo_width()
+     */
+    int (*set_fifo_width)(struct glip_ctx* /* ctx */,
+                          unsigned int /* fifo_width_bytes */);
 
     /**
      * Get the number of supported channels
