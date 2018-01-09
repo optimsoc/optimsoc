@@ -219,7 +219,7 @@ module tb_compute_tile(
       #(.CONFIG(CONFIG),
         .ID(0),
         .MEM_FILE("ct.vmem"),
-        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 2))
+        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 1))
       u_compute_tile(
                      // Debug ring ports
                      .debug_ring_in(debug_ring_in),

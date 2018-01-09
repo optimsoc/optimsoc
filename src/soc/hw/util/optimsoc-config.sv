@@ -175,10 +175,12 @@ package optimsoc;
       derive_config.PGAS_RANGE_MATCH = conf.PGAS_BASE >> (32-derive_config.PGAS_RANGE_WIDTH);
 
       derive_config.DEBUG_MODS_PER_CORE = (int'(conf.DEBUG_STM) + int'(conf.DEBUG_CTM)) * int'(conf.USE_DEBUG);
-      derive_config.DEBUG_MODS_PER_TILE = (1 + derive_config.DEBUG_MODS_PER_CORE *
-                                           conf.CORES_PER_TILE) * conf.USE_DEBUG;
-      derive_config.DEBUG_NUM_MODS = (1 + conf.NUMCTS *
-                                      derive_config.DEBUG_MODS_PER_TILE) * conf.USE_DEBUG;
+      derive_config.DEBUG_MODS_PER_TILE = conf.USE_DEBUG *
+                                          (1 /* MAM */
+                                           + derive_config.DEBUG_MODS_PER_CORE * conf.CORES_PER_TILE);
+      derive_config.DEBUG_NUM_MODS = conf.USE_DEBUG *
+                                     (1 /* SCM */
+                                      + conf.NUMCTS * derive_config.DEBUG_MODS_PER_TILE);
 
       // Those are supposed to be variables, but are constant at least for now
       derive_config.NOC_CHANNELS = 2;

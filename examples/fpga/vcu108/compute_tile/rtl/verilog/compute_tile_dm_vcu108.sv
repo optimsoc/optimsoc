@@ -286,7 +286,7 @@ module compute_tile_dm_vcu108
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
       #(.CONFIG(CONFIG),
-        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 2)
+        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 1)
       )
       u_compute_tile
         (

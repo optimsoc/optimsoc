@@ -130,7 +130,7 @@ module system_2x2_cccc_dm(
               .ID(i),
               .COREBASE(i*CONFIG.CORES_PER_TILE),
               .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS))
-                            + (2+i*CONFIG.DEBUG_MODS_PER_TILE)))
+                            + 1 + (i*CONFIG.DEBUG_MODS_PER_TILE)))
 
          u_ct(.clk                        (clk),
               .rst_cpu                    (rst_cpu),
