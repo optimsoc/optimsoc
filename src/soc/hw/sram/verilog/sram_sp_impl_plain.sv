@@ -44,7 +44,7 @@ module sram_sp_impl_plain(/*AUTOARG*/
    );
 
    import functions::*;
-   
+
    // address width
    parameter AW = 32;
    // data width (must be multiple of 8 for byte selects to work)
@@ -71,38 +71,22 @@ module sram_sp_impl_plain(/*AUTOARG*/
    input [AW-1:0]  addr; // address bus inputs
    input [DW-1:0]  din;  // input data bus
    input [SW-1:0]  sel;  // select bytes
-   output [DW-1:0] dout; // output data bus
+   output reg [DW-1:0] dout; // output data bus
 
    reg [DW-1:0] mem [MEM_SIZE_WORDS-1:0] /*synthesis syn_ramstyle = "block_ram" */;
 
-   // register address for one cycle memory latency
-   reg [AW-1:0] addr_r;
-   always @(posedge clk) begin
-      if (rst) begin
-         addr_r <= {AW{1'b0}};
-      end else begin
-         addr_r <= addr;
-      end
-   end
-
-   // Data output drivers
-   assign dout = (oe) ? mem[addr_r] : {DW{1'b0}};
-
-   // memory write
-   generate
-      genvar i;
-      for (i = 0; i < SW; i = i + 1) begin : gen_sel_writes
-         always @ (posedge clk) begin
-            if (we) begin
-               if (sel[i] == 1'b1) begin
-                  mem[addr][i*8 +: 8] <= din[i*8 +: 8];
-               end else begin
-                  mem[addr][i*8 +: 8] <= mem[addr][i*8 +: 8];
-               end
+   always_ff @ (posedge clk) begin
+      if (we) begin
+         // memory write
+         for (int i = 0; i < SW; i = i + 1) begin
+            if (sel[i] == 1'b1) begin
+               mem[addr][i*8 +: 8] <= din[i*8 +: 8];
             end
          end
       end
-   endgenerate
+      // memory read
+      dout <= mem[addr];
+   end
 
 `ifdef verilator
    export "DPI-C" task do_readmemh;
