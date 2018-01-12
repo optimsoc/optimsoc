@@ -36,7 +36,9 @@ module noc_mesh
     parameter CHANNELS = 1,
     parameter logic ENABLE_VCHANNELS = 1,
     parameter X = 'x,
-    parameter Y = 'x
+    parameter Y = 'x,
+    parameter BUFFER_SIZE_IN = 4,
+    parameter BUFFER_SIZE_OUT = 4
     )
    (
     input                                            clk, rst,
@@ -129,6 +131,8 @@ module noc_mesh
                    .VCHANNELS  (CHANNELS),
                    .INPUTS     (5),
                    .OUTPUTS    (5),
+                   .BUFFER_SIZE_IN (BUFFER_SIZE_IN),
+                   .BUFFER_SIZE_OUT (BUFFER_SIZE_OUT),
                    .DESTS      (NODES),
                    .ROUTES     (genroutes(x,y)))
                u_router
