@@ -34,7 +34,8 @@ module noc_router
     parameter VCHANNELS = 1,
     parameter INPUTS = 'x,
     parameter OUTPUTS = 'x,
-    parameter BUFFER_DEPTH = 4,
+    parameter BUFFER_SIZE_IN = 4,
+    parameter BUFFER_SIZE_OUT = 4,
     parameter DESTS = 'x,
     parameter [OUTPUTS*DESTS-1:0] ROUTES = {DESTS*OUTPUTS{1'b0}}
     )
@@ -76,7 +77,7 @@ module noc_router
          noc_router_input
            #(.FLIT_WIDTH(FLIT_WIDTH), .VCHANNELS(VCHANNELS),
              .DESTS(DESTS), .OUTPUTS(OUTPUTS), .ROUTES(ROUTES),
-	     .BUFFER_DEPTH (BUFFER_DEPTH))
+	     .BUFFER_DEPTH (BUFFER_SIZE_IN))
          u_input
            (.*,
             .in_flit   (in_flit[i]),
@@ -106,7 +107,7 @@ module noc_router
 	 // The output stages
 	 noc_router_output
 	   #(.FLIT_WIDTH(FLIT_WIDTH), .VCHANNELS(VCHANNELS),
-	     .INPUTS(INPUTS))
+	     .INPUTS(INPUTS), .BUFFER_DEPTH(BUFFER_SIZE_OUT))
 	 u_output
 	   (.*,
 	    .in_flit   (switch_out_flit[o]),
