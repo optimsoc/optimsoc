@@ -244,6 +244,18 @@ int gb_uart_new(struct glip_ctx *ctx)
 }
 
 /**
+ * Destruct the backend
+ *
+ * @see glip_free()
+ */
+void gb_uart_free(struct glip_ctx *ctx)
+{
+    cbuf_free(ctx->backend_ctx->output_buffer);
+    cbuf_free(ctx->backend_ctx->input_buffer);
+    free(ctx->backend_ctx);
+}
+
+/**
  * Open a target connection
  *
  * @param[in]  ctx the library context

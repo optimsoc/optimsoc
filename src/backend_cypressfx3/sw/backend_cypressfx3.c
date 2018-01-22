@@ -211,6 +211,17 @@ int gb_cypressfx3_new(struct glip_ctx *ctx)
 }
 
 /**
+ * Destruct the backend
+ *
+ * @see glip_free()
+ */
+void gb_cypressfx3_free(struct glip_ctx *ctx)
+{
+    libusb_exit(ctx->backend_ctx->usb_ctx);
+    free(ctx->backend_ctx);
+}
+
+/**
  * Open a target connection
  *
  * See the information about device auto-discovery at the start of this file.

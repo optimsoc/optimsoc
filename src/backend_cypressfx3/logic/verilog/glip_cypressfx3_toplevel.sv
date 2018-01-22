@@ -73,14 +73,32 @@ module glip_cypressfx3_toplevel
    localparam FX3_EPOUT = 2'b11;
    localparam FX3_EPIN = 2'b00;
 
-   assign ctrl_logic_rst = fx3_logic_rst;
-
    // pass through I/O clock to FX3
    assign fx3_pclk = clk_io_100;
 
    wire  int_rst;
    assign int_rst = fx3_com_rst | rst;
-   assign com_rst = int_rst;
+
+   // Synchronize com_rst and ctrl_logic_rst with clk
+   reg [2:0] ctrl_logic_rst_reg;
+   always @(posedge clk) begin
+      if (fx3_logic_rst) begin
+         ctrl_logic_rst_reg <= 3'b111;
+      end else begin
+         ctrl_logic_rst_reg <= {ctrl_logic_rst_reg[1:0], 1'b0};
+      end
+   end
+   assign ctrl_logic_rst = ctrl_logic_rst_reg[2];
+
+   reg [2:0] com_rst_reg;
+   always @(posedge clk) begin
+      if (int_rst) begin
+         com_rst_reg <= 3'b111;
+      end else begin
+         com_rst_reg <= {com_rst_reg[1:0], 1'b0};
+      end
+   end
+   assign com_rst = com_rst_reg[2];
 
    // Interface to the FIFOs from USB side
    wire  int_fifo_in_almost_full;
@@ -186,13 +204,14 @@ module glip_cypressfx3_toplevel
    localparam STATE_WAIT_FLG_B = 9;
    localparam STATE_WRITE = 10;
    localparam STATE_WRITE_FLUSH = 11;
-   localparam STATE_WAIT_FLG_A = 12;
-   localparam STATE_SW_READ = 13;
-   localparam STATE_SW_WRITE = 14;
-   localparam STATE_SW_WRITE_WAITFLG = 15;
+   localparam STATE_FLUSH = 12;
+   localparam STATE_WAIT_FLG_A = 13;
+   localparam STATE_SW_READ = 14;
+   localparam STATE_SW_WRITE = 15;
+   localparam STATE_SW_WRITE_WAITFLG = 16;
 
-   reg [3:0]   state;
-   reg [3:0]   nxt_state;
+   reg [4:0]   state;
+   reg [4:0]   nxt_state;
 
    reg flush;
    reg nxt_flush;
@@ -286,10 +305,17 @@ module glip_cypressfx3_toplevel
             fifoadr = FX3_EPIN;
             wr = 1;
             int_fifo_out_ready = 1;
-            if (int_fifo_out_empty || fx3_in_almost_full) begin
+            if (int_fifo_out_empty) begin
                wr = 0;
                int_fifo_out_ready = 0;
                nxt_idle_counter = FORCE_SEND_TIMEOUT;
+               nxt_state = STATE_IDLE;
+            // Extra case necessary to avoid critical timing path:
+            // fx3_in_almost_full -> fx3_slwr_n
+            // The last word "written" to the FX3 is ignored since its buffer
+            // is full.
+            end else if (fx3_in_almost_full) begin
+               int_fifo_out_ready = 0;
                nxt_state = STATE_IDLE;
             end
          end
@@ -314,7 +340,18 @@ module glip_cypressfx3_toplevel
             fifoadr = FX3_EPIN;
             nxt_flush = 0;
             if (!fx3_in_full) begin
-               pktend = 1;
+               nxt_state = STATE_FLUSH;
+            end else begin
+               nxt_state = STATE_IDLE;
+            end
+         end
+
+         // Extra state to avoid critical timing path:
+         // fx3_in_full -> fx3_pktend_n
+         STATE_FLUSH: begin
+            fifoadr = FX3_EPIN;
+            pktend = 1;
+            if (!fx3_in_full) begin
                nxt_state = STATE_WAIT_FLG_A;
             end else begin
                nxt_state = STATE_IDLE;

@@ -101,12 +101,12 @@ int gl_util_connect_to_host(struct glip_ctx *ctx, const char *hostname,
         close(sfd_tmp);
     }
 
+    freeaddrinfo(result);
+
     if (rp == NULL) {
         info(ctx, "Could not connect to %s:%u\n", hostname, port);
         return -1;
     }
-
-    freeaddrinfo(result);
 
     *sfd = sfd_out;
     return 0;

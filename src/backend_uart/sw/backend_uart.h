@@ -36,6 +36,7 @@
 
 
 int gb_uart_new(struct glip_ctx* ctx);
+void gb_uart_free(struct glip_ctx* ctx);
 
 int gb_uart_open(struct glip_ctx *ctx, unsigned int num_channels);
 int gb_uart_close(struct glip_ctx *ctx);

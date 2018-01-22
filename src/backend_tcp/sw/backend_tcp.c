@@ -125,6 +125,16 @@ int gb_tcp_new(struct glip_ctx *ctx)
 }
 
 /**
+ * Destruct the backend
+ *
+ * @see glip_free()
+ */
+void gb_tcp_free(struct glip_ctx *ctx)
+{
+    free(ctx->backend_ctx);
+}
+
+/**
  * Open a target connection
  *
  * @see glip_open()
@@ -175,7 +185,7 @@ int gb_tcp_open(struct glip_ctx *ctx, unsigned int num_channels)
         return -1;
     }
     bctx->data_ev.data.fd = bctx->data_sfd;
-    struct epoll_event ev;
+    struct epoll_event ev = { 0 };
     ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLPRI | EPOLLET;
     rv = epoll_ctl(bctx->data_efd, EPOLL_CTL_ADD, bctx->data_sfd, &ev);
     if (rv != 0) {
@@ -231,7 +241,7 @@ int gb_tcp_logic_reset(struct glip_ctx *ctx)
     uint16_t buf[1];
     buf[0] = CTRL_MSG_LOGIC_RESET;
 
-    ssize_t wsize = write(bctx->ctrl_sfd, buf, sizeof(buf));
+    ssize_t wsize = send(bctx->ctrl_sfd, buf, sizeof(buf), MSG_NOSIGNAL);
     if (wsize == -1 || wsize != sizeof(buf)) {
         err(ctx, "Unable to write data to control channel: %s\n",
             strerror(errno));
@@ -249,18 +259,25 @@ int gb_tcp_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
                 uint8_t *data, size_t *size_read)
 {
     if (channel != 0) {
-        err(ctx, "Only channel 0 is supported by the tcp backend");
+        err(ctx, "Only channel 0 is supported by the tcp backend\n");
         return -1;
     }
 
     struct glip_backend_ctx* bctx = ctx->backend_ctx;
 
+    if (bctx->data_sfd < 0) {
+        return -ENOTCONN;
+    }
     ssize_t rsize = read(bctx->data_sfd, data, size);
     if (rsize == -1) {
         *size_read = 0;
         if (errno == EAGAIN) {
             return 0;
+        } else if (errno == EBADF) {
+            dbg(ctx, "TCP connection was closed during read.\n");
+            return -ENOTCONN;
         } else {
+            dbg(ctx, "TCP read() returned %zd (errno = %d)\n", rsize, errno);
             return -1;
         }
     }
@@ -290,8 +307,7 @@ int gb_tcp_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         size_t size_remaining = size - size_read_tmp;
         rv = gb_tcp_read(ctx, channel, size_remaining, &data[size_read_tmp], &sr);
         if (rv != 0) {
-            err(ctx, "TCP read error!\n");
-            return -1;
+            return rv;
         }
         size_read_tmp += sr;
 
@@ -361,12 +377,15 @@ int gb_tcp_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
 
     struct glip_backend_ctx* bctx = ctx->backend_ctx;
 
-    ssize_t wsize = write(bctx->data_sfd, data, size);
+    ssize_t wsize = send(bctx->data_sfd, data, size, MSG_NOSIGNAL);
     if (wsize == -1) {
         *size_written = 0;
         if (errno == EAGAIN) {
             return 0;
+        } else if (errno == EBADF || errno == EPIPE) {
+            return -ENOTCONN;
         } else {
+            dbg(ctx, "TCP send() returned %zd (errno = %d)\n", wsize, errno);
             return -1;
         }
     }
@@ -397,8 +416,7 @@ int gb_tcp_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         rv = gb_tcp_write(ctx, channel, size_remaining,
                           &data[size_written_tmp], &sw);
         if (rv != 0) {
-            err(ctx, "TCP write error!\n");
-            return -1;
+            return rv;
         }
         size_written_tmp += sw;
 
