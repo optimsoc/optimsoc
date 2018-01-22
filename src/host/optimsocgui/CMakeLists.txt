@@ -39,7 +39,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 # check for Qt
 set(QT_MT_REQUIRED TRUE)
 set(QT_MIN_VERSION "4.8.0")
-find_package(Qt4 REQUIRED QtCore QtGui QtXml QtWebkit)
+find_package(Qt4 REQUIRED QtCore QtGui QtXml QtXmlPatterns QtWebkit)
 
 include(${QT_USE_FILE})
 
