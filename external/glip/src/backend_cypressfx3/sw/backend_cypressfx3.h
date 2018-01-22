@@ -36,6 +36,7 @@
 #include <stddef.h>
 
 int gb_cypressfx3_new(struct glip_ctx* ctx);
+void gb_cypressfx3_free(struct glip_ctx* ctx);
 
 int gb_cypressfx3_open(struct glip_ctx *ctx, unsigned int num_channels);
 int gb_cypressfx3_close(struct glip_ctx *ctx);

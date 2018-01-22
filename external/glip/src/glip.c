@@ -117,8 +117,8 @@ const struct glip_version * glip_get_version(void)
  * @ingroup library-init-deinit
  */
 API_EXPORT
-int glip_new(struct glip_ctx **ctx, char* backend_name,
-             struct glip_option backend_options[],
+int glip_new(struct glip_ctx **ctx, const char* backend_name,
+             const struct glip_option backend_options[],
              size_t num_backend_options, glip_log_fn log_fn)
 {
     struct glip_ctx *c = calloc(1, sizeof(struct glip_ctx));
@@ -159,6 +159,7 @@ int glip_new(struct glip_ctx **ctx, char* backend_name,
             break;
         }
     }
+    c->backend_id = backend_id;
 
     if (backend_id == -1) {
         err(c, "Unknown backend: %s\n", backend_name);
@@ -176,7 +177,13 @@ int glip_new(struct glip_ctx **ctx, char* backend_name,
      * Initialize the backend. This also sets all vtable pointers for the
      * backend functions.
      */
-    c->backend_options = backend_options;
+    c->backend_options = malloc(sizeof(struct glip_option)
+                                * num_backend_options);
+    if (!c->backend_options) {
+        return -ENOMEM;
+    }
+    memcpy(c->backend_options, backend_options,
+           sizeof(struct glip_option) * num_backend_options);
     c->num_backend_options = num_backend_options;
     glip_backends[backend_id].new(c);
 
@@ -200,6 +207,8 @@ int glip_new(struct glip_ctx **ctx, char* backend_name,
 API_EXPORT
 int glip_free(struct glip_ctx *ctx)
 {
+    glip_backends[ctx->backend_id].free(ctx);
+    free(ctx->backend_options);
     free(ctx);
     return 0;
 }
@@ -599,8 +608,9 @@ int glip_logic_reset(struct glip_ctx *ctx)
  * @param[out] size_read  the number of bytes actually read from the target.
  *                        Only those bytes may be considered valid inside
  *                        @p data!
- * @return     0 if the call was successful, or an error code if something went
- *             wrong
+ * @return     0 if the call was successful,
+ * @return     -ENOTCONN if the backend is not connected,
+ * @return     any other negative return code indicates an error
  *
  * @ingroup communication
  */
@@ -610,7 +620,7 @@ int glip_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
 {
     if (!ctx->connected) {
         err(ctx, "No connection; you need to call glip_open() first!\n");
-        return -1;
+        return -ENOTCONN;
     }
     if (size == 0) {
         *size_read = 0;
@@ -638,8 +648,9 @@ int glip_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
  *                        time
  * @return 0 if the call was successful and @p size bytes have been read
  * @return -ETIMEDOUT if the call timed out (some data might still have been
- *         read, see @p size_read)
- * @return any other value indicates an error
+ *         read, see @p size_read),
+ * @return -ENOTCONN if the backend is not connected,
+ * @return any other negative return code indicates an error
  *
  * Note: You need to allocate sufficient space to read @p size bytes into
  * @p data before calling this function.
@@ -654,7 +665,7 @@ int glip_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 {
     if (!ctx->connected) {
         err(ctx, "No connection; you need to call glip_open() first!\n");
-        return -1;
+        return -ENOTCONN;
     }
     if (size == 0) {
         *size_read = 0;
@@ -697,6 +708,7 @@ int glip_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
  * @param[out] size_written the number of bytes actually written; repeat the
  *                          transfer for the remaining data if
  * @return     0 if the call was successful
+ * @return     -ENOTCONN if the backend is not connected
  * @return     any other value indicates an error
  *
  * @see glip_write_b()
@@ -709,7 +721,7 @@ int glip_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
 {
     if (!ctx->connected) {
         err(ctx, "No connection; you need to call glip_open() first!\n");
-        return -1;
+        return -ENOTCONN;
     }
     if (size == 0) {
         *size_written = 0;
@@ -738,6 +750,7 @@ int glip_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
  * @return 0 if the call was successful and @p size bytes have been written
  * @return -ETIMEDOUT if the call timed out (some data might still have been
  *         written, see @p size_written)
+ * @return -ENOTCONN if the backend is not connected
  * @return any other value indicates an error
  *
  * @see glip_write()
@@ -750,7 +763,7 @@ int glip_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 {
     if (!ctx->connected) {
         err(ctx, "No connection; you need to call glip_open() first!\n");
-        return -1;
+        return -ENOTCONN;
     }
     if (size == 0) {
         *size_written = 0;
@@ -954,7 +967,7 @@ int glip_option_get_char(struct glip_ctx* ctx, const char* option_name,
  * @ingroup utilities
  */
 API_EXPORT
-int glip_parse_option_string(char* str, struct glip_option* options[],
+int glip_parse_option_string(const char* str, struct glip_option* options[],
                              size_t *num_options)
 {
     char *opt;
@@ -980,7 +993,7 @@ int glip_parse_option_string(char* str, struct glip_option* options[],
     optvec = calloc(count, sizeof(struct glip_option));
 
     strcp = strdup(str);
-    opt = strtok(str, ",");
+    opt = strtok(strcp, ",");
     int i = 0;
     do {
         char *sep = index(opt, '=');

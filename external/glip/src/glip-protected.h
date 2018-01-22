@@ -269,6 +269,7 @@ struct glip_ctx {
      * @see glip_is_connected()
      */
     bool connected;
+    int backend_id;
 };
 
 

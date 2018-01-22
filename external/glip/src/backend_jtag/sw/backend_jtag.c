@@ -220,6 +220,19 @@ int gb_jtag_new(struct glip_ctx *ctx)
 }
 
 /**
+ * Destruct the backend
+ *
+ * @see glip_free()
+ */
+void gb_jtag_free(struct glip_ctx *ctx)
+{
+    cbuf_free(ctx->backend_ctx->read_buf);
+    cbuf_free(ctx->backend_ctx->write_buf);
+    pthread_mutex_destroy(&ctx->backend_ctx->oocd_access_mutex);
+    free(ctx->backend_ctx);
+}
+
+/**
  * Open a target connection
  *
  * @param[in]  ctx the library context

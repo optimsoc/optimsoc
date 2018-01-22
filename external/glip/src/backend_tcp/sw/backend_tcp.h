@@ -34,6 +34,7 @@
 #include <libglip.h>
 
 int gb_tcp_new(struct glip_ctx* ctx);
+void gb_tcp_free(struct glip_ctx* ctx);
 
 int gb_tcp_open(struct glip_ctx *ctx, unsigned int num_channels);
 int gb_tcp_close(struct glip_ctx *ctx);

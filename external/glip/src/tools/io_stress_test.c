@@ -165,6 +165,7 @@ uint32_t lfsr32 = RND_SEED_DEFAULT;
 uint16_t lfsr16 = RND_SEED_DEFAULT;
 size_t read_block_size;
 size_t write_block_size;
+unsigned int progress_bar_update;
 
 pthread_t read_thread;
 pthread_t progressbar_thread;
@@ -195,6 +196,7 @@ int main(int argc, char *argv[])
     current_byte = 0;
     read_block_size = READ_BLOCK_SIZE_DEFAULT;
     write_block_size = WRITE_BLOCK_SIZE_DEFAULT;
+    progress_bar_update = 1;
 
     while (1) {
         static struct option long_options[] = {
@@ -557,6 +559,8 @@ void* read_from_target(void* ctx_void)
          */
         if (read_mode == 0) {
             if (size_read > 0) {
+                // stop progress bar update
+                progress_bar_update = 0;
                 rv = write_stress_test_read(read_data, size_read);
                 if (rv == 0) {
                     return NULL;
@@ -786,23 +790,19 @@ int read_stress_test_compare(uint8_t *read_data, uint16_t *rnd_word_16, size_t s
              * words.
              */
             if (bswap_16(read_data_16[i]) != rnd_word_16[i]) {
-                fprintf(stderr, "\nError comparing data word %zu. "
-                        "Read: 0x%04x, expected: 0x%04x.\n",
-                        ((current_byte / fifo_width_bytes) + i),
-                        bswap_16(read_data_16[i]), rnd_word_16[i]);
+                // stop progress bar update
+                progress_bar_update = 0;
 
-                size_t last_words = i >= 10 ? 10 : i;
-                size_t next_words = ((size_read / 2) - i) >= 10 ?
-                        10 : ((size_read / 2) - i);
+                fprintf(stderr, "\nError comparing data word %zu. "
+                        "Expected: 0x%04x, read: 0x%04x.\n",
+                        ((current_byte / fifo_width_bytes) + i),
+                        rnd_word_16[i], bswap_16(read_data_16[i]));
+
+                size_t last_words = i >= 5 ? 5 : i;
+                size_t next_words = ((size_read / 2) - i) >= 5 ?
+                        5 : ((size_read / 2) - i);
 
                 printf("With %zu prior and %zu subsequent words "
-                       "read:\t", last_words, next_words);
-                for (size_t j = i - last_words; j <= i + next_words;
-                        j++) {
-                    printf("0x%04x ", bswap_16(read_data_16[j]));
-                }
-
-                printf("\nWith %zu prior and %zu subsequent words "
                        "expected:\t", last_words, next_words);
                 for (size_t j = i - last_words; j <= i + next_words;
                         j++) {
@@ -811,6 +811,13 @@ int read_stress_test_compare(uint8_t *read_data, uint16_t *rnd_word_16, size_t s
                                                      &lfsr16);
                     }
                     printf("0x%04x ", rnd_word_16[j]);
+                }
+
+                printf("\nWith %zu prior and %zu subsequent words "
+                       "read:\t", last_words, next_words);
+                for (size_t j = i - last_words; j <= i + next_words;
+                        j++) {
+                    printf("0x%04x ", bswap_16(read_data_16[j]));
                 }
 
                 /*
@@ -822,11 +829,14 @@ int read_stress_test_compare(uint8_t *read_data, uint16_t *rnd_word_16, size_t s
                  * to reach the received value when starting with the
                  * expected value.
                  */
-                size_t distance = next_words;
-                while (read_data_16[i]
-                        != lfsr_inc_16(lfsr_taps16, &lfsr16))
+                size_t distance = 1;
+                uint16_t expected_word = rnd_word_16[i];
+                while (bswap_16(read_data_16[i])
+                        != lfsr_inc_16(lfsr_taps16, &rnd_word_16[i]))
                     distance++;
-                printf("\nDistance to read word is %zu.\n", distance);
+                printf("\nDistance from 0x%04x (expected) to 0x%04x (read) is "
+                        "%zu.\n",
+                       expected_word, bswap_16(read_data_16[i]), distance);
 
                 /* Set error word to be sent to the device. */
                 read_data_16[0] = bswap_16(0xDEAD);
@@ -847,23 +857,19 @@ int read_stress_test_compare(uint8_t *read_data, uint16_t *rnd_word_16, size_t s
              * words.
              */
             if (bswap_32(read_data_32[i]) != rnd_word_32[i]) {
-                fprintf(stderr, "\nError comparing data word %zu. "
-                        "Read: 0x%08x, expected: 0x%08x.\n",
-                        ((current_byte / fifo_width_bytes) + i),
-                        bswap_32(read_data_32[i]), rnd_word_32[i]);
+                // stop progress bar update
+                progress_bar_update = 0;
 
-                size_t last_words = i >= 10 ? 10 : i;
-                size_t next_words = ((size_read / 4) - i) >= 10 ?
-                        10 : ((size_read / 4) - i);
+                fprintf(stderr, "\nError comparing data word %zu. "
+                        "Expected: 0x%08x, read: 0x%08x.\n",
+                        ((current_byte / fifo_width_bytes) + i),
+                        rnd_word_32[i], bswap_32(read_data_32[i]));
+
+                size_t last_words = i >= 5 ? 5 : i;
+                size_t next_words = ((size_read / 4) - i) >= 5 ?
+                        5 : ((size_read / 4) - i);
 
                 printf("With %zu prior and %zu subsequent words "
-                       "read:\t", last_words, next_words);
-                for (size_t j = i - last_words; j <= i + next_words;
-                        j++) {
-                    printf("0x%08x ", bswap_32(read_data_32[j]));
-                }
-
-                printf("\nWith %zu prior and %zu subsequent words "
                        "expected:\t", last_words, next_words);
                 for (size_t j = i - last_words; j <= i + next_words;
                         j++) {
@@ -872,6 +878,13 @@ int read_stress_test_compare(uint8_t *read_data, uint16_t *rnd_word_16, size_t s
                                                      &lfsr32);
                     }
                     printf("0x%08x ", rnd_word_32[j]);
+                }
+
+                printf("\nWith %zu prior and %zu subsequent words "
+                       "read:\t", last_words, next_words);
+                for (size_t j = i - last_words; j <= i + next_words;
+                        j++) {
+                    printf("0x%08x ", bswap_32(read_data_32[j]));
                 }
 
                 /*
@@ -883,11 +896,14 @@ int read_stress_test_compare(uint8_t *read_data, uint16_t *rnd_word_16, size_t s
                  * to reach the received value when starting with the
                  * expected value.
                  */
-                size_t distance = next_words;
-                while (read_data_32[i]
-                        != lfsr_inc_32(lfsr_taps32, &lfsr32))
+                size_t distance = 1;
+                uint32_t expected_word = rnd_word_32[i];
+                while (bswap_32(read_data_32[i])
+                        != lfsr_inc_32(lfsr_taps32, &rnd_word_32[i]))
                     distance++;
-                printf("\nDistance to read word is %zu.\n", distance);
+                printf("\nDistance from 0x%04x (expected) to 0x%04x (read) is "
+                        "%zu.\n",
+                       expected_word, bswap_32(read_data_32[i]), distance);
 
                 /* Set error word to be sent to the device. */
                 read_data_32[0] = bswap_32(0x0000DEAD);
@@ -901,7 +917,7 @@ int read_stress_test_compare(uint8_t *read_data, uint16_t *rnd_word_16, size_t s
 
 void* update_progressbar_thread(void* arg)
 {
-    while (1) {
+    while (progress_bar_update) {
         update_progressbar();
         usleep(200 * 1000); /* 200 ms update interval */
     }

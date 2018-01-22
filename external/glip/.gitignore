@@ -1,5 +1,22 @@
-# Temporary files
+# Temporary files and build objects
 *~
+.deps/
+.dirstamp
+.libs/
+*.lo
+stamp-h1
+*.o
+*.la
+Makefile
+config.h
+config.log
+config.status
+libglip.pc
+libtool
+
+# build output
+src/tools/glip_io_stress_test
+src/tools/glip_loopback_measure
 
 # Autotools files
 build-aux/

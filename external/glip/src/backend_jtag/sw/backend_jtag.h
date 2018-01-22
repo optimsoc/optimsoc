@@ -49,6 +49,7 @@ struct cmdbuf {
 };
 
 int gb_jtag_new(struct glip_ctx* ctx);
+void gb_jtag_free(struct glip_ctx* ctx);
 
 int gb_jtag_open(struct glip_ctx *ctx, unsigned int num_channels);
 int gb_jtag_close(struct glip_ctx *ctx);
