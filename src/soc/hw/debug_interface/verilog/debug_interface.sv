@@ -38,7 +38,8 @@ module debug_interface
     parameter NUM_MODULES = 0,
     parameter MAX_PKT_LEN = 16,
     parameter SUBNET_BITS = 6,
-    parameter LOCAL_SUBNET = 0
+    parameter LOCAL_SUBNET = 0,
+    parameter DEBUG_ROUTER_BUFFER_SIZE = 4
   ) (
    input  clk,
    input  rst,
@@ -82,7 +83,8 @@ module debug_interface
 
 
    ring_router_gateway
-      #(.SUBNET_BITS(SUBNET_BITS), .LOCAL_SUBNET(LOCAL_SUBNET))
+      #(.BUFFER_SIZE(DEBUG_ROUTER_BUFFER_SIZE), .SUBNET_BITS(SUBNET_BITS),
+        .LOCAL_SUBNET(LOCAL_SUBNET))
       u_ring_router_gateway(
          .clk(clk),
          .rst(rst),

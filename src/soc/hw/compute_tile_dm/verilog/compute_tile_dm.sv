@@ -124,7 +124,8 @@ module compute_tile_dm
          end
 
          debug_ring_expand
-           #(.PORTS(CONFIG.DEBUG_MODS_PER_TILE))
+           #(.BUFFER_SIZE(CONFIG.DEBUG_ROUTER_BUFFER_SIZE),
+             .PORTS(CONFIG.DEBUG_MODS_PER_TILE))
          u_debug_ring_segment
            (.clk           (clk),
             .rst           (rst_dbg),

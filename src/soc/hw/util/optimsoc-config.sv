@@ -84,6 +84,7 @@ package optimsoc;
       logic              DEBUG_CTM;
       integer            DEBUG_SUBNET_BITS;
       integer            DEBUG_LOCAL_SUBNET;
+      integer            DEBUG_ROUTER_BUFFER_SIZE;
    } base_config_t;
 
    typedef struct packed {
@@ -98,7 +99,7 @@ package optimsoc;
       integer            TOTAL_NUM_CORES;
 
       // NoC-related configuration
-      logic 		 NOC_ENABLE_VCHANNELS;
+      logic 		       NOC_ENABLE_VCHANNELS;
       //  -> derived
       integer            NOC_FLIT_WIDTH;
       integer            NOC_CHANNELS;
@@ -131,6 +132,7 @@ package optimsoc;
       logic              DEBUG_CTM;
       integer            DEBUG_SUBNET_BITS;
       integer            DEBUG_LOCAL_SUBNET;
+      integer            DEBUG_ROUTER_BUFFER_SIZE;
       // -> derived
       integer            DEBUG_MODS_PER_CORE;
       integer            DEBUG_MODS_PER_TILE;
@@ -165,6 +167,7 @@ package optimsoc;
       derive_config.DEBUG_CTM = conf.DEBUG_CTM;
       derive_config.DEBUG_SUBNET_BITS = conf.DEBUG_SUBNET_BITS;
       derive_config.DEBUG_LOCAL_SUBNET = conf.DEBUG_LOCAL_SUBNET;
+      derive_config.DEBUG_ROUTER_BUFFER_SIZE = conf.DEBUG_ROUTER_BUFFER_SIZE;
 
       // Derive the other parameters
       derive_config.TOTAL_NUM_CORES = conf.NUMCTS * conf.CORES_PER_TILE;

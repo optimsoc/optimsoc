@@ -19,7 +19,7 @@ files =
   tb_compute_tile.sv
 
 [verilator]
-verilator_options = --trace -Wno-fatal -CFLAGS "-std=c++11" -LDFLAGS "-pthread"
+verilator_options = --trace -Wno-fatal -CFLAGS "-std=c++11" -LDFLAGS "-pthread" -Wwarn-lint
 tb_toplevel = tb_compute_tile.cpp
 top_module = tb_compute_tile
 depend = wallento:simutil:verilator

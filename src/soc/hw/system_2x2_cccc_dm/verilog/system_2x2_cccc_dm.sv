@@ -68,7 +68,8 @@ module system_2x2_cccc_dm(
          .NUM_MODULES (CONFIG.DEBUG_NUM_MODS),
          .MAX_PKT_LEN(16),
          .SUBNET_BITS(CONFIG.DEBUG_SUBNET_BITS),
-         .LOCAL_SUBNET(CONFIG.DEBUG_LOCAL_SUBNET)
+         .LOCAL_SUBNET(CONFIG.DEBUG_LOCAL_SUBNET),
+         .DEBUG_ROUTER_BUFFER_SIZE(CONFIG.DEBUG_ROUTER_BUFFER_SIZE)
       )
       u_debuginterface
         (
