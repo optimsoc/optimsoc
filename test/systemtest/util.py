@@ -26,6 +26,7 @@ import inspect
 import os
 import re
 import os
+import signal
 import subprocess
 import shlex
 import logging
@@ -96,6 +97,13 @@ def filter_timestamps(in_str_list):
     filter_expr = re.compile(r'^\[\s*\d+, \d+\] ', flags=re.MULTILINE)
     return [filter_expr.sub(repl='', string=l) for l in in_str_list]
 
+def filter_osd_trace_timestamps(in_str_list):
+    """
+    Remove all timestamps from the OSD-recorded systrace and coretrace log files
+    """
+    filter_expr = re.compile(r'^[0-9a-f]+ ', flags=re.MULTILINE)
+    return [filter_expr.sub(repl='', string=l) for l in in_str_list]
+
 def filter_stm_printf(in_str_list):
     """
     Process STM log file to contain only the printf() outputs from software
@@ -126,6 +134,7 @@ class Process:
         self._f_stdout = None
         self._f_stderr = None
         self._f_stdout_r = None
+        self._f_stderr_r = None
 
     def __del__(self):
         try:
@@ -133,6 +142,7 @@ class Process:
             self._f_stdout.close()
             self._f_stderr.close()
             self._f_stdout_r.close()
+            self._f_stderr_r.close()
         except:
             pass
 
@@ -163,13 +173,15 @@ class Process:
                                      stderr=self._f_stderr)
 
         self._f_stdout_r = open(logfile_stdout, 'r')
+        self._f_stderr_r = open(logfile_stderr, 'r')
 
         # no startup match pattern given => startup done!
         if self.startup_done_expect == None:
             return True
 
-        # check if the string indicating a successful startup appears in STDOUT
-        init_done = self._find_in_stdout(pattern=self.startup_done_expect,
+        # check if the string indicating a successful startup appears in the
+        # the program output (STDOUT or STDERR)
+        init_done = self._find_in_output(pattern=self.startup_done_expect,
                                          timeout=self.startup_timeout)
 
         if not init_done:
@@ -181,6 +193,9 @@ class Process:
 
     def terminate(self):
         self.proc.terminate()
+
+    def send_ctrl_c(self):
+        self.proc.send_signal(signal.SIGINT)
 
     def expect(self, stdin_data=None, pattern=None, timeout=None):
         """
@@ -200,11 +215,12 @@ class Process:
         if pattern == None:
             return True
 
-        return self._find_in_stdout(pattern, timeout)
+        return self._find_in_output(pattern, timeout)
 
-    def _find_in_stdout(self, pattern, timeout):
+    def _find_in_output(self, pattern, timeout):
         """
-        read STDOUT from file to find an expected pattern within timeout seconds
+        read STDOUT and STDERR from file to find an expected pattern within
+        timeout seconds
         """
         found = False
 
@@ -212,7 +228,7 @@ class Process:
             t_end = time.time() + timeout
 
         while True:
-            # check program output as long as there is one
+            # check STDOUT as long as there is one
             i = 0
             for line in self._f_stdout_r:
                 i += 1
@@ -225,6 +241,24 @@ class Process:
                         break
 
                 # check if we exceed the timeout while reading from STDOUT
+                # do so only every 100 lines to reduce the performance impact
+                if timeout != None:
+                    if i % 100 == 99 and time.time() >= t_end:
+                        break
+
+            # check STDERR as long as there is one
+            i = 0
+            for line in self._f_stderr_r:
+                i += 1
+                if hasattr(pattern, "match"):
+                    if pattern.match(line):
+                        found = True
+                else:
+                    if line.startswith(pattern):
+                        found = True
+                        break
+
+                # check if we exceed the timeout while reading from STDERR
                 # do so only every 100 lines to reduce the performance impact
                 if timeout != None:
                     if i % 100 == 99 and time.time() >= t_end:
