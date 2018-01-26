@@ -103,7 +103,7 @@ module trace_monitor(/*AUTOARG*/
          if (ENABLE_TRACE) begin
             if ((wb_pc_prev + 4 == wb_pc) || (wb_pc_prev == wb_pc)) begin
                count <= count + 1;
-            end 
+            end
             else if (count > 0) begin
                $fwrite(tracefile, "[%0t, %0d] %3d, 0x%08x\n", $time, ID, count, wb_pc);
                $fflush(tracefile);
