@@ -5,9 +5,26 @@ RUN apt-get update
 RUN apt-get -y install texlive texlive-latex-extra texlive-fonts-extra
 RUN apt-get -y install curl git build-essential autoconf automake \
     libtool pkg-config 
-RUN apt-get -y install tcl libusb-1.0-0-dev libboost-dev libelf-dev swig \
+RUN apt-get -y install tcl libusb-1.0-0-dev libboost-dev \
     python3 python3-pip libreadline-dev python-dev python3-venv doxygen \
     latexmk python-cffi libffi-dev python3-packaging python3-yaml
+
+# osd-sw dependencies, taken from osd-sw/install-build-deps.sh
+RUN apt-get -y install \
+      check \
+      doxygen \
+      python3 python3-venv python3-pip \
+      tox \
+      lcov valgrind \
+      libzmq5 \
+      libzmq3-dev \
+      libzmq5-dbg \
+      libczmq-dev \
+      libczmq-dbg \
+      xsltproc \
+      libelf1 libelf-dev zlib1g zlib1g-dev
+RUN pip3 install pytest
+
 
 # install fusesoc
 RUN pip3 install --upgrade pip
@@ -32,7 +49,6 @@ RUN /bin/bash -c "source /opt/optimsoc/setup_prebuilt.sh \
     && make install INSTALL_TARGET=/opt/optimsoc/latest"
 
 # Test the build
-RUN pip3 install pytest
 RUN /bin/bash -c "source /opt/optimsoc/setup_prebuilt.sh \
     && source /opt/optimsoc/latest/optimsoc-environment.sh \
     && pytest -s -v test/systemtest/test_tutorial.py::TestTutorial"
