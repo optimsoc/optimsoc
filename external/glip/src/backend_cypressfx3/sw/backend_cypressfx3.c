@@ -557,33 +557,13 @@ int gb_cypressfx3_logic_reset(struct glip_ctx *ctx)
 }
 
 /**
- * Read from the target device
+ * Possibly trigger a refill of the incoming (read) buffer
  *
- * @see glip_read()
+ * We request a new read from the USB device if at least one packet fits
+ * into the read buffer. The read itself is done by the usb_read_thread.
  */
-int gb_cypressfx3_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
-                       uint8_t *data, size_t *size_read)
+static void trigger_read_refill(struct glip_backend_ctx *bctx)
 {
-    if (channel != 0) {
-        err(ctx, "Only channel 0 is supported by the cypressfx3 backend");
-        return -1;
-    }
-
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    size_t fill_level = cbuf_fill_level(bctx->read_buf);
-    size_t size_read_req = (size > fill_level ? fill_level : size);
-
-    int rv = cbuf_read(bctx->read_buf, data, size_read_req);
-    if (rv < 0) {
-        err(ctx, "Unable to get data from read buffer, rv = %d\n", rv);
-        return -1;
-    }
-
-    /**
-     * We request a new read from the USB device if at least one packet fits
-     * into the read buffer. The read itself is done by the usb_read_thread.
-     */
     if (cbuf_free_level(bctx->read_buf) >= USB_TRANSFER_PACKET_SIZE_BYTES) {
         int sval;
         sem_getvalue(&bctx->read_notification_sem, &sval);
@@ -591,9 +571,55 @@ int gb_cypressfx3_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
             sem_post(&bctx->read_notification_sem);
         }
     }
+}
 
-    *size_read = size_read_req;
-    return 0;
+/**
+ * Possibly trigger a flush of the write (outgoing) buffer
+ *
+ * If half of the write buffer is filled we trigger the USB sending thread
+ * to transfer the data to the USB device. Apart from that, the write thread
+ * is triggered every USB_TRANSFER_RETRY_TIMEOUT_MS milliseconds, even if
+ * less data is available.
+ *
+ * The threshold "1/2 write buffer size" is a suitable value for
+ * high-bandwidth communication; if there is not much data to transfer, the
+ * communication latency will be increased to at least
+ * USB_TRANSFER_RETRY_TIMEOUT_MS per transfer.
+ */
+static void trigger_write_flush(struct glip_backend_ctx *bctx)
+{
+    if (cbuf_fill_level(bctx->write_buf) >= USB_BUF_SIZE / 2) {
+        int sval;
+        sem_getvalue(&bctx->write_notification_sem, &sval);
+        if (sval == 0) {
+            sem_post(&bctx->write_notification_sem);
+        }
+    }
+}
+/**
+ * Read from the target device
+ *
+ * @see glip_read()
+ */
+int gb_cypressfx3_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
+                       uint8_t *data, size_t *size_read)
+{
+    int rv;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
+    if (channel != 0) {
+        err(ctx, "Only channel 0 is supported by the cypressfx3 backend");
+        return -1;
+    }
+
+    rv = gb_util_cbuf_read(bctx->read_buf, size, data, size_read);
+    if (rv != 0) {
+        return rv;
+    }
+
+    trigger_read_refill(bctx);
+
+    return rv;
 }
 
 /**
@@ -606,52 +632,20 @@ int gb_cypressfx3_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
                          unsigned int timeout)
 {
     int rv;
-    struct glip_backend_ctx *bctx = ctx->backend_ctx;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
 
-    if (size > USB_BUF_SIZE) {
-        /*
-         * This is not a problem for non-blocking reads, but blocking reads will
-         * block forever in this case as the maximum amount of data ever
-         * available is limited by the buffer size.
-         */
-        err(ctx, "The read size cannot be larger than %u bytes.", USB_BUF_SIZE);
+    if (channel != 0) {
+        err(ctx, "Only channel 0 is supported by the cypressfx3 backend");
         return -1;
     }
 
-    /*
-     * Wait until sufficient data is available to be read.
-     */
-    struct timespec ts;
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
+    rv = gb_util_cbuf_read_b(bctx->read_buf, size, data, size_read, timeout);
+    if (rv != 0) {
+        return rv;
     }
 
-    size_t level = cbuf_fill_level(bctx->read_buf);
+    trigger_read_refill(bctx);
 
-    while (level < size) {
-        if (timeout == 0) {
-            rv = cbuf_wait_for_level_change(bctx->read_buf, level);
-        } else {
-            rv = cbuf_timedwait_for_level_change(bctx->read_buf, level, &ts);
-        }
-
-        if (rv != 0) {
-            break;
-        }
-
-        level = cbuf_fill_level(bctx->read_buf);
-    }
-
-    /*
-     * We read whatever data is available, and assume a timeout if the available
-     * amount of data does not match the requested amount.
-     */
-    *size_read = 0;
-    rv = gb_cypressfx3_read(ctx, channel, size, data, size_read);
-    if (rv == 0 && size != *size_read) {
-        return -ETIMEDOUT;
-    }
     return rv;
 }
 
@@ -678,37 +672,20 @@ int gb_cypressfx3_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
 int gb_cypressfx3_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
                         uint8_t *data, size_t *size_written)
 {
+    int rv;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
     if (channel != 0) {
         err(ctx, "Only channel 0 is supported by the cypressfx3 backend");
         return -1;
     }
 
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    unsigned int buf_size_free = cbuf_free_level(bctx->write_buf);
-    *size_written = (size > buf_size_free ? buf_size_free : size);
-
-    int rv = cbuf_write(bctx->write_buf, data, *size_written);
-    assert(rv == 0);
-
-    /*
-     * If half of the write buffer is filled we trigger the USB sending thread
-     * to transfer the data to the USB device. Apart from that, the write thread
-     * is triggered every USB_TRANSFER_RETRY_TIMEOUT_MS milliseconds, even if
-     * less data is available.
-     *
-     * The threshold "1/2 write buffer size" is a suitable value for
-     * high-bandwidth communication; if there is not much data to transfer, the
-     * communication latency will be increased to at least
-     * USB_TRANSFER_RETRY_TIMEOUT_MS per transfer.
-     */
-    if (cbuf_fill_level(bctx->write_buf) >= USB_BUF_SIZE / 2) {
-        int sval;
-        sem_getvalue(&bctx->write_notification_sem, &sval);
-        if (sval == 0) {
-            sem_post(&bctx->write_notification_sem);
-        }
+    rv = gb_util_cbuf_write(bctx->write_buf, size, data, size_written);
+    if (rv != 0) {
+        return rv;
     }
+
+    trigger_write_flush(bctx);
 
     return 0;
 }
@@ -722,41 +699,22 @@ int gb_cypressfx3_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
                           uint8_t *data, size_t *size_written,
                           unsigned int timeout)
 {
-    struct glip_backend_ctx *bctx = ctx->backend_ctx;
+    int rv;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
 
-    struct timespec ts;
-
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
+    if (channel != 0) {
+        err(ctx, "Only channel 0 is supported by the cypressfx3 backend");
+        return -1;
     }
 
-    size_t size_done = 0; /* number of bytes already written */
-
-    while (1) {
-        size_t size_done_tmp = 0;
-        gb_cypressfx3_write(ctx, channel, size - size_done, &data[size_done],
-                            &size_done_tmp);
-        size_done += size_done_tmp;
-
-        if (size_done == size) {
-            break;
-        }
-
-        if (cbuf_free_level(bctx->write_buf) == 0) {
-            if (timeout == 0) {
-                cbuf_wait_for_level_change(bctx->write_buf, 0);
-            } else {
-                cbuf_timedwait_for_level_change(bctx->write_buf, 0, &ts);
-            }
-        }
+    rv = gb_util_cbuf_write_b(bctx->write_buf, size, data, size_written,
+                              timeout);
+    if (rv != 0) {
+        return rv;
     }
 
-    *size_written = size_done;
+    trigger_write_flush(bctx);
 
-    if (size != *size_written) {
-        return -ETIMEDOUT;
-    }
     return 0;
 }
 

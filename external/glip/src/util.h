@@ -30,6 +30,7 @@
 #define __UTIL_H__
 
 #include <libglip.h>
+#include "cbuf.h"
 
 #include <time.h>
 
@@ -76,5 +77,14 @@ int gl_util_fd_nonblock(struct glip_ctx *ctx, int fd);
 
 int gl_util_popen(const char *file, char *const argv[], int *infd, int *outfd);
 int gl_util_pclose(pid_t pid);
+
+int gb_util_cbuf_read(struct cbuf *buf, size_t size, uint8_t *data,
+                      size_t *size_read);
+int gb_util_cbuf_read_b(struct cbuf *buf, size_t size, uint8_t *data,
+                        size_t *size_read, unsigned int timeout);
+int gb_util_cbuf_write(struct cbuf *buf, size_t size, uint8_t *data,
+                       size_t *size_written);
+int gb_util_cbuf_write_b(struct cbuf *buf, size_t size, uint8_t *data,
+                         size_t *size_written, unsigned int timeout);
 
 #endif /* __UTIL_H__ */
