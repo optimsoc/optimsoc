@@ -35,12 +35,11 @@ module osd_him
    logic ingress_active;
    logic [4:0] ingress_size;
 
-   logic [15:0] ingress_data_be;
-   assign ingress_data_be[7:0] = glip_in.data[15:8];
-   assign ingress_data_be[15:8] = glip_in.data[7:0];
+   logic [15:0] ingress_data;
+   assign ingress_data = glip_in.data;
 
    assign glip_in.ready = !ingress_active | dii_ingress_ready;
-   assign dii_ingress.data  = ingress_data_be;
+   assign dii_ingress.data  = ingress_data;
    assign dii_ingress.valid = ingress_active & glip_in.valid;
    assign dii_ingress.last  = ingress_active & (ingress_size == 0);
 
@@ -50,7 +49,7 @@ module osd_him
       end else begin
          if (!ingress_active) begin
             if (glip_in.valid & glip_in.ready) begin
-               ingress_size <= ingress_data_be[4:0] - 1;
+               ingress_size <= ingress_data[4:0] - 1;
                ingress_active <= 1;
             end
          end else begin
@@ -79,17 +78,18 @@ module osd_him
 
    logic       egress_active;
 
-   logic [15:0] egress_data_be;
+   logic [15:0] egress_data;
 
    always @(*) begin
      if (!egress_active) begin
-        egress_data_be = 0;
-        egress_data_be[$clog2(BUF_SIZE):0] = egress_packet_size;
-     end else
-       egress_data_be  = dii_egress.data;
+        egress_data = 0;
+        egress_data[$clog2(BUF_SIZE):0] = egress_packet_size;
+     end else begin
+        egress_data = dii_egress.data;
+     end
    end
 
-   assign glip_out.data = {egress_data_be[7:0], egress_data_be[15:8]};
+   assign glip_out.data = egress_data;
    assign glip_out.valid = dii_egress.valid;
    assign dii_egress_ready = egress_active & glip_out.ready;
 
@@ -117,6 +117,4 @@ module osd_him
                    .flit_in_ready (dii_in_ready),
                    .flit_out (dii_egress),
                    .flit_out_ready (dii_egress_ready));
-
-
 endmodule // osd_him

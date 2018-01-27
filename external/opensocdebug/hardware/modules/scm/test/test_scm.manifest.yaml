@@ -1,0 +1,17 @@
+module: test_scm
+
+sources:
+  - ../../../interfaces/common/dii_channel.sv
+  - ../../../blocks/regaccess/common/osd_regaccess.sv
+  - ../common/osd_scm.sv
+
+toplevel: osd_scm
+
+simulators:
+  - vcs
+
+parameters:
+  SYSTEM_VENDOR_ID: 1
+  SYSTEM_DEVICE_ID: 1
+  NUM_MOD: 1
+  MAX_PKT_LEN: 8

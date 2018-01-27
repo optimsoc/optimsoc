@@ -20,7 +20,7 @@ module osd_dem_uart_wb
    (
     input 	  clk, rst,
 
-    input [9:0]   id,
+    input [15:0]  id,
 
     output 	  irq,
 

@@ -1,4 +1,4 @@
-// Copyright 2016 by the authors
+// Copyright 2016-2017 by the authors
 //
 // Copyright and related rights are licensed under the Solderpad
 // Hardware License, Version 0.51 (the "License"); you may not use
@@ -17,12 +17,13 @@
 import dii_package::dii_flit;
 
 module osd_scm
-  #(parameter SYSTEMID='x,
+  #(parameter SYSTEM_VENDOR_ID='x,
+    parameter SYSTEM_DEVICE_ID='x,
     parameter NUM_MOD='x,
     parameter MAX_PKT_LEN=8)
    (input clk, rst,
 
-    input [9:0] id,
+    input [15:0] id,
 
     input dii_flit debug_in, output debug_in_ready,
     output dii_flit debug_out, input debug_out_ready,
@@ -44,9 +45,10 @@ module osd_scm
    assign cpu_rst = rst_vector[1] | rst;
 
    osd_regaccess
-     #(.MODID(16'h1), .MODVERSION(16'h0),
+     #(.MOD_VENDOR(16'h1), .MOD_TYPE(16'h1), .MOD_VERSION(16'h0),
        .MAX_REG_SIZE(16))
    u_regaccess(.*,
+               .event_dest (),
                .stall ());
 
    always @(*) begin
@@ -55,10 +57,11 @@ module osd_scm
       reg_err = 0;
 
       case (reg_addr)
-        16'h200: reg_rdata = 16'(SYSTEMID);
-        16'h201: reg_rdata = 16'(NUM_MOD);
-        16'h202: reg_rdata = 16'(MAX_PKT_LEN);
-        16'h203: reg_rdata = {14'h0, rst_vector};
+        16'h200: reg_rdata = 16'(SYSTEM_VENDOR_ID);
+        16'h201: reg_rdata = 16'(SYSTEM_DEVICE_ID);
+        16'h202: reg_rdata = 16'(NUM_MOD);
+        16'h203: reg_rdata = 16'(MAX_PKT_LEN);
+        16'h204: reg_rdata = {14'h0, rst_vector};
         default: reg_err = reg_request;
       endcase // case (reg_addr)
    end // always @ (*)
@@ -67,7 +70,7 @@ module osd_scm
       if (rst) begin
          rst_vector <= 2'b00;
       end else begin
-         if (reg_request & reg_write & (reg_addr == 16'h203))
+         if (reg_request & reg_write & (reg_addr == 16'h204))
             rst_vector <= reg_wdata[1:0];
       end
    end

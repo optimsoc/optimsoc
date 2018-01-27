@@ -24,7 +24,7 @@ module osd_ctm
    (
     input                  clk, rst,
 
-    input [9:0]            id,
+    input [15:0]           id,
 
     input                  dii_flit debug_in,
     output                 debug_in_ready,
@@ -61,14 +61,16 @@ module osd_ctm
    logic [15:0]            reg_rdata;
 
    logic                   stall;
+   logic [15:0]            event_dest;
 
    dii_flit dp_out, dp_in;
    logic                   dp_out_ready, dp_in_ready;
 
    osd_regaccess_layer
-     #(.MODID(16'h5), .MODVERSION(16'h0),
+     #(.MOD_VENDOR(16'h1), .MOD_TYPE(16'h5), .MOD_VERSION(16'h0),
        .MAX_REG_SIZE(16), .CAN_STALL(1))
    u_regaccess(.*,
+               .event_dest (event_dest),
                .module_in (dp_out),
                .module_in_ready (dp_out_ready),
                .module_out (dp_in),
@@ -81,9 +83,9 @@ module osd_ctm
       reg_err = 0;
 
       case (reg_addr)
-        16'h200: reg_rdata = 16'(ADDR_WIDTH);
-        16'h201: reg_rdata = 16'(DATA_WIDTH);
-        default: reg_err = reg_request;
+         16'h200: reg_rdata = 16'(ADDR_WIDTH);
+         16'h201: reg_rdata = 16'(DATA_WIDTH);
+         default: reg_err = reg_request;
       endcase // case (reg_addr)
    end // always @ (*)
 
@@ -91,7 +93,7 @@ module osd_ctm
 
    reg [1:0]               prv_reg;
    always_ff @(posedge clk)
-     prv_reg <= trace_prv;
+      prv_reg <= trace_prv;
 
    logic [EW-1:0]          sample_data;
    logic                   sample_valid;
@@ -146,6 +148,7 @@ module osd_ctm
    u_packetization(.clk  (clk),
                    .rst  (rst),
                    .id   (id),
+                   .event_dest (event_dest),
                    .trace_data  (packet_data),
                    .trace_overflow (packet_overflow),
                    .trace_valid (packet_valid),

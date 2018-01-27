@@ -40,7 +40,7 @@ abstract class MamBundle(implicit val p: Parameters) extends ParameterizedBundle
   with HasMamParameters
 
 class MamReq(implicit p: Parameters) extends MamBundle()(p) {
-  val rw = Bool() // 0: Read, 1: Write
+  val we = Bool() // 0: Read, 1: Write
   val addr = UInt(width = mamAddrBits)
   val burst = Bool() // 0: single, 1: incremental burst
   val beats = UInt(width = mamBeatsBits)

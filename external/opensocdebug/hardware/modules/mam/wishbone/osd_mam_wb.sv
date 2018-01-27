@@ -47,7 +47,7 @@ module osd_mam_wb
     input                   dii_flit debug_in, output debug_in_ready,
     output                  dii_flit debug_out, input debug_out_ready,
 
-    input [9:0]             id,
+    input [15:0]            id,
 
     output                  stb_o,
     output                  cyc_o,
@@ -63,7 +63,7 @@ module osd_mam_wb
 
    logic                        req_valid;
    logic                        req_ready;
-   logic                        req_rw;
+   logic                        req_we;
    logic [ADDR_WIDTH-1:0]       req_addr;
    logic                        req_burst;
    logic [13:0]                 req_beats;

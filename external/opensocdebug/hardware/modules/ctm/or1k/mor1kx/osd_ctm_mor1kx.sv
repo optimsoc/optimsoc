@@ -21,7 +21,7 @@ module osd_ctm_mor1kx
    (
     input                        clk, rst,
 
-    input [9:0]                  id,
+    input [15:0]                 id,
 
     input  dii_flit              debug_in,
     output                       debug_in_ready,

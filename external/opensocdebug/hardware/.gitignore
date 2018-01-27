@@ -1,5 +1,17 @@
 *.pdf
 *~
 
+*.pyc
+
 # Chisel compiled files
 /target
+
+# Editor/IDE Project files
+/.project
+/.pydevproject
+/.settings/
+/.svproject
+
+# Unit test temporary files
+DVEfiles/
+ucli.key

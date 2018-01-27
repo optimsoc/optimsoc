@@ -21,7 +21,7 @@ module ring_router
    (
     input         clk, rst,
 
-    input [9:0]   id,
+    input [15:0]  id,
 
     input dii_flit   ring_in0, output ring_in0_ready,
     input dii_flit   ring_in1, output ring_in1_ready,
