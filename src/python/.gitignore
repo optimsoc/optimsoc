@@ -1,0 +1,10 @@
+# Cython-generated intermediate files
+*.so
+MANIFEST
+.cache
+*.egg-info/
+.tox
+.eggs
+
+# setuptools_scm generated version information from git repo
+src/version.py
