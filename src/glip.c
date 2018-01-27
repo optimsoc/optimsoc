@@ -650,6 +650,7 @@ int glip_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
  * @return -ETIMEDOUT if the call timed out (some data might still have been
  *         read, see @p size_read),
  * @return -ENOTCONN if the backend is not connected,
+ * @return -ECANCELED if the operation was canceled,
  * @return any other negative return code indicates an error
  *
  * Note: You need to allocate sufficient space to read @p size bytes into
@@ -751,6 +752,7 @@ int glip_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
  * @return -ETIMEDOUT if the call timed out (some data might still have been
  *         written, see @p size_written)
  * @return -ENOTCONN if the backend is not connected
+ * @return -ECANCELED if the operation was canceled
  * @return any other value indicates an error
  *
  * @see glip_write()

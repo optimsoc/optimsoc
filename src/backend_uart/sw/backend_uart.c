@@ -519,27 +519,8 @@ int gb_uart_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
     if (channel > 0) {
         return -1;
     }
-
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    /* Check the fill level */
-    size_t fill_level = cbuf_fill_level(bctx->input_buffer);
-    /* We read as much as possible up to size */
-    size_t size_read_req = min(fill_level, size);
-    /* Ensure reading only full words */
-    size_read_req -= size_read_req % gb_uart_get_fifo_width(ctx);
-
-    /* Read from buffer */
-    int rv = cbuf_read(bctx->input_buffer, data, size_read_req);
-    if (rv < 0) {
-        err(ctx, "Unable to get data from read buffer, rv = %d\n", rv);
-        return -1;
-    }
-
-    /* Update actual read information */
-    *size_read = size_read_req;
-
-    return 0;
+    return gb_util_cbuf_read(ctx->backend_ctx->input_buffer, size, data,
+                             size_read);
 }
 
 /**
@@ -561,60 +542,11 @@ int gb_uart_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
 int gb_uart_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
                    uint8_t *data, size_t *size_read, unsigned int timeout)
 {
-    int rv;
-    struct glip_backend_ctx *bctx = ctx->backend_ctx;
-    struct timespec ts;
-
     if (channel > 0) {
         return -1;
     }
-
-    if (size > cbuf_size(bctx->input_buffer)) {
-        /*
-         * This is not a problem for non-blocking reads, but blocking reads will
-         * block forever in this case as the maximum amount of data ever
-         * available is limited by the buffer size.
-         * @todo: This can be solved by loop-reading until timeout
-         */
-        err(ctx, "The read size cannot be larger than %lu bytes.",
-            cbuf_size(bctx->input_buffer));
-        return -1;
-    }
-
-    /*
-     * Wait until sufficient data is available to be read.
-     */
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
-    }
-
-    size_t level = cbuf_fill_level(bctx->input_buffer);
-
-    while (level < size) {
-        if (timeout == 0) {
-            rv = cbuf_wait_for_level_change(bctx->input_buffer, level);
-        } else {
-            rv = cbuf_timedwait_for_level_change(bctx->input_buffer, level, &ts);
-        }
-
-        if (rv != 0) {
-            break;
-        }
-
-        level = cbuf_fill_level(bctx->input_buffer);
-    }
-
-    /*
-     * We read whatever data is available, and assume a timeout if the available
-     * amount of data does not match the requested amount.
-     */
-    *size_read = 0;
-    rv = gb_uart_read(ctx, channel, size, data, size_read);
-    if (rv == 0 && size != *size_read) {
-        return -ETIMEDOUT;
-    }
-    return rv;
+    return gb_util_cbuf_read_b(ctx->backend_ctx->input_buffer, size, data,
+                               size_read, timeout);
 }
 
 /**
@@ -638,14 +570,8 @@ int gb_uart_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
         return -1;
     }
 
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    unsigned int buf_size_free = cbuf_free_level(bctx->output_buffer);
-    *size_written = (size > buf_size_free ? buf_size_free : size);
-
-    cbuf_write(bctx->output_buffer, data, *size_written);
-
-    return 0;
+    return gb_util_cbuf_write(ctx->backend_ctx->output_buffer, size, data,
+                              size_written);
 }
 
 /**
@@ -671,40 +597,8 @@ int gb_uart_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         return -1;
     }
 
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-    struct timespec ts;
-
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
-    }
-
-    size_t size_done = 0;
-    while (1) {
-        size_t size_done_tmp = 0;
-        gb_uart_write(ctx, channel, size - size_done, &data[size_done],
-                      &size_done_tmp);
-        size_done += size_done_tmp;
-
-        if (size_done == size) {
-            break;
-        }
-
-        if (cbuf_free_level(bctx->output_buffer) == 0) {
-            if (timeout == 0) {
-                cbuf_wait_for_level_change(bctx->output_buffer, 0);
-            } else {
-                cbuf_timedwait_for_level_change(bctx->output_buffer, 0, &ts);
-            }
-        }
-    }
-
-    *size_written = size_done;
-    if (size != *size_written) {
-        return -ETIMEDOUT;
-    }
-
-    return 0;
+    return gb_util_cbuf_write_b(ctx->backend_ctx->output_buffer, size, data,
+                                size_written, timeout);
 }
 
 /**

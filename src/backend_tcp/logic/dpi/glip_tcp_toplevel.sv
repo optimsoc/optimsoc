@@ -56,27 +56,27 @@ module glip_tcp_toplevel
      int glip_tcp_connected(input chandle obj);
 
    import "DPI-C" function
-     int glip_tcp_next_cycle(input chandle obj);   
+     int glip_tcp_next_cycle(input chandle obj);
 
    import "DPI-C" function
-     int glip_tcp_control_msg(input chandle obj);   
+     int glip_tcp_control_msg(input chandle obj);
 
    import "DPI-C" function
-     longint glip_tcp_read(input chandle obj);   
+     longint glip_tcp_read(input chandle obj);
 
    import "DPI-C" function
      void glip_tcp_read_ack(input chandle obj);
 
    import "DPI-C" function
      void glip_tcp_write(input chandle obj, input longint unsigned data);
-   
+
    chandle obj;
 
    localparam STATE_MASK_CTRL  = 32'h1;
    localparam STATE_MASK_READ  = 32'h2;
    localparam STATE_MASK_WRITE = 32'h4;
    localparam UART_DELAY = 8;
-   
+
    logic [63:0] rcnt, wcnt;
 
    always @(negedge clk_logic) begin
@@ -96,7 +96,7 @@ module glip_tcp_toplevel
          end else begin
             com_rst = 1'b1;
          end
-         
+
          state = glip_tcp_next_cycle(obj);
 
          // Get control message
@@ -161,7 +161,7 @@ module glip_tcp_toplevel
    end
 
    int port_int;
-   
+
    initial begin
       obj = glip_tcp_create(PORT, WIDTH);
    end

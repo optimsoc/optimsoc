@@ -375,21 +375,8 @@ int gb_jtag_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
         err(ctx, "Only channel 0 is supported by the jtag backend");
         return -1;
     }
-
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    size_t fill_level = cbuf_fill_level(bctx->read_buf);
-    size_t size_read_req = min(fill_level, size);
-
-    int rv = cbuf_read(bctx->read_buf, data, size_read_req);
-    if (rv < 0) {
-        err(ctx, "Unable to get data from read buffer, rv = %d\n", rv);
-        return -1;
-    }
-
-    *size_read = size_read_req;
-
-    return 0;
+    return gb_util_cbuf_read(ctx->backend_ctx->read_buf, size, data,
+                             size_read);
 }
 
 /**
@@ -412,59 +399,12 @@ int gb_jtag_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
                    uint8_t *data, size_t *size_read,
                    unsigned int timeout)
 {
-    int rv;
-    struct glip_backend_ctx *bctx = ctx->backend_ctx;
-    struct timespec ts;
-
-    if (size > BUFFER_SIZE) {
-        /*
-         * This is not a problem for non-blocking reads, but blocking reads will
-         * block forever in this case as the maximum amount of data ever
-         * available is limited by the buffer size.
-         */
-        err(ctx, "The read size cannot be larger than %u bytes.", BUFFER_SIZE);
+    if (channel != 0) {
+        err(ctx, "Only channel 0 is supported by the jtag backend");
         return -1;
     }
-
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
-    }
-
-    /*
-     * Wait until sufficient data is available to be read.
-     */
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
-    }
-
-    size_t level = cbuf_fill_level(bctx->read_buf);
-
-    while (level < size) {
-        if (timeout == 0) {
-            rv = cbuf_wait_for_level_change(bctx->read_buf, level);
-        } else {
-            rv = cbuf_timedwait_for_level_change(bctx->read_buf, level, &ts);
-        }
-
-        if (rv != 0) {
-            break;
-        }
-
-        level = cbuf_fill_level(bctx->read_buf);
-    }
-
-    /*
-     * We read whatever data is available, and assume a timeout if the available
-     * amount of data does not match the requested amount.
-     */
-    *size_read = 0;
-    rv = gb_jtag_read(ctx, channel, size, data, size_read);
-    if (rv == 0 && size != *size_read) {
-        return -ETIMEDOUT;
-    }
-    return rv;
+    return gb_util_cbuf_read_b(ctx->backend_ctx->read_buf, size, data,
+                               size_read, timeout);
 }
 
 /**
@@ -489,14 +429,8 @@ int gb_jtag_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
         return -1;
     }
 
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    unsigned int buf_size_free = cbuf_free_level(bctx->write_buf);
-    *size_written = (size > buf_size_free ? buf_size_free : size);
-
-    cbuf_write(bctx->write_buf, data, *size_written);
-
-    return 0;
+    return gb_util_cbuf_write(ctx->backend_ctx->write_buf, size, data,
+                              size_written);
 }
 
 /**
@@ -523,41 +457,8 @@ int gb_jtag_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
         return -1;
     }
 
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-    struct timespec ts;
-
-    if (timeout != 0) {
-        clock_gettime(CLOCK_REALTIME, &ts);
-        timespec_add_ns(&ts, timeout * 1000 * 1000);
-    }
-
-    size_t size_done = 0;
-    while (1) {
-        size_t size_done_tmp = 0;
-        gb_jtag_write(ctx, channel, size - size_done, &data[size_done],
-                            &size_done_tmp);
-        size_done += size_done_tmp;
-
-        if (size_done == size) {
-            break;
-        }
-
-        if (cbuf_free_level(bctx->write_buf) == 0) {
-            if (timeout == 0) {
-                cbuf_wait_for_level_change(bctx->write_buf, 0);
-            } else {
-                cbuf_timedwait_for_level_change(bctx->write_buf, 0, &ts);
-            }
-        }
-    }
-
-    *size_written = size_done;
-    if (size != *size_written) {
-        return -ETIMEDOUT;
-    }
-
-    return 0;
-
+    return gb_util_cbuf_write_b(ctx->backend_ctx->write_buf, size, data,
+                                size_written, timeout);
 }
 
 /**
@@ -1000,8 +901,8 @@ static size_t grow_buf(size_t current_size)
  * @private
  */
 static wsize_t calc_payload_len(struct glip_ctx *ctx,
-                         wsize_t wanted_words,
-                         wsize_t *wr_words, wsize_t *rd_words)
+                                wsize_t wanted_words,
+                                wsize_t *wr_words, wsize_t *rd_words)
 {
     wsize_t avail_wr, avail_rd;
     wsize_t payload_len;

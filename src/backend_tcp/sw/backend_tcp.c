@@ -39,10 +39,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 /**
  * @defgroup backend_tcp-sw TCP libglip backend
@@ -71,13 +71,21 @@
  * GLIP backend context for the TCP backend
  */
 struct glip_backend_ctx {
+    /** TCP communication thread */
+    pthread_t tcp_com_thread;
+
+    /** Shutdown request for tcp_com_thread */
+    volatile bool tcp_com_thread_shutdown;
+
+    /** Input buffer */
+    struct cbuf *read_buf;
+    /** Output buffer */
+    struct cbuf *write_buf;
+    /** semaphore notifying the TCP communication thread to fetch new data */
+    sem_t tcp_com_notification_sem;
+
     /** socket fd of the data channel */
     int data_sfd;
-
-    /** epoll fd for the data channel */
-    int data_efd;
-    /** epoll event structure for the data channel */
-    struct epoll_event data_ev;
 
     /** socket fd of the control channel */
     int ctrl_sfd;
@@ -95,6 +103,131 @@ static const unsigned int DEFAULT_PORT_DATA = 23000;
 // control messages
 static const unsigned int CTRL_MSG_LOGIC_RESET = 0x0001;
 
+/** Size of the read/write buffers */
+static const unsigned int BUF_SIZE = 64 * 1024; // kB
+
+static int tcp_read(struct glip_ctx *ctx)
+{
+    int rv;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
+    if (bctx->data_sfd < 0) {
+        return -ENOTCONN;
+    }
+
+    size_t free_level = cbuf_free_level(bctx->read_buf);
+    if (free_level == 0) {
+        return 0;
+    }
+    uint8_t *buf;
+    rv = cbuf_reserve(bctx->read_buf, &buf, free_level);
+    assert(rv == 0);
+
+    ssize_t rsize = read(bctx->data_sfd, buf, free_level);
+    if (rsize == -1) {
+        if (errno == EAGAIN) {
+            return 0;
+        } else if (errno == EBADF) {
+            dbg(ctx, "TCP connection was closed during read.\n");
+            return -ENOTCONN;
+        } else {
+            dbg(ctx, "TCP read() returned %zd (errno = %d)\n", rsize,
+                errno);
+            return -1;
+        }
+    }
+    rv = cbuf_commit(bctx->read_buf, buf, rsize);
+    assert(rv == 0);
+
+    return 0;
+}
+
+static int tcp_write(struct glip_ctx *ctx)
+{
+    int rv;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
+    if (bctx->data_sfd < 0) {
+        return -ENOTCONN;
+    }
+
+    size_t fill_level = cbuf_fill_level(bctx->write_buf);
+    if (fill_level == 0) {
+        return 0;
+    }
+
+    uint8_t *data;
+    rv = cbuf_peek(bctx->write_buf, &data, fill_level);
+    assert(rv == 0);
+
+    ssize_t wsize = send(bctx->data_sfd, data, fill_level, MSG_NOSIGNAL);
+    if (wsize == -1) {
+        if (errno == EAGAIN) {
+            return 0;
+        } else if (errno == EBADF || errno == EPIPE) {
+            return -ENOTCONN;
+        } else {
+            dbg(ctx, "TCP send() returned %zd (errno = %d)\n", wsize, errno);
+            return -1;
+        }
+    }
+
+    rv = cbuf_discard(bctx->write_buf, wsize);
+    assert(rv == 0);
+
+    return 0;
+}
+
+/**
+ * Thread: Read/write from/to the TCP socket, store data in cbufs
+ */
+static void* tcp_com_thread(void* ctx_void)
+{
+    struct glip_ctx *ctx = ctx_void;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
+    int rv;
+    struct timespec ts;
+
+    while (1) {
+        clock_gettime(CLOCK_REALTIME, &ts);
+        timespec_add_ns(&ts, 100 * 1000); // 100 us
+        sem_timedwait(&ctx->backend_ctx->tcp_com_notification_sem, &ts);
+
+        /* handle shutdown request */
+        if (bctx->tcp_com_thread_shutdown) {
+            goto cleanup_return;
+        }
+
+        /* READ: Try to read as much data as cbuf can hold */
+        rv = tcp_read(ctx);
+        if (rv != 0) {
+            goto cleanup_return;
+        }
+
+        /* WRITE: Try to write as much data as we have in the write cbuf */
+        rv = tcp_write(ctx);
+        if (rv != 0) {
+            goto cleanup_return;
+        }
+    }
+
+cleanup_return:
+    dbg(ctx, "Shutting down tcp_com_thread\n");
+
+    if (ctx->backend_ctx->data_sfd >= 0) {
+        close(ctx->backend_ctx->data_sfd);
+        ctx->backend_ctx->data_sfd = -1;
+    }
+    if (ctx->backend_ctx->ctrl_sfd >= 0) {
+        close(ctx->backend_ctx->ctrl_sfd);
+        ctx->backend_ctx->ctrl_sfd = -1;
+    }
+
+    bctx->tcp_com_thread_shutdown = false;
+    return NULL;
+}
+
 /**
  * Initialize the backend (constructor)
  *
@@ -106,7 +239,7 @@ int gb_tcp_new(struct glip_ctx *ctx)
 
     c->data_sfd = -1;
     c->ctrl_sfd = -1;
-    c->data_efd = -1;
+    c->tcp_com_thread_shutdown = false;
 
     /* setup vtable */
     ctx->backend_functions.open = gb_tcp_open;
@@ -177,21 +310,6 @@ int gb_tcp_open(struct glip_ctx *ctx, unsigned int num_channels)
         return -1;
     }
 
-    /* setup polling (for blocking I/O on data channel) */
-    bctx->data_efd = epoll_create1(0);
-    if (bctx->data_efd == -1) {
-        err(ctx, "Unable to create epoll fd for the data channel: %s\n",
-            strerror(errno));
-        return -1;
-    }
-    bctx->data_ev.data.fd = bctx->data_sfd;
-    struct epoll_event ev = { 0 };
-    ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLPRI | EPOLLET;
-    rv = epoll_ctl(bctx->data_efd, EPOLL_CTL_ADD, bctx->data_sfd, &ev);
-    if (rv != 0) {
-        return -1;
-    }
-
     /* connect to control channel */
     bctx->ctrl_sfd = 0;
     rv = gl_util_connect_to_host(ctx, hostname, port_ctrl, &bctx->ctrl_sfd);
@@ -200,6 +318,29 @@ int gb_tcp_open(struct glip_ctx *ctx, unsigned int num_channels)
     }
     rv = gl_util_fd_nonblock(ctx, bctx->ctrl_sfd);
     if (rv != 0) {
+        return -1;
+    }
+
+    /* initialize write circular buffer */
+    rv = cbuf_init(&ctx->backend_ctx->write_buf, BUF_SIZE);
+    if (rv < 0) {
+        err(ctx, "Unable to setup write buffer: %d\n", rv);
+        return -1;
+    }
+
+    /* initialize read circular buffer */
+    rv = cbuf_init(&ctx->backend_ctx->read_buf, BUF_SIZE);
+    if (rv < 0) {
+        err(ctx, "Unable to setup read buffer: %d\n", rv);
+        return -1;
+    }
+
+    sem_init(&ctx->backend_ctx->tcp_com_notification_sem, 0, 0);
+
+    rv = pthread_create(&ctx->backend_ctx->tcp_com_thread, NULL,
+                        tcp_com_thread, (void*)ctx);
+    if (rv) {
+        err(ctx, "Unable to create TCP communication thread: %d\n", rv);
         return -1;
     }
 
@@ -213,18 +354,27 @@ int gb_tcp_open(struct glip_ctx *ctx, unsigned int num_channels)
  */
 int gb_tcp_close(struct glip_ctx *ctx)
 {
-    if (ctx->backend_ctx->data_efd >= 0) {
-        close(ctx->backend_ctx->data_efd);
-    }
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
 
-    if (ctx->backend_ctx->data_sfd >= 0) {
-        close(ctx->backend_ctx->data_sfd);
-        ctx->backend_ctx->data_sfd = -1;
+    /* clean-up TCP communication thread */
+    ctx->backend_ctx->tcp_com_thread_shutdown = true;
+
+    int sval;
+    sem_getvalue(&bctx->tcp_com_notification_sem, &sval);
+    if (sval == 0) {
+        sem_post(&bctx->tcp_com_notification_sem);
     }
-    if (ctx->backend_ctx->ctrl_sfd >= 0) {
-        close(ctx->backend_ctx->ctrl_sfd);
-        ctx->backend_ctx->ctrl_sfd = -1;
-    }
+    pthread_join(ctx->backend_ctx->tcp_com_thread, NULL);
+
+    /* tear down event notifications */
+    sem_destroy(&bctx->tcp_com_notification_sem);
+
+    /*
+     * Tear down read/write buffer. This also unblocks all blocking read/write
+     * functions and makes them return -ECANCELED
+     */
+    cbuf_free(ctx->backend_ctx->write_buf);
+    cbuf_free(ctx->backend_ctx->read_buf);
 
     return 0;
 }
@@ -251,6 +401,20 @@ int gb_tcp_logic_reset(struct glip_ctx *ctx)
 }
 
 /**
+ * Possibly trigger a refill/flush of the incoming and outgoing buffers
+ */
+static void trigger_com_refill_flush(struct glip_backend_ctx *bctx)
+{
+    if (cbuf_fill_level(bctx->write_buf) >= 4 * 1024 ||
+        cbuf_free_level(bctx->read_buf) > 0) {
+        int sval;
+        sem_getvalue(&bctx->tcp_com_notification_sem, &sval);
+        if (sval == 0) {
+            sem_post(&bctx->tcp_com_notification_sem);
+        }
+    }
+}
+/**
  * Read from the target device
  *
  * @see glip_read()
@@ -258,36 +422,26 @@ int gb_tcp_logic_reset(struct glip_ctx *ctx)
 int gb_tcp_read(struct glip_ctx *ctx, uint32_t channel, size_t size,
                 uint8_t *data, size_t *size_read)
 {
+    int rv;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
     if (channel != 0) {
-        err(ctx, "Only channel 0 is supported by the tcp backend\n");
+        err(ctx, "Only channel 0 is supported by the tcp backend");
         return -1;
     }
 
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    if (bctx->data_sfd < 0) {
-        return -ENOTCONN;
-    }
-    ssize_t rsize = read(bctx->data_sfd, data, size);
-    if (rsize == -1) {
-        *size_read = 0;
-        if (errno == EAGAIN) {
-            return 0;
-        } else if (errno == EBADF) {
-            dbg(ctx, "TCP connection was closed during read.\n");
-            return -ENOTCONN;
-        } else {
-            dbg(ctx, "TCP read() returned %zd (errno = %d)\n", rsize, errno);
-            return -1;
-        }
+    rv = gb_util_cbuf_read(bctx->read_buf, size, data, size_read);
+    if (rv != 0) {
+        return rv;
     }
 
-    *size_read = rsize;
-    return 0;
+    trigger_com_refill_flush(bctx);
+
+    return rv;
 }
 
 /**
- * Blocking read from the target
+ * Blocking read from the device
  *
  * @see glip_read_b()
  */
@@ -295,107 +449,51 @@ int gb_tcp_read_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
                   uint8_t *data, size_t *size_read, unsigned int timeout)
 {
     int rv;
-    size_t size_read_tmp = 0;
-    size_t sr;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
 
-    struct epoll_event events[1];
-
-    struct timespec ts_start, ts_now;
-    clock_gettime(CLOCK_MONOTONIC, &ts_start);
-
-    do {
-        size_t size_remaining = size - size_read_tmp;
-        rv = gb_tcp_read(ctx, channel, size_remaining, &data[size_read_tmp], &sr);
-        if (rv != 0) {
-            return rv;
-        }
-        size_read_tmp += sr;
-
-        if ((sr != size_remaining) && (timeout > 0)) {
-            /* we didn't get as much data as we requested - wait for new data! */
-            do {
-                /* calculate remaining wait time */
-                clock_gettime(CLOCK_MONOTONIC, &ts_now);
-                int tspent = (ts_now.tv_sec * 1000 + ts_now.tv_nsec / 1000 / 1000) -
-                             (ts_start.tv_sec * 1000 + ts_start.tv_nsec / 1000 / 1000);
-                if (tspent >= (int)timeout) {
-                    /* we've hit the timeout already; return what we got */
-                    goto return_read_data;
-                }
-
-                int nfds = epoll_wait(ctx->backend_ctx->data_efd, events,
-                                      sizeof(events), timeout - tspent);
-                if (nfds == -1) {
-                    err(ctx, "epoll_wait() failed: %s\n", strerror(errno));
-                    return -1;
-                }
-                if (nfds == 0) {
-                    /* we've hit the timeout */
-                    goto return_read_data;
-                }
-
-                assert(nfds == 1);
-
-                if ((events[0].events & EPOLLRDHUP) ||
-                    (events[0].events & EPOLLERR) ||
-                    (events[0].events & EPOLLHUP)) {
-                    /* an error happened; did the connection die? */
-
-                    err(ctx, "An error happened while waiting for the "
-                        "TCP I/O. Returning whatever data we have.\n");
-                    /*
-                     * XXX: is this error handling ok, or should we inform the
-                     * API user?
-                     */
-                    goto return_read_data;
-                }
-            } while (!((events[0].events & EPOLLIN) ||
-                       (events[0].events & EPOLLPRI)));
-        }
-    } while (size > size_read_tmp);
-
-return_read_data:
-    *size_read = size_read_tmp;
-    if (size_read_tmp != size) {
-        return -ETIMEDOUT;
+    if (channel != 0) {
+        err(ctx, "Only channel 0 is supported by the tcp backend");
+        return -1;
     }
-    return 0;
+
+    rv = gb_util_cbuf_read_b(bctx->read_buf, size, data, size_read, timeout);
+    if (rv != 0) {
+        return rv;
+    }
+
+    trigger_com_refill_flush(bctx);
+
+    return rv;
 }
 
 /**
- * Write to the target
+ * Write to the target device
  *
  * @see glip_write()
  */
 int gb_tcp_write(struct glip_ctx *ctx, uint32_t channel, size_t size,
                  uint8_t *data, size_t *size_written)
 {
+    int rv;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
+
     if (channel != 0) {
         err(ctx, "Only channel 0 is supported by the tcp backend");
         return -1;
     }
 
-    struct glip_backend_ctx* bctx = ctx->backend_ctx;
-
-    ssize_t wsize = send(bctx->data_sfd, data, size, MSG_NOSIGNAL);
-    if (wsize == -1) {
-        *size_written = 0;
-        if (errno == EAGAIN) {
-            return 0;
-        } else if (errno == EBADF || errno == EPIPE) {
-            return -ENOTCONN;
-        } else {
-            dbg(ctx, "TCP send() returned %zd (errno = %d)\n", wsize, errno);
-            return -1;
-        }
+    rv = gb_util_cbuf_write(bctx->write_buf, size, data, size_written);
+    if (rv != 0) {
+        return rv;
     }
 
-    *size_written = wsize;
+    trigger_com_refill_flush(bctx);
+
     return 0;
 }
 
 /**
- * Blocking write to the target
+ * Blocking write to the target device
  *
  * @see glip_write_b()
  */
@@ -403,70 +501,21 @@ int gb_tcp_write_b(struct glip_ctx *ctx, uint32_t channel, size_t size,
                    uint8_t *data, size_t *size_written, unsigned int timeout)
 {
     int rv;
-    size_t size_written_tmp = 0;
-    size_t sw;
+    struct glip_backend_ctx* bctx = ctx->backend_ctx;
 
-    struct epoll_event events[1];
-
-    struct timespec ts_start, ts_now;
-    clock_gettime(CLOCK_MONOTONIC, &ts_start);
-
-    do {
-        size_t size_remaining = size - size_written_tmp;
-        rv = gb_tcp_write(ctx, channel, size_remaining,
-                          &data[size_written_tmp], &sw);
-        if (rv != 0) {
-            return rv;
-        }
-        size_written_tmp += sw;
-
-        if ((sw != size_remaining) && (timeout > 0)) {
-            /* more data needs to be written */
-            do {
-                /* calculate remaining wait time */
-                clock_gettime(CLOCK_MONOTONIC, &ts_now);
-                int tspent = (ts_now.tv_sec * 1000 + ts_now.tv_nsec / 1000 / 1000) -
-                             (ts_start.tv_sec * 1000 + ts_start.tv_nsec / 1000 / 1000);
-                if (tspent >= (int)timeout) {
-                    /* we've hit the timeout already */
-                    goto return_written_data;
-                }
-
-                int nfds = epoll_wait(ctx->backend_ctx->data_efd, events,
-                                      sizeof(events), timeout - tspent);
-                if (nfds == -1) {
-                    err(ctx, "epoll_wait() failed: %s\n", strerror(errno));
-                    return -1;
-                }
-                if (nfds == 0) {
-                    /* we've hit the timeout */
-                    goto return_written_data;
-                }
-
-                assert(nfds == 1);
-
-                if ((events[0].events & EPOLLRDHUP) ||
-                    (events[0].events & EPOLLERR) ||
-                    (events[0].events & EPOLLHUP)) {
-                    /* an error happened; did the connection die? */
-
-                    err(ctx, "An error happened while waiting for the "
-                        "TCP I/O when writing.\n");
-                    /*
-                     * XXX: is this error handling ok, or should we inform the
-                     * API user?
-                     */
-                    goto return_written_data;
-                }
-            } while (!(events[0].events & EPOLLOUT));
-        }
-    } while (size_written_tmp < size);
-
-return_written_data:
-    *size_written = size_written_tmp;
-    if (size_written_tmp != size) {
-        return -ETIMEDOUT;
+    if (channel != 0) {
+        err(ctx, "Only channel 0 is supported by the tcp backend");
+        return -1;
     }
+
+    rv = gb_util_cbuf_write_b(bctx->write_buf, size, data, size_written,
+                              timeout);
+    if (rv != 0) {
+        return rv;
+    }
+
+    trigger_com_refill_flush(bctx);
+
     return 0;
 }
 

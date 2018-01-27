@@ -14,7 +14,7 @@
 using namespace std;
 
 GlipTcp::GlipTcp() : mThreadReady(false), mConnected(false),
-        mDataIn(16*1024), mDataOut(16*1024), mControl(256) {
+        mDataIn(1*1024*1024), mDataOut(1*1024*1024), mControl(256) {
 }
 
 void GlipTcp::init(int port, int width) {
@@ -292,8 +292,8 @@ void *GlipTcp::thread(void) {
 
         while(true) {
             int rv;
-            size_t sz = 2048;
-            uint8_t data[2048];
+            size_t sz = 4096;
+            uint8_t data[4096];
 
             rv = read(mSocketControl.socket, data, sz);
             if (rv == -1) {
