@@ -21,7 +21,7 @@ module debug_ring_expand
   #(parameter PORTS = 1,
     parameter BUFFER_SIZE = 4)
    (input clk, rst,
-    input  [PORTS-1:0][9:0] id_map,
+    input  [PORTS-1:0][15:0] id_map,
     input  dii_flit [PORTS-1:0] dii_in, output [PORTS-1:0] dii_in_ready,
     output dii_flit [PORTS-1:0] dii_out, input [PORTS-1:0] dii_out_ready,
     input  dii_flit [1:0] ext_in, output [1:0] ext_in_ready, // extension input ports
@@ -34,7 +34,7 @@ module debug_ring_expand
    logic [1:0][PORTS:0] chain_ready;
 
    generate
-      for(i=0; i<PORTS; i++) begin
+      for(i=0; i<PORTS; i++) begin : gen_router
          ring_router
            #(.BUFFER_SIZE(BUFFER_SIZE))
          u_router(

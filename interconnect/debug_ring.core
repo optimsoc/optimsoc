@@ -15,3 +15,6 @@ files =
   common/ring_router.sv
   common/ring_router_mux.sv
   common/ring_router_mux_rr.sv
+  common/ring_router_gateway.sv
+  common/ring_router_gateway_demux.sv
+  common/ring_router_gateway_mux.sv

@@ -22,7 +22,7 @@ module osd_dem_uart
    input           dii_flit debug_in, output debug_in_ready,
    output          dii_flit debug_out, input debug_out_ready,
 
-   input [9:0]     id,
+   input [15:0]    id,
 
    output          drop,
 

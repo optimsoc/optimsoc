@@ -19,7 +19,7 @@ import dii_package::dii_flit;
 module ring_router_demux
   (
    input       clk, rst,
-   input [9:0] id,
+   input [15:0] id,
    input dii_flit in_ring, output in_ring_ready,
    output dii_flit out_local, input out_local_ready,
    output dii_flit out_ring, input out_ring_ready
@@ -34,7 +34,8 @@ module ring_router_demux
    reg         worm_local;
 
    logic       is_local;
-   assign is_local = (in_ring.data[9:0] === id);
+
+   assign is_local = (in_ring.data[15:0] == id);
 
    always_ff @(posedge clk) begin
       if (rst) begin

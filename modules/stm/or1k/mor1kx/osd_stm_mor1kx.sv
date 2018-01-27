@@ -21,7 +21,7 @@ module osd_stm_mor1kx
    (
     input                        clk, rst,
 
-    input [9:0]                  id,
+    input [15:0]                 id,
 
     input  dii_flit              debug_in,
     output                       debug_in_ready,
@@ -31,18 +31,18 @@ module osd_stm_mor1kx
     input mor1kx_trace_exec      trace_port
     );
 
-   localparam XLEN = 32;
+   localparam VALWIDTH = 32;
    localparam REG_ADDR_WIDTH = 5;
 
    logic                         trace_valid;
    logic [15:0]                  trace_id;
-   logic [XLEN-1:0]              trace_value;
+   logic [VALWIDTH-1:0]          trace_value;
 
    logic                         trace_reg_enable;
    logic [REG_ADDR_WIDTH-1:0]    trace_reg_addr;
 
    osd_stm
-     #(.REG_ADDR_WIDTH(REG_ADDR_WIDTH), .XLEN(XLEN))
+     #(.REG_ADDR_WIDTH(REG_ADDR_WIDTH), .VALWIDTH(VALWIDTH))
    u_stm
      (.*);
 

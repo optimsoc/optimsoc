@@ -19,12 +19,12 @@ import dii_package::dii_flit;
 module osd_stm
   #(
     parameter REG_ADDR_WIDTH = 5, // the address width of the core register file
-    parameter XLEN = 64
+    parameter VALWIDTH = 64
     )
    (
     input                       clk, rst,
 
-    input [9:0]                 id,
+    input [15:0]                id,
 
     input dii_flit              debug_in,
     output                      debug_in_ready,
@@ -33,10 +33,7 @@ module osd_stm
 
     input                       trace_valid,
     input [15:0]                trace_id,
-    input [XLEN-1:0]            trace_value,
-
-    output                      trace_reg_enable,
-    output [REG_ADDR_WIDTH-1:0] trace_reg_addr
+    input [VALWIDTH-1:0]        trace_value
     );
 
    logic        reg_request;
@@ -48,15 +45,21 @@ module osd_stm
    logic        reg_err;
    logic [15:0] reg_rdata;
 
+   logic [15:0] event_dest;
+
    logic                   stall;
 
    dii_flit dp_out, dp_in;
    logic        dp_out_ready, dp_in_ready;
 
+   // This module cannot receive packets other than register access packets
+   assign dp_in_ready = 1'b0;
+
    osd_regaccess_layer
-     #(.MODID(16'h4), .MODVERSION(16'h0),
-       .MAX_REG_SIZE(16), .CAN_STALL(1))
+     #(.MOD_VENDOR(16'h1), .MOD_TYPE(16'h4), .MOD_VERSION(16'h0),
+       .MAX_REG_SIZE(16), .CAN_STALL(1), .MOD_EVENT_DEST_DEFAULT(16'h0))
    u_regaccess(.*,
+               .event_dest (event_dest),
                .module_in (dp_out),
                .module_in_ready (dp_out_ready),
                .module_out (dp_in),
@@ -68,13 +71,13 @@ module osd_stm
       reg_err = 0;
 
       case (reg_addr)
-        16'h200: reg_rdata = 16'(XLEN);
+        16'h200: reg_rdata = 16'(VALWIDTH);
         default: reg_err = reg_request;
       endcase // case (reg_addr)
    end // always @ (*)
 
    // Event width
-   localparam EW = 32 + 16 + XLEN;
+   localparam EW = 32 + 16 + VALWIDTH;
 
    logic [EW-1:0] sample_data;
    logic          sample_valid;
@@ -95,7 +98,7 @@ module osd_stm
      #(.WIDTH(32))
    u_timestamp(.clk  (clk),
                .rst  (rst),
-               .enable (1),
+               .enable (1'b1),
                .timestamp (timestamp));
 
    osd_tracesample
@@ -125,6 +128,7 @@ module osd_stm
    u_packetization(.clk             (clk),
                    .rst             (rst),
                    .id              (id),
+                   .event_dest      (event_dest),
                    .trace_data      (packet_data),
                    .trace_overflow  (packet_overflow),
                    .trace_valid     (packet_valid),

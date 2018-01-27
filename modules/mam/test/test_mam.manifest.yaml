@@ -1,0 +1,23 @@
+module: test_mam
+
+sources:
+  - ../../../interfaces/common/dii_channel.sv
+  - ../../../blocks/regaccess/common/osd_regaccess.sv
+  - ../../../blocks/regaccess/common/osd_regaccess_demux.sv
+  - ../../../blocks/regaccess/common/osd_regaccess_layer.sv
+  - ../../../interconnect/common/ring_router_mux.sv
+  - ../common/osd_mam.sv
+
+toplevel: osd_mam
+
+simulators:
+  - vcs
+
+parameters:
+  DATA_WIDTH: 32
+  ADDR_WIDTH: 32
+  MAX_PKT_LEN: 8
+  REGIONS: 1
+  MEM_SIZE0: 128
+  BASE_ADDR0: 0 
+  ENDIAN: 1 # 1 = big endian; 0 = little endian
