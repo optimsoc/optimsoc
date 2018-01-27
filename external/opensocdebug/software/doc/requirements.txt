@@ -1,0 +1,4 @@
+Sphinx
+breathe
+sphinx-rtd-theme
+sphinxcontrib-seqdiag

@@ -1,0 +1,56 @@
+language: c
+
+compiler:
+  - gcc
+
+env:
+  global:
+    # Codecov upload token: CODECOV_TOKEN=xxx
+    # To decrypt/replace go to the Shippable UI into the project settings
+    - secure: vw5Dlj5ZjrVFbHjq76qzJyoj/C8p1QiS8qYQcVUA6iOgYR05CRVaGogtdIMMwkAlvN01AH7h5cGgnoXnFTRKkd5CaPuasqJWORi0lTfQooP+nX6loOomtZmia+DrxddcLi8tzAjjm5PhsL501vWRNsUaTadlzeg63Xfa8HCG7YWjJgO3kOXcZmkRy7eK590eQDo6AyXQXrfUNCmsJfDxPB1Vjg8lM+cc2z6AKZM3X4sUtKKXAaxngDmnWKxyPKOlYJPkIE1SLj8GYYBq+05fi1rA2mztaDZ/pJrcp2cEDRIPcqNjb57DZ2HfXr36vibx4C5NMmmMTbwyCekai76hVA==
+  matrix:
+    # Configure options (resulting in one build job each)
+    - BUILD_TYPE=valgrind CONFIGURE_OPTS="--with-glip --enable-debug --enable-code-coverage --enable-valgrind --disable-asan" UPLOAD_COVERAGE=false
+    - BUILD_TYPE=asan     CONFIGURE_OPTS="--with-glip --enable-debug --enable-code-coverage --disable-valgrind --enable-asan" UPLOAD_COVERAGE=true
+    - BUILD_TYPE=release  CONFIGURE_OPTS="--with-glip" UPLOAD_COVERAGE=false
+
+build:
+  ci:
+    # Build and install GLIP as build dependency
+    - git clone --depth 1 https://github.com/TUM-LIS/glip.git
+    - cd glip && ./autogen.sh && ./configure && make && sudo make install && cd ..
+
+    # Now build the actual OSD software
+    - sudo apt-get update
+    - ./install-build-deps.sh
+    - ./autogen.sh
+    - echo "Running configure with $CONFIGURE_OPTS"
+    - ./configure $CONFIGURE_OPTS
+    - make
+    - make check-code-coverage
+    - make check-valgrind
+    - sudo make install
+
+    # Build and test Python bindings (using the release version of libosd)
+    - if [ "$BUILD_TYPE" == "release" ]; then cd src/python; tox; cd ../..; fi
+
+  post_ci:
+    # Copy code coverage information where shippable.io finds it
+    - if [ "$UPLOAD_COVERAGE" == "true" ]; then make -C tests/unit coverage-cobertura-xml; cp tests/unit/coverage-cobertura.xml shippable/codecoverage; fi
+
+  on_success:
+    # Copy test results where shippable.io finds them
+    - make -C tests/unit check-junit-xml
+    - cp tests/unit/*.junit.xml shippable/testresults
+
+    # Report coverage results to codecov
+    - if [ "$UPLOAD_COVERAGE" == "true" ]; then bash <(curl -s https://codecov.io/bash); else echo "Not uploading coverage data for this build."; fi
+
+  on_failure:
+    # Dump test logs to stdout for debugging test failures
+    - if [ -f tests/unit/test-suite.log ]; then cat tests/unit/test-suite.log; fi
+    - if [ -f tests/unit/test-suite-memcheck.log ]; then cat tests/unit/test-suite-memcheck.log; fi
+
+    # Copy test results where shippable.io finds them
+    - make -C tests/unit check-junit-xml
+    - cp tests/unit/*.junit.xml shippable/testresults

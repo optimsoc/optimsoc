@@ -1,0 +1,41 @@
+# temporary editor files
+*~
+*.kate-swp
+
+# intermediate build objects
+Makefile.in
+!doc/Makefile.in
+Makefile
+aclocal.m4
+autom4te.cache
+configure
+build-aux
+config.h.in
+.autotools
+config.log
+__pycache__
+.deps
+config.h
+config.status
+libtool
+stamp-h1
+*.o
+*.lo
+.dirstamp
+*.la
+.libs/
+/osd.pc
+*.gcno
+doc/doxygen.cfg
+doc/doctrees/
+doc/html/
+doc/xml/
+
+# editor/ide project files
+.cproject
+.project
+.settings
+.pydevproject
+
+# standard out-of-tree build directory
+build
