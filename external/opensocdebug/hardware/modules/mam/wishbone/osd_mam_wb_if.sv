@@ -28,7 +28,7 @@ module osd_mam_wb_if
 
     input                       req_valid, // Start a new memory access request
     output reg                  req_ready, // Acknowledge the new memory access request
-    input                       req_rw, // 0: Read, 1: Write
+    input                       req_we, // 0: Read, 1: Write
     input [ADDR_WIDTH-1:0]      req_addr, // Request base address
     input                       req_burst, // 0 for single beat access, 1 for incremental burst
     input [13:0]                req_beats, // Burst length in number of words
@@ -118,7 +118,7 @@ module osd_mam_wb_if
            nxt_beats = req_beats;
            nxt_addr_o = req_addr;
            if (req_valid) begin
-              if (req_rw) begin
+              if (req_we) begin
                  nxt_we_o = 1;
                  if (req_burst) begin
                     if (nxt_beats == 1) begin
@@ -148,7 +148,7 @@ module osd_mam_wb_if
                        nxt_state = STATE_WRITE_LAST_WAIT;
                     end
                  end // if (req_burst)
-              end else begin // req_rw == 0
+              end else begin // req_we == 0
                  nxt_we_o = 0;
                  nxt_state = STATE_READ;
                  if (req_burst) begin
@@ -160,7 +160,7 @@ module osd_mam_wb_if
                  end else begin // !req_burst
                     nxt_cti_o = 3'b111;
                  end // if (req_burst)
-              end // if (req_rw)
+              end // if (req_we)
            end // if (req_valid)
         end //STATE_IDLE
         STATE_WRITE_LAST_WAIT: begin

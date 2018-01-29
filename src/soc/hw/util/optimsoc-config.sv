@@ -82,6 +82,9 @@ package optimsoc;
       logic              USE_DEBUG;
       logic              DEBUG_STM;
       logic              DEBUG_CTM;
+      integer            DEBUG_SUBNET_BITS;
+      integer            DEBUG_LOCAL_SUBNET;
+      integer            DEBUG_ROUTER_BUFFER_SIZE;
    } base_config_t;
 
    typedef struct packed {
@@ -96,7 +99,7 @@ package optimsoc;
       integer            TOTAL_NUM_CORES;
 
       // NoC-related configuration
-      logic 		 NOC_ENABLE_VCHANNELS;
+      logic 		       NOC_ENABLE_VCHANNELS;
       //  -> derived
       integer            NOC_FLIT_WIDTH;
       integer            NOC_CHANNELS;
@@ -127,6 +130,9 @@ package optimsoc;
       logic              USE_DEBUG;
       logic              DEBUG_STM;
       logic              DEBUG_CTM;
+      integer            DEBUG_SUBNET_BITS;
+      integer            DEBUG_LOCAL_SUBNET;
+      integer            DEBUG_ROUTER_BUFFER_SIZE;
       // -> derived
       integer            DEBUG_MODS_PER_CORE;
       integer            DEBUG_MODS_PER_TILE;
@@ -159,6 +165,9 @@ package optimsoc;
       derive_config.USE_DEBUG = conf.USE_DEBUG;
       derive_config.DEBUG_STM = conf.DEBUG_STM;
       derive_config.DEBUG_CTM = conf.DEBUG_CTM;
+      derive_config.DEBUG_SUBNET_BITS = conf.DEBUG_SUBNET_BITS;
+      derive_config.DEBUG_LOCAL_SUBNET = conf.DEBUG_LOCAL_SUBNET;
+      derive_config.DEBUG_ROUTER_BUFFER_SIZE = conf.DEBUG_ROUTER_BUFFER_SIZE;
 
       // Derive the other parameters
       derive_config.TOTAL_NUM_CORES = conf.NUMCTS * conf.CORES_PER_TILE;
@@ -169,10 +178,12 @@ package optimsoc;
       derive_config.PGAS_RANGE_MATCH = conf.PGAS_BASE >> (32-derive_config.PGAS_RANGE_WIDTH);
 
       derive_config.DEBUG_MODS_PER_CORE = (int'(conf.DEBUG_STM) + int'(conf.DEBUG_CTM)) * int'(conf.USE_DEBUG);
-      derive_config.DEBUG_MODS_PER_TILE = (1 + derive_config.DEBUG_MODS_PER_CORE *
-                                           conf.CORES_PER_TILE) * conf.USE_DEBUG;
-      derive_config.DEBUG_NUM_MODS = (1 + conf.NUMCTS *
-                                      derive_config.DEBUG_MODS_PER_TILE) * conf.USE_DEBUG;
+      derive_config.DEBUG_MODS_PER_TILE = conf.USE_DEBUG *
+                                          (1 /* MAM */
+                                           + derive_config.DEBUG_MODS_PER_CORE * conf.CORES_PER_TILE);
+      derive_config.DEBUG_NUM_MODS = conf.USE_DEBUG *
+                                     (1 /* SCM */
+                                      + conf.NUMCTS * derive_config.DEBUG_MODS_PER_TILE);
 
       // Those are supposed to be variables, but are constant at least for now
       derive_config.NOC_CHANNELS = 2;

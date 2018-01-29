@@ -3,7 +3,7 @@
 autoreconf --install --symlink
 
 echo
-echo "Configuration done. Before proceeding you need to decide for an installation"
+echo "Configuration done."
 echo "Usual build procedure:"
 echo
 echo "    mkdir build; cd build;"

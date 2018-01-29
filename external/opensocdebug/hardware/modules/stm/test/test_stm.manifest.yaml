@@ -1,0 +1,22 @@
+module: test_stm
+
+sources:
+  - ../../../interfaces/common/dii_channel.sv
+  - ../../../blocks/regaccess/common/osd_regaccess.sv
+  - ../../../blocks/regaccess/common/osd_regaccess_demux.sv
+  - ../../../blocks/regaccess/common/osd_regaccess_layer.sv
+  - ../../../interconnect/common/ring_router_mux.sv
+  - ../../../blocks/timestamp/common/osd_timestamp.sv
+  - ../../../blocks/buffer/common/osd_fifo.sv
+  - ../../../blocks/tracepacket/common/osd_trace_packetization.sv
+  - ../../../blocks/tracesample/common/osd_tracesample.sv
+  - ../common/osd_stm.sv
+
+toplevel: osd_stm
+
+simulators:
+  - vcs
+
+parameters:
+  VALWIDTH: 32
+  REG_ADDR_WIDTH: 5

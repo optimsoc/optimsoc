@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Run cocotb_testrunner.py in a virtual environment and install cocotb with it
+#
+
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+COCOTB_GIT_URL=https://github.com/potentialventures/cocotb
+COCOTB_GIT_REF=f1297a71e09ddc10c64b413dcf4da441cb7b69bf
+
+if [ -z "$OBJDIR" ]; then
+  OBJDIR=/tmp/cocotb_testrunner_objdir
+fi
+
+function install_cocotb
+{
+  git clone "$COCOTB_GIT_URL" "$OBJDIR/cocotb"
+  (cd "$OBJDIR/cocotb"; git checkout "$COCOTB_GIT_REF")
+  export COCOTB=$OBJDIR/cocotb
+}
+
+
+mkdir -p "$OBJDIR"
+
+# Prepare cocotb
+if [ -d "$OBJDIR/cocotb" ]; then
+  export COCOTB=$OBJDIR/cocotb
+fi
+
+if [ ! -d "$COCOTB" ]; then
+  echo "cocotb is not installed or the environment variable doesn't point "
+  echo "to a valid COCOTB directory."
+  while true; do
+    read -p "Should we install cocotb into the object directory? " yn
+    case $yn in
+      [Yy]*)
+        install_cocotb
+        break
+          ;;
+      [Nn]*)
+        echo "Please install cocotb yourself and point the environment variable"
+        echo "COCOTB to the installation directory."
+        exit
+        ;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
+fi
+
+# Prepare Python 3 virtual environment
+if [ ! -d "$OBJDIR/venv" ]; then
+  python3 -m venv "$OBJDIR/venv"
+  $OBJDIR/venv/bin/pip -q install --upgrade pip
+  $OBJDIR/venv/bin/pip -q install -r "$DIR/requirements.txt"
+fi
+
+. $OBJDIR/venv/bin/activate
+
+# Run actual testrunner
+$OBJDIR/venv/bin/python "$DIR/cocotb_testrunner.py" -o "$OBJDIR/testobj" $@

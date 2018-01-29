@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (c) 2016-2017 by the author(s)
+# Copyright (c) 2016-2018 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -477,32 +477,39 @@ def build_examples_sim(options, env):
     exobjdir = os.path.join(objdir, "examples", "sim")
     exdist = os.path.join(dist, "examples", "sim")
 
+    # Newer fusesoc versions use bld-verilator as output directory, older ones
+    # use sim-verilator. Support both by giving alternatives for the filename.
     examples = [
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_singlecore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
+        "files": [ [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+                     "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile" ] ],
         "options": "--NUM_CORES 1" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_dualcore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
+        "files": [ [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+                     "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile" ] ],
         "options": "--NUM_CORES 2" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_quadcore",
         "path": "compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile" ],
+        "files": [ [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+                     "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile" ] ],
         "options": "--NUM_CORES 4" },
 
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore",
         "path": "system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc" ],
+        "files": [ [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc",
+                     "build/optimsoc_examples_system_2x2_cccc_sim_0/bld-verilator/Vtb_system_2x2_cccc"] ],
         "options": "--NUM_CORES 2"},
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore_debug",
         "path": "system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc" ],
+        "files": [ [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc",
+                     "build/optimsoc_examples_system_2x2_cccc_sim_0/bld-verilator/Vtb_system_2x2_cccc"] ],
         "options": "--NUM_CORES 2 --USE_DEBUG 1"},
     ]
 
@@ -520,7 +527,18 @@ def build_examples_sim(options, env):
         info("  + Copy build artifacts")
         ensure_directory(builddist)
         for f in ex["files"]:
-            srcf = os.path.join(buildobjdir, f)
+            filename = None
+            if isinstance(f, list):
+                for alternative_file in f:
+                    if os.path.isfile(os.path.join(buildobjdir, alternative_file)):
+                        filename = alternative_file
+                        break
+                if not filename:
+                    fatal("No alternative file for build artifact %s found." % ex["name"])
+            else:
+                filename = f
+
+            srcf = os.path.join(buildobjdir, filename)
             destf = os.path.join(builddist, ex["outname"])
             file_copy(srcf, destf)
 
@@ -754,7 +772,7 @@ def build_externals_opensocdebug_software(options, env):
     info(" + Configure")
     ensure_directory(objdir)
 
-    cmd = "{}/configure --prefix={} --enable-python-bindings".format(src, prefix)
+    cmd = "{}/configure --prefix={} --enable-logging --with-glip".format(src, prefix)
     run_command(cmd, cwd=objdir, env=env)
 
     info(" + Build")

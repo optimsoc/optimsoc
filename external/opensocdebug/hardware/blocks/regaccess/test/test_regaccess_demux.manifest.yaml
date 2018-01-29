@@ -1,0 +1,10 @@
+module: test_regaccess_demux
+
+sources:
+  - ../../../interfaces/common/dii_channel.sv
+  - ../common/osd_regaccess_demux.sv
+
+toplevel: osd_regaccess_demux
+
+simulators:
+  - vcs

@@ -1,16 +1,30 @@
-This is the host software library and daemon for the Open SoC Debug
-project.
+[![Run Status](https://api.shippable.com/projects/5a212a1b7cc9a8070082fa14/badge?branch=master)](https://app.shippable.com/github/opensocdebug/osd-sw) 
+[![codecov](https://codecov.io/gh/opensocdebug/osd-sw/branch/master/graph/badge.svg)](https://codecov.io/gh/opensocdebug/osd-sw)
 
-It is work in progress, please visit http://opensocdebug.org for more
-information.
+# Open SoC Debug Software
 
-## Try it out
+This is the reference implementation of the Open SoC Debug host software.
 
-* Build the software: `./autogen.sh; cd build; ../configure; make; make install`
-* Start a simulation or board
-* Connect the daemon: `opensocdebugd tcp`
-* It will start an xterm for the terminal
-* Connect to the daemon using the command line interface: `osd-cli`
-* Reset the system and keep cores halted: `reset -halt`
-* Start the processor cores: `start`
-* Run memory test: `mem test`
+## Documentation
+- [Implementation Documentation](https://opensocdebug.readthedocs.io/projects/osd-sw)
+- [OSD Specification and overview](https://opensocdebug.readthedocs.io/) (good first read if you're new to OSD)
+
+## Build Dependencies
+```sh
+./install-build-deps.sh
+```
+
+## Build
+```sh
+./autogen.sh
+mkdir build
+cd build
+../configure
+make
+make install
+```
+
+## License
+This software is licensed under the Apache 2 license.
+See the [LICENSE](LICENSE) file for the full license text.
+

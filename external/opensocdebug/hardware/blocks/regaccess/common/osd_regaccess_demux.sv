@@ -1,4 +1,4 @@
-// Copyright 2016 by the authors
+// Copyright 2016-2017 by the authors
 //
 // Copyright and related rights are licensed under the Solderpad
 // Hardware License, Version 0.51 (the "License"); you may not use
@@ -12,10 +12,19 @@
 // License.
 //
 // Authors:
-//    Stefan Wallentowitz <stefan@wallentowitz.de>
+//    Philipp Wagner <philipp.wagner@tum.de>
 
 import dii_package::dii_flit;
 
+/**
+ * Debug Interconnect Register Access Demultiplexer
+ *
+ * This module splits an incoming DI link depending on the packet type.
+ * Register access packets (FLAGS.TYPE = REG) are forwarded to the out_reg
+ * output ports, all other packets are forwarded to the out_bypass ports.
+ *
+ * The latency between the in and the out port is 3 cycles.
+ */
 module osd_regaccess_demux
   (input clk, input rst,
 
@@ -24,78 +33,110 @@ module osd_regaccess_demux
    output dii_flit out_reg, input out_reg_ready,
    output dii_flit out_bypass, input out_bypass_ready);
 
-   reg [16:0] buf_reg;
+   typedef struct {
+      logic [15:0] data;
+      logic last;
+      logic valid;
+   } bufdata;
 
-   logic      buf_last;
-   assign buf_last = buf_reg[16];
+   bufdata buf_reg[3];
+   logic [2:0] buf_reg_is_regaccess;
+   logic [2:0] buf_reg_is_bypass;
 
-   assign out_reg.data = buf_reg[15:0];
-   assign out_reg.last = buf_last;
-   assign out_bypass.data = buf_reg[15:0];
-   assign out_bypass.last = buf_last;
+   logic do_tag, mark_bypass, mark_regaccess;
+   assign do_tag = buf_reg[2].valid & buf_reg[1].valid & buf_reg[0].valid &
+      (!buf_reg_is_regaccess[2] & !buf_reg_is_bypass[2]) &
+      (!buf_reg_is_regaccess[1] & !buf_reg_is_bypass[1]) &
+      (!buf_reg_is_regaccess[0] & !buf_reg_is_bypass[0]);
 
-   logic      in_is_regaccess;
-   assign in_is_regaccess = ~|in.data[15:14];
+   assign mark_bypass = do_tag & (buf_reg[0].data[15:14] != 2'b00);
+   assign mark_regaccess = do_tag & (buf_reg[0].data[15:14] == 2'b00);
 
-   logic      in_transfer, out_transfer;
-   assign in_transfer = in.valid & in_ready;
-   assign out_transfer = (out_reg.valid & out_reg_ready) |
-                         (out_bypass.valid & out_bypass_ready);
+   logic pkg_is_bypass, pkg_is_regaccess;
+   always_ff @(posedge clk) begin
+      if (rst) begin
+         pkg_is_bypass <= 0;
+         pkg_is_regaccess <= 0;
+      end else begin
+         pkg_is_bypass <= (pkg_is_bypass | mark_bypass)
+            & !(in.last & in.valid & in_ready)
+            & !(buf_reg[0].last & buf_reg[0].valid);
+         pkg_is_regaccess <= (pkg_is_regaccess | mark_regaccess)
+            & !(in.last & in.valid & in_ready)
+            & !(buf_reg[0].last & buf_reg[0].valid);
+      end
+   end
 
-   // The flit in the register is part of a worm
-   reg        worm;
-   logic      nxt_worm;
-   // The flit in the register is a first
-   reg        first;
-   logic      nxt_first;
-   // The current worm is a register access
-   reg        regaccess;
-   logic      nxt_regaccess;
+   logic keep_1, keep_2;
+   assign keep_1 = !do_tag & buf_reg[1].valid
+      & !(buf_reg_is_bypass[1] | buf_reg_is_regaccess[1]) & keep_2;
+   assign keep_2 = !do_tag & buf_reg[2].valid
+      & !(buf_reg_is_bypass[2] | buf_reg_is_regaccess[2]);
 
    always_ff @(posedge clk) begin
       if (rst) begin
-         worm <= 0;
-         first <= 0;
+         buf_reg[0].valid <= 0;
+         buf_reg_is_regaccess[0] <= 0;
+         buf_reg_is_bypass[0] <= 0;
+
+         buf_reg[1].valid <= 0;
+         buf_reg_is_regaccess[1] <= 0;
+         buf_reg_is_bypass[1] <= 0;
+
+         buf_reg[2].valid <= 0;
+         buf_reg_is_regaccess[2] <= 0;
+         buf_reg_is_bypass[2] <= 0;
       end else begin
-         worm <= nxt_worm;
-         first <= nxt_first;
+         if (in_ready) begin
+            buf_reg[0].data <= in.data;
+            buf_reg[0].last <= in.last;
+            buf_reg[0].valid <= in.valid & in_ready;
+            if (buf_reg[0].valid & !buf_reg[0].last) begin
+               buf_reg_is_regaccess[0] <= pkg_is_regaccess | mark_regaccess;
+               buf_reg_is_bypass[0] <= pkg_is_bypass | mark_bypass;
+            end else begin
+               buf_reg_is_regaccess[0] <= pkg_is_regaccess;
+               buf_reg_is_bypass[0] <= pkg_is_bypass;
+            end
+
+            if (!keep_1) begin
+               buf_reg[1] <= buf_reg[0];
+               buf_reg_is_regaccess[1] <= buf_reg_is_regaccess[0] | mark_regaccess;
+               buf_reg_is_bypass[1] <= buf_reg_is_bypass[0] | mark_bypass;
+            end else begin
+               buf_reg_is_regaccess[1] <= buf_reg_is_regaccess[1] | mark_regaccess;
+               buf_reg_is_bypass[1] <= buf_reg_is_bypass[1] | mark_bypass;
+            end
+
+            if (!keep_2) begin
+               buf_reg[2] <= buf_reg[1];
+               buf_reg_is_regaccess[2] <= buf_reg_is_regaccess[1] | mark_regaccess;
+               buf_reg_is_bypass[2] <= buf_reg_is_bypass[1] | mark_bypass;
+            end else begin
+               buf_reg_is_regaccess[2] <= buf_reg_is_regaccess[2] | mark_regaccess;
+               buf_reg_is_bypass[2] <= buf_reg_is_bypass[2] | mark_bypass;
+            end
+         end
       end
-
-      regaccess <= nxt_regaccess;
-
-      if (in_transfer)
-        buf_reg <= { in.last, in.data };
    end
 
-   logic active;
-   assign active = first | worm;
+   // Output data
+   assign out_reg.data = buf_reg[2].data;
+   assign out_reg.last = buf_reg[2].last;
+   assign out_reg.valid = buf_reg[2].valid
+      & (buf_reg_is_regaccess[2] | mark_regaccess);
 
-   logic nxt_worm_first, nxt_worm_keep;
-   assign nxt_worm = nxt_worm_first | nxt_worm_keep;
-   assign nxt_worm_first = first & in_ready & in.valid;
-   assign nxt_worm_keep = worm & !(buf_last & out_transfer);
+   assign out_bypass.data = buf_reg[2].data;
+   assign out_bypass.last = buf_reg[2].last;
+   assign out_bypass.valid = buf_reg[2].valid
+      & (buf_reg_is_bypass[2] | mark_bypass);
 
-   logic nxt_first_inactive, nxt_first_keep, nxt_first_worm;
-   assign nxt_first = nxt_first_inactive | nxt_first_keep | nxt_first_worm;
-   assign nxt_first_inactive = !active & in.valid;
-   assign nxt_first_keep = first & !in_transfer;
-   assign nxt_first_worm = worm & in_transfer & buf_last;
+   logic no_buf_entry_is_tagged;
+   assign no_buf_entry_is_tagged = ~do_tag & ~(|buf_reg_is_regaccess | |buf_reg_is_bypass);
 
-   assign nxt_regaccess = first ? in_is_regaccess : regaccess;
-
-   assign out_reg.valid = (first & in_is_regaccess & in.valid) |
-                          (worm & regaccess & in.valid) |
-                          (worm & regaccess & buf_last & !in.valid);
-   assign out_bypass.valid = (first & !in_is_regaccess & in.valid) |
-                             (worm & !regaccess & in.valid) |
-                             (worm & !regaccess & buf_last & !in.valid);
-
-   logic out_ready, out_ready_first, out_ready_worm;
-   assign out_ready = (first & out_ready_first) |
-                      (worm & out_ready_worm);
-   assign out_ready_first = in_is_regaccess ? out_reg_ready : out_bypass_ready;
-   assign out_ready_worm = regaccess ? out_reg_ready : out_bypass_ready;
-
-   assign in_ready = !active | out_ready;
+   assign in_ready = (out_bypass_ready & out_reg_ready) |
+      (out_bypass_ready & (buf_reg_is_bypass[2] | mark_bypass)) |
+      (out_reg_ready & (buf_reg_is_regaccess[2] | mark_regaccess)) |
+      no_buf_entry_is_tagged;
 
 endmodule // osd_regaccess_demux

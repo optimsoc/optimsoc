@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
 
 /**
  * @defgroup development-cbuf Circular Buffer
@@ -154,6 +155,8 @@ struct cbuf {
     size_t hint_max_write_size;
     size_t write_data_tmp_size;
     uint8_t *write_data_tmp;
+
+    volatile bool cancel_waits;
 };
 
 /**
@@ -189,6 +192,17 @@ static size_t _cbuf_calc_bufsize(size_t size_req, size_t size_max)
     } else {
         return pow_two;
     }
+}
+
+/**
+ * Unblock all functions waiting for a level change
+ */
+static void _cbuf_cancel_waits(struct cbuf *buf)
+{
+    buf->cancel_waits = true;
+
+    // unblock functions waiting for a buffer level change
+    pthread_cond_broadcast(&buf->level_changed);
 }
 
 /**
@@ -228,6 +242,8 @@ int cbuf_init(struct cbuf **buf, size_t size)
     b->write_data_tmp = NULL;
     b->write_data_tmp_size = 0;
 
+    b->cancel_waits = false;
+
     pthread_mutex_init(&b->level_mutex, NULL);
     pthread_cond_init(&b->level_changed, NULL);
 
@@ -248,6 +264,8 @@ int cbuf_init(struct cbuf **buf, size_t size)
  */
 int cbuf_free(struct cbuf *buf)
 {
+    _cbuf_cancel_waits(buf);
+
     pthread_mutex_destroy(&buf->level_mutex);
     pthread_cond_destroy(&buf->level_changed);
 
@@ -692,6 +710,7 @@ size_t cbuf_free_level(struct cbuf *buf)
  * @param buf the buffer
  * @param level known level
  * @return 0 on success
+ * @return -ECANCELED if the wait was canceled
  * @return any other value indicates an error
  *
  * @see cbuf_timedwait_for_level_change()
@@ -715,6 +734,9 @@ int cbuf_wait_for_level_change(struct cbuf *buf, size_t level)
 
 unlock_return:
     pthread_mutex_unlock(&buf->level_mutex);
+    if (buf->cancel_waits) {
+        rv = ECANCELED;
+    }
     return -rv;
 }
 
@@ -734,9 +756,12 @@ unlock_return:
  * @param level last known level
  * @param abs_timeout if this absolute time passes, the timeout expires
  * @return 0 on success
+ * @return -ETIMEDOUT if the timeout expired
+ * @return -ECANCELED if the wait was canceled
  * @return any other value indicates an error
  *
  * @see cbuf_wait_for_level_change()
+ * @see cbuf_cancel_waits()
  */
 int cbuf_timedwait_for_level_change(struct cbuf *buf, size_t level,
                                     const struct timespec *abs_timeout)
@@ -758,6 +783,9 @@ int cbuf_timedwait_for_level_change(struct cbuf *buf, size_t level,
 
 unlock_return:
     pthread_mutex_unlock(&buf->level_mutex);
+    if (buf->cancel_waits) {
+        rv = ECANCELED;
+    }
     return -rv;
 }
 

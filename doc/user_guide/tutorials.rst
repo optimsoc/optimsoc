@@ -45,7 +45,7 @@ They are essentially transformed versions of the ELF file, i.e. the software bin
 Now you have everything you need to run the hello world example on a simulated SoC hardware:
 
 .. code:: sh
-	  
+
    $OPTIMSOC/examples/sim/compute_tile/compute_tile_sim_singlecore --meminit=hello.vmem
 
 And you'll get roughly this output:
@@ -109,7 +109,7 @@ It instructs Verilator to write all signals into a file.
 You can then start a waveform viewer, like GTKWave to display it.
 
 .. code:: sh
-	  
+
    $OPTIMSOC/examples/sim/compute_tile/compute_tile_sim_singlecore --meminit=hello.vmem --vcd
 
 This command will run the hello world example like it did before, but this time Verilator additionally writes a ``sim.vcd`` waveform file.
@@ -233,196 +233,87 @@ So, open a new terminal (or a new tab inside your terminal), and start the simul
 
    $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug
 
-Now, open a second terminal (leave the first one running!) and type
+The first and most common task using the debug system is to run a program (just like we did before with the ``--meminit`` parameter).
+Open a second terminal (leave the first one running!) and type
 
 .. code:: sh
 
-   opensocdebugd tcp
+   osd-target-run -e hello.elf -vvv
 
-This starts the *Open SoC Debug daemon*.
-Open SoC Debug (or short, OSD) is the name of the debug infrastructure that's included with OpTiMSoC.
-The Open SoC Debug daemon is a tool which connects to the debug system inside the SoC hardware and interacts with it.
-In our case, since the SoC is running inside the Verilator simulation on the same PC, we use TCP to connect the simulated hardware `opensocdebugd`.
-Later, if we run the hardware on an FPGA, we'll use UART or USB instead of TCP -- but all the commands stay the same.
+``The osd-target-run`` command takes a couple seconds to finish, so don't get nervious.
+If everything goes to plan ``osd-target-run`` just does its job: run the provided ELF file ``hello.elf`` on all CPUs in the system.
+To do that, it internally performs the following steps:
 
-After some seconds, `opensocdebugd` will output something like this.
+- Connect to the simulation over TCP (on port 23000 and 23001)
+- Halt all CPUs
+- Load all memories in the system (since this is a 2x2 system, there are four memories) with the ELF file
+- Reset and start all CPUs
+- Close the TCP connection
 
-::
+If you switch back to the first console where you started the simulation you should see something like this:
 
-   Open SoC Debug Daemon
-   Backend: tcp
-   System ID: 0001
-   22 debug modules found:
-    [0]: HOST
-      version: 0000
-    [1]: SCM
-      version: 0000
-    [2]: MAM
-      version: 0000
-      data width: 32, address width: 32
-      number of regions: 1
-        [0] base address: 0x0000000000000000, memory size: 33554432 Bytes
-    [3]: STM
-      version: 0000
-      xlen: 32
-    [4]: CTM
-      version: 0000
-      addr_width: 32
-      data_width: 32
-    [5]: STM
-      version: 0000
-      xlen: 32
-    [6]: CTM
-      version: 0000
-      addr_width: 32
-      data_width: 32
-    [7]: MAM
-      version: 0000
-      data width: 32, address width: 32
-      number of regions: 1
-        [0] base address: 0x0000000000000000, memory size: 33554432 Bytes
-    [8]: STM
-      version: 0000
-      xlen: 32
-    [9]: CTM
-      version: 0000
-      addr_width: 32
-      data_width: 32
-    [10]: STM
-      version: 0000
-      xlen: 32
-    [11]: CTM
-      version: 0000
-      addr_width: 32
-      data_width: 32
-   ... (we've skipped some output here) ...
-   Wait for connection
+.. code:: none
 
-What you see is the output of the *debug system enumeration*.
-Internally, the debug system consists of many modules.
-When first started, ``opensocdebugd`` first asks the SoC hardware for all available modules and prints them out.
-Without going into too much details, the most important ones are the following ones.
+   $> $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug
+   Glip TCP DPI listening on port 23000 and 23001
+   [                  24, 0] Software reset
+   [                  24, 1] Software reset
+   [                  24, 2] Software reset
+   [                  24, 3] Software reset
+   Client connected
+   Disconnected
+   [             1035016, 0] Terminated at address 0x0000ee38 (status:          0)
+   [             1035016, 1] Terminated at address 0x0000ee38 (status:          0)
+   [             1035016, 2] Terminated at address 0x0000ee38 (status:          0)
+   [             1035016, 3] Terminated at address 0x0000ee38 (status:          0)
+   - ../src/optimsoc_trace_monitor_trace_monitor_0/verilog/trace_monitor.sv:94: Verilog $finish
+   - ../src/optimsoc_trace_monitor_trace_monitor_0/verilog/trace_monitor.sv:94: Verilog $finish
+   - ../src/optimsoc_trace_monitor_trace_monitor_0/verilog/trace_monitor.sv:94: Second verilog $finish, exiting
 
-- The Memory Access Module (MAM) allows us to write and read memories inside the SoC from the host.
-  We'll make use of this in a bit to load our software into the SoC.
-- The System Trace Module (STM) is mainly responsible to transmit the output of all ``printf()`` calls to the host PC.
-- The Core Trace Module (CTM) observes the software execution on the processor.
-  We use it mainly to generate a function trace, i.e. a list of all software functions which have been called.
+Just like in the previous examples you can see the output of the program runs as captured by the simulation software in the files ``stdout.NNN`` in the directory where you started the simulation.
 
-Why is there not just one of each modules?
-We're running a system with four tiles, each with two CPU cores.
-There are so many modules, because some of the debug modules are part of a tile, and some are attached to each CPU core.
-So this explains why there are four MAM modules, and eight CTM and STM modules each.
+Reading the ``stdout`` files works great as long as OpTiMSoC runs in simulation -- but how can you access the program's output when it runs on an FPGA?
+The answer is called "system trace", and you'll learn more about that in the next section.
 
-Let's go back to our terminals.
-Up to now we have two terminals open, let's open a third one.
-In here, we start ``osd-cli``, a command line application that allows you to interact with the SoC hardware.
+System Traces
+-------------
+System traces (sometimes also called instrumentation traces) give software developers a tool to instruct their software running on OpTiMSoC to send information into a "system trace log".
+By default, all calls to ``printf()`` result in an entry in the system trace.
+(See the discussion above for how this works.)
+This system trace log can then be captured on the host and displayed.
+To capture a system trace from the system we'll again use the ``osd-target-run`` tool:
 
 .. code:: sh
 
-   osd-cli
+   osd-target-run -e hello.elf --systrace -vvv
 
-``osd-cli`` supports many commands, and the ``help`` command is probably a good starting point.
-
-.. highlight:: none
-
-::
-
-   osd> help
-   Available commands:
-     help        Print this help
-     <cmd> help  Print help for command
-     quit        Exit the command line
-     reset       Reset the system
-     start       Start the processor cores
-     mem         Access memory
-     ctm         Configure core trace module
-     stm         Configure software trace module
-     terminal    Start terminal for device emulation module
-     wait        Wait for given seconds
-   osd> mem help
-   Available subcommands:
-     help        Print this help
-     test        Run memory tests
-     loadelf     Load an elf to memory
-
-Now let's run our hello world software on the SoC.
-
-- First, we reset and then halt all CPUs.
-  This gives us a "silent" system, i.e. nothing is running and we can modify the memory without being disturbed by the CPUs.
-  ::
-
-     osd> reset -halt
-
-- Next, we load the ELF file of the hello world program into the memory of compute tile 0.
-  To do this, we tell the MAM module with ID 2 to write the file into the memory. (See the output of opensocdebugd for all IDs that are available.)
-  After writing, the ``-verify`` option instructs ``osd-cli`` to read back all memory content and check if the read data is equal to the written data.
-  This step is not strictly necessary, but is helpful to check that the memory write was successful indeed.
-
-  ::
-    
-     osd> mem loadelf hello.elf 2 -verify
-     Verify: 1
-     Load program header 0
-     Load program header 1
-     Verify program header 0
-     Verify program header 1
+Just like before, ``osd-target-run`` initializes the memories and starts the CPUs.
+It then starts recording system traces until you press CTRL-C to end the trace collection.
+(Yes, you need to abort the program by pressing CTRL-C! It will not terminate itself.)
+After roughly 20 seconds, you can press CTRL-C to stop collecting traces.
+Now you can analyze the collected traces in the same directory you ran ``osd-target-run`` in.
+The files ``systrace.print.NNNN.log`` contain the ``printf()`` output of the program.
+These files are generated by analyzing the raw system log events, which are recorded in ``systrace.NNNN.log``.
 
 
-- Before we start the system, we want to observe what's going on when the software is executed.
-  We therefore instruct the STM and CTM modules of core 0 to write log files.
-  To the CTM we also pass the ELF file, i.e. the program that is executed.
-  The CTM can use the information inside this file to record not only the program counter that is executed, but also tell you which function (as written inside the C code) a program counter refers to.
-  This makes the CTM logs much nicer to read (at least for humans).
+Core Function Traces
+--------------------
 
-  ::
-	  
-     osd> stm log stm000.log 3
-     osd> ctm log ctm000.log 4 hello.elf
+If you need more insight into a program than system traces provide, or want to get insight into a program which isn't instrumented to generate system traces, core function traces come to help.
+These traces are recording every call of a function and every return from it, resulting in traces which allow you to understand which parts of your program have been called.
 
-- Finally, we are ready to start the system, i.e. lower the reset signal.
-
-  ::
-	  
-     osd> start
-     osd> [STM 003] 004616b5 Hello World! Core 0 of 2 in tile 0, my absolute core id is: 0
-     [STM 003] 0046266e There are 4 compute tiles:
-     [STM 003] 00463792  rank 0 is tile 0
-     [STM 003] 0046484d  rank 1 is tile 1
-     [STM 003] 00465918  rank 2 is tile 2
-     [STM 003] 004669ea  rank 3 is tile 3
-
-  Since we have written our hello world program only to core 0, we only get the ``printf()`` output from this core.
-
-- Now that the software has finished, we can close the connection by typing
-
-  ::
-
-     osd> quit
-
-Remember that we instructed the STM and CTM modules to write log files?
-Have a look at the files ``stm000.log`` and ``ctm000.log`` to find all STM and CTM messages that were issued by the system.
-If possible the modules already assemble them back together to be more useful to the human user.
-For example, the STM creates the ``printf()`` output out of the trace messages (and you see both inside the file).
-The CTM uses the passed ELF file to resolve the function names that you see in the log file.
-
-Automating System Interaction
-=============================
-
-In the previous section, you have manually typed commands into ``osd-cli`` to interact with the debug system.
-We understand that this is something you don't want to do all day.
-To make things easier, our debug components come with a Python interface that you can use to automate all the steps.
-To make it even more easy, you can use an example script that does exactly what you just typed manually: load all memories of a system and start the CPUs.
-The script then waits for ten seconds before it closes the connection to the ``opensocdebugd``.
-(If your application runs longer than that adjust the script accordingly.)
+To obtain a core trace use the following command:
 
 .. code:: sh
 
-   # only Python 2 is supported at the moment
-   python2 $OPTIMSOC/host/share/opensocdebug/examples/runelf.py hello.elf
+   osd-target-run -e hello.elf --coretrace -vvv
 
-This ends our experiments with SoCs running as Verilator simulation.
-In the next sections, we'll move to an FPGA board and see how we can run software on that.
+Just like in the previous example, you need to stop the trace collection by pressing CTRL-C.
+You can then view the traces in the ``coretrace.NNNN.log`` files.
+
+This completes our short trip through the debug system.
+Knowing about it will be of great help when we move on to the next step: running OpTiMSoC on an FPGA.
+
 
 Our SoC on an FPGA
 ==================
@@ -439,7 +330,7 @@ It's not that expensive (of course, depending on your financial situation) and w
 If you need help obtaining one, let us know - maybe we can help out in some way.
 
 Additionally you need to download and install the Xilinx Vivado tool (the cost-free WebPack license is sufficient).
-We used the 2016.2 version when preparing this tutorial; we strongly recommend you also use this exact version.
+We used the |requirement_versions.vivado| version when preparing this tutorial; we strongly recommend you also use this exact version.
 
 Once you have obtained the FPGA board, connect it to the PC on the "PROG UART" USB connection.
 You don't need to connect any additional power supply.
@@ -491,34 +382,26 @@ Usually the easiest way is to do a
 If you have only the Nexys 4 DDR board connected, you'll see only one device, e.g. ``/dev/ttyUSB0``.
 Make note of this device name, and replace it accordingly in all the following steps in this tutorial.
 
-Just as before, we'll need more than one terminal window.
-Open a first terminal and start ``opensocdebugd`` (remember to replace the device with your device name).
-
-.. code:: sh
-
-   opensocdebugd uart device=/dev/ttyUSB1 speed=12000000
-
-The output you see should be almost identical to what you've seen in Section~\ref{sec:tutorials:debug_system_intro}, with one change:
-the system you're now using has just one CPU per compute tile, so only four cores in total.
-As consequence, you see less CTM and STM modules.
-
 Running Software
 ----------------
 
 Now that you've connected to the system, can you run software on it?
-Yes, you already know how!
-Open a new terminal window, and use ``osd-cli`` or the Python script to flash the memories with an ELF file and run the system.
+Just like in the previous chapter we'll use the ``osd-target-run`` tool, this time passing it some paramters to connect to the FPGA instead to a simulation.
+
+.. code:: sh
+
+   osd-target-run -e hello.elf -b uart -o device=/dev/ttyUSB1,speed=12000000 --coretrace --systrace --verify -vvv
+   # let it run for a couple of seconds, then press CTRL-C to stop collecting traces
 
 When you run software, you'll notice two things: first, the output is the same as you've already seen when running the system in simulation.
 But: it's much faster. The FPGA runs at 50~MHz, which is still quite slow compared to current desktop processors, but still much faster than the simulation.
 
-This concludes our tutorial session, and hands over to you:
-modify the software as you wish, program it again, analyze the simulations and explore your first multicore SoC.
+Before we end, let's discuss one more topic which helps you in writing good software for OpTiMSoC: message passing.
 
 Make Message Passing More Simple
 ================================
 
-So far you have used the low level message passing buffers to exchange data between the tiles.
+So far the example programs you have seen used the low level message passing buffers to exchange data between the tiles.
 You may remember that exchanging this data involved forming and parsing messages including the low level network-on-chip details.
 
 To abstract from these low level details and to encapsulate certain extensions OpTiMSoC comes with the message passing library (``libmp``).
@@ -626,3 +509,7 @@ More important is the output of tile 0 in ``stdout.000``:
    [               78792, 0] Received from 2
    [              179834, 0] Received from 3
 
+
+
+This concludes our tutorial session, and hands over to you:
+modify the software as you wish, program it again, analyze the simulations and explore your first multicore SoC.

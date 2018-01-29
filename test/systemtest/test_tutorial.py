@@ -54,19 +54,6 @@ class TestTutorial:
 
         p_sim.terminate()
 
-    @pytest.fixture
-    def opensocdebugd_tcp(self, tmpdir):
-        cmd_opensocdebugd = ['opensocdebugd', 'tcp']
-        p_opensocdebugd = util.Process(cmd_opensocdebugd, logdir=str(tmpdir),
-                                       cwd=str(tmpdir),
-                                       startup_done_expect="Wait for connection",
-                                       startup_timeout=30)
-        p_opensocdebugd.run()
-
-        yield p_opensocdebugd
-
-        p_opensocdebugd.terminate()
-
     def test_baremetal_hello(self, baremetal_apps_hello):
         """
         Ensure that all files which are mentioned to result from compiling the
@@ -175,125 +162,141 @@ class TestTutorial:
             assert util.matches_golden_reference(str(tmpdir), f,
                                                  filter_func=util.filter_timestamps)
 
-    def test_tutorial5(self, tmpdir, baremetal_apps_hello,
-                       sim_system_2x2_cccc_sim_dualcore_debug,
-                       opensocdebugd_tcp):
+    def test_tutorial5_hello_notrace(self, tmpdir, baremetal_apps_hello,
+                                     sim_system_2x2_cccc_sim_dualcore_debug):
         """
-        Tutorial 5: Verilator with debug system and interactive osd-cli
-        """
-
-        cmd_osdcli = 'osd-cli'
-        p_osdcli = util.Process(cmd_osdcli, logdir=str(tmpdir),
-                                cwd=str(tmpdir),
-                                startup_done_expect="osd>",
-                                startup_timeout=10)
-        p_osdcli.run()
-
-        assert p_osdcli.expect(stdin_data="help\n",
-                               pattern="Available commands:")
-        time.sleep(0.5)  # XXX: match end of the output to avoid sleep
-
-        assert p_osdcli.expect(stdin_data="mem help\n",
-                               pattern="Available subcommands:")
-        time.sleep(0.5)  # XXX: match end of the output to avoid sleep
-
-        assert p_osdcli.expect(stdin_data="reset -halt\n", pattern="osd>")
-
-        hello_elf = str(baremetal_apps_hello.join('hello.elf'))
-        assert p_osdcli.expect(stdin_data="mem loadelf {} 2 -verify\n".format(hello_elf),
-                               pattern="Verify program header 1")
-
-        assert p_osdcli.expect(stdin_data="stm log stm000.log 3\n",
-                               pattern="osd>")
-
-        assert p_osdcli.expect(stdin_data="ctm log ctm000.log 4 {}\n".format(hello_elf),
-                               pattern="osd>")
-
-        assert p_osdcli.expect(stdin_data="start\n",
-                               pattern=re.compile(r"\[STM 003\] [a-f0-9]{8}  rank 3 is tile 3"),
-                               timeout=60)
-
-        assert p_osdcli.expect(stdin_data="quit\n")
-
-        # wait up to 2 seconds for osd-cli to terminate, then kill
-        try:
-            p_osdcli.proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            p_osdcli.proc.kill()
-
-        # XXX: also check the contents of the STM/CTM logs
-        assert tmpdir.join('stm000.log').isfile()
-        assert tmpdir.join('ctm000.log').isfile()
-
-        return
-
-    def test_tutorial6_hello(self, tmpdir, baremetal_apps_hello,
-                             sim_system_2x2_cccc_sim_dualcore_debug,
-                             opensocdebugd_tcp):
-        """
-        Tutorial 6: Same as tutorial 5, but using the python interface of
-        osd-cli instead of manually typing commands
+        Tutorial 5: use osd-target-run and system with debug system to run
+        software (no trace enabled)
         """
 
         hello_elf = str(baremetal_apps_hello.join('hello.elf'))
-        cmd_runelf = ['python2',
-                      '{}/host/share/opensocdebug/examples/runelf.py'.format(os.environ['OPTIMSOC']),
-                      hello_elf]
-        p_runelf = util.Process(cmd_runelf, logdir=str(tmpdir),
-                                cwd=str(tmpdir))
-        p_runelf.run()
+        cmd_targetrun = ['osd-target-run',
+                         '-e', hello_elf,
+                         '-vvv']
+        p_targetrun = util.Process(cmd_targetrun, logdir=str(tmpdir),
+                                   cwd=str(tmpdir))
+        p_targetrun.run()
 
-        logging.getLogger(__name__).info("Waiting 10 minutes for process to finish")
-        p_runelf.proc.wait(timeout=600)
-        assert p_runelf.proc.returncode == 0
+        logging.getLogger(__name__).info("Program should terminate itself; give it up to 5 minutes")
+        p_targetrun.proc.wait(timeout=300)
+        assert p_targetrun.proc.returncode == 0
+
+        logging.getLogger(__name__).info("Now wait 60 seconds until the program has finished execution")
+        time.sleep(60)
 
         try:
-            p_runelf.terminate()
+            p_targetrun.terminate()
         except ProcessLookupError:
             # process is already dead
             pass
 
-        # check all output files
+        # check the simulation-generated stdout files
         for i in range(0, 7):
             f = "stdout.{:03d}".format(i)
             assert tmpdir.join(f).isfile()
             assert util.matches_golden_reference(str(tmpdir), f,
                                                  filter_func=util.filter_timestamps)
 
-    def test_tutorial6_hello_mpsimple(self, tmpdir, baremetal_apps_hello_mpsimple,
-                                      sim_system_2x2_cccc_sim_dualcore_debug,
-                                      opensocdebugd_tcp):
+    def test_tutorial5_hello_systrace(self, tmpdir, baremetal_apps_hello,
+                                      sim_system_2x2_cccc_sim_dualcore_debug):
         """
-        Variation of tutorial 6: Run the same steps as tutorial 6, just this time
-        use hello_mpsimple instead of hello.
+        Tutorial 5: use osd-target-run and system with debug system to run
+        software (with system trace)
         """
 
-        hello_mpsimple_elf = str(baremetal_apps_hello_mpsimple.join('hello_mpsimple.elf'))
-        cmd_runelf = ['python2',
-                      '{}/host/share/opensocdebug/examples/runelf.py'.format(os.environ['OPTIMSOC']),
-                      hello_mpsimple_elf]
-        p_runelf = util.Process(cmd_runelf, logdir=str(tmpdir),
-                                cwd=str(tmpdir))
-        p_runelf.run()
+        startup_done_string = '[INFO]  osd-target-run: System is now running. Press CTRL-C to end tracing.'
+        hello_elf = str(baremetal_apps_hello.join('hello.elf'))
+        cmd_targetrun = ['osd-target-run',
+                         '-e', hello_elf,
+                         '--systrace',
+                         '-vvv']
+        p_targetrun = util.Process(cmd_targetrun, logdir=str(tmpdir),
+                                   cwd=str(tmpdir),
+                                   startup_done_expect=startup_done_string,
+                                   startup_timeout=300)
+        p_targetrun.run()
 
-        logging.getLogger(__name__).info("Waiting 10 minutes for process to finish")
-        p_runelf.proc.wait(timeout=600)
-        assert p_runelf.proc.returncode == 0
+        logging.getLogger(__name__).info("Record traces for 1 minute")
+        time.sleep(60)
+        p_targetrun.send_ctrl_c()
+
+        # Give the process some time to clean up
+        p_targetrun.proc.wait(timeout=30)
+        assert p_targetrun.proc.returncode == 0
 
         try:
-            p_runelf.terminate()
+            p_targetrun.terminate()
         except ProcessLookupError:
             # process is already dead
             pass
 
-        # check all output files
-        for i in range(0, 7):
-            f = "stdout.{:03d}".format(i)
+        # Ensure that the STM logs are written
+        stmlogs = [ 'systrace.0002.log', 'systrace.0004.log',
+                    'systrace.0007.log', 'systrace.0009.log',
+                    'systrace.0012.log', 'systrace.0014.log',
+                    'systrace.0017.log', 'systrace.0019.log']
+        for f in stmlogs:
+            # STM log file exists
             assert tmpdir.join(f).isfile()
-            assert util.matches_golden_reference(str(tmpdir), f,
-                                                 filter_func=util.filter_timestamps)
 
-    def test_tutorial8_hello_mp(self, baremetal_apps_hello_mp, tmpdir):
+            # STM log >= 0 bytes
+            # Currently some of the STM logs don't contain a full trace due to
+            # overload in the debug system causing dropped packets. Checking for
+            # such partial logs cannot be done reliably.
+            f_stat = os.stat(str(tmpdir.join(f)))
+            assert f_stat.st_size > 0
+
+    def test_tutorial5_hello_coretrace(self, tmpdir, baremetal_apps_hello,
+                                       sim_system_2x2_cccc_sim_dualcore_debug):
+        """
+        Tutorial 5: use osd-target-run and system with debug system to run
+        software (with core trace)
+        """
+
+        startup_done_string = '[INFO]  osd-target-run: System is now running. Press CTRL-C to end tracing.'
+        hello_elf = str(baremetal_apps_hello.join('hello.elf'))
+        cmd_targetrun = ['osd-target-run',
+                         '-e', hello_elf,
+                         '--coretrace',
+                         '-vvv']
+        p_targetrun = util.Process(cmd_targetrun, logdir=str(tmpdir),
+                                   cwd=str(tmpdir),
+                                   startup_done_expect=startup_done_string,
+                                   startup_timeout=300)
+        p_targetrun.run()
+
+        logging.getLogger(__name__).info("Record traces for 1 minute")
+        time.sleep(60)
+        p_targetrun.send_ctrl_c()
+
+        # Give the process some time to clean up
+        p_targetrun.proc.wait(timeout=30)
+        assert p_targetrun.proc.returncode == 0
+
+        try:
+            p_targetrun.terminate()
+        except ProcessLookupError:
+            # process is already dead
+            pass
+
+        # Ensure that the CTM logs are written
+        ctmlogs = [ 'coretrace.0003.log', 'coretrace.0005.log',
+                    'coretrace.0008.log', 'coretrace.0010.log',
+                    'coretrace.0013.log', 'coretrace.0015.log',
+                    'coretrace.0018.log', 'coretrace.0020.log']
+        for f in ctmlogs:
+            # CTM log file exists
+            assert tmpdir.join(f).isfile()
+
+            # CTM log >= 0 bytes
+            # Currently some of the CTM logs don't contain a full trace due to
+            # overload in the debug system causing dropped packets. Checking for
+            # such partial logs cannot be done reliably.
+            f_stat = os.stat(str(tmpdir.join(f)))
+            assert f_stat.st_size > 0
+
+
+    def test_tutorial6_hello_mp(self, baremetal_apps_hello_mp, tmpdir):
         """
         Tutorial 8: Run hello_mp world application on 2x2 CCCC in Verilator
         Memory loading is done through Verilator meminit.
@@ -309,7 +312,7 @@ class TestTutorial:
             assert tmpdir.join(f).isfile()
             assert util.matches_golden_reference(str(tmpdir), f,
                                                  filter_func=util.filter_timestamps)
-        
+
 class TestTutorialFpga:
     """
     Test all FPGA-based tutorial steps in the User Guide
@@ -334,57 +337,56 @@ class TestTutorialFpga:
 
         time.sleep(2)
 
-        # connect to board with opensocdebugd
+        # run hello.elf on target board
         nexys4ddr_device = localconf['boards']['nexys4ddr']['device']
         logging.getLogger(__name__).info("Using Nexys 4 board connected to " + nexys4ddr_device)
-        cmd_opensocdebugd = ['opensocdebugd', 'uart',
-                             'device=' + nexys4ddr_device,
-                             'speed=12000000' ]
-        p_opensocdebugd = util.Process(cmd_opensocdebugd, logdir=str(tmpdir),
-                                       cwd=str(tmpdir),
-                                       startup_done_expect="Wait for connection",
-                                       startup_timeout=30)
-        p_opensocdebugd.run()
+        glip_backend = 'uart'
+        glip_backend_options = 'device=%s,speed=12000000' % nexys4ddr_device
 
-        # run hello world on FPGA
         hello_elf = str(baremetal_apps_hello.join('hello.elf'))
-        cmd_runelf = ['python2',
-                      '{}/host/share/opensocdebug/examples/runelf.py'.format(os.environ['OPTIMSOC']),
-                      hello_elf]
-        p_runelf = util.Process(cmd_runelf, logdir=str(tmpdir), cwd=str(tmpdir))
-        p_runelf.run()
+        cmd_targetrun = ['osd-target-run',
+                         '-e', hello_elf,
+                         '-b', glip_backend,
+                         '-o', glip_backend_options,
+                         '--coretrace',
+                         '--systrace',
+                         '--verify',
+                         '-vvv']
 
-        logging.getLogger(__name__).info("Waiting 10 minutes for process to finish")
-        p_runelf.proc.wait(timeout=600)
-        assert p_runelf.proc.returncode == 0
+        startup_done_string = '[INFO]  osd-target-run: System is now running. Press CTRL-C to end tracing.'
+
+        p_targetrun = util.Process(cmd_targetrun, logdir=str(tmpdir), 
+                                   cwd=str(tmpdir),
+                                   startup_done_expect=startup_done_string,
+                                   startup_timeout=300)
+        p_targetrun.run()
+
+        logging.getLogger(__name__).info("Record traces for 30 seconds")
+        time.sleep(30)
+        p_targetrun.send_ctrl_c()
+
+        # Give the process some time to clean up
+        p_targetrun.proc.wait(timeout=30)
+        assert p_targetrun.proc.returncode == 0
 
         try:
-            p_runelf.terminate()
+            p_targetrun.terminate()
         except ProcessLookupError:
             # process is already dead
             pass
 
-        p_opensocdebugd.terminate()
-
-        # Ensure that all cores execute some code, as shown in the CTM logs
-        # We currently don't check for the exact software execution, but the
-        # output of the program as shown in the STM logs (below)
-        ctmlogs = [ 'ctm004.log', 'ctm007.log', 'ctm010.log', 'ctm013.log' ]
-        for f in ctmlogs:
-            # CTM log file exists
-            assert tmpdir.join(f).isfile()
-
-            # CTM log >= 0 bytes
-            f_stat = os.stat(str(tmpdir.join(f)))
-            assert f_stat.st_size > 0
-
-
-        # Ensure that the STMs log the expected printf() messages
-        stmlogs = [ 'stm003.log', 'stm006.log', 'stm009.log', 'stm012.log' ]
+        # Ensure that the STM logs are written
+        stmlogs = [ 'systrace.0002.log', 'systrace.0005.log',
+                    'systrace.0008.log', 'systrace.0011.log' ]
         for f in stmlogs:
-            # STM log file exists
             assert tmpdir.join(f).isfile()
-
-            # Check printf() program output in STM logs
             assert util.matches_golden_reference(str(tmpdir), f,
-                                                 filter_func=util.filter_stm_printf)
+                                                 filter_func=util.filter_osd_trace_timestamps)
+
+        # Ensure that the CTM logs are written
+        ctmlogs = [ 'coretrace.0003.log', 'coretrace.0006.log',
+                    'coretrace.0009.log', 'coretrace.0012.log' ]
+        for f in ctmlogs:
+            assert tmpdir.join(f).isfile()
+            assert util.matches_golden_reference(str(tmpdir), f,
+                                                 filter_func=util.filter_osd_trace_timestamps)

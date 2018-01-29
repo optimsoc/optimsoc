@@ -91,7 +91,10 @@ module compute_tile_dm_nexys4
                       NA_DMA_ENTRIES: 4,
                       USE_DEBUG: 1,
                       DEBUG_STM: 1,
-                      DEBUG_CTM: 1
+                      DEBUG_CTM: 1,
+                      DEBUG_SUBNET_BITS: 6,
+                      DEBUG_LOCAL_SUBNET: 0,
+                      DEBUG_ROUTER_BUFFER_SIZE: 4
                       };
 
    localparam config_t CONFIG = derive_config(BASE_CONFIG);
@@ -180,8 +183,12 @@ module compute_tile_dm_nexys4
 
    debug_interface
       #(
-         .SYSTEMID    (1),
-         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS)
+         .SYSTEM_VENDOR_ID (2),
+         .SYSTEM_DEVICE_ID (1),
+         .NUM_MODULES      (CONFIG.DEBUG_NUM_MODS),
+         .SUBNET_BITS      (CONFIG.DEBUG_SUBNET_BITS),
+         .LOCAL_SUBNET     (CONFIG.DEBUG_LOCAL_SUBNET),
+         .DEBUG_ROUTER_BUFFER_SIZE (CONFIG.DEBUG_ROUTER_BUFFER_SIZE)
       )
       u_debuginterface
         (
@@ -200,7 +207,7 @@ module compute_tile_dm_nexys4
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
       #(.CONFIG(CONFIG),
-        .DEBUG_BASEID(2)
+        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 1)
       )
       u_compute_tile
         (

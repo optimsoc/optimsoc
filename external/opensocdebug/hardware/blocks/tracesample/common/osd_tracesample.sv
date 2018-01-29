@@ -28,20 +28,20 @@ module osd_tracesample
     output             fifo_valid,
     input              fifo_ready
     );
-   
-   reg [9:0]          ov_counter;
+
+   reg [15:0]          ov_counter;
 
    logic               passthrough;
    assign passthrough = (ov_counter == 0);
-   
-   assign fifo_data[9:0] = passthrough ? sample_data[9:0] : ov_counter;
+
+   assign fifo_data[15:0] = passthrough ? sample_data[15:0] : ov_counter;
    generate
-      if (WIDTH > 10)
-        assign fifo_data[WIDTH-1:10] = sample_data[WIDTH-1:10];
+      if (WIDTH > 16)
+        assign fifo_data[WIDTH-1:16] = sample_data[WIDTH-1:16];
    endgenerate
-   
+
    assign fifo_overflow = ~passthrough;
-   assign fifo_valid = passthrough ? sample_valid : 1;
+   assign fifo_valid = passthrough ? sample_valid : 1'b1;
 
    logic               ov_increment, ov_saturate, ov_complete, ov_again;
 
@@ -49,7 +49,7 @@ module osd_tracesample
    assign ov_saturate  = &ov_counter;
    assign ov_complete  = fifo_overflow & fifo_ready & !sample_valid;
    assign ov_again     = fifo_overflow & fifo_ready & sample_valid;
-   
+
    always_ff @(posedge clk) begin
      if (rst | ov_complete)
        ov_counter <= 0;
@@ -60,5 +60,4 @@ module osd_tracesample
    end
 
 endmodule // osd_tracesample
-         
-      
+

@@ -35,9 +35,9 @@ module system_2x2_cccc_dm(
    input clk, rst,
 
    glip_channel c_glip_in,
-   glip_channel c_glip_out
+   glip_channel c_glip_out,
 
-   , output [4*32-1:0] wb_ext_adr_i,
+   output [4*32-1:0] wb_ext_adr_i,
    output [4*1-1:0]  wb_ext_cyc_i,
    output [4*32-1:0] wb_ext_dat_i,
    output [4*4-1:0]  wb_ext_sel_i,
@@ -63,8 +63,13 @@ module system_2x2_cccc_dm(
 
    debug_interface
       #(
-         .SYSTEMID    (1),
-         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS)
+         .SYSTEM_VENDOR_ID (2),
+         .SYSTEM_DEVICE_ID (2),
+         .NUM_MODULES (CONFIG.DEBUG_NUM_MODS),
+         .MAX_PKT_LEN(16),
+         .SUBNET_BITS(CONFIG.DEBUG_SUBNET_BITS),
+         .LOCAL_SUBNET(CONFIG.DEBUG_LOCAL_SUBNET),
+         .DEBUG_ROUTER_BUFFER_SIZE(CONFIG.DEBUG_ROUTER_BUFFER_SIZE)
       )
       u_debuginterface
         (
@@ -125,7 +130,9 @@ module system_2x2_cccc_dm(
             #(.CONFIG (CONFIG),
               .ID(i),
               .COREBASE(i*CONFIG.CORES_PER_TILE),
-              .DEBUG_BASEID(2+i*CONFIG.DEBUG_MODS_PER_TILE))
+              .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS))
+                            + 1 + (i*CONFIG.DEBUG_MODS_PER_TILE)))
+
          u_ct(.clk                        (clk),
               .rst_cpu                    (rst_cpu),
               .rst_sys                    (rst_sys),
