@@ -3,11 +3,19 @@
 # Install development build dependencies for different Linux distributions
 #
 
-case $(lsb_release -is) in
-  Ubuntu)
+[ -f /etc/os-release ] || (echo "/etc/os-release doesn't exist."; exit 1)
+. /etc/os-release
+
+SUDO_CMD=""
+if [ $(id -u) -ne 0 ]; then
+  SUDO_CMD="sudo "
+fi
+
+case "$ID" in
+  ubuntu)
     # Ubuntu seems to have a rather strange and inconsistent naming for the
     # ZeroMQ packages ...
-    sudo apt-get install \
+    $SUDO_CMD apt-get install -y \
       check \
       doxygen \
       python3 python3-venv python3-pip \
@@ -20,11 +28,11 @@ case $(lsb_release -is) in
       libczmq-dbg \
       xsltproc \
       libelf1 libelf-dev zlib1g zlib1g-dev
-    sudo pip3 install pytest
+    $SUDO_CMD pip3 install pytest
     ;;
 
-  *SUSE*)
-    sudo zypper install \
+  *suse*)
+    $SUDO_CMD zypper install \
       libcheck0 check-devel libcheck0-debuginfo \
       doxygen \
       python3 python3-pip \
@@ -34,7 +42,7 @@ case $(lsb_release -is) in
       czmq-devel czmq-debuginfo \
       xsltproc \
       libelf1 libelf-devel
-    sudo pip3 install pytest
+    $SUDO_CMD pip3 install pytest
     ;;
 
   *)
