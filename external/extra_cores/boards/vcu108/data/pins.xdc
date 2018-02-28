@@ -568,8 +568,8 @@ set_property -quiet -dict PACKAGE_PIN BD20     [get_ports -quiet { "bpi_flash_a2
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "bpi_flash_a23" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L5N_T0U_N9_AD14N_A23_65
 #set_property -quiet -dict PACKAGE_PIN BE18     [get_ports -quiet { "8n7164" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L4P_T0U_N6_DBC_AD7P_A24_65
 #set_property -quiet -dict IOSTANDARD  LVCMOSxx [get_ports -quiet { "8n7164" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L4P_T0U_N6_DBC_AD7P_A24_65
-set_property -quiet -dict PACKAGE_PIN BE17     [get_ports -quiet { "sm_fan_tach" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L4N_T0U_N7_DBC_AD7N_A25_65
-set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "sm_fan_tach" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L4N_T0U_N7_DBC_AD7N_A25_65
+set_property PACKAGE_PIN BE17     [get_ports { "sm_fan_tach" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L4N_T0U_N7_DBC_AD7N_A25_65
+set_property IOSTANDARD  LVCMOS18 [get_ports { "sm_fan_tach" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L4N_T0U_N7_DBC_AD7N_A25_65
 #set_property -quiet -dict PACKAGE_PIN BE19     [get_ports -quiet { "8n7178" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L3P_T0L_N4_AD15P_A26_65
 #set_property -quiet -dict IOSTANDARD  LVCMOSxx [get_ports -quiet { "8n7178" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L3P_T0L_N4_AD15P_A26_65
 #set_property -quiet -dict PACKAGE_PIN BF19     [get_ports -quiet { "8n7181" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L3N_T0L_N5_AD15N_A27_65
@@ -578,8 +578,8 @@ set_property -quiet -dict PACKAGE_PIN BF17     [get_ports -quiet { "bpi_flash_oe
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "bpi_flash_oe_b" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L2P_T0L_N2_FOE_B_65
 set_property -quiet -dict PACKAGE_PIN BF16     [get_ports -quiet { "bpi_flash_fwe_b" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L2N_T0L_N3_FWE_FCS2_B_65
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "bpi_flash_fwe_b" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L2N_T0L_N3_FWE_FCS2_B_65
-set_property -quiet -dict PACKAGE_PIN BF21     [get_ports -quiet { "sm_fan_pwm" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_T0U_N12_VRP_A28_65
-set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "sm_fan_pwm" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_T0U_N12_VRP_A28_65
+set_property PACKAGE_PIN BF21     [get_ports { "sm_fan_pwm" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_T0U_N12_VRP_A28_65
+set_property IOSTANDARD  LVCMOS18 [get_ports { "sm_fan_pwm" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_T0U_N12_VRP_A28_65
 set_property -quiet -dict PACKAGE_PIN BE20     [get_ports -quiet { "bpi_flash_a24" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L1P_T0L_N0_DBC_RS0_65
 set_property -quiet -dict IOSTANDARD  LVCMOS18 [get_ports -quiet { "bpi_flash_a24" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L1P_T0L_N0_DBC_RS0_65
 set_property -quiet -dict PACKAGE_PIN BF20     [get_ports -quiet { "bpi_flash_a25" }] ;# Bank  65 VCCO - VCC1V8_FPGA - IO_L1N_T0L_N1_DBC_RS1_65

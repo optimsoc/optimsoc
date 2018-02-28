@@ -2,6 +2,8 @@ CAPI=1
 [main]
 name = wallento:boards:vcu108
 depend =
+  vcu108lib:misc:fancontrol
+  vcu108lib:misc:system_management_wiz
   wallento:boards:vcu108-ddr
   wallento:boards:vcu108-axi_clk_converter
 
