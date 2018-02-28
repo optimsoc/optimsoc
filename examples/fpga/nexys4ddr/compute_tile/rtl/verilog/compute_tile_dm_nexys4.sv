@@ -183,11 +183,11 @@ module compute_tile_dm_nexys4
 
    debug_interface
       #(
-         .SYSTEM_VENDOR_ID (2),
-         .SYSTEM_DEVICE_ID (1),
-         .NUM_MODULES      (CONFIG.DEBUG_NUM_MODS),
-         .SUBNET_BITS      (CONFIG.DEBUG_SUBNET_BITS),
-         .LOCAL_SUBNET     (CONFIG.DEBUG_LOCAL_SUBNET),
+         .SYSTEM_VENDOR_ID         (2),
+         .SYSTEM_DEVICE_ID         (1),
+         .NUM_MODULES              (CONFIG.DEBUG_NUM_MODS),
+         .SUBNET_BITS              (CONFIG.DEBUG_SUBNET_BITS),
+         .LOCAL_SUBNET             (CONFIG.DEBUG_LOCAL_SUBNET),
          .DEBUG_ROUTER_BUFFER_SIZE (CONFIG.DEBUG_ROUTER_BUFFER_SIZE)
       )
       u_debuginterface

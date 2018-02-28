@@ -65,6 +65,8 @@ endif
 
 
 build:
+	@echo Running OpTiMSoC build. If you get errors for missing dependencies run
+	@echo "make install-build-deps" first.
 	tools/build.py $(BUILD_ARGS) -o $(OBJDIR)
 
 install:
@@ -104,5 +106,12 @@ else
 	pytest -s -v test/systemtest/test_tutorial.py
 endif
 
-.PHONY: build test
+install-build-deps:
+ifeq ($(BUILD_DOCS),yes)
+	INSTALL_DOC_DEPS=yes tools/install-build-deps.sh
+else
+	INSTALL_DOC_DEPS=no tools/install-build-deps.sh
+endif
+
+.PHONY: build test install-build-deps
 

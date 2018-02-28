@@ -31,11 +31,12 @@ First, install all required packages from Ubuntu.
 
 .. code:: sh
 
-   sudo apt-get -y install tcl libusb-1.0-0-dev \
-     libboost-dev libelf-dev swig \
-     python3 python3-pip python3-venv libreadline-dev python-dev \
-     curl git build-essential autoconf automake \
-     libtool pkg-config python-cffi libffi-dev python3-packaging python3-yaml
+   # This command should get all required build dependencies
+   ./tools/install-build-deps.sh
+
+   # If you do not plan to build the documentation you can save yourself 
+   # a bit of download time by using
+   INSTALL_DOC_DEPS=no ./tools/install-build-deps.sh
 
    # optional, but highly recommended: a waveform viewer
    sudo apt-get -y install gtkwave
