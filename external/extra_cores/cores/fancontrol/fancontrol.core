@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = vcu108lib:misc:fancontrol
+description = "fan control for VCU108n board"
+
+[fileset rtl_files]
+files =
+  rtl/verilog/fancontrol.v
+file_type = verilogSource
+usage = sim synth
+
