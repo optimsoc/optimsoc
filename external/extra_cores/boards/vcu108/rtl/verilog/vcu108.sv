@@ -127,11 +127,15 @@ module vcu108
    output [NUM_UART-1:0] uart_rx,
    input [NUM_UART-1:0]  uart_tx,
    output [NUM_UART-1:0] uart_cts_n,
-   input [NUM_UART-1:0]  uart_rts_n
+   input [NUM_UART-1:0]  uart_rts_n,
 
 /*   output [23*8-1:0]     gpio_in,
    input [23*8-1:0]      gpio_out,
    input [23*8-1:0]      gpio_oe*/
+
+	// signals for fan control
+	input 				sm_fan_tach,
+	output				sm_fan_pwm
    );
 
    logic        ddr_calib_done;
@@ -445,5 +449,32 @@ module vcu108
          assign uart_cts_n[0] = pmod_uart_rts;
       end
    endgenerate
+
+	// system monitor and fan control
+	wire system_monitor_user_temp_alarm;
+	wire system_monitor_ot;
+	wire system_monitor_temp;
+
+	system_management_wiz u_system_management_wiz (
+      .dclk_in(sys_clk_50),                         // input wire dclk_in
+  	  .reset_in(sys_rst),                        	// input wire reset_in
+      .user_temp_alarm_out(system_monitor_user_temp_alarm),  // output wire user_temp_alarm_out
+      .ot_out(system_monitor_ot),                   // output wire ot_out
+      .channel_out(),                  				// output wire [5 : 0] channel_out
+      .eoc_out(),                          			// output wire eoc_out
+      .alarm_out(),                      			// output wire alarm_out
+      .eos_out(),                          			// output wire eos_out
+      .busy_out()                        			// output wire busy_out
+	);
+
+	fancontrol u_fancontrol (
+	  .clk (sys_clk_50),
+	  .reset_n (sys_rst_n),
+	  .user_temp_alarm_in (system_monitor_user_temp_alarm),
+	  .ot_in (system_monitor_ot),
+	  .temp_in (system_monitor_temp),
+	  .SM_FAN_TACH (sm_fan_tach),
+	  .SM_FAN_PWM (sm_fan_pwm)
+	);
 
 endmodule
