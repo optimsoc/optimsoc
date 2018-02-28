@@ -1,0 +1,8 @@
+CAPI=1
+[main]
+name = vcu108lib:misc:system_management_wiz
+
+[fileset core]
+usage = vivado xsim
+files =
+  ip/system_management_wiz.xci[file_type=xci]
