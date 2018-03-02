@@ -1,0 +1,8 @@
+CAPI=1
+[main]
+name = wallento:boards:vcu108-system_management
+
+[fileset core]
+usage = vivado
+files =
+  ip/system_management.xci[file_type=xci]
