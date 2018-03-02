@@ -477,22 +477,25 @@ class RegAccess:
                 raise RegAccessFailedException("No response packet received.")
 
             if rx_packet.type_sub == DiPacket.TYPE_SUB.RESP_WRITE_REG_ERROR.value:
-                raise RegAccessFailedException("An error occurred during the "
-                                               "write process!")
+                raise RegAccessFailedException(
+                    "Register write failed, DUT returned RESP_WRITE_REG_ERROR "
+                    "when writing 0x%x to register 0x%x of module 0x%x."
+                    % (value, regaddr, dest))
 
             if rx_packet.type_sub != DiPacket.TYPE_SUB.RESP_WRITE_REG_SUCCESS.value:
-                raise RegAccessFailedException("Expected subtype to be %s, got %s" %
-                                               (DiPacket.TYPE_SUB.RESP_WRITE_REG_SUCCESS.name,
-                                                DiPacket.TYPE_SUB(rx_packet.type_sub).name))
+                raise RegAccessFailedException(
+                    "Expected subtype to be %s, got %s"
+                    % (DiPacket.TYPE_SUB.RESP_WRITE_REG_SUCCESS.name,
+                       DiPacket.TYPE_SUB(rx_packet.type_sub).name))
 
-            self.dut._log.debug("Successfully wrote %d bit register 0x%04x of module at "
-                                "DI address 0x%04x."
+            self.dut._log.debug("Successfully wrote %d bit register 0x%04x of "
+                                "module at DI address 0x%04x."
                                 % (word_width, regaddr, dest))
             success = True
 
         except RegAccessFailedException as reg_acc_error:
             if fatal_errors:
-                raise TestError(reg_acc_error.message)
+                raise TestFailure(reg_acc_error.message)
             else:
                 self.dut._log.info(reg_acc_error.message)
                 success = False
