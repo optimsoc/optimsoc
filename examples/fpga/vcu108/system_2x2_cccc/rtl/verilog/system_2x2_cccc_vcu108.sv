@@ -84,7 +84,11 @@ module system_2x2_cccc_vcu108
    input                 fx3_flagd_n,
    input                 fx3_com_rst,
    input                 fx3_logic_rst,
-   output [2:0]          fx3_pmode
+   output [2:0]          fx3_pmode,
+
+   // signals for fan control
+   input                 sm_fan_tach,
+   output                sm_fan_pwm
    );
 
    parameter ENABLE_VCHANNELS = 1*1;
@@ -370,7 +374,11 @@ module system_2x2_cccc_vcu108
          .ddr_rdata   (c_axi_ddr.r_data),
          .ddr_rlast   (c_axi_ddr.r_last),
          .ddr_rvalid  (c_axi_ddr.r_valid),
-         .ddr_rready  (c_axi_ddr.r_ready)
+         .ddr_rready  (c_axi_ddr.r_ready),
+
+         // signals for fan control
+         .sm_fan_tach (sm_fan_tach),
+         .sm_fan_pwm  (sm_fan_pwm)
       );
 
 

@@ -83,7 +83,11 @@ module compute_tile_dm_vcu108
    input                 fx3_flagd_n,
    input                 fx3_com_rst,
    input                 fx3_logic_rst,
-   output [2:0]          fx3_pmode
+   output [2:0]          fx3_pmode,
+
+   // signals for fan control
+   input                 sm_fan_tach,
+   output                sm_fan_pwm
    );
 
    parameter integer NUM_CORES = 1;
@@ -327,7 +331,7 @@ module compute_tile_dm_vcu108
          .wb_ext_dat_o  (c_wb_ddr.dat_i)
       );
 
-   // Nexys 4 board wrapper
+   // VCU108 board wrapper
    vcu108
       #(
          .NUM_UART(1),
@@ -409,7 +413,11 @@ module compute_tile_dm_vcu108
          .ddr_rdata   (c_axi_ddr.r_data),
          .ddr_rlast   (c_axi_ddr.r_last),
          .ddr_rvalid  (c_axi_ddr.r_valid),
-         .ddr_rready  (c_axi_ddr.r_ready)
+         .ddr_rready  (c_axi_ddr.r_ready),
+
+         // signals for fan control
+         .sm_fan_tach (sm_fan_tach),
+         .sm_fan_pwm  (sm_fan_pwm)
       );
 
    // Memory interface: convert WishBone signals from system to AXI for DRAM
