@@ -65,6 +65,12 @@ class CocotbTest():
         self.manifest_path = manifest_path
 
     def _abspath(self, path, basedir):
+        """
+        Return the absolute path for |path| relative to |basedir| with all
+        environment variables expanded.
+        """
+        path = os.path.expandvars(path)
+
         if path.startswith('/'):
             return path
         return os.path.abspath(os.path.join(basedir, path))
@@ -81,6 +87,10 @@ class CocotbTest():
         manifest_dir = os.path.dirname(manifest_path)
         manifest['sources'][:] = map(lambda x: self._abspath(x, manifest_dir),
                                      manifest['sources'])
+        if 'include_dirs' in manifest:
+            manifest['include_dirs'][:] =\
+                map(lambda x: self._abspath(x, manifest_dir),
+                    manifest['include_dirs'])
 
         manifest['manifest_dir'] = os.path.abspath(manifest_dir)
         return manifest
@@ -113,8 +123,15 @@ class CocotbTest():
             for name, value in self.manifest["parameters"].items():
                 args_hdl_params.append("-pvalue+{}={}".format(name, value))
 
+        args_incdirs = []
+        if "include_dirs" in self.manifest:
+            for incdir in self.manifest["include_dirs"]:
+                args_incdirs.append("+incdir+{}".format(incdir))
+
         sim_args = "+lint=all"
-        compile_args = "+lint=all -timescale=1ns/10ps " + " ".join(args_hdl_params)
+        compile_args = "+lint=all -timescale=1ns/10ps " +\
+            ' '.join(args_hdl_params) + ' ' +\
+            ' '.join(args_incdirs)
 
         makefile += "SIM_ARGS=" + sim_args + "\n"
         makefile += "COMPILE_ARGS=" + compile_args + "\n"
@@ -153,8 +170,7 @@ class CocotbTest():
         subprocess.run(["make"] + make_args, cwd=self.objdir, env=env)
 
 class CocotbTestRunner:
-    def __init__(self, test_search_base, objdir=None):
-        self.test_search_base = test_search_base
+    def __init__(self, objdir=None):
         self.objdir = objdir
         self.tests = []
 
@@ -163,8 +179,9 @@ class CocotbTestRunner:
         Run all discovered tests
         """
         if (gui or testcase) and len(self.tests) > 1:
-            print("You cannot run multiple tests with GUI. Please run again "
-                  "with a single test.")
+            print("Running multiple tests at once is not possible with "
+                  "-g/--gui or -t/--testcase.\nPlease run again with a single "
+                  "test.")
             exit(1)
 
         for t in self.tests:
@@ -172,11 +189,13 @@ class CocotbTestRunner:
             ensure_directory(t.objdir, recursive=True)
             t.run(gui, loglevel, seed, testcase)
 
-
-    def discover_tests(self):
+    def discover_tests(self, search_base):
         self.tests = []
-        search_expr = '{}/**/*.manifest.yaml'.format(self.test_search_base)
-        test_manifests = glob.iglob(search_expr, recursive=True)
+        if os.path.isfile(search_base):
+            test_manifests = [ search_base ]
+        else:
+            search_expr = '{}/**/*.manifest.yaml'.format(self.test_search_base)
+            test_manifests = glob.iglob(search_expr, recursive=True)
 
         for f in test_manifests:
             cocotb_test = CocotbTest(manifest_path=f)
@@ -198,12 +217,12 @@ if __name__ == '__main__':
                         help="only run the specified testcases. Expects a "
                         "comma-separated list of test function names, e.g. "
                         "'test_basic,test_advanced'.")
-    parser.add_argument('dir', nargs='?', default=os.getcwd())
+    parser.add_argument('dir_file', nargs='?', default=os.getcwd())
 
     args = parser.parse_args()
 
-    testrunner = CocotbTestRunner(test_search_base=args.dir, objdir=args.objdir)
-    testrunner.discover_tests()
+    testrunner = CocotbTestRunner(objdir=args.objdir)
+    testrunner.discover_tests(args.dir_file)
 
     if len(testrunner.tests) == 0:
         print("No test manifests (*.manifest.yaml) found in " +
