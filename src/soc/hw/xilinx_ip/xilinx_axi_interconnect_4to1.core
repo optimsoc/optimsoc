@@ -5,4 +5,4 @@ name = optimsoc:ip:xilinx_axi_interconnect_4to1
 [fileset core]
 usage = vivado xsim
 files =
-  data/xilinx_axi_interconnect_4to1.xci[file_type=xci]
+  data/xilinx_axi_interconnect_4to1/xilinx_axi_interconnect_4to1.xci[file_type=xci]
