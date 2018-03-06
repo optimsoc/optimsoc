@@ -5,4 +5,4 @@ name = wallento:boards:vcu108-axi_clk_converter
 [fileset core]
 usage = vivado xsim
 files =
-  ip/ddr4_c0_axi_clk_converter.xci[file_type=xci]
+  ip/ddr4_c0_axi_clk_converter/ddr4_c0_axi_clk_converter.xci[file_type=xci]

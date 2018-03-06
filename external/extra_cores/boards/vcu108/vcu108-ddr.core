@@ -5,4 +5,4 @@ name = wallento:boards:vcu108-ddr
 [fileset core]
 usage = vivado xsim
 files =
-  ip/mig_ultrascale.xci[file_type=xci]
+  ip/mig_ultrascale/mig_ultrascale.xci[file_type=xci]
