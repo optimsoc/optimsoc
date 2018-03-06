@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = wallento:boards:vcu108-fancontrol
+description = "fan control for VCU108 board"
+
+[fileset rtl_files]
+files =
+  rtl/verilog/fancontrol.sv
+file_type = systemVerilogSource
+usage = synth

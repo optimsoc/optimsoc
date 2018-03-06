@@ -7,4 +7,4 @@ depend =
 usage = vivado xsim
 file_type = xci
 files =
-  ip/clk_gen_ddr.xci
+  ip/clk_gen_ddr/clk_gen_ddr.xci
