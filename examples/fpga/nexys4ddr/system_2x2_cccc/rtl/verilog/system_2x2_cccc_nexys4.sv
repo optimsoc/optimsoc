@@ -327,6 +327,11 @@ module system_2x2_cccc_nexys4
       .m_axi_rready    (c_axi_tile0.r_ready)
       );
 
+   assign c_axi_tile0.aw_lock = 1'h0;
+   assign c_axi_tile0.aw_region = 4'h0;
+   assign c_axi_tile0.ar_lock = 1'h0;
+   assign c_axi_tile0.ar_region = 4'h0;
+
    xilinx_axi_register_slice
      u_slice0
        (.aclk(sys_clk),
@@ -460,7 +465,12 @@ module system_2x2_cccc_nexys4
       .m_axi_rready    (c_axi_tile1.r_ready)
       );
 
-      xilinx_axi_register_slice
+   assign c_axi_tile1.aw_lock = 1'h0;
+   assign c_axi_tile1.aw_region = 4'h0;
+   assign c_axi_tile1.ar_lock = 1'h0;
+   assign c_axi_tile1.ar_region = 4'h0;
+
+   xilinx_axi_register_slice
      u_slice1
        (.aclk(sys_clk),
         .aresetn(!sys_rst),
@@ -536,7 +546,7 @@ module system_2x2_cccc_nexys4
         .m_axi_rready(c_axi_ddr1.r_ready)
         );
 
-      // Memory interface: convert WishBone signals from system to AXI for DRAM
+   // Memory interface: convert WishBone signals from system to AXI for DRAM
    wb2axi
      #(.ADDR_WIDTH (TILE_ADDR_WIDTH),
        .DATA_WIDTH (DDR_DATA_WIDTH),
@@ -592,6 +602,11 @@ module system_2x2_cccc_nexys4
       .m_axi_rvalid    (c_axi_tile2.r_valid),
       .m_axi_rready    (c_axi_tile2.r_ready)
       );
+
+   assign c_axi_tile2.aw_lock = 1'h0;
+   assign c_axi_tile2.aw_region = 4'h0;
+   assign c_axi_tile2.ar_lock = 1'h0;
+   assign c_axi_tile2.ar_region = 4'h0;
 
    xilinx_axi_register_slice
      u_slice2
@@ -669,7 +684,7 @@ module system_2x2_cccc_nexys4
         .m_axi_rready(c_axi_ddr2.r_ready)
         );
 
-      // Memory interface: convert WishBone signals from system to AXI for DRAM
+   // Memory interface: convert WishBone signals from system to AXI for DRAM
    wb2axi
      #(.ADDR_WIDTH (TILE_ADDR_WIDTH),
        .DATA_WIDTH (DDR_DATA_WIDTH),
@@ -725,6 +740,11 @@ module system_2x2_cccc_nexys4
       .m_axi_rvalid    (c_axi_tile3.r_valid),
       .m_axi_rready    (c_axi_tile3.r_ready)
       );
+
+  assign c_axi_tile3.aw_lock = 1'h0;
+  assign c_axi_tile3.aw_region = 4'h0;
+  assign c_axi_tile3.ar_lock = 1'h0;
+  assign c_axi_tile3.ar_region = 4'h0;
 
    xilinx_axi_register_slice
      u_slice3
