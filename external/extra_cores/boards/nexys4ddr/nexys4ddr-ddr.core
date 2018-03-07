@@ -7,5 +7,5 @@ depend =
 [fileset core]
 usage = vivado xsim
 files =
-  ip/mig_7series.xci[file_type=xci]
-  ip/mig_config.prj[file_type=user]
+  ip/mig_7series/mig_7series.xci[file_type=xci]
+  ip/mig_7series/mig_config.prj[file_type=user]
