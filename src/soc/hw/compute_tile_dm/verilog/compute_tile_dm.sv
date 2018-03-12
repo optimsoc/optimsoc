@@ -521,7 +521,7 @@ module compute_tile_dm
          wb_sram_sp
            #(.DW(32),
              .AW(clog2_width(CONFIG.LMEM_SIZE)),
-             .MEM_SIZE(CONFIG.LMEM_SIZE),
+             .MEM_SIZE_BYTE(CONFIG.LMEM_SIZE),
              .MEM_FILE(MEM_FILE),
              .MEM_IMPL_TYPE("PLAIN")
              )
