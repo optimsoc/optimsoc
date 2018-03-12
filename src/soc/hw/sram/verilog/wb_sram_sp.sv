@@ -58,7 +58,6 @@ module wb_sram_sp(/*AUTOARG*/
 
    // Allowed values:
    //   * PLAIN
-   //   * XILINX_SPARTAN6
    parameter MEM_IMPL_TYPE = "PLAIN";
 
    /*

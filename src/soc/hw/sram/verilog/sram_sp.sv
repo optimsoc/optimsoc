@@ -119,22 +119,6 @@
                    .addr                (addr[AW-1:0]),
                    .din                 (din[DW-1:0]),
                    .sel                 (sel[SW-1:0]));
-      end else if (MEM_IMPL_TYPE == "XILINX_SPARTAN6") begin : gen_sram_sp_impl
-         sram_sp_impl_xilinx_spartan6
-            #(/*AUTOINSTPARAM*/
-              // Parameters
-              .MEM_SIZE                 (MEM_SIZE))
-            u_impl(/*AUTOINST*/
-                   // Outputs
-                   .dout                (dout[31:0]),
-                   // Inputs
-                   .clk                 (clk),
-                   .rst                 (rst),
-                   .sel                 (sel[3:0]),
-                   .addr                (addr[AW-1:0]),
-                   .we                  (we),
-                   .ce                  (ce),
-                   .din                 (din[31:0]));
       end else begin : gen_sram_sp_impl // block: gen_sram_sp_impl
 //         $display("Unsupported memory type: ", MEM_IMPL_TYPE);
 //         $stop;
