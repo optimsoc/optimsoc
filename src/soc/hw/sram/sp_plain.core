@@ -1,6 +1,6 @@
 CAPI=1
 [main]
-name = optimsoc:sram:plain
+name = optimsoc:sram:sp_plain
 description = "Single-Port SRAM implementation using no vendor-specific blocks"
 depend = optimsoc:base:functions
 

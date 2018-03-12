@@ -5,7 +5,7 @@ depend =
   optimsoc:core:mor1kx_module
   optimsoc:networkadapter:networkadapter_ct
   optimsoc:bootrom:bootrom
-  optimsoc:sram:plain
+  optimsoc:sram:sp_plain
   optimsoc:debug_system:mam_wb_adapter
   optimsoc:wb_interconnect:bus
   opensocdebug:modules:mam_wb

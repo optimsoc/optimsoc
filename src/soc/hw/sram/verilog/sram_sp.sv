@@ -25,9 +25,6 @@
  * The width of the data and address bus can be configured using the DW and
  * AW parameters. To support byte selects DW must be a multiple of 8.
  *
- * Most of the code is taken from the ORPSoCv2 project (or1200_tpram_32x32)
- * of opencores.org.
- *
  * Author(s):
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *   Markus Goehrle <markus.goehrle@tum.de>

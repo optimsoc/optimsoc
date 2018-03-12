@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2017 by the author(s)
+/* Copyright (c) 2012-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,10 @@
  * The main use case for this memory implementation are simulations, but
  * depending on the used Synthesis tool it might also be used in synthesized
  * systems, if the right memory blocks for the target hardware are inferred.
+ *
+ * The code has been written to follow the inferrence guidelines from Vivado
+ * (UG 901, v2017.4) for Single-Port Block RAMs, and tested in Xilinx 7series
+ * devices to ensure blockram is inferred.
  *
  * When using Verilator, this memory can be initialized from MEM_FILE by calling
  * the do_readmemh() function. It is also possible to read and write the memory
