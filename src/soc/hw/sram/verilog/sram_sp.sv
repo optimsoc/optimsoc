@@ -38,12 +38,12 @@
    // Outputs
    dout,
    // Inputs
-   clk, rst, ce, we, oe, addr, din, sel
+   clk, rst, ce, we, oe, waddr, din, sel
    );
 
    import functions::*;
-   
-   parameter MEM_SIZE = 'hx;
+
+   parameter MEM_SIZE_BYTE = 'hx;
 
    // address width
    parameter AW = 32;
@@ -62,9 +62,10 @@
                    (DW == 16) ? 2 :
                    (DW ==  8) ? 1 : 'hx;
 
+   // word address width
+   parameter WORD_AW = AW - (SW >> 1);
+
    // ensure that parameters are set to allowed values
-   // TODO: Check if synthesis tools statically check this statement and remove
-   //       it. Otherwise we'll need some defines here.
    initial begin
       if (DW % 8 != 0) begin
          $display("sram_sp: the data port width (parameter DW) must be a multiple of 8");
@@ -77,22 +78,24 @@
       end
    end
 
-   input           clk;  // Clock
-   input           rst;  // Reset
-   input           ce;   // Chip enable input
-   input           we;   // Write enable input
-   input           oe;   // Output enable input
-   input [AW-1:0]  addr; // address bus inputs
-   input [DW-1:0]  din;  // input data bus
-   input [SW-1:0]  sel;  // select bytes
-   output [DW-1:0] dout; // output data bus
+   input                clk;  // Clock
+   input                rst;  // Reset
+   input                ce;   // Chip enable input
+   input                we;   // Write enable input
+   input                oe;   // Output enable input
+   input [WORD_AW-1:0]  waddr; // word address
+   input [DW-1:0]       din;  // input data bus
+   input [SW-1:0]       sel;  // select bytes
+   output [DW-1:0]      dout; // output data bus
 
    // validate the memory address (check if it's inside the memory size bounds)
 `ifdef OPTIMSOC_SRAM_VALIDATE_ADDRESS
+   logic [AW-1:0] addr;
+   assign addr = {waddr, (AW - WORD_AW)'{1'b0}};
    always @(posedge clk) begin
-      if (addr > MEM_SIZE) begin
-         $display("sram_sp: access to out-of-bounds memory address detected! Trying to access byte address 0x%x, MEM_SIZE is %d bytes.",
-                  addr, MEM_SIZE);
+      if (addr > MEM_SIZE_BYTE) begin
+         $display("sram_sp: access to out-of-bounds memory address detected! Trying to access byte address 0x%x, MEM_SIZE_BYTE is %d bytes.",
+                  addr, MEM_SIZE_BYTE);
          $stop;
       end
    end
@@ -101,11 +104,10 @@
    generate
       if (MEM_IMPL_TYPE == "PLAIN") begin : gen_sram_sp_impl
          sram_sp_impl_plain
-            #(/*AUTOINSTPARAM*/
-              // Parameters
-              .AW                       (AW),
+            #(.AW                       (AW),
+              .WORD_AW                  (WORD_AW),
               .DW                       (DW),
-              .MEM_SIZE                 (MEM_SIZE),
+              .MEM_SIZE_BYTE            (MEM_SIZE_BYTE),
               .MEM_FILE                 (MEM_FILE))
             u_impl(/*AUTOINST*/
                    // Outputs
@@ -116,25 +118,9 @@
                    .ce                  (ce),
                    .we                  (we),
                    .oe                  (oe),
-                   .addr                (addr[AW-1:0]),
+                   .waddr               (waddr),
                    .din                 (din[DW-1:0]),
                    .sel                 (sel[SW-1:0]));
-      end else if (MEM_IMPL_TYPE == "XILINX_SPARTAN6") begin : gen_sram_sp_impl
-         sram_sp_impl_xilinx_spartan6
-            #(/*AUTOINSTPARAM*/
-              // Parameters
-              .MEM_SIZE                 (MEM_SIZE))
-            u_impl(/*AUTOINST*/
-                   // Outputs
-                   .dout                (dout[31:0]),
-                   // Inputs
-                   .clk                 (clk),
-                   .rst                 (rst),
-                   .sel                 (sel[3:0]),
-                   .addr                (addr[AW-1:0]),
-                   .we                  (we),
-                   .ce                  (ce),
-                   .din                 (din[31:0]));
       end else begin : gen_sram_sp_impl // block: gen_sram_sp_impl
 //         $display("Unsupported memory type: ", MEM_IMPL_TYPE);
 //         $stop;

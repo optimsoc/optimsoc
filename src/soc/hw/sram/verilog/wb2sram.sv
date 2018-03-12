@@ -37,14 +37,14 @@
 module wb2sram(/*AUTOARG*/
    // Outputs
    wb_ack_o, wb_err_o, wb_rty_o, wb_dat_o, sram_ce, sram_we,
-   sram_addr, sram_din, sram_sel,
+   sram_waddr, sram_din, sram_sel,
    // Inputs
    wb_adr_i, wb_bte_i, wb_cti_i, wb_cyc_i, wb_dat_i, wb_sel_i,
    wb_stb_i, wb_we_i, wb_clk_i, wb_rst_i, sram_dout
    );
 
    import functions::*;
-   
+
    // Memory parameters
    // data width (word size)
    // Valid values: 32, 16 and 8
@@ -92,7 +92,7 @@ module wb2sram(/*AUTOARG*/
    // generic RAM ports
    output               sram_ce;
    output               sram_we;
-   output [WORD_AW-1:0] sram_addr;
+   output [WORD_AW-1:0] sram_waddr;
    output [DW-1:0]      sram_din;
    output [SW-1:0]      sram_sel;
    input [DW-1:0]       sram_dout;
@@ -116,7 +116,7 @@ module wb2sram(/*AUTOARG*/
    // assignments from wb to memory
    assign sram_ce = 1'b1;
    assign sram_we = wb_we_i & wb_ack_o;
-   assign sram_addr =(wb_we_i) ? word_addr_reg : word_addr;
+   assign sram_waddr = (wb_we_i) ? word_addr_reg : word_addr;
    assign sram_din = wb_dat_i;
    assign sram_sel = wb_sel_i;
 
@@ -239,7 +239,7 @@ module wb2sram(/*AUTOARG*/
                   nxt_wb_ack = 1;
                end else begin
                   nxt_wb_ack = 0;
-               end                
+               end
             end else begin
                nxt_wb_ack = 0;
             end

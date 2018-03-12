@@ -37,15 +37,15 @@ module wb_sram_sp(/*AUTOARG*/
    );
 
    import functions::*;
-   
+
    // Memory size in bytes
-   parameter MEM_SIZE = 'hx;
+   parameter MEM_SIZE_BYTE = 'hx;
 
    // VMEM file used to initialize the memory in simulation
    parameter MEM_FILE = "sram.vmem";
 
    // address width
-   parameter AW = $clog2(MEM_SIZE);
+   parameter AW = $clog2(MEM_SIZE_BYTE);
 
    // data width (must be multiple of 8 for byte selects to work)
    // Valid values: 32, 16 and 8
@@ -58,7 +58,6 @@ module wb_sram_sp(/*AUTOARG*/
 
    // Allowed values:
    //   * PLAIN
-   //   * XILINX_SPARTAN6
    parameter MEM_IMPL_TYPE = "PLAIN";
 
    /*
@@ -91,7 +90,7 @@ module wb_sram_sp(/*AUTOARG*/
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [WORD_AW-1:0]   sram_addr;              // From wb_ram of wb2sram.v
+   wire [WORD_AW-1:0]   sram_waddr;             // From wb_ram of wb2sram.v
    wire                 sram_ce;                // From wb_ram of wb2sram.v
    wire [DW-1:0]        sram_din;               // From wb_ram of wb2sram.v
    wire [DW-1:0]        sram_dout;              // From sp_ram of sram_sp.v
@@ -110,7 +109,7 @@ module wb_sram_sp(/*AUTOARG*/
             .wb_dat_o                   (wb_dat_o[DW-1:0]),
             .sram_ce                    (sram_ce),
             .sram_we                    (sram_we),
-            .sram_addr                  (sram_addr[WORD_AW-1:0]),
+            .sram_waddr                 (sram_waddr),
             .sram_din                   (sram_din[DW-1:0]),
             .sram_sel                   (sram_sel[SW-1:0]),
             // Inputs
@@ -127,22 +126,23 @@ module wb_sram_sp(/*AUTOARG*/
             .sram_dout                  (sram_dout[DW-1:0]));
 
    /* sram_sp AUTO_TEMPLATE(
-    .clk  (wb_clk_i),
-    .rst  (wb_rst_i),
-    .ce   (sram_ce),
-    .we   (sram_we),
-    .oe   (1'b1),
-    .addr (sram_addr),
-    .sel  (sram_sel),
-    .din  (sram_din),
-    .dout (sram_dout[]),
+    .clk   (wb_clk_i),
+    .rst   (wb_rst_i),
+    .ce    (sram_ce),
+    .we    (sram_we),
+    .oe    (1'b1),
+    .waddr (sram_waddr),
+    .sel   (sram_sel),
+    .din   (sram_din),
+    .dout  (sram_dout[]),
     ); */
    sram_sp
-      #(.DW       (DW),
-        .MEM_SIZE (MEM_SIZE),
-        .AW       (WORD_AW),
+      #(.DW            (DW),
+        .MEM_SIZE_BYTE (MEM_SIZE_BYTE),
+        .AW            (AW),
+        .WORD_AW       (WORD_AW),
         .MEM_IMPL_TYPE (MEM_IMPL_TYPE),
-        .MEM_FILE(MEM_FILE))
+        .MEM_FILE      (MEM_FILE))
       sp_ram(/*AUTOINST*/
              // Outputs
              .dout                      (sram_dout[DW-1:0]),     // Templated
@@ -152,7 +152,7 @@ module wb_sram_sp(/*AUTOARG*/
              .ce                        (sram_ce),               // Templated
              .we                        (sram_we),               // Templated
              .oe                        (1'b1),                  // Templated
-             .addr                      (sram_addr),             // Templated
+             .waddr                     (sram_waddr),            // Templated
              .din                       (sram_din),              // Templated
              .sel                       (sram_sel));             // Templated
 
