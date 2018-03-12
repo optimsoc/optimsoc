@@ -125,7 +125,7 @@ module trace_monitor(/*AUTOARG*/
                  if (is_newline) begin
                     $fwrite(stdout, "[%t, %0d] ", $time, ID);
                  end
-                 $fwrite(stdout,"%c",r3);
+                 $fwrite(stdout, "%c", r3[7:0]);
                  if (r3 == "\n") begin
                     $fflush(stdout);
                     is_newline <= 1;

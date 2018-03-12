@@ -171,7 +171,7 @@ module networkadapter_conf
               data[REGBIT_CONF_DMA] = CONFIG.NA_ENABLE_DMA;
            end
            REG_COREBASE: begin
-              data = COREBASE;
+              data = 32'(COREBASE);
            end
            REG_DOMAIN_NUMCORES: begin
               data = CONFIG.CORES_PER_TILE;
