@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:sram:sdp_plain
+description = "Simple Dual-Port SRAM implementation (no target-specific blocks)"
+depend = optimsoc:base:functions
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/sram_sdp.sv
