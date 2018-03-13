@@ -6,7 +6,7 @@ depend =
   opensocdebug:interfaces:mor1kx_trace_exec
   opensocdebug:blocks:timestamp
   opensocdebug:blocks:tracesample
-  opensocdebug:blocks:tracepacket
+  opensocdebug:blocks:eventpacket_fixedwidth
 
 [fileset src_files]
 file_type = systemVerilogSource

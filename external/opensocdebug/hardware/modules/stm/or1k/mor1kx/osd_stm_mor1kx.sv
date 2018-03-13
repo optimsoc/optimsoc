@@ -18,18 +18,20 @@ import dii_package::dii_flit;
 import opensocdebug::mor1kx_trace_exec;
 
 module osd_stm_mor1kx
-   (
-    input                        clk, rst,
+#(
+   parameter MAX_PKT_LEN = 'hx
+)(
+   input                        clk, rst,
 
-    input [15:0]                 id,
+   input [15:0]                 id,
 
-    input  dii_flit              debug_in,
-    output                       debug_in_ready,
-    output dii_flit              debug_out,
-    input                        debug_out_ready,
+   input  dii_flit              debug_in,
+   output                       debug_in_ready,
+   output dii_flit              debug_out,
+   input                        debug_out_ready,
 
-    input mor1kx_trace_exec      trace_port
-    );
+   input mor1kx_trace_exec      trace_port
+);
 
    localparam VALWIDTH = 32;
    localparam REG_ADDR_WIDTH = 5;
@@ -42,7 +44,9 @@ module osd_stm_mor1kx
    logic [REG_ADDR_WIDTH-1:0]    trace_reg_addr;
 
    osd_stm
-     #(.REG_ADDR_WIDTH(REG_ADDR_WIDTH), .VALWIDTH(VALWIDTH))
+     #(.REG_ADDR_WIDTH(REG_ADDR_WIDTH),
+       .VALWIDTH(VALWIDTH),
+       .MAX_PKT_LEN(MAX_PKT_LEN))
    u_stm
      (.*);
 

@@ -19,7 +19,8 @@ import dii_package::dii_flit;
 module osd_stm
   #(
     parameter REG_ADDR_WIDTH = 5, // the address width of the core register file
-    parameter VALWIDTH = 64
+    parameter VALWIDTH = 64,
+    parameter MAX_PKT_LEN = 'hx
     )
    (
     input                       clk, rst,
@@ -47,9 +48,9 @@ module osd_stm
 
    logic [15:0] event_dest;
 
-   logic                   stall;
+   logic        stall;
 
-   dii_flit dp_out, dp_in;
+   dii_flit     dp_out, dp_in;
    logic        dp_out_ready, dp_in_ready;
 
    // This module cannot receive packets other than register access packets
@@ -123,17 +124,20 @@ module osd_stm
             .out_valid (packet_valid),
             .out_ready (packet_ready));
 
-   osd_trace_packetization
-     #(.WIDTH(EW))
-   u_packetization(.clk             (clk),
-                   .rst             (rst),
-                   .id              (id),
-                   .event_dest      (event_dest),
-                   .trace_data      (packet_data),
-                   .trace_overflow  (packet_overflow),
-                   .trace_valid     (packet_valid),
-                   .trace_ready     (packet_ready),
-                   .debug_out       (dp_out),
-                   .debug_out_ready (dp_out_ready));
+  osd_event_packetization_fixedwidth
+     #(.DATA_WIDTH(EW), .MAX_PKT_LEN(MAX_PKT_LEN))
+     u_packetization(
+        .clk             (clk),
+        .rst             (rst),
 
+        .debug_out       (dp_out),
+        .debug_out_ready (dp_out_ready),
+
+        .id              (id),
+        .dest            (event_dest),
+        .overflow        (packet_overflow),
+        .event_available (packet_valid),
+        .event_consumed  (packet_ready),
+
+        .data            (packet_data));
 endmodule // osd_stm

@@ -8,7 +8,7 @@ sources:
   - ../../../interconnect/common/ring_router_mux.sv
   - ../../../blocks/timestamp/common/osd_timestamp.sv
   - ../../../blocks/buffer/common/osd_fifo.sv
-  - ../../../blocks/tracepacket/common/osd_trace_packetization.sv
+  - ../../../blocks/eventpacket/common/osd_event_packetization.sv
   - ../../../blocks/tracesample/common/osd_tracesample.sv
   - ../common/osd_stm.sv
 
