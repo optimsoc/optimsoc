@@ -96,7 +96,8 @@ module system_2x2_cccc_nexys4
                       DEBUG_CTM: 1,
                       DEBUG_SUBNET_BITS: 6,
                       DEBUG_LOCAL_SUBNET: 0,
-                      DEBUG_ROUTER_BUFFER_SIZE: 4
+                      DEBUG_ROUTER_BUFFER_SIZE: 4,
+                      DEBUG_MAX_PKT_LEN: 8
                       };
 
    localparam config_t CONFIG = derive_config(BASE_CONFIG);

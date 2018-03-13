@@ -327,6 +327,7 @@ module compute_tile_dm
 
          if (CONFIG.USE_DEBUG == 1) begin
             osd_stm_mor1kx
+              #(.MAX_PKT_LEN(CONFIG.DEBUG_MAX_PKT_LEN))
               u_stm
                 (.clk  (clk),
                  .rst  (rst_dbg),
@@ -338,6 +339,7 @@ module compute_tile_dm
                  .trace_port (trace[c]));
 
             osd_ctm_mor1kx
+              #(.MAX_PKT_LEN(CONFIG.DEBUG_MAX_PKT_LEN))
               u_ctm
                 (.clk  (clk),
                  .rst  (rst_dbg),
@@ -424,7 +426,7 @@ module compute_tile_dm
       //MAM
       osd_mam_wb #(
            .DATA_WIDTH(32),
-           .MAX_PKT_LEN(8),
+           .MAX_PKT_LEN(CONFIG.DEBUG_MAX_PKT_LEN),
            .MEM_SIZE0(CONFIG.LMEM_SIZE),
            .BASE_ADDR0(0))
       u_mam_dm_wb(

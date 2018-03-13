@@ -36,7 +36,7 @@ module debug_interface
     parameter SYSTEM_VENDOR_ID = 'x,
     parameter SYSTEM_DEVICE_ID = 'x,
     parameter NUM_MODULES = 0,
-    parameter MAX_PKT_LEN = 16,
+    parameter MAX_PKT_LEN = 'x,
     parameter SUBNET_BITS = 6,
     parameter LOCAL_SUBNET = 0,
     parameter DEBUG_ROUTER_BUFFER_SIZE = 4

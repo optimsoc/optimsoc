@@ -85,6 +85,7 @@ package optimsoc;
       integer            DEBUG_SUBNET_BITS;
       integer            DEBUG_LOCAL_SUBNET;
       integer            DEBUG_ROUTER_BUFFER_SIZE;
+      integer            DEBUG_MAX_PKT_LEN;
    } base_config_t;
 
    typedef struct packed {
@@ -133,6 +134,7 @@ package optimsoc;
       integer            DEBUG_SUBNET_BITS;
       integer            DEBUG_LOCAL_SUBNET;
       integer            DEBUG_ROUTER_BUFFER_SIZE;
+      integer            DEBUG_MAX_PKT_LEN;
       // -> derived
       integer            DEBUG_MODS_PER_CORE;
       integer            DEBUG_MODS_PER_TILE;
@@ -168,6 +170,7 @@ package optimsoc;
       derive_config.DEBUG_SUBNET_BITS = conf.DEBUG_SUBNET_BITS;
       derive_config.DEBUG_LOCAL_SUBNET = conf.DEBUG_LOCAL_SUBNET;
       derive_config.DEBUG_ROUTER_BUFFER_SIZE = conf.DEBUG_ROUTER_BUFFER_SIZE;
+      derive_config.DEBUG_MAX_PKT_LEN = conf.DEBUG_MAX_PKT_LEN;
 
       // Derive the other parameters
       derive_config.TOTAL_NUM_CORES = conf.NUMCTS * conf.CORES_PER_TILE;
