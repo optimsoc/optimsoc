@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+description = "Synchrnous FIFO with NoC port naming"
+name = optimsoc:fifo:fifo_sync_noc
+depend = optimsoc:fifo:fifo_sync_fwft
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/fifo_sync_noc.sv
+
