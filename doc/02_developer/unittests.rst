@@ -34,6 +34,9 @@ The following command line runs a compiled test under gdb (replace ``check_hostm
    make check # build the tests (if not already done)
    CK_FORK=no libtool --mode=execute gdb tests/unit/check_hostmod
 
+To further control the execution of tests the check framework offers a number of environment variables.
+These are `listed in the documentation <https://libcheck.github.io/check/doc/check_html/check_7.html>`_.
+
 Analyzing Code Coverage
 -----------------------
 

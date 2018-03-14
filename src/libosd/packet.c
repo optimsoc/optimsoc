@@ -57,6 +57,22 @@ osd_result osd_packet_new(struct osd_packet **packet, size_t data_size_words)
 }
 
 API_EXPORT
+osd_result osd_packet_realloc(struct osd_packet **packet_p,
+                              size_t data_size_words_new)
+{
+    ssize_t size_new = sizeof(uint16_t) * 1  // data_size_words
+                       + sizeof(uint16_t) * data_size_words_new; // data
+    struct osd_packet *pkg_new = realloc(*packet_p, size_new);
+    assert(pkg_new);
+
+    pkg_new->data_size_words = data_size_words_new;
+
+    *packet_p = pkg_new;
+
+    return OSD_OK;
+}
+
+API_EXPORT
 osd_result osd_packet_new_from_zframe(struct osd_packet **packet,
                                       const zframe_t *frame)
 {
@@ -85,8 +101,39 @@ void osd_packet_free(struct osd_packet **packet_p)
 }
 
 API_EXPORT
+osd_result osd_packet_combine(struct osd_packet** first_p,
+                              const struct osd_packet *second)
+{
+    osd_result rv;
+
+    assert(first_p);
+    assert(*first_p);
+    assert(second);
+
+    uint16_t first_payload_size =
+        osd_packet_sizeconv_data2payload((*first_p)->data_size_words);
+
+    uint16_t second_payload_size =
+        osd_packet_sizeconv_data2payload(second->data_size_words);
+
+    uint16_t old_size, new_size;
+    old_size = (*first_p)->data_size_words;
+    new_size = old_size + second_payload_size;
+    rv = osd_packet_realloc(first_p, new_size);
+    if (OSD_FAILED(rv)) {
+        return rv;
+    }
+
+    memcpy(&((*first_p)->data.payload[first_payload_size]),
+           second->data.payload, second_payload_size * sizeof(uint16_t));
+
+    return OSD_OK;
+}
+
+API_EXPORT
 unsigned int osd_packet_get_dest(const struct osd_packet *packet)
 {
+    assert(packet);
     assert((packet->data_size_words >= PACKET_HEADER_WORD_CNT) &&
            "The packet must be large enough for the header words.");
 
@@ -96,6 +143,7 @@ unsigned int osd_packet_get_dest(const struct osd_packet *packet)
 API_EXPORT
 unsigned int osd_packet_get_src(const struct osd_packet *packet)
 {
+    assert(packet);
     assert((packet->data_size_words >= PACKET_HEADER_WORD_CNT) &&
            "The packet must be large enough for the header words.");
 
@@ -105,6 +153,7 @@ unsigned int osd_packet_get_src(const struct osd_packet *packet)
 API_EXPORT
 unsigned int osd_packet_get_type(const struct osd_packet *packet)
 {
+    assert(packet);
     assert((packet->data_size_words >= PACKET_HEADER_WORD_CNT) &&
            "The packet must be large enough for the header words.");
 
@@ -114,11 +163,26 @@ unsigned int osd_packet_get_type(const struct osd_packet *packet)
 API_EXPORT
 unsigned int osd_packet_get_type_sub(const struct osd_packet *packet)
 {
+    assert(packet);
     assert((packet->data_size_words >= PACKET_HEADER_WORD_CNT) &&
            "The packet must be large enough for the header words.");
 
     return (packet->data.flags >> DP_HEADER_TYPE_SUB_SHIFT) &
            DP_HEADER_TYPE_SUB_MASK;
+}
+
+API_EXPORT
+osd_result osd_packet_set_type_sub(struct osd_packet *packet,
+                                   const unsigned int type_sub)
+{
+    assert(packet);
+
+    assert((type_sub & DP_HEADER_TYPE_SUB_MASK) == type_sub);
+    packet->data.flags &= ~(DP_HEADER_TYPE_SUB_MASK << DP_HEADER_TYPE_SUB_SHIFT);
+    packet->data.flags |= (type_sub & DP_HEADER_TYPE_SUB_MASK)
+                          << DP_HEADER_TYPE_SUB_SHIFT;
+
+    return OSD_OK;
 }
 
 API_EXPORT
@@ -128,6 +192,7 @@ osd_result osd_packet_set_header(struct osd_packet *packet,
                                  const enum osd_packet_type type,
                                  const unsigned int type_sub)
 {
+    assert(packet);
     assert((packet->data_size_words >= PACKET_HEADER_WORD_CNT) &&
            "The packet must be large enough for the header words.");
 
@@ -148,9 +213,7 @@ osd_result osd_packet_set_header(struct osd_packet *packet,
     packet->data.flags |= (type & DP_HEADER_TYPE_MASK) << DP_HEADER_TYPE_SHIFT;
 
     // FLAGS.TYPE_SUB
-    assert((type_sub & DP_HEADER_TYPE_SUB_MASK) == type_sub);
-    packet->data.flags |= (type_sub & DP_HEADER_TYPE_SUB_MASK)
-                          << DP_HEADER_TYPE_SUB_SHIFT;
+    osd_packet_set_type_sub(packet, type_sub);
 
     return OSD_OK;
 }
@@ -158,6 +221,7 @@ osd_result osd_packet_set_header(struct osd_packet *packet,
 API_EXPORT
 size_t osd_packet_sizeof(const struct osd_packet *packet)
 {
+    assert(packet);
     return packet->data_size_words * sizeof(uint16_t);
 }
 
