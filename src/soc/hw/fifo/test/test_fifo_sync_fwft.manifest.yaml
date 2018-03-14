@@ -1,0 +1,14 @@
+module: test_fifo_sync_fwft
+
+sources:
+  - ../verilog/fifo_sync_fwft.sv
+  - ../verilog/fifo_sync_standard.sv
+
+toplevel: fifo_sync_fwft
+
+simulators:
+  - vcs
+
+parameters:
+    WIDTH: 16
+    DEPTH: 32

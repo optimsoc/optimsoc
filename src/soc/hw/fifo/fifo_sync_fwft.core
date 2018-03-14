@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+description = "Synchronous First-Word Fall-Through (FWFT) FIFO"
+name = optimsoc:fifo:fifo_sync_fwft
+depend = optimsoc:fifo:fifo_sync_standard
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/fifo_sync_fwft.sv
+
