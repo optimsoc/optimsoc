@@ -1,4 +1,4 @@
-/* Copyright 2017 The Open SoC Debug Project
+/* Copyright 2017-2018 The Open SoC Debug Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,148 @@ struct iothread_usr_ctx {
 
     /** Argument passed to event_handler */
     void *event_handler_arg;
+
+    /** Event re-assembly buffer (used to recombine split transactions) */
+    zlist_t *event_reassembly_buf;
 };
+
+/**
+ * Handle an EVENT packet received from the host controller
+ *
+ * Possible actions include forwarding the packet to the main thread,
+ * storing it to be combined with other packets, or forwarded to the
+ * registered event handler callback.
+ *
+ * @param usrctx the user context in the I/O thread
+ * @param pkg the packet to be handled, ownership is passed to this function
+ * @return a packet to be sent to the main thread (can be NULL)
+ */
+static struct osd_packet* iothread_handle_in_eventpkg(struct iothread_usr_ctx *usrctx,
+                                                      struct osd_packet *pkg)
+{
+    int rv;
+    osd_result osd_rv;
+
+    assert(usrctx);
+    assert(pkg);
+
+    // record non-last EVENT packet in reassembly buffer and be done
+    if (osd_packet_get_type_sub(pkg) == EV_CONT) {
+        rv = zlist_append(usrctx->event_reassembly_buf, pkg);
+        assert(rv == 0);
+
+        return NULL;
+    }
+
+    struct osd_packet *fwd_pkg = NULL;
+
+    if (osd_packet_get_type_sub(pkg) != EV_LAST) {
+        // simply forward packet as-is
+        fwd_pkg = pkg;
+    } else {
+        // reassemble one packet out of the multiple EVENT packets in the
+        // reassembly buffer
+        struct osd_packet *pkg_inbuf;
+        pkg_inbuf = zlist_first(usrctx->event_reassembly_buf);
+        while (pkg_inbuf) {
+
+            if (osd_packet_get_src(pkg_inbuf) != osd_packet_get_src(pkg)) {
+                // packet belongs to a different transmission, skip
+                pkg_inbuf = zlist_next(usrctx->event_reassembly_buf);
+                continue;
+            }
+
+            if (!fwd_pkg) {
+                // first packet
+                fwd_pkg = pkg_inbuf;
+                osd_rv = osd_packet_set_type_sub(fwd_pkg, EV_LAST);
+                assert(OSD_SUCCEEDED(osd_rv));
+            } else {
+                // subsequent packet: only take payload
+                osd_rv = osd_packet_combine(&fwd_pkg, pkg_inbuf);
+                assert(OSD_SUCCEEDED(osd_rv));
+
+                osd_packet_free(&pkg_inbuf);
+            }
+
+            zlist_remove(usrctx->event_reassembly_buf, pkg_inbuf);
+            pkg_inbuf = zlist_next(usrctx->event_reassembly_buf);
+        }
+
+        // append/forward the current packet as well
+        if (!fwd_pkg) {
+            fwd_pkg = pkg;
+            // should not be necessary as this is the only packet in the
+            // transmission
+            osd_rv = osd_packet_set_type_sub(fwd_pkg, EV_LAST);
+            assert(OSD_SUCCEEDED(osd_rv));
+        } else {
+            osd_rv = osd_packet_combine(&fwd_pkg, pkg);
+            assert(OSD_SUCCEEDED(osd_rv));
+            osd_packet_free(&pkg);
+        }
+    }
+
+
+    if (usrctx->event_handler) {
+        // Forward EVENT packets to handler function.
+        // Ownership of |pkg| is transferred to the event handler.
+        osd_rv = usrctx->event_handler(usrctx->event_handler_arg, fwd_pkg);
+        if (OSD_FAILED(osd_rv)) {
+            // ignore (error in user logic, packet is possibly dropped)
+        }
+        return NULL;
+    }
+
+    return fwd_pkg;
+}
+
+/**
+ * Process an incoming data message from the host controller
+ *
+ * @return a message to be sent to the main thread (can be NULL)
+ */
+static zmsg_t* iothread_handle_in_data_msg(struct iothread_usr_ctx *usrctx,
+                                           zmsg_t *msg)
+{
+    int rv;
+    osd_result osd_rv;
+
+    assert(usrctx);
+    assert(msg);
+
+    zmsg_first(msg);
+    zframe_t *data_frame = zmsg_next(msg);
+    assert(data_frame);
+
+    struct osd_packet *pkg;
+    osd_rv = osd_packet_new_from_zframe(&pkg, data_frame);
+    assert(OSD_SUCCEEDED(osd_rv));
+
+    if (osd_packet_get_type(pkg) == OSD_PACKET_TYPE_EVENT) {
+        zmsg_destroy(&msg);
+
+        struct osd_packet *fwd_pkg = iothread_handle_in_eventpkg(usrctx, pkg);
+        if (fwd_pkg) {
+            // Create new message to forward packet to main thread
+            zmsg_t *fwd_msg = zmsg_new();
+            rv = zmsg_addstr(fwd_msg, "D");
+            assert(rv == 0);
+            rv = zmsg_addmem(fwd_msg, fwd_pkg->data_raw,
+                             osd_packet_sizeof(fwd_pkg));
+            assert(rv == 0);
+
+            osd_packet_free(&fwd_pkg);
+            return fwd_msg;
+        }
+        return NULL;
+    }
+
+    osd_packet_free(&pkg);
+
+    // Forward all other data messages to the main thread
+    return msg;
+}
 
 /**
  * Process incoming messages from the host controller
@@ -76,7 +217,6 @@ static int iothread_rcv_from_hostctrl(zloop_t *loop, zsock_t *reader,
     assert(usrctx);
 
     int rv;
-    osd_result osd_rv;
 
     zmsg_t *msg = zmsg_recv(reader);
     if (!msg) {
@@ -86,34 +226,13 @@ static int iothread_rcv_from_hostctrl(zloop_t *loop, zsock_t *reader,
     zframe_t *type_frame = zmsg_first(msg);
     assert(type_frame);
     if (zframe_streq(type_frame, "D")) {
+        zmsg_t *out_msg = iothread_handle_in_data_msg(usrctx, msg);
 
-        if (usrctx->event_handler) {
-            zframe_t *data_frame = zmsg_next(msg);
-            assert(data_frame);
-
-            struct osd_packet *pkg;
-            osd_rv = osd_packet_new_from_zframe(&pkg, data_frame);
-            assert(OSD_SUCCEEDED(osd_rv));
-
-            // Forward EVENT packets to handler function.
-            // Ownership of |pkg| is transferred to the event handler.
-            if (osd_packet_get_type(pkg) == OSD_PACKET_TYPE_EVENT) {
-
-                zmsg_destroy(&msg);
-                osd_rv = usrctx->event_handler(usrctx->event_handler_arg, pkg);
-                if (OSD_FAILED(osd_rv)) {
-                    err(thread_ctx->log_ctx, "Handling EVENT packet failed: %d",
-                        osd_rv);
-                }
-                return 0;
-            }
-
-            osd_packet_free(&pkg);
+        // possibly send a message to the main thread
+        if (out_msg) {
+            rv = zmsg_send(&out_msg, thread_ctx->inproc_socket);
+            assert(rv == 0);
         }
-
-        // Forward all other data messages to the main thread
-        rv = zmsg_send(&msg, thread_ctx->inproc_socket);
-        assert(rv == 0);
 
     } else if (zframe_streq(type_frame, "M")) {
         assert(0 && "TODO: Handle incoming management messages.");
@@ -293,6 +412,7 @@ static osd_result iothread_destroy(struct worker_thread_ctx *thread_ctx)
     struct iothread_usr_ctx *usrctx = thread_ctx->usr;
     assert(usrctx);
 
+    zlist_destroy(&usrctx->event_reassembly_buf);
     free(usrctx->host_controller_address);
     free(usrctx);
     thread_ctx->usr = NULL;
@@ -405,6 +525,7 @@ osd_result osd_hostmod_new(struct osd_hostmod_ctx **ctx,
     iothread_usr_data->event_handler_arg = event_handler_arg;
     iothread_usr_data->host_controller_address =
         strdup(host_controller_address);
+    iothread_usr_data->event_reassembly_buf = zlist_new();
 
     rv = worker_new(&c->ioworker_ctx, log_ctx, NULL, iothread_destroy,
                     iothread_handle_inproc_request, iothread_usr_data);

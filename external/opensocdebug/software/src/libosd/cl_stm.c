@@ -21,15 +21,12 @@
 #include <osd/packet.h>
 #include "osd-private.h"
 
-#define OSD_STM_TYPE_SUB_TRACE 0 //<! Trace event packet
-#define OSD_STM_TYPE_SUB_OVERFLOW 5 //<! Overflow packet
-
 static struct osd_stm_event* build_stm_event(const struct osd_stm_desc *stm_desc,
                                              const struct osd_packet *pkg)
 {
     struct osd_stm_event *ev = calloc(1, sizeof(struct osd_stm_event));
 
-    if (osd_packet_get_type_sub(pkg) == OSD_STM_TYPE_SUB_OVERFLOW) {
+    if (osd_packet_get_type_sub(pkg) == EV_OVERFLOW) {
         assert(osd_packet_sizeconv_payload2data(1) == pkg->data_size_words
                    && "STM Protocol violation detected.");
 

@@ -81,6 +81,15 @@ enum osd_packet_type_reg_subtype {
     RESP_WRITE_REG_ERROR = 0b1111        //< the preceding write request failed
 };
 
+/**
+ * Values of the TYPE_SUB field in if TYPE == OSD_PACKET_TYPE_EVENT
+ */
+enum osd_packet_type_event_subtype {
+    EV_LAST = 0,                         //< last (only) event packet
+    EV_CONT = 1,                         //< intermediate event packet
+    EV_OVERFLOW = 5                      //< overflow event packet
+};
+
 // debug packet structure
 #define DP_HEADER_TYPE_SHIFT 14
 #define DP_HEADER_TYPE_MASK 0b11
@@ -102,10 +111,30 @@ enum osd_packet_type_reg_subtype {
  * @param[out] packet the packet to be allocated
  * @param[in]  size_data_words number of uint16_t words in the packet, including
  *             the header words.
- * @return the allocated packet, or NULL if allocation fails
+ * @return     OSD_OK if successful, any other value indicates an error
+ *
+ * @see osd_packet_new_from_zframe()
+ * @see osd_packet_realloc()
+ * @see osd_packet_free()
  */
 osd_result osd_packet_new(struct osd_packet **packet, size_t size_data_words);
 
+/**
+ * Reallocate memory for a packet to increase or decrease its size
+ *
+ * @param      packet_p A pointer to an existing packet, which will be
+ *                      reallocated. The resulting pointer will potentially
+ *                      differ from the the passed pointer!
+ * @param[in]  size_data_words number of uint16_t words in the packet, including
+ *             the header words. May be larger or smaller than the size of the
+ *             existing packet.
+ * @return     OSD_OK if successful, any other value indicates an error
+ *
+ * @see osd_packet_new()
+ * @see osd_packet_free()
+ */
+osd_result osd_packet_realloc(struct osd_packet **packet_p,
+                              size_t data_size_words_new);
 /**
  * Create a new packet from a zframe
  *
@@ -118,6 +147,20 @@ osd_result osd_packet_new_from_zframe(struct osd_packet **packet,
  * Free the memory associated with the packet and NULL the object
  */
 void osd_packet_free(struct osd_packet **packet);
+
+/**
+ * Append the payload of the second packet into the first packet
+ *
+ * The header data of the second packet is ignored.
+ *
+ * @param   first_p a pointer to an existing packet, which will be reallocated
+ *                 the resulting pointer will be *different* than the
+ *                 the passed pointer!
+ * @param   second the packet of which the payload is appended to @p first
+ * @return  OSD_OK if successful, any other value indicates an error
+ */
+osd_result osd_packet_combine(struct osd_packet** first_p,
+                              const struct osd_packet *second);
 
 /**
  * Extract the DEST field out of a packet
@@ -138,6 +181,12 @@ unsigned int osd_packet_get_type(const struct osd_packet *packet);
  * Extract the TYPE_SUB field out of a packet
  */
 unsigned int osd_packet_get_type_sub(const struct osd_packet *packet);
+
+/**
+ * Set the TYPE_SUB field in a packet
+ */
+osd_result osd_packet_set_type_sub(struct osd_packet *packet,
+                                   const unsigned int type_sub);
 
 /**
  * Populate the header of a osd_packet

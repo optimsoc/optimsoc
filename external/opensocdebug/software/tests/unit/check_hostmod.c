@@ -212,7 +212,7 @@ START_TEST(test_core_event_send)
 
     mock_host_controller_expect_data_req(event_pkg, NULL);
 
-    osd_hostmod_event_send(hostmod_ctx, event_pkg);
+    rv = osd_hostmod_event_send(hostmod_ctx, event_pkg);
     ck_assert_int_eq(rv, OSD_OK);
 
     osd_packet_free(&event_pkg);
@@ -226,19 +226,135 @@ START_TEST(test_core_event_receive)
     struct osd_packet *event_pkg;
     osd_packet_new(&event_pkg, osd_packet_sizeconv_payload2data(1));
     osd_packet_set_header(event_pkg, 1, mock_hostmod_diaddr,
-                          OSD_PACKET_TYPE_EVENT, 0);
+                          OSD_PACKET_TYPE_EVENT, EV_LAST);
     event_pkg->data.payload[0] = 0x0000;
 
     mock_host_controller_queue_data_packet(event_pkg);
 
     struct osd_packet *rcv_event_pkg;
-    osd_hostmod_event_receive(hostmod_ctx, &rcv_event_pkg, 0);
+    rv = osd_hostmod_event_receive(hostmod_ctx, &rcv_event_pkg, 0);
     ck_assert_int_eq(rv, OSD_OK);
 
     ck_assert(osd_packet_equal(event_pkg, rcv_event_pkg));
 
     osd_packet_free(&event_pkg);
     osd_packet_free(&rcv_event_pkg);
+}
+END_TEST
+
+START_TEST(test_core_event_receive_split_transaction)
+{
+    osd_result rv;
+    struct osd_packet *event_pkg_1, *event_pkg_2, *exp_event_pkg;
+
+    // packet 1
+    osd_packet_new(&event_pkg_1, osd_packet_sizeconv_payload2data(1));
+    osd_packet_set_header(event_pkg_1, 1, mock_hostmod_diaddr,
+                          OSD_PACKET_TYPE_EVENT, EV_CONT);
+    event_pkg_1->data.payload[0] = 0xdead;
+
+    mock_host_controller_queue_data_packet(event_pkg_1);
+
+    // packet 2
+    osd_packet_new(&event_pkg_2, osd_packet_sizeconv_payload2data(1));
+    osd_packet_set_header(event_pkg_2, 1, mock_hostmod_diaddr,
+                          OSD_PACKET_TYPE_EVENT, EV_LAST);
+    event_pkg_2->data.payload[0] = 0xbeef;
+
+    mock_host_controller_queue_data_packet(event_pkg_2);
+
+
+    // expected, re-assembled packet (consisting of the payload of packet 1
+    // and 2)
+    osd_packet_new(&exp_event_pkg, osd_packet_sizeconv_payload2data(2));
+    osd_packet_set_header(exp_event_pkg, 1, mock_hostmod_diaddr,
+                          OSD_PACKET_TYPE_EVENT, EV_LAST);
+    exp_event_pkg->data.payload[0] = 0xdead;
+    exp_event_pkg->data.payload[1] = 0xbeef;
+
+    // receive packet
+    struct osd_packet *rcv_event_pkg;
+    rv = osd_hostmod_event_receive(hostmod_ctx, &rcv_event_pkg, 0);
+    ck_assert_int_eq(rv, OSD_OK);
+
+    ck_assert(osd_packet_equal(exp_event_pkg, rcv_event_pkg));
+
+    osd_packet_free(&event_pkg_1);
+    osd_packet_free(&event_pkg_2);
+    osd_packet_free(&exp_event_pkg);
+    osd_packet_free(&rcv_event_pkg);
+}
+END_TEST
+
+/**
+ * Interleave the reception of two split event transmissions from two
+ * sources.
+ */
+START_TEST(test_core_event_receive_split_transaction_interleaved)
+{
+    osd_result rv;
+    struct osd_packet *event_pkg_0_0, *event_pkg_0_1, *event_pkg_1_0;
+    struct osd_packet *exp_event_pkg_0, *exp_event_pkg_1;
+    struct osd_packet *rcv_event_pkg_0, *rcv_event_pkg_1;
+
+    // packet 1 (SRC 1)
+    osd_packet_new(&event_pkg_0_0, osd_packet_sizeconv_payload2data(1));
+    osd_packet_set_header(event_pkg_0_0, mock_hostmod_diaddr, 1,
+                          OSD_PACKET_TYPE_EVENT, EV_CONT);
+    event_pkg_0_0->data.payload[0] = 0xdead;
+
+    mock_host_controller_queue_data_packet(event_pkg_0_0);
+
+    // packet 1 (SRC 2)
+    osd_packet_new(&event_pkg_1_0, osd_packet_sizeconv_payload2data(1));
+    osd_packet_set_header(event_pkg_1_0, mock_hostmod_diaddr, 2,
+                          OSD_PACKET_TYPE_EVENT, EV_LAST);
+    event_pkg_1_0->data.payload[0] = 0xdead;
+
+    mock_host_controller_queue_data_packet(event_pkg_1_0);
+
+
+    // packet 2 (SRC 1)
+    osd_packet_new(&event_pkg_0_1, osd_packet_sizeconv_payload2data(1));
+    osd_packet_set_header(event_pkg_0_1, mock_hostmod_diaddr, 1,
+                          OSD_PACKET_TYPE_EVENT, EV_LAST);
+    event_pkg_0_1->data.payload[0] = 0x1234;
+
+    mock_host_controller_queue_data_packet(event_pkg_0_1);
+
+    // expected, re-assembled packet from SRC 2 (consisting of the payload of
+    // event_pkg_1_0)
+    osd_packet_new(&exp_event_pkg_1, osd_packet_sizeconv_payload2data(1));
+    osd_packet_set_header(exp_event_pkg_1, mock_hostmod_diaddr, 2,
+                          OSD_PACKET_TYPE_EVENT, EV_LAST);
+    exp_event_pkg_1->data.payload[0] = 0x1234;
+
+    rv = osd_hostmod_event_receive(hostmod_ctx, &rcv_event_pkg_1, 0);
+    ck_assert_int_eq(rv, OSD_OK);
+
+    ck_assert(osd_packet_equal(exp_event_pkg_1, rcv_event_pkg_1));
+
+
+    // expected, re-assembled packet from SRC 1 (consisting of the payload of
+    // event_pkg_0_0 and event_pkg_0_1)
+    osd_packet_new(&exp_event_pkg_0, osd_packet_sizeconv_payload2data(2));
+    osd_packet_set_header(exp_event_pkg_0, mock_hostmod_diaddr, 1,
+                          OSD_PACKET_TYPE_EVENT, EV_LAST);
+    exp_event_pkg_0->data.payload[0] = 0xdead;
+    exp_event_pkg_0->data.payload[1] = 0xbeef;
+
+    rv = osd_hostmod_event_receive(hostmod_ctx, &rcv_event_pkg_0, 0);
+    ck_assert_int_eq(rv, OSD_OK);
+
+    ck_assert(osd_packet_equal(exp_event_pkg_0, rcv_event_pkg_0));
+
+    osd_packet_free(&event_pkg_0_0);
+    osd_packet_free(&event_pkg_0_1);
+    osd_packet_free(&event_pkg_1_0);
+    osd_packet_free(&exp_event_pkg_0);
+    osd_packet_free(&rcv_event_pkg_0);
+    osd_packet_free(&exp_event_pkg_1);
+    osd_packet_free(&rcv_event_pkg_1);
 }
 END_TEST
 
@@ -405,6 +521,9 @@ Suite *suite(void)
 
     tcase_add_test(tc_core, test_core_event_send);
     tcase_add_test(tc_core, test_core_event_receive);
+    tcase_add_test(tc_core, test_core_event_receive_split_transaction);
+    tcase_add_test(tc_core,
+                   test_core_event_receive_split_transaction_interleaved);
     suite_add_tcase(s, tc_core);
 
     // Higher-layer functionality

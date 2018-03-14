@@ -20,6 +20,69 @@
 #include <osd/osd.h>
 #include <osd/packet.h>
 
+START_TEST(test_packet_realloc)
+{
+    osd_result rv;
+    struct osd_packet *pkg;
+    rv = osd_packet_new(&pkg, osd_packet_sizeconv_payload2data(0));
+    ck_assert_int_eq(rv, OSD_OK);
+
+    osd_packet_set_header(pkg, 0x1ab, 0x157, OSD_PACKET_TYPE_EVENT, 0x5);
+
+    ck_assert_int_eq(pkg->data.dest, 0x1ab);
+    ck_assert_int_eq(pkg->data.src, 0x157);
+    ck_assert_int_eq(pkg->data.flags, 0x9400);
+
+    rv = osd_packet_realloc(&pkg, osd_packet_sizeconv_payload2data(2));
+    ck_assert_int_eq(rv, OSD_OK);
+
+    // space for two new payload words
+    pkg->data.payload[0] = 0xabcd;
+    pkg->data.payload[1] = 0xbeef;
+
+    // data is still there in the new packet
+    ck_assert_int_eq(pkg->data.dest, 0x1ab);
+    ck_assert_int_eq(pkg->data.src, 0x157);
+    ck_assert_int_eq(pkg->data.flags, 0x9400);
+
+    osd_packet_free(&pkg);
+}
+END_TEST
+
+START_TEST(test_packet_combine)
+{
+    osd_result rv;
+    struct osd_packet *first, *second;
+    rv = osd_packet_new(&first, osd_packet_sizeconv_payload2data(1));
+    ck_assert_int_eq(rv, OSD_OK);
+
+    osd_packet_set_header(first, 0x1ab, 0x157, OSD_PACKET_TYPE_EVENT, 0x5);
+    first->data.payload[0] = 0xabcd;
+
+    rv = osd_packet_new(&second, osd_packet_sizeconv_payload2data(2));
+    ck_assert_int_eq(rv, OSD_OK);
+
+    osd_packet_set_header(second, 0x123, 0x456, OSD_PACKET_TYPE_EVENT, 0x1);
+    second->data.payload[0] = 0xbeef;
+    second->data.payload[1] = 0xdead;
+
+    rv = osd_packet_combine(&first, second);
+    ck_assert_int_eq(rv, OSD_OK);
+    osd_packet_free(&second);
+
+    ck_assert_int_eq(first->data_size_words, osd_packet_sizeconv_payload2data(3));
+
+    ck_assert_int_eq(first->data.dest, 0x1ab);
+    ck_assert_int_eq(first->data.src, 0x157);
+    ck_assert_int_eq(first->data.flags, 0x9400);
+    ck_assert_int_eq(first->data.payload[0], 0xabcd);
+    ck_assert_int_eq(first->data.payload[1], 0xbeef);
+    ck_assert_int_eq(first->data.payload[2], 0xdead);
+
+    osd_packet_free(&first);
+}
+END_TEST
+
 START_TEST(test_packet_header_extractparts)
 {
     osd_result rv;
@@ -52,6 +115,29 @@ START_TEST(test_packet_header_set)
     ck_assert_int_eq(pkg->data.dest, 0x1ab);
     ck_assert_int_eq(pkg->data.src, 0x157);
     ck_assert_int_eq(pkg->data.flags, 0x9400);
+
+    osd_packet_free(&pkg);
+    ck_assert_ptr_eq(pkg, NULL);
+}
+END_TEST
+
+START_TEST(test_packet_set_type_sub)
+{
+    osd_result rv;
+    struct osd_packet *pkg;
+    rv = osd_packet_new(&pkg, osd_packet_sizeconv_payload2data(0));
+    ck_assert_int_eq(rv, OSD_OK);
+
+    rv = osd_packet_set_header(pkg, 0x1ab, 0x157, OSD_PACKET_TYPE_EVENT, 0x5);
+    ck_assert_int_eq(rv, OSD_OK);
+
+    ck_assert_int_eq(pkg->data.dest, 0x1ab);
+    ck_assert_int_eq(pkg->data.src, 0x157);
+    ck_assert_int_eq(pkg->data.flags, 0x9400);
+
+    rv = osd_packet_set_type_sub(pkg, 0x1);
+    ck_assert_int_eq(rv, OSD_OK);
+    ck_assert_int_eq(pkg->data.flags, 0x8400);
 
     osd_packet_free(&pkg);
     ck_assert_ptr_eq(pkg, NULL);
@@ -141,7 +227,10 @@ Suite *suite(void)
     tc_core = tcase_create("Core");
 
     tcase_add_test(tc_core, test_packet_sizeconv);
+    tcase_add_test(tc_core, test_packet_realloc);
+    tcase_add_test(tc_core, test_packet_combine);
     tcase_add_test(tc_core, test_packet_header_set);
+    tcase_add_test(tc_core, test_packet_set_type_sub);
     tcase_add_test(tc_core, test_packet_header_extractparts);
     tcase_add_test(tc_core, test_packet_equal);
     tcase_add_test(tc_core, test_packet_tostring);
