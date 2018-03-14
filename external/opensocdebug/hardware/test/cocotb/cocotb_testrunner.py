@@ -14,6 +14,7 @@ import yaml
 import glob
 import argparse
 import subprocess
+import xml.etree.ElementTree as ET
 
 tests = []
 objdir = None
@@ -56,7 +57,7 @@ def ensure_directory(dirpath, recursive=True):
         exit(1)
 
 
-class CocotbTest():
+class CocotbTest:
     def __init__(self, manifest_path):
         self._manifest_path = None
         self.manifest = None
@@ -147,6 +148,34 @@ class CocotbTest():
         with open("{}/Makefile".format(self.objdir), "w") as fp_makefile:
             fp_makefile.write(makefile_contents)
 
+    def _collect_results(self):
+        results_xml = os.path.join(self.objdir, 'results.xml')
+        try:
+            tree = ET.parse(results_xml)
+        except:
+            res = {'failed': True, 'name': self.manifest['module'],
+                   'failuremsg': 'No results.xml generated. Compilation error?'}
+            return {'any_failed': True, 'results': [res]}
+
+        root = tree.getroot()
+
+        results = []
+        any_failed = False
+        for tc in root.find("testsuite").findall("testcase"):
+            tc_result = {}
+            tc_result['failed'] = False
+            tc_result['failuremsg'] = ''
+            tc_result['name'] = tc.get('classname') + '.' + tc.get('name')
+
+            for failure in tc.iter("failure"):
+                tc_result['failuremsg'] += failure.get('stdout')
+                tc_result['failed'] = True
+                any_failed = True
+
+            results.append(tc_result)
+
+        return {'any_failed': any_failed, 'results': results}
+
     def run(self, gui, loglevel='INFO', seed=None, testcase=None):
         self._prepare_objdir()
 
@@ -169,6 +198,8 @@ class CocotbTest():
 
         subprocess.run(["make"] + make_args, cwd=self.objdir, env=env)
 
+        return self._collect_results()
+
 class CocotbTestRunner:
     def __init__(self, objdir=None):
         self.objdir = objdir
@@ -177,6 +208,8 @@ class CocotbTestRunner:
     def run_tests(self, gui=False, loglevel='INFO', seed=None, testcase=None):
         """
         Run all discovered tests
+
+        Return True if all tests were successful, False otherwise
         """
         if (gui or testcase) and len(self.tests) > 1:
             print("Running multiple tests at once is not possible with "
@@ -184,10 +217,27 @@ class CocotbTestRunner:
                   "test.")
             exit(1)
 
+        all_tests_successful = True
+        all_results = []
         for t in self.tests:
             t.objdir = os.path.join(self.objdir, t.manifest['toplevel'])
             ensure_directory(t.objdir, recursive=True)
-            t.run(gui, loglevel, seed, testcase)
+            r = t.run(gui, loglevel, seed, testcase)
+            results = r['results']
+            if r['any_failed']:
+                all_tests_successful = False
+            all_results.append(results)
+
+        print("\n\n=== TEST RESULT SUMMARY ===")
+        for result in all_results:
+            for tc in result:
+                if tc['failed']:
+                    print("\033[91mFAIL {name}: {errormsg}\033[0m".format(
+                        name=tc['name'], errormsg=tc['failuremsg']))
+                else:
+                    print("\033[92mPASS {name}\033[0m".format(name=tc['name']))
+
+        return all_tests_successful
 
     def discover_tests(self, search_base):
         self.tests = []
@@ -228,5 +278,14 @@ if __name__ == '__main__':
         print("No test manifests (*.manifest.yaml) found in " + args.dir_file)
         exit(1)
 
-    testrunner.run_tests(gui=args.gui, loglevel=args.loglevel, seed=args.seed,
-                         testcase=args.testcase)
+    all_tests_successful = testrunner.run_tests(gui=args.gui,
+                                                loglevel=args.loglevel,
+                                                seed=args.seed,
+                                                testcase=args.testcase)
+
+    if all_tests_successful:
+        print("\nAll tests successful.")
+        exit(0)
+    else:
+        print("\nAt least one test failed.")
+        exit(1)
