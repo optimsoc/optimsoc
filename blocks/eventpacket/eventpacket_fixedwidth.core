@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+name = opensocdebug:blocks:eventpacket_fixedwidth
+
+depend =
+   opensocdebug:blocks:eventpacket
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  common/osd_event_packetization_fixedwidth.sv

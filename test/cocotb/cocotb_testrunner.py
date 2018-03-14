@@ -194,7 +194,7 @@ class CocotbTestRunner:
         if os.path.isfile(search_base):
             test_manifests = [ search_base ]
         else:
-            search_expr = '{}/**/*.manifest.yaml'.format(self.test_search_base)
+            search_expr = '{}/**/*.manifest.yaml'.format(search_base)
             test_manifests = glob.iglob(search_expr, recursive=True)
 
         for f in test_manifests:
@@ -225,8 +225,7 @@ if __name__ == '__main__':
     testrunner.discover_tests(args.dir_file)
 
     if len(testrunner.tests) == 0:
-        print("No test manifests (*.manifest.yaml) found in " +
-              testrunner.test_search_base)
+        print("No test manifests (*.manifest.yaml) found in " + args.dir_file)
         exit(1)
 
     testrunner.run_tests(gui=args.gui, loglevel=args.loglevel, seed=args.seed,

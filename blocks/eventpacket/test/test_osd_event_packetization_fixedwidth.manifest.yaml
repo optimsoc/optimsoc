@@ -1,0 +1,16 @@
+module: test_osd_event_packetization_fixedwidth
+
+sources:
+  - ../../../interfaces/common/dii_channel.sv
+  - ../common/osd_event_packetization.sv
+  - ../common/osd_event_packetization_fixedwidth.sv
+
+toplevel: osd_event_packetization_fixedwidth
+
+simulators:
+  - vcs
+
+parameters:
+  MAX_PKT_LEN: 8
+  # two packets: packet 1 with 80 bit of payload, and packet 2 with 8 bit of payload
+  DATA_WIDTH: 88

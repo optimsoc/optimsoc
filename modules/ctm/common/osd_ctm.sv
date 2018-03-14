@@ -19,7 +19,8 @@ import dii_package::dii_flit;
 module osd_ctm
   #(
     parameter ADDR_WIDTH = 64,  // width of memory addresses
-    parameter DATA_WIDTH = 64   // system word length
+    parameter DATA_WIDTH = 64,   // system word length
+    parameter MAX_PKT_LEN = 'hx // maximum length of a DI packet in flits
     )
    (
     input                  clk, rst,
@@ -63,7 +64,7 @@ module osd_ctm
    logic                   stall;
    logic [15:0]            event_dest;
 
-   dii_flit dp_out, dp_in;
+   dii_flit                dp_out, dp_in;
    logic                   dp_out_ready, dp_in_ready;
 
    osd_regaccess_layer
@@ -143,18 +144,22 @@ module osd_ctm
             .out_valid (packet_valid),
             .out_ready (packet_ready));
 
-   osd_trace_packetization
-     #(.WIDTH(EW))
-   u_packetization(.clk  (clk),
-                   .rst  (rst),
-                   .id   (id),
-                   .event_dest (event_dest),
-                   .trace_data  (packet_data),
-                   .trace_overflow (packet_overflow),
-                   .trace_valid (packet_valid),
-                   .trace_ready (packet_ready),
-                   .debug_out (dp_out),
-                   .debug_out_ready (dp_out_ready));
+  osd_event_packetization_fixedwidth
+     #(.DATA_WIDTH(EW), .MAX_PKT_LEN(MAX_PKT_LEN))
+     u_packetization(
+        .clk             (clk),
+        .rst             (rst),
+
+        .debug_out       (dp_out),
+        .debug_out_ready (dp_out_ready),
+
+        .id              (id),
+        .dest            (event_dest),
+        .overflow        (packet_overflow),
+        .event_available (packet_valid),
+        .event_consumed  (packet_ready),
+
+        .data            (packet_data));
 
 
 endmodule // osd_ctm

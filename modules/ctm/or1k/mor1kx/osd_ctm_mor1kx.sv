@@ -18,7 +18,9 @@ import dii_package::dii_flit;
 import opensocdebug::mor1kx_trace_exec;
 
 module osd_ctm_mor1kx
-   (
+#(
+   parameter MAX_PKT_LEN = 'hx
+)(
     input                        clk, rst,
 
     input [15:0]                 id,
@@ -54,7 +56,8 @@ module osd_ctm_mor1kx
    logic [DATA_WIDTH-1:0]        trace_time;
 
    osd_ctm
-     #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH))
+     #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH),
+       .MAX_PKT_LEN(MAX_PKT_LEN))
    u_ctm
      (.*);
 

@@ -33,7 +33,7 @@ module osd_regaccess_demux
    output dii_flit out_reg, input out_reg_ready,
    output dii_flit out_bypass, input out_bypass_ready);
 
-   typedef struct {
+   typedef struct packed {
       logic [15:0] data;
       logic last;
       logic valid;
