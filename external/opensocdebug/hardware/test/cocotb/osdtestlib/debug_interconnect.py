@@ -204,8 +204,8 @@ class DiPacket:
         self.payload = []
 
     def __str__(self):
-        # Converts the individual words into a hexadecimal representation
-        content = '[{}]'.format(', '.join(hex(x) for x in self.flits))
+        """Represent the DI packet as human-readable string"""
+        content = '[{}]'.format(', '.join('0x{0:04x}'.format(x) for x in self.flits))
         return "DI packet:\n" + content
 
     @property
@@ -228,9 +228,9 @@ class DiPacket:
     @flits.setter
     def flits(self, flits):
         if len(flits) < 3:
-            flits_str = '[{}]'.format(', '.join(hex(x) for x in flits))
+            flits_str = '[{}]'.format(', '.join('0x{0:04x}'.format(x) for x in flits))
             raise TestFailure("Packets must consist of at least 3 flits, got "
-                "%d flits: %s" % (len(flits), flits_str))
+                "%d flit(s): %s" % (len(flits), flits_str))
 
         self.dest = flits[0]
         self.src = flits[1]
@@ -296,10 +296,16 @@ class DiPacket:
                               (other_packet.type_sub, self.type_sub))
             return False
 
+        if len(self.payload) != len(other_packet.payload):
+            dut._log.error("Payload length differs: self=%d words, "
+                           "other=%d words"
+                           % (len(self.payload), len(other_packet.payload)))
+            return False
+
         for x in range(0, len(self.payload)):
             # The list indicates if the next flit is to be evaluated
             if mask[x] and self.payload[x] != other_packet.payload[x]:
-                dut._log.info("Expected payload word %d to be 0x%x, got 0x%x" %
+                dut._log.info("Expected payload word %d to be 0x%04x, got 0x%04x" %
                               (x, other_packet.payload[x], self.payload[x]))
                 return False
 
