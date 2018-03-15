@@ -783,6 +783,34 @@ def build_externals_opensocdebug_software(options, env):
     cmd = "make install prefix={}".format(dist)
     run_command(cmd, cwd=objdir, env=env)
 
+""" Build a source package of the OSD Python bindings
+"""
+def build_externals_opensocdebug_software_pybindings(options, env):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+
+    src = os.path.join(src, "external", "opensocdebug",
+                       "software", "src", "python")
+    objdir = os.path.join(objdir, "external",
+                          "opensocdebug", "software-pybindings")
+    dist = os.path.join(dist, "host", "share", "python3-pkgs")
+    ensure_directory(dist)
+
+    # The OSD Python bindings use setuptools_scm to determine the version from
+    # the git repository the bindings live in. Since we vendor OSD into our
+    # optimsoc source tree that mechanism doesn't work. As a workaround we use 
+    # a "fake" version number "0", representing "unknown". 
+    #
+    # Unfortunately setuptools_scm is rather picky in what it accepts
+    # as valid version numbers, so putting the OpTiMSoC version number into it 
+    # is more tricky than hoped for. (Tested with setuptools_scm 1.15.6)
+    env['SETUPTOOLS_SCM_PRETEND_VERSION'] = '0'
+
+    info("Create source package for opensocdebug Python bindings")
+    cmd = "python3 setup.py sdist --dist-dir {}".format(dist)
+    run_command(cmd, cwd=src, env=env)
+
 """Setup the OpTiMSoC environment variables pointing towards the dist directory
 
 This environment can be used to build software depending on an OpTiMSoC
@@ -872,10 +900,6 @@ export FUSESOC_CORES=$OPTIMSOC/soc/hw:$OPTIMSOC/external/lisnoc:$OPTIMSOC/extern
 export PKG_CONFIG_PATH=$OPTIMSOC/host/share/pkgconfig:$OPTIMSOC/host/lib/pkgconfig:$OPTIMSOC/host/lib64/pkgconfig:$OPTIMSOC/soc/sw/share/pkgconfig:$PKG_CONFIG_PATH
 export PATH=$OPTIMSOC/host/bin:$PATH
 export LD_LIBRARY_PATH=$OPTIMSOC/host/lib:$OPTIMSOC/host/lib64:$LD_LIBRARY_PATH
-
-# Adapting the PYTHONPATH is not so nice especially if Python 3 is involved.
-# But it works for us currently, and a real solution is rather tricky.
-export PYTHONPATH=$OPTIMSOC/host/lib/python2.7/site-packages:$OPTIMSOC/host/lib64/python2.7/site-packages:$PYTHONPATH
 """.format(options.version))
 
 """Get the version number from the source code
@@ -1016,6 +1040,7 @@ if __name__ == '__main__':
         env = os.environ
         set_environment(options, env)
         build_externals_opensocdebug_software(options, env)
+        build_externals_opensocdebug_software_pybindings(options, env)
 
         # write out optimsoc-environment.sh for our users
         write_environment_file(options)
