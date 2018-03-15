@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = wallento:boards:nexys4ddr-mii_to_rmii
+depend =
+
+[fileset xci]
+usage = vivado xsim
+file_type = xci
+files =
+  ip/mii_to_rmii_0.xci

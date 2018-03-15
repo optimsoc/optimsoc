@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = wallento:boards:nexys4ddr-clk_eth
+depend =
+
+[fileset xci]
+usage = vivado xsim
+file_type = xci
+files =
+  ip/clk_gen_eth.xci

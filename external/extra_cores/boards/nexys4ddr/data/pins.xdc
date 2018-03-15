@@ -233,18 +233,18 @@ set_property -quiet -dict { PACKAGE_PIN E5    IOSTANDARD LVCMOS33 } [get_ports -
 
 ## SMSC Ethernet PHY
 
-#set_property -quiet -dict { PACKAGE_PIN C9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_mdc }]; #IO_L11P_T1_SRCC_16 Sch=eth_mdc
-#set_property -quiet -dict { PACKAGE_PIN A9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_mdio }]; #IO_L14N_T2_SRCC_16 Sch=eth_mdio
-#set_property -quiet -dict { PACKAGE_PIN B3    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rstn }]; #IO_L10P_T1_AD15P_35 Sch=eth_rstn
-#set_property -quiet -dict { PACKAGE_PIN D9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_crsdv }]; #IO_L6N_T0_VREF_16 Sch=eth_crsdv
-#set_property -quiet -dict { PACKAGE_PIN C10   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rxerr }]; #IO_L13N_T2_MRCC_16 Sch=eth_rxerr
-#set_property -quiet -dict { PACKAGE_PIN C11   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rxd[0] }]; #IO_L13P_T2_MRCC_16 Sch=eth_rxd[0]
-#set_property -quiet -dict { PACKAGE_PIN D10   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rxd[1] }]; #IO_L19N_T3_VREF_16 Sch=eth_rxd[1]
-#set_property -quiet -dict { PACKAGE_PIN B9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_txen }]; #IO_L11N_T1_SRCC_16 Sch=eth_txen
-#set_property -quiet -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_txd[0] }]; #IO_L14P_T2_SRCC_16 Sch=eth_txd[0]
-#set_property -quiet -dict { PACKAGE_PIN A8    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_txd[1] }]; #IO_L12N_T1_MRCC_16 Sch=eth_txd[1]
-#set_property -quiet -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_refclk }]; #IO_L11P_T1_SRCC_35 Sch=eth_refclk
-#set_property -quiet -dict { PACKAGE_PIN B8    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_intn }]; #IO_L12P_T1_MRCC_16 Sch=eth_intn
+set_property -quiet -dict { PACKAGE_PIN C9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_mdc }]; #IO_L11P_T1_SRCC_16 Sch=eth_mdc
+set_property -quiet -dict { PACKAGE_PIN A9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_mdio }]; #IO_L14N_T2_SRCC_16 Sch=eth_mdio
+set_property -quiet -dict { PACKAGE_PIN B3    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rstn }]; #IO_L10P_T1_AD15P_35 Sch=eth_rstn
+set_property -quiet -dict { PACKAGE_PIN D9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_crsdv }]; #IO_L6N_T0_VREF_16 Sch=eth_crsdv
+set_property -quiet -dict { PACKAGE_PIN C10   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rxerr }]; #IO_L13N_T2_MRCC_16 Sch=eth_rxerr
+set_property -quiet -dict { PACKAGE_PIN C11   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rxd[0] }]; #IO_L13P_T2_MRCC_16 Sch=eth_rxd[0]
+set_property -quiet -dict { PACKAGE_PIN D10   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_rxd[1] }]; #IO_L19N_T3_VREF_16 Sch=eth_rxd[1]
+set_property -quiet -dict { PACKAGE_PIN B9    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_txen }]; #IO_L11N_T1_SRCC_16 Sch=eth_txen
+set_property -quiet -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_txd[0] }]; #IO_L14P_T2_SRCC_16 Sch=eth_txd[0]
+set_property -quiet -dict { PACKAGE_PIN A8    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_txd[1] }]; #IO_L12N_T1_MRCC_16 Sch=eth_txd[1]
+set_property -quiet -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_refclk }]; #IO_L11P_T1_SRCC_35 Sch=eth_refclk
+set_property -quiet -dict { PACKAGE_PIN B8    IOSTANDARD LVCMOS33 } [get_ports -quiet { eth_intn }]; #IO_L12P_T1_MRCC_16 Sch=eth_intn
 
 
 ## Quad SPI Flash

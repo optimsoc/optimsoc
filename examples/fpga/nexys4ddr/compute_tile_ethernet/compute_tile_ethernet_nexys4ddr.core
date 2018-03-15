@@ -1,0 +1,31 @@
+CAPI=1
+[main]
+name = optimsoc:examples:compute_tile_ethernet_nexys4ddr
+description = "Xilinx/Digilent Nexys4 DDR board with compute tile and Ethernet support"
+depend =
+  wallento:boards:nexys4ddr
+  wallento:svchannels:nasti
+  wallento:svchannels:wishbone
+  wallento:wb2axi:wb2axi
+  optimsoc:tile:compute_tile_dm
+  optimsoc:debug:debug_interface
+  opensocdebug:interconnect:debug_ring
+  glip:backend:uart
+  optimsoc:base:config
+
+backend = vivado
+
+[fileset rtl_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  rtl/verilog/compute_tile_dm_ethernet_nexys4.sv
+
+[vivado]
+part = "xc7a100tcsg324-1"
+hw_device = xc7a100t_0
+
+[parameter NUM_CORES]
+datatype = int
+paramtype = vlogparam
+scope = public

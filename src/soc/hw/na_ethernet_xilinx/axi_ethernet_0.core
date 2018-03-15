@@ -1,0 +1,10 @@
+CAPI=1
+[main]
+name = optimsoc:examples:na_ethernet_xilinx-axi_ethernet_0
+depend =
+
+[fileset xci]
+usage = vivado
+file_type = xci
+files =
+  ip/axi_ethernet_0.xci

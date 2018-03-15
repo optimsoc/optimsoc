@@ -14,6 +14,7 @@ depend =
   opensocdebug:modules:ctm_mor1kx
   optimsoc:base:config
   optimsoc:base:functions
+  optimsoc:ethernet:na_ethernet_xilinx
 
 [fileset src_files]
 file_type = systemVerilogSource-2009

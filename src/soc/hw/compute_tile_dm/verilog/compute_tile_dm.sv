@@ -32,24 +32,24 @@ import opensocdebug::mor1kx_trace_exec;
 import optimsoc::config_t;
 
 module compute_tile_dm
-  #(
-    parameter config_t CONFIG = 'x,
+   #(
+      parameter config_t CONFIG = 'x,
 
-    parameter ID       = 'x,
-    parameter COREBASE = 'x,
+      parameter ID       = 'x,
+      parameter COREBASE = 'x,
 
-    parameter DEBUG_BASEID = 'x,
+      parameter DEBUG_BASEID = 'x,
 
-    parameter MEM_FILE = 'x,
+      parameter MEM_FILE = 'x,
 
-    localparam CHANNELS = CONFIG.NOC_CHANNELS,
-    localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH
+      localparam CHANNELS = CONFIG.NOC_CHANNELS,
+      localparam FLIT_WIDTH = CONFIG.NOC_FLIT_WIDTH
     )
    (
    input                                 dii_flit [1:0] debug_ring_in,
    output [1:0]                          debug_ring_in_ready,
    output                                dii_flit [1:0] debug_ring_out,
-   input [1:0]                           debug_ring_out_ready,
+   input  [1:0]                          debug_ring_out_ready,
 
    output [31:0]                         wb_ext_adr_i,
    output                                wb_ext_cyc_i,
@@ -63,29 +63,47 @@ module compute_tile_dm
    input                                 wb_ext_ack_o,
    input                                 wb_ext_rty_o,
    input                                 wb_ext_err_o,
-   input [31:0]                          wb_ext_dat_o,
+   input  [31:0]                         wb_ext_dat_o,
 
    input                                 clk,
    input                                 rst_cpu, rst_sys, rst_dbg,
 
-   input [CHANNELS-1:0][FLIT_WIDTH-1:0]  noc_in_flit,
-   input [CHANNELS-1:0]                  noc_in_last,
-   input [CHANNELS-1:0]                  noc_in_valid,
+   input  [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_in_flit,
+   input  [CHANNELS-1:0]                 noc_in_last,
+   input  [CHANNELS-1:0]                 noc_in_valid,
    output [CHANNELS-1:0]                 noc_in_ready,
    output [CHANNELS-1:0][FLIT_WIDTH-1:0] noc_out_flit,
    output [CHANNELS-1:0]                 noc_out_last,
    output [CHANNELS-1:0]                 noc_out_valid,
-   input [CHANNELS-1:0]                  noc_out_ready
+   input  [CHANNELS-1:0]                 noc_out_ready,
+
+   // Ethernet
+   output [3:0]                          phy_mii_txd,
+   output                                phy_mii_tx_en,
+   output                                phy_mii_tx_er,
+   input                                 phy_mii_tx_clk,
+   input                                 phy_mii_rx_clk,
+   input  [3:0]                          phy_mii_rxd,
+   input                                 phy_mii_rx_dv,
+   input                                 phy_mii_rx_er,      
+   
+   output                                phy_mdc,        
+   inout                                 eth_mdio,
+   output                                phy_rst_n,   
+   
+   input                                 clk_125mhz
    );
 
    import functions::*;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
-   localparam NR_SLAVES = 4;
+   localparam NR_SLAVES = 6;
    localparam SLAVE_DM   = 0;
    localparam SLAVE_PGAS = 1;
    localparam SLAVE_NA   = 2;
    localparam SLAVE_BOOT = 3;
+   localparam SLAVE_ETH_CTRL = 4;  // Ethernet
+   localparam SLAVE_ETH_DATA = 5; // Ethernet
 
    mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
@@ -173,7 +191,8 @@ module compute_tile_dm
    wire [31:0]   snoop_adr;
 
    wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
-   assign pic_ints_i[0][31:4] = 28'h0;
+   
+   assign pic_ints_i[0][31:5] = 27'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
 
    genvar        c, m, s;
@@ -367,13 +386,30 @@ module compute_tile_dm
     ); */
    wb_bus_b3
      #(.MASTERS(NR_MASTERS),.SLAVES(NR_SLAVES),
+        
+        // DM: 0x0000_0000 - 0x
        .S0_ENABLE(CONFIG.ENABLE_DM),
        .S0_RANGE_WIDTH(CONFIG.DM_RANGE_WIDTH),.S0_RANGE_MATCH(CONFIG.DM_RANGE_MATCH),
+       
+       // PGAS: somewhere ...(disabled anyways)
        .S1_ENABLE(CONFIG.ENABLE_PGAS),
        .S1_RANGE_WIDTH(CONFIG.PGAS_RANGE_WIDTH),.S1_RANGE_MATCH(CONFIG.PGAS_RANGE_MATCH),
+       
+       // Network Adapter: 0xE000_0000 - 0xEFFFF_FFFF
        .S2_RANGE_WIDTH(4),.S2_RANGE_MATCH(4'he),
+       
+       // Bootrom: 0xF000_0000 - 0xFFFF_FFFF
        .S3_ENABLE(CONFIG.ENABLE_BOOTROM),
-       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf))
+       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf),
+       
+       // ESS: 18 bit: 0xD000_0000 - 0xDFFF_FFFF
+       .S4_ENABLE(1'b1),
+       .S4_RANGE_WIDTH(4),.S4_RANGE_MATCH(4'hd),
+       
+       // FIFO: 7 bit: 0xC000_0000 - 0xCFFF_FFFF
+       .S5_ENABLE(1'b1),
+       .S5_RANGE_WIDTH(4),.S5_RANGE_MATCH(4'hc)  
+       )
    u_bus(/*AUTOINST*/
          // Outputs
          .m_dat_o                       (busms_dat_i_flat),      // Templated
@@ -641,6 +677,128 @@ module compute_tile_dm
          assign bussl_rty_o[SLAVE_BOOT] = 1'b0;
       end // else: !if(CONFIG.ENABLE_BOOTROM)
    endgenerate
+   
+   // Ethernet
+   // ESS
+   wire [31:0]           wb_ctrl_adr_i; 
+   wire                  wb_ctrl_cyc_i;  
+   wire [31:0]           wb_ctrl_dat_i; 
+   wire [3:0]            wb_ctrl_sel_i; 
+   wire                  wb_ctrl_stb_i;
+   wire                  wb_ctrl_we_i; 
+   wire                  wb_ctrl_cab_i; 
+   wire  [2:0]           wb_ctrl_cti_i; 
+   wire  [1:0]           wb_ctrl_bte_i; 
+   wire                  wb_ctrl_ack_o;
+   wire                  wb_ctrl_rty_o;
+   wire                  wb_ctrl_err_o;
+   wire [31:0]           wb_ctrl_dat_o;  
+   
+   // FIFO
+   wire [31:0]         wb_data_adr_i;
+   wire                wb_data_cyc_i;
+   wire [31:0]         wb_data_dat_i;
+   wire [3:0]          wb_data_sel_i;
+   wire                wb_data_stb_i;
+   wire                wb_data_we_i;
+   wire                wb_data_cab_i;
+   wire [2:0]          wb_data_cti_i;
+   wire [1:0]          wb_data_bte_i;
+   wire                wb_data_ack_o;
+   wire                wb_data_rty_o;
+   wire                wb_data_err_o;
+   wire [31:0]         wb_data_dat_o;     
+   
+   // Network Adapter  na_etherent_xilinx
+   na_etherent_xilinx
+      u_na_ethernet_xilinx
+      (
+         .sys_rst             (rst_sys), // same as sys_rst
+         .sys_clk             (clk), // same as sys_clk
+         .clk_125mhz          (clk_125mhz),
+      
+         // interrupt
+         .eth_irq             (pic_ints_i[0][4]),
+      
+         // WB bus (TX/RX) - to AXI Stream FIFO
+         .wb_data_adr_i       (wb_data_adr_i),
+         .wb_data_cyc_i       (wb_data_cyc_i),
+         .wb_data_dat_i       (wb_data_dat_i),
+         .wb_data_sel_i       (wb_data_sel_i),
+         .wb_data_stb_i       (wb_data_stb_i ),
+         .wb_data_we_i        (wb_data_we_i),
+         .wb_data_cti_i       (wb_data_cti_i),
+         .wb_data_bte_i       (wb_data_bte_i),
+         .wb_data_ack_o       (wb_data_ack_o),
+         .wb_data_rty_o       (wb_data_rty_o),
+         .wb_data_err_o       (wb_data_err_o),
+         .wb_data_dat_o       (wb_data_dat_o),
+      
+         // WB bus (Control - AXI4_Lite System) - to AXI4 Ethernet Subsystem
+         .wb_ctrl_adr_i        (wb_ctrl_adr_i),
+         .wb_ctrl_cyc_i        (wb_ctrl_cyc_i),
+         .wb_ctrl_dat_i        (wb_ctrl_dat_i),
+         .wb_ctrl_sel_i        (wb_ctrl_sel_i),
+         .wb_ctrl_stb_i        (wb_ctrl_stb_i),
+         .wb_ctrl_we_i         (wb_ctrl_we_i),
+         .wb_ctrl_cti_i        (wb_ctrl_cti_i),
+         .wb_ctrl_bte_i        (wb_ctrl_bte_i),
+         .wb_ctrl_ack_o        (wb_ctrl_ack_o),
+         .wb_ctrl_rty_o        (wb_ctrl_rty_o),
+         .wb_ctrl_err_o        (wb_ctrl_err_o),
+         .wb_ctrl_dat_o        (wb_ctrl_dat_o),   
+  
+         // MII Output
+         .phy_mii_txd             (phy_mii_txd),
+         .phy_mii_tx_en           (phy_mii_tx_en),
+         .phy_mii_tx_er           (phy_mii_tx_er),
+         .phy_mii_tx_clk          (phy_mii_tx_clk),
+         .phy_mii_rx_clk          (phy_mii_rx_clk),
+         .phy_mii_rxd             (phy_mii_rxd),
+         .phy_mii_rx_dv           (phy_mii_rx_dv),
+         .phy_mii_rx_er           (phy_mii_rx_er),   
+      
+         // MDIO Interface - Ethernet
+         .phy_mdc             (phy_mdc),        
+         .eth_mdio            (eth_mdio),
+      
+         .phy_rst_n           (phy_rst_n)
+      );     
+      
+   // ESS
+   assign wb_ctrl_adr_i = bussl_adr_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_cyc_i = bussl_cyc_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_dat_i = bussl_dat_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_sel_i = bussl_sel_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_stb_i = bussl_stb_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_we_i = bussl_we_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_cab_i = bussl_cab_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_cti_i = bussl_cti_i[SLAVE_ETH_CTRL];
+   assign wb_ctrl_bte_i = bussl_bte_i[SLAVE_ETH_CTRL];
+   assign bussl_ack_o[SLAVE_ETH_CTRL] = wb_ctrl_ack_o;
+   assign bussl_rty_o[SLAVE_ETH_CTRL] = wb_ctrl_rty_o;
+   assign bussl_err_o[SLAVE_ETH_CTRL] = wb_ctrl_err_o;
+   assign bussl_dat_o[SLAVE_ETH_CTRL] = wb_ctrl_dat_o;
+   
+   // FIFO
+   assign wb_data_adr_i = bussl_adr_i[SLAVE_ETH_DATA];
+   assign wb_data_cyc_i = bussl_cyc_i[SLAVE_ETH_DATA];
+   assign wb_data_dat_i = bussl_dat_i[SLAVE_ETH_DATA];
+   assign wb_data_sel_i = bussl_sel_i[SLAVE_ETH_DATA];
+   assign wb_data_stb_i = bussl_stb_i[SLAVE_ETH_DATA];
+   assign wb_data_we_i = bussl_we_i[SLAVE_ETH_DATA];
+   assign wb_data_cab_i = bussl_cab_i[SLAVE_ETH_DATA];
+   assign wb_data_cti_i = bussl_cti_i[SLAVE_ETH_DATA];
+   assign wb_data_bte_i = bussl_bte_i[SLAVE_ETH_DATA];
+   assign bussl_ack_o[SLAVE_ETH_DATA] = wb_data_ack_o;
+   assign bussl_rty_o[SLAVE_ETH_DATA] = wb_data_rty_o;
+   assign bussl_err_o[SLAVE_ETH_DATA] = wb_data_err_o;
+   assign bussl_dat_o[SLAVE_ETH_DATA] = wb_data_dat_o;   
+   
+          
+   
+   
+   
 endmodule
 
 
