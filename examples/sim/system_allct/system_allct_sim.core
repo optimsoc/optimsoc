@@ -1,6 +1,6 @@
 CAPI=1
 [main]
-name = optimsoc:examples:system_2x2_cccc_sim
+name = optimsoc:examples:system_allct_sim
 depend =
   optimsoc:system:allct
   optimsoc:trace_monitor:trace_monitor
@@ -12,17 +12,17 @@ simulators = verilator xsim
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  tb_system_2x2_cccc.sv
+  tb_system_allct.sv
 
 [verilator]
 verilator_options = --trace -Wno-fatal -CFLAGS "-std=c++11" -LDFLAGS "-pthread"
-tb_toplevel = tb_system_2x2_cccc.cpp
-top_module = tb_system_2x2_cccc
+tb_toplevel = tb_system_allct.cpp
+top_module = tb_system_allct
 depend = wallento:simutil:verilator
 cli_parser = fusesoc
 
 [xsim]
-top_module = tb_system_2x2_cccc
+top_module = tb_system_allct
 
 [parameter USE_DEBUG]
 datatype = int
@@ -30,6 +30,16 @@ paramtype = vlogparam
 scope = public
 
 [parameter NUM_CORES]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter XDIM]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter YDIM]
 datatype = int
 paramtype = vlogparam
 scope = public

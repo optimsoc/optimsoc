@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016 by the author(s)
+/* Copyright (c) 2012-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,16 @@
  *
  * =============================================================================
  *
- * A testbench for a 2x2 CCCC system with distributed memory
+ * A testbench for a mesh-based system with distributed memory
  *
  * Parameters:
+ *
+ *   XDIM:
+ *     Number tiles in x dimension (default: 2)
+ *
+ *   YDIM:
+ *     Number tiles in y dimension (default: 2)
+ *
  *   USE_DEBUG:
  *     Enable the OSD-based debug system.
  *
@@ -34,15 +41,24 @@
  *
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
 `include "dbg_config.vh"
 
-module tb_system_2x2_cccc(
+module tb_system_allct
+  #(parameter integer XDIM = 2,
+    parameter integer YDIM = 2,
+    localparam TILES = XDIM*YDIM,
+    parameter USE_DEBUG = 0,
+    parameter ENABLE_VCHANNELS = 1*1,
+    parameter integer NUM_CORES = 1*1, // bug in verilator would give a warning
+    parameter integer LMEM_SIZE = 32*1024*1024
+    )
+    (
 `ifdef verilator
-   input clk,
-   input rst
+     input clk,
+     input rst
 `endif
    );
 
@@ -51,14 +67,9 @@ module tb_system_2x2_cccc(
    import optimsoc_config::*;
    import optimsoc_functions::*;
 
-   parameter USE_DEBUG = 0;
-   parameter ENABLE_VCHANNELS = 1*1;
-   parameter integer NUM_CORES = 1*1; // bug in verilator would give a warning
-   parameter integer LMEM_SIZE = 32*1024*1024;
-
    localparam base_config_t
-     BASE_CONFIG = '{ NUMTILES: 4,
-                      NUMCTS: 4,
+     BASE_CONFIG = '{ NUMTILES: TILES,
+                      NUMCTS: TILES,
                       CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
@@ -184,10 +195,10 @@ module tb_system_2x2_cccc(
       .c_glip_in (c_glip_in),
       .c_glip_out (c_glip_out),
 
-      .wb_ext_ack_o (4'hx),
-      .wb_ext_err_o (4'hx),
-      .wb_ext_rty_o (4'hx),
-      .wb_ext_dat_o (128'hx),
+      .wb_ext_ack_o ('x),
+      .wb_ext_err_o ('x),
+      .wb_ext_rty_o ('x),
+      .wb_ext_dat_o ('x),
       .wb_ext_adr_i (),
       .wb_ext_cyc_i (),
       .wb_ext_dat_i (),
@@ -211,6 +222,18 @@ module tb_system_2x2_cccc(
 
    always clk = #1.25 ~clk;
 `endif
+
+   export "DPI-C" function getXDIM;
+
+   function integer getXDIM();
+     getXDIM = XDIM;
+   endfunction
+
+   export "DPI-C" function getYDIM;
+
+   function integer getYDIM();
+     getYDIM = YDIM;
+   endfunction
 
 endmodule
 

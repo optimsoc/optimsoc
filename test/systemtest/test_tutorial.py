@@ -44,7 +44,7 @@ class TestTutorial:
 
     @pytest.fixture
     def sim_system_2x2_cccc_sim_dualcore_debug(self, tmpdir):
-        cmd_sim = '{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug'.format(os.environ['OPTIMSOC'])
+        cmd_sim = '{}/examples/sim/system_allct/system_2x2_cccc_sim_dualcore_debug'.format(os.environ['OPTIMSOC'])
         p_sim = util.Process(cmd_sim, logdir=str(tmpdir), cwd=str(tmpdir),
                              startup_done_expect='Glip TCP DPI listening',
                              startup_timeout=10)
@@ -134,7 +134,7 @@ class TestTutorial:
         Memory loading is done through Verilator meminit.
         """
         # run simulation
-        cmd = ['{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
+        cmd = ['{}/examples/sim/system_allct/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
                '--meminit={}'.format(str(baremetal_apps_hello.join('hello.vmem')))]
         subprocess.check_output(cmd, cwd=str(tmpdir))
 
@@ -151,7 +151,7 @@ class TestTutorial:
         Memory loading is done through Verilator meminit.
         """
         # run simulation
-        cmd = ['{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
+        cmd = ['{}/examples/sim/system_allct/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
                '--meminit={}'.format(str(baremetal_apps_hello_mpsimple.join('hello_mpsimple.vmem')))]
         subprocess.check_output(cmd, cwd=str(tmpdir))
 
@@ -302,7 +302,7 @@ class TestTutorial:
         Memory loading is done through Verilator meminit.
         """
         # run simulation
-        cmd = ['{}/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
+        cmd = ['{}/examples/sim/system_allct/system_2x2_cccc_sim_dualcore'.format(os.environ['OPTIMSOC']),
                '--meminit={}'.format(str(baremetal_apps_hello_mp.join('hello_mp.vmem')))]
         subprocess.check_output(cmd, cwd=str(tmpdir))
 
