@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 by the author(s)
+/* Copyright (c) 2017-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -266,8 +266,8 @@ module system_2x2_cccc_vcu108
 
 
    // 2x2 distributed memory system with all memory mapped to DDR
-   system_2x2_cccc_dm
-      #(.CONFIG(CONFIG))
+   system_allct
+      #(.CONFIG(CONFIG), .XDIM(2), .YDIM(2))
       u_system
       (
          .clk           (sys_clk_50),

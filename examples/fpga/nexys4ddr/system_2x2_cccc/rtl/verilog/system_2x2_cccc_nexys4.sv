@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 by the author(s)
+/* Copyright (c) 2016-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -170,8 +170,8 @@ module system_2x2_cccc_nexys4
       );
 
    // Single compute tile with all memory mapped to the DRAM
-   system_2x2_cccc_dm
-      #(.CONFIG(CONFIG))
+   system_allct
+      #(.CONFIG(CONFIG), .XDIM(2), .YDIM(2))
    u_system
      (
       .clk           (sys_clk),

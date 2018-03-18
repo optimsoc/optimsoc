@@ -2,7 +2,7 @@ CAPI=1
 [main]
 name = optimsoc:examples:system_2x2_cccc_sim
 depend =
-  optimsoc:system:2x2_cccc_dm
+  optimsoc:system:allct
   optimsoc:trace_monitor:trace_monitor
   glip:backend:tcp
 

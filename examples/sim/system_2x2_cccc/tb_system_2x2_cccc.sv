@@ -176,8 +176,8 @@ module tb_system_2x2_cccc(
       end
    endgenerate
 
-   system_2x2_cccc_dm
-     #(.CONFIG(CONFIG))
+   system_allct
+     #(.CONFIG(CONFIG), .XDIM(2), .YDIM(2))
    u_system
      (.clk (clk),
       .rst (rst | logic_rst),

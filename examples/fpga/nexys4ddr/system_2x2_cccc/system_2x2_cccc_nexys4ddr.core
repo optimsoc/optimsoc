@@ -7,7 +7,7 @@ depend =
   wallento:svchannels:nasti
   wallento:svchannels:wishbone
   wallento:wb2axi:wb2axi
-  optimsoc:system:2x2_cccc_dm
+  optimsoc:system:allct
   glip:backend:uart
   optimsoc:ip:xilinx_axi_interconnect_4to1
   optimsoc:ip:xilinx_axi_register_slice
