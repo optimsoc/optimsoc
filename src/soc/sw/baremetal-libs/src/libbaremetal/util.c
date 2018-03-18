@@ -27,6 +27,37 @@
  */
 
 #include "include/optimsoc-baremetal.h"
+#include <stdlib.h>
+
+// List of compute tiles
+// Place this in the bss section so that is initialized to 0
+// at runtime and not at loading time
+static uint16_t *_ctlist;
+
+static uint16_t* _init_ctlist(void) {
+    uint32_t numct = REG32(OPTIMSOC_NA_CT_NUM);
+    uint32_t numtiles = REG32(OPTIMSOC_NA_NUMTILES);
+    uint32_t *nalist = (uint32_t*) OPTIMSOC_NA_CT_LIST;
+    uint16_t *ctlist;
+
+    ctlist = malloc(numct * sizeof(uint16_t));
+    uint32_t idx = 0;
+
+    // Iterate over the bitmap. Each group contains 32 tiles
+    // (numtiles+31)>>5 is ceil(numtiles/32)
+    // For each tile add the id to the ctlist if it is
+    // a compute tile
+    for (int g = 0; g < ((numtiles+31)>>5); ++g) {
+        uint32_t group = REG32(&nalist[g]);
+        for (int f = 0; f < 32; ++f) {
+            if ((group >> f) & 0x1) {
+	         ctlist[idx++] = g*32 + f;
+            }
+        }
+    }
+
+    return ctlist;
+}
 
 uint32_t optimsoc_get_numct(void) {
     return REG32(OPTIMSOC_NA_CT_NUM);
@@ -38,9 +69,8 @@ int optimsoc_get_ctrank(void) {
 
 
 int optimsoc_get_tilerank(unsigned int tile) {
-    uint16_t *ctlist = (uint16_t*) OPTIMSOC_NA_CT_LIST;
     for (int i = 0; i < optimsoc_get_numct(); i++) {
-        if (REG16(&ctlist[i]) == tile) {
+        if (_ctlist[i] == tile) {
             return i;
         }
     }
@@ -48,12 +78,20 @@ int optimsoc_get_tilerank(unsigned int tile) {
 }
 
 int optimsoc_get_ranktile(unsigned int rank) {
-    uint16_t *ctlist = (uint16_t*) OPTIMSOC_NA_CT_LIST;
-    return ctlist[rank];
+    return _ctlist[rank];
 }
 
 void optimsoc_init(optimsoc_conf *config) {
-
+  if (_ctlist == 0) {
+      // if no other core called this function yet
+      // create the list
+      uint16_t* list =_init_ctlist();
+      // try to store it as the list atomically if no other
+      // core did so. Otherwise free the allocated memory
+      if (or1k_sync_cas(&_ctlist, 0, (uint32_t) list) != 0) {
+          free(list);
+      }
+  }
 }
 
 uint32_t optimsoc_mainmem_size() {

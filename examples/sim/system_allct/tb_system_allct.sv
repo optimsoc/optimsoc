@@ -70,7 +70,7 @@ module tb_system_allct
    localparam base_config_t
      BASE_CONFIG = '{ NUMTILES: TILES,
                       NUMCTS: TILES,
-                      CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
+                      CTLIST: {{1024-TILES{1'b0}}, {TILES{1'b1}}},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,

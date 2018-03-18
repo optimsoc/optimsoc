@@ -45,11 +45,11 @@ serve as generator input, but is essentially for information purposes.
 List of Compute Tiles (``CTLIST``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Type** Base item, packed multi-dimensional array (64 of 16 bit).
+**Type** Base item, 1024 bit bitmask
 
-**Description** Provide a map of compute tiles (max. 64 currently)
-with the tile id at the index of the array. Be careful that it is
-sorted as little endian ("from right to left").
+**Description** Provide a map of compute tiles (max. 1024 currently)
+with the tileid being the index in the bitmask and the according bit
+set when this tile is a compute tile.
 
 **Usage** As informational field in the network adapter.
 

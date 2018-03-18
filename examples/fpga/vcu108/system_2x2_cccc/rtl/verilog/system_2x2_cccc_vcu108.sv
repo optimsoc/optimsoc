@@ -27,8 +27,9 @@
  */
 
 module system_2x2_cccc_vcu108
+  import dii_package::dii_flit;
+  import optimsoc::*;
   (
-
    // 300 MHz system clock
    input                 sysclk1_300_p,
    input                 sysclk1_300_n,
@@ -119,7 +120,7 @@ module system_2x2_cccc_vcu108
    localparam base_config_t
       BASE_CONFIG = '{ NUMTILES: 4,
          NUMCTS: 4,
-         CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
+         CTLIST: 1024'hf,
          CORES_PER_TILE: NUM_CORES,
          GMEM_SIZE: 0,
          GMEM_TILE: 'x,

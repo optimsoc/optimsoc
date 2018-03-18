@@ -23,7 +23,7 @@
  * Toplevel: compute_tile_dm on a Nexys 4 DDR board
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
@@ -72,7 +72,7 @@ module system_2x2_cccc_nexys4
    localparam base_config_t
      BASE_CONFIG = '{ NUMTILES: 4,
                       NUMCTS: 4,
-                      CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
+                      CTLIST: 1024'hf,
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
