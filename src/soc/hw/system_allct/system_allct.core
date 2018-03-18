@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = optimsoc:system:allct
+depend =
+  optimsoc:tile:compute_tile_dm
+  optimsoc:debug:debug_interface
+  optimsoc:noc:mesh
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/system_allct.sv
