@@ -60,13 +60,13 @@ So let's look at a couple of examples how to build a SoC hardware with fusesoc.
 
   .. code:: sh
 
-     fusesoc --cores-root $OPTIMSOC_SOURCE/examples build optimsoc:examples:system_2x2_cccc_nexys4ddr
+     fusesoc --cores-root $OPTIMSOC_SOURCE/examples build optimsoc:examples:system_allct_nexys4ddr --XDIM 2 --YDIM 2
 
 - Now flash the bitstream that the previous step generated to the FPGA.
 
   .. code:: sh
 
-     fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
+     fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_allct_nexys4ddr
 
 Choosing an Editor/IDE
 ======================     

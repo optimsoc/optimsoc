@@ -561,11 +561,15 @@ def build_examples_fpga(options, env):
 
     examples = [
       { "name": "compute_tile_nexys4ddr",
+        "outname": "compute_tile_nexys4ddr",
         "path": "nexys4ddr/compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit" ] },
-      { "name": "system_2x2_cccc_nexys4ddr",
-        "path": "nexys4ddr/system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit" ] },
+        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit" ],
+        "options": "" },
+      { "name": "system_allct_nexys4ddr",
+        "outname": "system_2x2_cccc_nexys4ddr",
+        "path": "nexys4ddr/system_allct",
+        "files": [ "build/optimsoc_examples_system_allct_nexys4ddr_0/bld-vivado/optimsoc_examples_system_allct_nexys4ddr_0.bit" ],
+        "options": "--XDIM 2 --YDIM 2 --LMEM_EXTERNAL" },
     ]
 
     for ex in examples:
@@ -576,14 +580,14 @@ def build_examples_fpga(options, env):
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        cmd = "fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{} {}".format(buildsrcdir, ex["name"], ex["options"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Copy build artifacts")
         ensure_directory(builddist)
         for f in ex["files"]:
             srcf = os.path.join(buildobjdir, f)
-            destf = os.path.join(builddist, ex["name"]+".bit")
+            destf = os.path.join(builddist, ex["outname"]+".bit")
             file_copy(srcf, destf)
 
 """Build and install the documentation

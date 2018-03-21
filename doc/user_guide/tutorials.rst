@@ -352,7 +352,7 @@ Programming the FPGA with the Vivado GUI
 - Click on "Open Target" in the green bar on the top, and then on "Auto Connect"
 - Now click on "Program Device" in the same green bar and select the only option ``xc7a100t\_0`` (that's the FPGA on the board).
 - In the dialog window, select the bitstream file. We'll start directly with the larger 2x2 system, you can find the bitstream in
-   ``$OPTISMOC/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit``.
+   ``$OPTISMOC/examples/fpga/nexys4ddr/system_allct/system_2x2_cccc_nexys4ddr.bit``.
 - You can leave the other field "Debug probes file" empty.
 - Click on "Program" to download the bitstream onto the FPGA.
 
@@ -363,7 +363,7 @@ Programming the FPGA on the Command Line
 
 .. code:: sh
 
-   optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit xc7a100t_0
+   optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/system_allct/system_2x2_cccc_nexys4ddr.bit xc7a100t_0
 
 Connecting
 ----------
