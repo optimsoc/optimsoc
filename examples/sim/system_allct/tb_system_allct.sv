@@ -142,49 +142,51 @@ module tb_system_allct
    end // if (CONFIG.USE_DEBUG == 1)
 
    // Monitor system behavior in simulation
-   genvar t;
+   genvar x,y;
    genvar i;
 
    wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
-      for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
+      for (y = 0; y < YDIM; y=y+1) begin : gen_tracemon_cty
+         for (x = 0; x < XDIM; x=x+1) begin : gen_tracemon_ctx
+            localparam integer t = y * XDIM + x;
 
-         logic [31:0] trace_r3 [0:CONFIG.CORES_PER_TILE-1];
-         mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
-         assign trace = u_system.gen_ct[t].u_ct.trace;
+            logic [31:0] trace_r3 [0:CONFIG.CORES_PER_TILE-1];
+            mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
+            assign trace = u_system.gen_cty[y].gen_ctx[x].u_ct.trace;
 
-         for (i = 0; i < CONFIG.CORES_PER_TILE; i = i + 1) begin : gen_tracemon_core
-            r3_checker
-               u_r3_checker(
-                  .clk(clk),
-                  .valid(trace[i].valid),
-                  .we (trace[i].wben),
-                  .addr (trace[i].wbreg),
-                  .data (trace[i].wbdata),
-                  .r3 (trace_r3[i])
-               );
+            for (i = 0; i < CONFIG.CORES_PER_TILE; i = i + 1) begin : gen_tracemon_core
+               r3_checker
+                     u_r3_checker(
+                                  .clk(clk),
+                                  .valid(trace[i].valid),
+                                  .we (trace[i].wben),
+                                  .addr (trace[i].wbreg),
+                                  .data (trace[i].wbdata),
+                                  .r3 (trace_r3[i])
+                                  );
 
-            trace_monitor
-               #(
-                  .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
-                  .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
-                  .ENABLE_TRACE(0),
-                  .ID((t*CONFIG.CORES_PER_TILE)+i),
-                  .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
-               )
+               trace_monitor
+                 #(
+                   .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
+                   .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
+                   .ENABLE_TRACE(0),
+                   .ID((t*CONFIG.CORES_PER_TILE)+i),
+                   .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
+                   )
                u_mon0(
-                  .termination            (termination[(t*CONFIG.CORES_PER_TILE)+i]),
-                  .clk                    (clk),
-                  .enable                 (trace[i].valid),
-                  .wb_pc                  (trace[i].pc),
-                  .wb_insn                (trace[i].insn),
-                  .r3                     (trace_r3[i]),
-                  .termination_all        (termination)
-              );
-         end
-
-      end
+                      .termination            (termination[(t*CONFIG.CORES_PER_TILE)+i]),
+                      .clk                    (clk),
+                      .enable                 (trace[i].valid),
+                      .wb_pc                  (trace[i].pc),
+                      .wb_insn                (trace[i].insn),
+                      .r3                     (trace_r3[i]),
+                      .termination_all        (termination)
+                      );
+            end
+         end // block: gen_tracemon_ctx
+      end // block: gen_tracemon_cty
    endgenerate
 
    system_allct

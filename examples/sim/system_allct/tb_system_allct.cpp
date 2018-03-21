@@ -14,21 +14,22 @@ VERILATED_TOPLEVEL(tb_system_allct, clk, rst)
 
 int main(int argc, char *argv[])
 {
-    int x, y, tiles;
+    int xdim, ydim;
     tb_system_allct sys("TOP");
 
     VerilatedControl &simctrl = VerilatedControl::instance();
     simctrl.init(sys, argc, argv);
 
     svSetScope(svGetScopeFromName ("TOP.tb_system_allct"));
-    x = sys.getXDIM();
-    y = sys.getYDIM();
-    tiles = x*y;
+    xdim = sys.getXDIM();
+    ydim = sys.getYDIM();
 
-    for (int t = 0; t < tiles; ++t) {
-      std::ostringstream stringStream;
-      stringStream << "TOP.tb_system_allct.u_system.gen_ct[" << t << "].u_ct.gen_sram.u_ram.sp_ram.gen_sram_sp_impl.u_impl";
-      simctrl.addMemory(stringStream.str().c_str());
+    for (int x = 0; x < xdim; ++x) {
+        for (int y = 0; y < ydim; ++y) {
+            std::ostringstream stringStream;
+            stringStream << "TOP.tb_system_allct.u_system.gen_cty[" << y << "].gen_ctx[" << x << "].u_ct.gen_sram.u_ram.sp_ram.gen_sram_sp_impl.u_impl";
+            simctrl.addMemory(stringStream.str().c_str());
+        }
     }
     simctrl.setMemoryFuncs(do_readmemh, do_readmemh_file);
     simctrl.run();

@@ -153,7 +153,7 @@ Execute it again to get the hello world experience:
 
 .. code:: sh
 
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello.vmem
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore --meminit=hello.vmem
 
 In our simulation all cores in the four tiles run the same software.
 Before you shout "that's boring": you can still write different code depending on which tile and core the software is executed.
@@ -176,7 +176,7 @@ If all messages have been received, core 0 prints a message "Received all messag
    # start from the the baremetal-apps source code directory
    cd hello_mpsimple
    make
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello_mpsimple.vmem
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore --meminit=hello_mpsimple.vmem
 
 Have a look what the software does (you find the code in ``hello_mpsimple.c``).
 Let's first check the output of core 0.
@@ -231,7 +231,7 @@ So, open a new terminal (or a new tab inside your terminal), and start the simul
 
 .. code:: sh
 
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore_debug
 
 The first and most common task using the debug system is to run a program (just like we did before with the ``--meminit`` parameter).
 Open a second terminal (leave the first one running!) and type
@@ -254,7 +254,7 @@ If you switch back to the first console where you started the simulation you sho
 
 .. code:: none
 
-   $> $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug
+   $> $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore_debug
    Glip TCP DPI listening on port 23000 and 23001
    [                  24, 0] Software reset
    [                  24, 1] Software reset
@@ -470,7 +470,7 @@ You can now run the example using:
    # start from the the baremetal-apps source code directory
    cd hello_mp
    make
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello_mp.vmem
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore --meminit=hello_mp.vmem
 
 ::
 
