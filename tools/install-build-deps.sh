@@ -4,6 +4,8 @@ set -e
 [ -f /etc/os-release ] || (echo "/etc/os-release doesn't exist."; exit 1)
 . /etc/os-release
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 SUDO_CMD=""
 if [ $(id -u) -ne 0 ]; then
   SUDO_CMD="sudo "
@@ -29,4 +31,5 @@ case "$ID" in
 esac
 
 # Install build dependencies for osd-sw
-./external/opensocdebug/software/install-build-deps.sh
+$SCRIPT_DIR/../external/opensocdebug/software/install-build-deps.sh
+
