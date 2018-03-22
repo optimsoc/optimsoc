@@ -16,9 +16,11 @@ fi
 
 function install_cocotb
 {
-  git clone "$COCOTB_GIT_URL" "$OBJDIR/cocotb"
-  (cd "$OBJDIR/cocotb"; git checkout "$COCOTB_GIT_REF")
+  echo -n "Installing cocotb version $COCOTB_GIT_REF from $COCOTB_GIT_URL to $OBJDIR/cocotb..."
+  git clone -q "$COCOTB_GIT_URL" "$OBJDIR/cocotb"
+  (cd "$OBJDIR/cocotb"; git checkout -q "$COCOTB_GIT_REF")
   export COCOTB=$OBJDIR/cocotb
+  echo " done"
 }
 
 
@@ -27,6 +29,10 @@ mkdir -p "$OBJDIR"
 # Prepare cocotb
 if [ -d "$OBJDIR/cocotb" ]; then
   export COCOTB=$OBJDIR/cocotb
+fi
+
+if [ -n "$INSTALL_COCOTB" -a ! -d "$COCOTB" ]; then
+  install_cocotb
 fi
 
 if [ ! -d "$COCOTB" ]; then
