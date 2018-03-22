@@ -184,11 +184,12 @@ cdef class Log:
 cdef class Packet:
     cdef cosd.osd_packet* _cself
 
-    def __cinit__(self):
-        # XXX: don't make the length fixed! Might require API changes on C side
-        cosd.osd_packet_new(&self._cself, 10)
-        if self._cself is NULL:
-            raise MemoryError()
+    def _ensure_cself(self):
+        if not self._cself:
+            # XXX: don't make the length fixed! Might require API changes on C side
+            cosd.osd_packet_new(&self._cself, 10)
+            if self._cself is NULL:
+                raise MemoryError()
 
     def __dealloc__(self):
         if self._cself is not NULL:
@@ -196,25 +197,31 @@ cdef class Packet:
 
     @property
     def src(self):
+        self._ensure_cself()
         return cosd.osd_packet_get_src(self._cself)
 
     @property
     def dest(self):
+        self._ensure_cself()
         return cosd.osd_packet_get_dest(self._cself)
 
     @property
     def type(self):
+        self._ensure_cself()
         return cosd.osd_packet_get_type(self._cself)
 
     @property
     def type_sub(self):
+        self._ensure_cself()
         return cosd.osd_packet_get_type_sub(self._cself)
 
     def set_header(self, dest, src, type, type_sub):
+        self._ensure_cself()
         cosd.osd_packet_set_header(self._cself, dest, src, type, type_sub)
 
     def __str__(self):
         cdef char* c_str = NULL
+        self._ensure_cself()
         cosd.osd_packet_to_string(self._cself, &c_str)
 
         try:
@@ -228,7 +235,9 @@ cdef class Packet:
 cdef class Hostmod:
     cdef cosd.osd_hostmod_ctx* _cself
 
-    def __cinit__(self, Log log, host_controller_address):
+    def __cinit__(self, Log log, host_controller_address, *args, **kwargs):
+        # *args and **kwargs enables child classes to have more constructor
+        # parameters
         py_byte_string = host_controller_address.encode('UTF-8')
         cdef char* c_host_controller_address = py_byte_string
         cosd.osd_hostmod_new(&self._cself, log._cself, c_host_controller_address,
@@ -241,7 +250,7 @@ cdef class Hostmod:
         if self._cself is NULL:
             return
 
-        if self.is_connected():
+        if self.is_connected:
             self.disconnect()
 
         cosd.osd_hostmod_free(&self._cself)
@@ -252,8 +261,16 @@ cdef class Hostmod:
     def disconnect(self):
         cosd.osd_hostmod_disconnect(self._cself)
 
+    @property
     def is_connected(self):
         return cosd.osd_hostmod_is_connected(self._cself)
+
+    @property
+    def diaddr(self):
+        if not self.is_connected:
+            return None
+
+        return cosd.osd_hostmod_get_diaddr(self._cself)
 
     def reg_read(self, diaddr, reg_addr, reg_size_bit = 16, flags = 0):
         cdef uint16_t outvalue
@@ -262,8 +279,7 @@ cdef class Hostmod:
 
         rv = cosd.osd_hostmod_reg_read(self._cself, &outvalue, diaddr, reg_addr,
                                        reg_size_bit, flags)
-        if rv != 0:
-            raise Exception("Register read failed (%d)" % rv)
+        check_osd_result(rv)
 
         return outvalue
 
@@ -275,8 +291,7 @@ cdef class Hostmod:
 
         rv = cosd.osd_hostmod_reg_write(self._cself, &c_data, diaddr, reg_addr,
                                         reg_size_bit, flags)
-        if rv != 0:
-            raise Exception("Register read failed (%d)" % rv)
+        check_osd_result(rv)
 
     def get_modules(self, subnet_addr):
         cdef cosd.osd_module_desc *modules = NULL
@@ -298,6 +313,45 @@ cdef class Hostmod:
             free(modules)
 
         return result_list
+
+    def mod_describe(self, di_addr):
+        cdef cosd.osd_module_desc c_mod_desc
+        rv = cosd.osd_hostmod_mod_describe(self._cself, di_addr, &c_mod_desc)
+        check_osd_result(rv)
+
+        mod_desc = {}
+        mod_desc['addr'] = c_mod_desc.addr
+        mod_desc['vendor'] = c_mod_desc.addr
+        mod_desc['type'] = c_mod_desc.addr
+        mod_desc['version'] = c_mod_desc.addr
+
+        return mod_desc
+
+    def mod_set_event_dest(self, di_addr, flags=0):
+        rv = cosd.osd_hostmod_mod_set_event_dest(self._cself, di_addr, flags)
+        check_osd_result(rv)
+
+    def mod_set_event_active(self, di_addr, enabled=True, flags=0):
+        rv = cosd.osd_hostmod_mod_set_event_active(self._cself, di_addr,
+                                                   enabled, flags)
+        check_osd_result(rv)
+
+    def get_max_event_words(self, di_addr_target):
+        return cosd.osd_hostmod_get_max_event_words(self._cself, di_addr_target)
+
+    def event_send(self, Packet event_pkg):
+        rv = cosd.osd_hostmod_event_send(self._cself, event_pkg._cself)
+        check_osd_result(rv)
+
+    def event_receive(self, flags=0):
+        cdef cosd.osd_packet* c_event_pkg
+        rv = cosd.osd_hostmod_event_receive(self._cself, &c_event_pkg, flags)
+        check_osd_result(rv)
+
+        py_event_pkg = Packet()
+        py_event_pkg._cself = c_event_pkg
+
+        return py_event_pkg
 
 
 cdef class GatewayGlip:
