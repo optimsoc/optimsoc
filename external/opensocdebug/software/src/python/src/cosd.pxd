@@ -55,9 +55,9 @@ cdef extern from "osd/packet.h" nogil:
 
     cdef enum osd_packet_type:
         OSD_PACKET_TYPE_REG = 0
-        OSD_PACKET_TYPE_PLAIN = 1
+        OSD_PACKET_TYPE_RES_1 = 1
         OSD_PACKET_TYPE_EVENT = 2
-        OSD_PACKET_TYPE_RES = 3
+        OSD_PACKET_TYPE_RES_2 = 3
 
     osd_result osd_packet_new(osd_packet **packet, size_t size_data_words)
 
@@ -116,6 +116,26 @@ cdef extern from "osd/hostmod.h" nogil:
                                        unsigned int subnet_addr,
                                        osd_module_desc **modules,
                                        size_t *modules_len)
+
+    unsigned int osd_hostmod_get_max_event_words(osd_hostmod_ctx *ctx,
+                                                 unsigned int di_addr_target)
+
+    osd_result osd_hostmod_event_send(osd_hostmod_ctx *ctx,
+                                      const osd_packet* event_pkg)
+
+    osd_result osd_hostmod_event_receive(osd_hostmod_ctx *ctx,
+                                         osd_packet **event_pkg, int flags)
+
+    osd_result osd_hostmod_mod_describe(osd_hostmod_ctx *ctx,
+                                        uint16_t di_addr,
+                                        osd_module_desc *desc)
+
+    osd_result osd_hostmod_mod_set_event_dest(osd_hostmod_ctx *ctx,
+                                              uint16_t di_addr, int flags)
+
+    osd_result osd_hostmod_mod_set_event_active(osd_hostmod_ctx *ctx,
+                                                uint16_t di_addr, int enabled,
+                                                int flags)
 
 
 cdef extern from "osd/hostctrl.h" nogil:
