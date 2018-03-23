@@ -27,7 +27,7 @@ node('fpga-nexys4ddr') {
   stage('FPGA Tests') {
     sh "echo 'boards:' > localconf.yaml"
     sh "echo '  nexys4ddr:' >> localconf.yaml"
-    sh "echo '    device: /dev/ttyUSB1' >> localconf.yaml"
+    sh "echo '    device: /dev/ttyUSB3' >> localconf.yaml"
      
     lcci.sh 'source objdir/dist/optimsoc-environment.sh; export OPTIMSOC_TEST_LOCALCONF=$PWD/localconf.yaml; cat $OPTIMSOC_TEST_LOCALCONF; pytest -s -v test/systemtest/test_tutorial.py::TestTutorialFpga'
   }  
