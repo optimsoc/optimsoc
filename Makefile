@@ -67,6 +67,7 @@ endif
 build:
 	@echo Running OpTiMSoC build. If you get errors for missing dependencies run
 	@echo "make install-build-deps" first.
+	which python3
 	python3 tools/build.py $(BUILD_ARGS) -o $(OBJDIR)
 
 install:
