@@ -67,7 +67,7 @@ endif
 build:
 	@echo Running OpTiMSoC build. If you get errors for missing dependencies run
 	@echo "make install-build-deps" first.
-	python3 tools/build.py $(BUILD_ARGS) -o $(OBJDIR)
+	tools/build.py $(BUILD_ARGS) -o $(OBJDIR)
 
 install:
 	@test -d "$(OBJDIR)/dist" || (echo "Run make build first."; exit 1)
