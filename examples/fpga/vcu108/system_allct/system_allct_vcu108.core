@@ -1,7 +1,7 @@
 CAPI=1
 [main]
-name = optimsoc:examples:system_2x2_cccc_vcu108
-description = "Xilinx VCU108 board with 2x2 system"
+name = optimsoc:examples:system_allct_vcu108
+description = "Xilinx VCU108 board with all compute tile system"
 depend =
   wallento:boards:vcu108
   wallento:svchannels:nasti
@@ -21,12 +21,22 @@ backend = vivado
 file_type = systemVerilogSource
 usage = synth
 files =
-  rtl/verilog/system_2x2_cccc_vcu108.sv
+  rtl/verilog/system_allct_vcu108.sv
 
 [vivado]
-top_module = system_2x2_cccc_vcu108
+top_module = system_allct_vcu108
 part = "xcvu095-ffva2104-2-e"
 hw_device = xcvu095_0
+
+[parameter XDIM]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter YDIM]
+datatype = int
+paramtype = vlogparam
+scope = public
 
 [parameter NUM_CORES]
 datatype = int
@@ -35,6 +45,16 @@ scope = public
 
 [parameter ENABLE_VCHANNELS]
 datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter LMEM_SIZE_BYTES]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter LMEM_EXTERNAL]
+datatype = bool
 paramtype = vlogparam
 scope = public
 
