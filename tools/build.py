@@ -960,7 +960,7 @@ if __name__ == '__main__':
 
     parser.add_option("--with-docs", dest="with_docs",
                       action="store_true",
-                      help="Build the documentation [default: %default]",
+                      help="Build the documentation [default]",
                       default=True)
     parser.add_option("--without-docs", dest="with_docs",
                       action="store_false",
@@ -969,7 +969,7 @@ if __name__ == '__main__':
     parser.add_option("--with-examples-sim", dest="with_examples_sim",
                       action="store_true",
                       help="Build and include the simulation examples "
-                           "[default: %default]",
+                           "[default]",
                       default=True)
     parser.add_option("--without-examples-sim", dest="with_examples_sim",
                       action="store_false",
@@ -977,13 +977,12 @@ if __name__ == '__main__':
 
     parser.add_option("--with-examples-fpga", dest="with_examples_fpga",
                       action="store_true",
-                      help="Build and include bitstreams for the FPGA examples "
-                           "[default: %default]",
+                      help="Build and include bitstreams for the FPGA examples ",
                       default=False)
     parser.add_option("--without-examples-fpga", dest="with_examples_fpga",
                       action="store_false",
                       help="Do not build and include bitstreams for the FPGA "
-                           "examples [default: %default]")
+                           "examples [default]")
 
     (options, args) = parser.parse_args()
 
