@@ -57,7 +57,7 @@ module tb_compute_tile
    localparam base_config_t
      BASE_CONFIG = '{ NUMTILES: 1,
                       NUMCTS: 1,
-                      CTLIST: {{63{16'hx}}, 16'h0},
+                      CTLIST: 1024'h1,
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 0,

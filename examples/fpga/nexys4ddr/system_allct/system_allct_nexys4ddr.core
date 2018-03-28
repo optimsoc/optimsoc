@@ -1,13 +1,14 @@
 CAPI=1
 [main]
-name = optimsoc:examples:system_2x2_cccc_nexys4ddr
-description = "Xilinx/Digilent Nexys4 DDR board with 2x2 system"
+name = optimsoc:examples:system_allct_nexys4ddr
+description = "Xilinx/Digilent Nexys4 DDR board with all compute tile system"
 depend =
   wallento:boards:nexys4ddr
   wallento:svchannels:nasti
   wallento:svchannels:wishbone
   wallento:wb2axi:wb2axi
-  optimsoc:system:2x2_cccc_dm
+  optimsoc:system:allct
+  optimsoc:base:config
   glip:backend:uart
   optimsoc:ip:xilinx_axi_interconnect_4to1
   optimsoc:ip:xilinx_axi_register_slice
@@ -19,22 +20,32 @@ backend = vivado
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  rtl/verilog/system_2x2_cccc_nexys4.sv
+  rtl/verilog/system_allct_nexys4.sv
 
 [fileset testbench]
 file_type = systemVerilogSource
 usage = sim
 files =
-  tbench/verilog/tb_system_2x2_cccc_nexys4ddr.sv
+  tbench/verilog/tb_system_allct_nexys4ddr.sv
 
 [xsim]
-top_module = tb_system_2x2_cccc_nexys4ddr
+top_module = tb_system_allct_nexys4ddr
 part = xc7a100tcsg324-1
 
 [vivado]
-top_module = system_2x2_cccc_nexys4ddr
+top_module = system_allct_nexys4ddr
 part = "xc7a100tcsg324-1"
 hw_device = xc7a100t_0
+
+[parameter XDIM]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter YDIM]
+datatype = int
+paramtype = vlogparam
+scope = public
 
 [parameter NUM_CORES]
 datatype = int
@@ -43,5 +54,15 @@ scope = public
 
 [parameter ENABLE_VCHANNELS]
 datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter LMEM_SIZE_BYTES]
+datatype = int
+paramtype = vlogparam
+scope = public
+
+[parameter LMEM_EXTERNAL]
+datatype = bool
 paramtype = vlogparam
 scope = public

@@ -153,7 +153,7 @@ Execute it again to get the hello world experience:
 
 .. code:: sh
 
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello.vmem
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore --meminit=hello.vmem
 
 In our simulation all cores in the four tiles run the same software.
 Before you shout "that's boring": you can still write different code depending on which tile and core the software is executed.
@@ -176,7 +176,7 @@ If all messages have been received, core 0 prints a message "Received all messag
    # start from the the baremetal-apps source code directory
    cd hello_mpsimple
    make
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello_mpsimple.vmem
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore --meminit=hello_mpsimple.vmem
 
 Have a look what the software does (you find the code in ``hello_mpsimple.c``).
 Let's first check the output of core 0.
@@ -231,7 +231,7 @@ So, open a new terminal (or a new tab inside your terminal), and start the simul
 
 .. code:: sh
 
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore_debug
 
 The first and most common task using the debug system is to run a program (just like we did before with the ``--meminit`` parameter).
 Open a second terminal (leave the first one running!) and type
@@ -254,7 +254,7 @@ If you switch back to the first console where you started the simulation you sho
 
 .. code:: none
 
-   $> $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug
+   $> $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore_debug
    Glip TCP DPI listening on port 23000 and 23001
    [                  24, 0] Software reset
    [                  24, 1] Software reset
@@ -352,7 +352,7 @@ Programming the FPGA with the Vivado GUI
 - Click on "Open Target" in the green bar on the top, and then on "Auto Connect"
 - Now click on "Program Device" in the same green bar and select the only option ``xc7a100t\_0`` (that's the FPGA on the board).
 - In the dialog window, select the bitstream file. We'll start directly with the larger 2x2 system, you can find the bitstream in
-   ``$OPTISMOC/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit``.
+   ``$OPTISMOC/examples/fpga/nexys4ddr/system_allct/system_2x2_cccc_nexys4ddr.bit``.
 - You can leave the other field "Debug probes file" empty.
 - Click on "Program" to download the bitstream onto the FPGA.
 
@@ -363,7 +363,7 @@ Programming the FPGA on the Command Line
 
 .. code:: sh
 
-   optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit xc7a100t_0
+   optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/system_allct/system_2x2_cccc_nexys4ddr.bit xc7a100t_0
 
 Connecting
 ----------
@@ -470,7 +470,7 @@ You can now run the example using:
    # start from the the baremetal-apps source code directory
    cd hello_mp
    make
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello_mp.vmem
+   $OPTIMSOC/examples/sim/system_allct/system_2x2_cccc_sim_dualcore --meminit=hello_mp.vmem
 
 ::
 

@@ -50,9 +50,9 @@ package optimsoc_config;
 
    typedef struct packed {
       // System configuration
-      integer     NUMTILES;
-      integer     NUMCTS;
-      logic [63:0][15:0] CTLIST;
+      integer            NUMTILES;
+      integer            NUMCTS;
+      logic [1023:0]     CTLIST;
       integer            CORES_PER_TILE;
       integer            GMEM_SIZE;
       integer            GMEM_TILE;

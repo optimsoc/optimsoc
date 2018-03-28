@@ -1,6 +1,6 @@
 CAPI=1
 [main]
-name = optimsoc:system:2x2_cccc_dm
+name = optimsoc:system:allct
 depend =
   optimsoc:tile:compute_tile_dm
   optimsoc:debug:debug_interface
@@ -10,4 +10,4 @@ depend =
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/system_2x2_cccc_dm.sv
+  verilog/system_allct.sv

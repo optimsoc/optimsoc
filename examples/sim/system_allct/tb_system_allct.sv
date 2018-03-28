@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016 by the author(s)
+/* Copyright (c) 2012-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,16 @@
  *
  * =============================================================================
  *
- * A testbench for a 2x2 CCCC system with distributed memory
+ * A testbench for a mesh-based system with distributed memory
  *
  * Parameters:
+ *
+ *   XDIM:
+ *     Number tiles in x dimension (default: 2)
+ *
+ *   YDIM:
+ *     Number tiles in y dimension (default: 2)
+ *
  *   USE_DEBUG:
  *     Enable the OSD-based debug system.
  *
@@ -34,15 +41,24 @@
  *
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
 `include "dbg_config.vh"
 
-module tb_system_2x2_cccc(
+module tb_system_allct
+  #(parameter integer XDIM = 2,
+    parameter integer YDIM = 2,
+    localparam TILES = XDIM*YDIM,
+    parameter USE_DEBUG = 0,
+    parameter ENABLE_VCHANNELS = 1*1,
+    parameter integer NUM_CORES = 1*1, // bug in verilator would give a warning
+    parameter integer LMEM_SIZE = 32*1024*1024
+    )
+    (
 `ifdef verilator
-   input clk,
-   input rst
+     input clk,
+     input rst
 `endif
    );
 
@@ -51,15 +67,10 @@ module tb_system_2x2_cccc(
    import optimsoc_config::*;
    import optimsoc_functions::*;
 
-   parameter USE_DEBUG = 0;
-   parameter ENABLE_VCHANNELS = 1*1;
-   parameter integer NUM_CORES = 1*1; // bug in verilator would give a warning
-   parameter integer LMEM_SIZE = 32*1024*1024;
-
    localparam base_config_t
-     BASE_CONFIG = '{ NUMTILES: 4,
-                      NUMCTS: 4,
-                      CTLIST: {{60{16'hx}}, 16'h0, 16'h1, 16'h2, 16'h3},
+     BASE_CONFIG = '{ NUMTILES: TILES,
+                      NUMCTS: TILES,
+                      CTLIST: {{1024-TILES{1'b0}}, {TILES{1'b1}}},
                       CORES_PER_TILE: NUM_CORES,
                       GMEM_SIZE: 0,
                       GMEM_TILE: 'x,
@@ -131,63 +142,65 @@ module tb_system_2x2_cccc(
    end // if (CONFIG.USE_DEBUG == 1)
 
    // Monitor system behavior in simulation
-   genvar t;
+   genvar x,y;
    genvar i;
 
    wire [CONFIG.NUMCTS*CONFIG.CORES_PER_TILE-1:0] termination;
 
    generate
-      for (t = 0; t < CONFIG.NUMCTS; t = t + 1) begin : gen_tracemon_ct
+      for (y = 0; y < YDIM; y=y+1) begin : gen_tracemon_cty
+         for (x = 0; x < XDIM; x=x+1) begin : gen_tracemon_ctx
+            localparam integer t = y * XDIM + x;
 
-         logic [31:0] trace_r3 [0:CONFIG.CORES_PER_TILE-1];
-         mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
-         assign trace = u_system.gen_ct[t].u_ct.trace;
+            logic [31:0] trace_r3 [0:CONFIG.CORES_PER_TILE-1];
+            mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
+            assign trace = u_system.gen_cty[y].gen_ctx[x].u_ct.trace;
 
-         for (i = 0; i < CONFIG.CORES_PER_TILE; i = i + 1) begin : gen_tracemon_core
-            r3_checker
-               u_r3_checker(
-                  .clk(clk),
-                  .valid(trace[i].valid),
-                  .we (trace[i].wben),
-                  .addr (trace[i].wbreg),
-                  .data (trace[i].wbdata),
-                  .r3 (trace_r3[i])
-               );
+            for (i = 0; i < CONFIG.CORES_PER_TILE; i = i + 1) begin : gen_tracemon_core
+               r3_checker
+                     u_r3_checker(
+                                  .clk(clk),
+                                  .valid(trace[i].valid),
+                                  .we (trace[i].wben),
+                                  .addr (trace[i].wbreg),
+                                  .data (trace[i].wbdata),
+                                  .r3 (trace_r3[i])
+                                  );
 
-            trace_monitor
-               #(
-                  .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
-                  .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
-                  .ENABLE_TRACE(0),
-                  .ID((t*CONFIG.CORES_PER_TILE)+i),
-                  .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
-               )
+               trace_monitor
+                 #(
+                   .STDOUT_FILENAME({"stdout.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
+                   .TRACEFILE_FILENAME({"trace.",index2string((t*CONFIG.CORES_PER_TILE)+i)}),
+                   .ENABLE_TRACE(0),
+                   .ID((t*CONFIG.CORES_PER_TILE)+i),
+                   .TERM_CROSS_NUM(CONFIG.NUMCTS*CONFIG.CORES_PER_TILE)
+                   )
                u_mon0(
-                  .termination            (termination[(t*CONFIG.CORES_PER_TILE)+i]),
-                  .clk                    (clk),
-                  .enable                 (trace[i].valid),
-                  .wb_pc                  (trace[i].pc),
-                  .wb_insn                (trace[i].insn),
-                  .r3                     (trace_r3[i]),
-                  .termination_all        (termination)
-              );
-         end
-
-      end
+                      .termination            (termination[(t*CONFIG.CORES_PER_TILE)+i]),
+                      .clk                    (clk),
+                      .enable                 (trace[i].valid),
+                      .wb_pc                  (trace[i].pc),
+                      .wb_insn                (trace[i].insn),
+                      .r3                     (trace_r3[i]),
+                      .termination_all        (termination)
+                      );
+            end
+         end // block: gen_tracemon_ctx
+      end // block: gen_tracemon_cty
    endgenerate
 
-   system_2x2_cccc_dm
-     #(.CONFIG(CONFIG))
+   system_allct
+     #(.CONFIG(CONFIG), .XDIM(2), .YDIM(2))
    u_system
      (.clk (clk),
       .rst (rst | logic_rst),
       .c_glip_in (c_glip_in),
       .c_glip_out (c_glip_out),
 
-      .wb_ext_ack_o (4'hx),
-      .wb_ext_err_o (4'hx),
-      .wb_ext_rty_o (4'hx),
-      .wb_ext_dat_o (128'hx),
+      .wb_ext_ack_o ('x),
+      .wb_ext_err_o ('x),
+      .wb_ext_rty_o ('x),
+      .wb_ext_dat_o ('x),
       .wb_ext_adr_i (),
       .wb_ext_cyc_i (),
       .wb_ext_dat_i (),
@@ -211,6 +224,18 @@ module tb_system_2x2_cccc(
 
    always clk = #1.25 ~clk;
 `endif
+
+   export "DPI-C" function getXDIM;
+
+   function integer getXDIM();
+     getXDIM = XDIM;
+   endfunction
+
+   export "DPI-C" function getYDIM;
+
+   function integer getYDIM();
+     getYDIM = YDIM;
+   endfunction
 
 endmodule
 

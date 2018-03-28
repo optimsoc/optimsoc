@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2015 by the author(s)
+/* Copyright (c) 2013-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +24,8 @@
  * adapter to the software via memory mapped registers.
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
-
 
 /*
  * BASE+
@@ -73,16 +72,18 @@ module networkadapter_conf
     parameter COREBASE = 'x
     )
   (
-`ifdef OPTIMSOC_CLOCKDOMAINS
- `ifdef OPTIMSOC_CDC_DYNAMIC
-                           cdc_conf, cdc_enable,
- `endif
-`endif
-                           /*AUTOARG*/
-   // Outputs
-   data, ack, rty, err,
-   // Inputs
-   clk, rst, adr, we, data_i
+   input             clk,
+   input             rst,
+
+   input [15:0]      adr,
+   input             en,
+   input             we,
+   input [31:0]      data_i,
+
+   output reg [31:0] data,
+   output reg        ack,
+   output            rty,
+   output reg        err
    );
 
    reg [31:0] seed = 0;
@@ -104,142 +105,67 @@ module networkadapter_conf
    localparam REG_NUMCTS = 10;
    localparam REG_SEED = 11;
 
-   localparam REG_CDC      = 10'h40;
-   localparam REG_CDC_DYN  = 10'h41;
-   localparam REG_CDC_CONF = 10'h42;
-
    localparam REG_CTLIST = 10'h80;
 
    localparam REGBIT_CONF_MPSIMPLE = 0;
    localparam REGBIT_CONF_DMA      = 1;
 
-   input clk;
-   input rst;
-
-   input [15:0]      adr;
-   input             we;
-   input [31:0]      data_i;
-
-   output reg [31:0] data;
-   output            ack;
-   output            rty;
-   output            err;
-
-   assign ack = ~|adr[15:12];
-   assign err = ~ack;
    assign rty = 1'b0;
 
-   // CDC configuration register
-`ifdef OPTIMSOC_CLOCKDOMAINS
- `ifdef OPTIMSOC_CDC_DYNAMIC
-   output reg [2:0]         cdc_conf;
-   output reg               cdc_enable;
- `endif
-`endif
-
-   wire [15:0]              ctlist_vector[0:63];
-
-   genvar                   i;
-   generate
-      for (i=0; i<CONFIG.NUMCTS; i=i+1) begin : gen_ctlist_vector // array is indexed by the desired destination
-         // The entries of this array are subranges from the parameter, where
-         // the indexing is reversed (num_dests-i-1)!
-         assign ctlist_vector[CONFIG.NUMCTS - i - 1] = CONFIG.CTLIST[i];
-      end
-   endgenerate
-
-
-   always @(*) begin
-      if (adr[11:9] == REG_CTLIST[9:7]) begin
-         if (adr[1]) begin
-            data = {16'h0,ctlist_vector[adr[6:1]]};
-         end else begin
-            data = {ctlist_vector[adr[6:1]],16'h0};
-         end
-      end else begin
-         case (adr[11:2])
-           REG_TILEID: begin
-              data = TILEID;
-           end
-           REG_NUMTILES: begin
-              data = CONFIG.NUMTILES;
-           end
-           REG_CONF: begin
-              data = 32'h0000_0000;
-              data[REGBIT_CONF_MPSIMPLE] = CONFIG.NA_ENABLE_MPSIMPLE;
-              data[REGBIT_CONF_DMA] = CONFIG.NA_ENABLE_DMA;
-           end
-           REG_COREBASE: begin
-              data = 32'(COREBASE);
-           end
-           REG_DOMAIN_NUMCORES: begin
-              data = CONFIG.CORES_PER_TILE;
-           end
-           REG_GMEM_SIZE: begin
-              data = CONFIG.GMEM_SIZE;
-           end
-           REG_GMEM_TILE: begin
-              data = CONFIG.GMEM_TILE;
-           end
-           REG_LMEM_SIZE: begin
-              data = CONFIG.LMEM_SIZE;
-           end
-           REG_NUMCTS: begin
-              data = CONFIG.NUMCTS;
-           end
-           REG_SEED: begin
-              data = seed;
-           end
-           REG_CDC: begin
-`ifdef OPTIMSOC_CLOCKDOMAINS
-           data = 32'b1;
-`else
-           data = 32'b0;
-`endif
-        end
-        REG_CDC_DYN: begin
-`ifdef OPTIMSOC_CDC_DYNAMIC
-           data = 32'b1;
-`else
-           data = 32'b0;
-`endif
-        end
-        REG_CDC_CONF: begin
-`ifdef OPTIMSOC_CLOCKDOMAINS
- `ifdef OPTIMSOC_CDC_DYNAMIC
-           data = cdc_conf;
- `else
-           data = 32'hx;
- `endif
-`else
-           data = 32'hx;
-`endif
-        end
-
-           default: begin
-              data = 32'hx;
-           end
-         endcase // case (adr[11:2])
-      end
-   end
-
-`ifdef OPTIMSOC_CLOCKDOMAINS
- `ifdef OPTIMSOC_CDC_DYNAMIC
    always @(posedge clk) begin
-      if (rst) begin
-         cdc_conf <= `OPTIMSOC_CDC_DYN_DEFAULT;
-         cdc_enable <= 0;
-      end else begin
-         if ((adr[11:2]==REG_CDC_CONF) && we) begin
-            cdc_conf <= data_i[2:0];
-            cdc_enable <= 1;
+      ack <= 0;
+      err <= 0;
+
+      if (en) begin
+         if (we) begin
+            err <= 1;
          end else begin
-            cdc_conf <= cdc_conf;
-            cdc_enable <= 0;
+            ack <= ~ack;
+            if (adr[11:9] == REG_CTLIST[9:7]) begin
+               data <= CONFIG.CTLIST[adr[6:2]*32 +: 32];
+               ack <= 1;
+            end else begin
+              case (adr[11:2])
+                REG_TILEID: begin
+                   data <= TILEID;
+                end
+                REG_NUMTILES: begin
+                   data <= CONFIG.NUMTILES;
+                end
+                REG_CONF: begin
+                 data <= 32'h0000_0000;
+                 data[REGBIT_CONF_MPSIMPLE] <= CONFIG.NA_ENABLE_MPSIMPLE;
+                 data[REGBIT_CONF_DMA] <= CONFIG.NA_ENABLE_DMA;
+                end
+                REG_COREBASE: begin
+                   data <= 32'(COREBASE);
+                end
+                REG_DOMAIN_NUMCORES: begin
+                   data <= CONFIG.CORES_PER_TILE;
+                end
+                REG_GMEM_SIZE: begin
+                   data <= CONFIG.GMEM_SIZE;
+                end
+                REG_GMEM_TILE: begin
+                   data <= CONFIG.GMEM_TILE;
+                end
+                REG_LMEM_SIZE: begin
+                   data <= CONFIG.LMEM_SIZE;
+                end
+                REG_NUMCTS: begin
+                   data <= CONFIG.NUMCTS;
+                end
+                REG_SEED: begin
+                   data <= seed;
+                end
+                default: begin
+                   ack <= 0;
+                   err <= 1;
+                   data <= 32'hx;
+                end
+              endcase // case (adr[11:2])
+            end // else: !if(adr[11:9] == REG_CTLIST[9:7])
          end
       end
    end // always @ (posedge clk)
- `endif //  `ifdef OPTIMSOC_CDC_DYNAMIC
-`endif //  `ifdef OPTIMSOC_CLOCKDOMAINS
-
 endmodule // networkadapter_conf

@@ -1,6 +1,6 @@
-# OpTiMSoC Example Design: 2x2 CCCC System for the Xilinx VCU108 Evaluation Board
+# OpTiMSoC Example Design: System with all compute tiles for the Xilinx VCU108 Evaluation Board
 
-This is a example design of a system with four compute tiles in a 2x2 mesh structure.
+This is a example design of a system with all compute tiles in a mesh structure.
 Each tile can have a configurable amount of CPU cores.
 The memory distributed in each tile is mapped to one DDR memory on the board.
 
@@ -8,7 +8,7 @@ The memory distributed in each tile is mapped to one DDR memory on the board.
 
 | Name | Value |
 | --- | ---|
-| Design | `system_2x2_cccc` |
+| Design | `system_allct` |
 | Frequency | 50 MHz |
 | Board | [Xilinx Virtex UltraScale FPGA VCU108 Evaluation Kit](https://www.xilinx.com/products/boards-and-kits/ek-u1-vcu108-g.html) |
 | Synthesis tool | Xilinx Vivado |
@@ -42,7 +42,7 @@ If you plan to use the board more extensively, we recommend choosing either an e
 # run Vivado to generate the bitstream
 # With HOST_IF=uart and UART0_SOURCE=onboard the design can be used without
 # additional hardware.
-fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/system_2x2_cccc build optimsoc:examples:system_2x2_cccc_vcu108 --UART0_SOURCE=onboard --HOST_IF=uart
+fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/system_allct build optimsoc:examples:system_allct_vcu108 --UART0_SOURCE=onboard --HOST_IF=uart --XDIM 2 --YDIM 2 --LMEM_EXTERNAL
 ```
 
 ### Step 3: Connect Board
@@ -59,7 +59,7 @@ After pressing any key you should see the System Controller Main Menu.
 
 ### Step 4: Program Bitstream
 ```sh
-fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/system_2x2_cccc pgm optimsoc:examples:system_2x2_cccc_vcu108
+fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/system_allct pgm optimsoc:examples:system_allct_vcu108
 ```
 
 ### Step 5: Run software
