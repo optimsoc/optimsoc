@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2017 by the author(s)
+/* Copyright (c) 2013-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ package functions;
     *   vector value. The argument shall be treated as an unsigned
     *   value, and an argument value of 0 shall produce a result of 0.
     */
-   function integer clog2;
+   function automatic integer clog2;
       input integer value;
       begin
          value = value - 1;
@@ -86,7 +86,7 @@ package functions;
     *   reg [clog2_width(64) - 1 : 0]     store_64_items;  // width is [5:0]
     *   reg [clog2_width(64 + 1) - 1 : 0] store_number_64; // width is [6:0]
     */
-   function integer clog2_width;
+   function automatic integer clog2_width;
       input integer value;
       begin
          if (value == 1) begin
@@ -97,7 +97,7 @@ package functions;
       end
    endfunction
 
-   function [23:0] index2string;
+   function automatic [23:0] index2string;
       input integer index;
       integer       hundreds;
       integer       tens;
