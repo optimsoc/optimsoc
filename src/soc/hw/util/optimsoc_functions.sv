@@ -53,8 +53,8 @@ package functions;
          end
       end
    endfunction
-   
-   
+
+
    /**
     * Math function: enhanced clog2 function
     *
@@ -77,7 +77,7 @@ package functions;
     *   parameter ITEMS = 64;
     *   localparam ITEMS_WIDTH = clog2_width(ITEMS); // 6
     *   reg [ITEMS_WIDTH-1:0] item_register; // items_register is now [5:0]
-    *   
+    *
     * Note: I if you want to store the number "value" inside a
     * register, you need a register with size clog2(value + 1), since
     * you also need to store the number 0.
@@ -96,12 +96,12 @@ package functions;
          end
       end
    endfunction
-   
+
    function [23:0] index2string;
       input integer index;
-      integer 	    hundreds;
-      integer 	    tens;
-      integer 	    ones;
+      integer       hundreds;
+      integer       tens;
+      integer       ones;
       begin
          hundreds = index / 100;
          tens = (index - (hundreds * 100)) / 10;
@@ -113,4 +113,3 @@ package functions;
    endfunction
 
 endpackage // functions
-   

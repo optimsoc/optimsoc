@@ -80,11 +80,11 @@ module mpbuffer
            bus_data_out = bus_data_mod[i];
       end
    end
-   
+
    assign bus_ack = |bus_ack_mod;
    assign bus_err = |bus_err_mod;
    assign irq = |irq_mod;
-   
+
    assign bus_ack_mod[0] = bus_en & bus_sel_mod[0] & !bus_we & (bus_addr[12:0] == 0);
    assign bus_err_mod[0] = bus_en & bus_sel_mod[0] & (bus_we | (bus_addr[12:0] != 0));
    assign bus_data_mod[0] = N;
@@ -113,6 +113,5 @@ module mpbuffer
                 );
       end
    endgenerate
-   
-endmodule // mpbuffer
 
+endmodule // mpbuffer

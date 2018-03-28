@@ -398,7 +398,7 @@ int ob_simtcp_mem_write(struct optimsoc_backend_ctx *ctx,
 
 int ob_simtcp_reset(struct optimsoc_backend_ctx *ctx)
 {
-	int rv;
+    int rv;
     uint8_t buf[2];
     // Lock access to the control message
     pthread_mutex_lock(&ctx->ctrl_msg_mutex);

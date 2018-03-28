@@ -799,7 +799,7 @@ int main(int argc, char *argv[])
             {"version",     no_argument,       0, 'v'},
             {"backend",     required_argument, 0, 'b'},
             {"options",     required_argument, 0, 'o'},
-			{"auto-mode",   no_argument,       0, 'a'},
+            {"auto-mode",   no_argument,       0, 'a'},
             {0, 0, 0, 0}
         };
         int option_index = 0;

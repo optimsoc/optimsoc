@@ -40,7 +40,8 @@ import dii_package::dii_flit;
 import opensocdebug::mor1kx_trace_exec;
 import optimsoc::*;
 
-module tb_compute_tile(
+module tb_compute_tile
+  (
 `ifdef verilator
    input clk,
    input rst
@@ -87,26 +88,26 @@ module tb_compute_tile(
 
    localparam config_t CONFIG = derive_config(BASE_CONFIG);
 
-   logic rst_sys, rst_cpu;
+   logic             rst_sys, rst_cpu;
 
-   logic cpu_stall;
+   logic             cpu_stall;
    assign cpu_stall = 0;
 
-// In Verilator, we feed clk and rst from the C++ toplevel, in ModelSim & Co.
-// these signals are generated inside this testbench.
+   // In Verilator, we feed clk and rst from the C++ toplevel, in ModelSim & Co.
+   // these signals are generated inside this testbench.
 `ifndef verilator
-   reg clk;
-   reg rst;
+   reg               clk;
+   reg               rst;
 `endif
 
-   wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0]  noc_in_flit;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_last;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_valid;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_in_ready;
-   wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0]  noc_out_flit;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_last;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_valid;
-   wire [CONFIG.NOC_CHANNELS-1:0] 			      noc_out_ready;
+   wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0] noc_in_flit;
+   wire [CONFIG.NOC_CHANNELS-1:0]                            noc_in_last;
+   wire [CONFIG.NOC_CHANNELS-1:0]                            noc_in_valid;
+   wire [CONFIG.NOC_CHANNELS-1:0]                            noc_in_ready;
+   wire [CONFIG.NOC_CHANNELS-1:0][CONFIG.NOC_FLIT_WIDTH-1:0] noc_out_flit;
+   wire [CONFIG.NOC_CHANNELS-1:0]                            noc_out_last;
+   wire [CONFIG.NOC_CHANNELS-1:0]                            noc_out_valid;
+   wire [CONFIG.NOC_CHANNELS-1:0]                            noc_out_ready;
 
    assign noc_in_flit   = {CONFIG.NOC_FLIT_WIDTH*CONFIG.NOC_CHANNELS{1'bx}};
    assign noc_in_last   = {CONFIG.NOC_CHANNELS{1'bx}};
@@ -117,40 +118,40 @@ module tb_compute_tile(
    mor1kx_trace_exec [NUM_CORES-1:0] trace;
    assign trace = u_compute_tile.trace;
 
-   logic [31:0]        trace_r3 [0:NUM_CORES-1];
+   logic [31:0]                                              trace_r3 [0:NUM_CORES-1];
 
-   wire [NUM_CORES-1:0]                         termination;
+   wire [NUM_CORES-1:0]                                      termination;
 
-   genvar i;
+   genvar                                                    i;
    generate
       for (i = 0; i < NUM_CORES; i = i + 1) begin
          r3_checker
-            u_r3_checker(
-               .clk(clk),
-               .valid(trace[i].valid),
-               .we (trace[i].wben),
-               .addr (trace[i].wbreg),
-               .data (trace[i].wbdata),
-               .r3 (trace_r3[i])
-            );
+               u_r3_checker(
+                            .clk(clk),
+                            .valid(trace[i].valid),
+                            .we (trace[i].wben),
+                            .addr (trace[i].wbreg),
+                            .data (trace[i].wbdata),
+                            .r3 (trace_r3[i])
+                            );
 
          trace_monitor
-            #(
-               .STDOUT_FILENAME({"stdout.",index2string(i)}),
-               .TRACEFILE_FILENAME({"trace.",index2string(i)}),
-               .ENABLE_TRACE(0),
-               .ID(i),
-               .TERM_CROSS_NUM(NUM_CORES)
-            )
-            u_mon0(
-               .termination            (termination[i]),
-               .clk                    (clk),
-               .enable                 (trace[i].valid),
-               .wb_pc                  (trace[i].pc),
-               .wb_insn                (trace[i].insn),
-               .r3                     (trace_r3[i]),
-               .termination_all        (termination)
-           );
+           #(
+             .STDOUT_FILENAME({"stdout.",index2string(i)}),
+             .TRACEFILE_FILENAME({"trace.",index2string(i)}),
+             .ENABLE_TRACE(0),
+             .ID(i),
+             .TERM_CROSS_NUM(NUM_CORES)
+             )
+         u_mon0(
+                .termination            (termination[i]),
+                .clk                    (clk),
+                .enable                 (trace[i].valid),
+                .wb_pc                  (trace[i].pc),
+                .wb_insn                (trace[i].insn),
+                .r3                     (trace_r3[i]),
+                .termination_all        (termination)
+                );
       end
    endgenerate
 
@@ -169,42 +170,42 @@ module tb_compute_tile(
 
          // TCP communication interface (simulation only)
          glip_tcp_toplevel
-            u_glip(
-               .*,
-               .clk_io    (clk),
-               .clk_logic (clk),
-               .fifo_in   (c_glip_in),
-               .fifo_out  (c_glip_out)
-            );
+           u_glip(
+                  .*,
+                  .clk_io    (clk),
+                  .clk_logic (clk),
+                  .fifo_in   (c_glip_in),
+                  .fifo_out  (c_glip_out)
+                  );
 
          // System Interface
          debug_interface
-            #(
-               .SYSTEM_VENDOR_ID   (2),
-               .SYSTEM_DEVICE_ID   (1),
-               .NUM_MODULES (CONFIG.DEBUG_NUM_MODS),
-               .SUBNET_BITS (CONFIG.DEBUG_SUBNET_BITS),
-               .LOCAL_SUBNET (CONFIG.DEBUG_LOCAL_SUBNET),
-               .MAX_PKT_LEN (CONFIG.DEBUG_MAX_PKT_LEN),
-               .DEBUG_ROUTER_BUFFER_SIZE (CONFIG.DEBUG_ROUTER_BUFFER_SIZE)
-            )
-            u_debuginterface(
-               .clk           (clk),
-               .rst           (rst),
+           #(
+             .SYSTEM_VENDOR_ID   (2),
+             .SYSTEM_DEVICE_ID   (1),
+             .NUM_MODULES (CONFIG.DEBUG_NUM_MODS),
+             .SUBNET_BITS (CONFIG.DEBUG_SUBNET_BITS),
+             .LOCAL_SUBNET (CONFIG.DEBUG_LOCAL_SUBNET),
+             .MAX_PKT_LEN (CONFIG.DEBUG_MAX_PKT_LEN),
+             .DEBUG_ROUTER_BUFFER_SIZE (CONFIG.DEBUG_ROUTER_BUFFER_SIZE)
+             )
+   u_debuginterface(
+                    .clk           (clk),
+                    .rst           (rst),
 
-               .sys_rst       (rst_sys),
-               .cpu_rst       (rst_cpu),
+                    .sys_rst       (rst_sys),
+                    .cpu_rst       (rst_cpu),
 
-               .glip_in       (c_glip_in),
-               .glip_out      (c_glip_out),
+                    .glip_in       (c_glip_in),
+                    .glip_out      (c_glip_out),
 
-               .ring_out       (debug_ring_in),
-               .ring_out_ready (debug_ring_in_ready),
-               .ring_in        (debug_ring_out),
-               .ring_in_ready  (debug_ring_out_ready)
-            );
-      end
-   endgenerate
+                    .ring_out       (debug_ring_in),
+                    .ring_out_ready (debug_ring_in_ready),
+                    .ring_in        (debug_ring_out),
+                    .ring_in_ready  (debug_ring_out_ready)
+                    );
+end
+endgenerate
 
    // Reset signals
    // In simulations with debug system, these signals can be triggered through
@@ -220,49 +221,49 @@ module tb_compute_tile(
 
    // The actual system: a single compute tile
    compute_tile_dm
-      #(.CONFIG(CONFIG),
-        .ID(0),
-        .MEM_FILE("ct.vmem"),
-        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 1))
-      u_compute_tile(
-                     // Debug ring ports
-                     .debug_ring_in(debug_ring_in),
-                     .debug_ring_in_ready(debug_ring_in_ready),
-                     .debug_ring_out(debug_ring_out),
-                     .debug_ring_out_ready(debug_ring_out_ready),
-                     // Outputs
-                     .noc_in_ready      (noc_in_ready),
-                     .noc_out_flit      (noc_out_flit),
-                     .noc_out_last      (noc_out_last),
-                     .noc_out_valid     (noc_out_valid),
-                     // Inputs
-                     .clk               (clk),
-                     .rst_cpu           (rst_cpu),
-                     .rst_sys           (rst_sys),
-                     .rst_dbg           (rst),
-                     .noc_in_flit       (noc_in_flit),
-                     .noc_in_last       (noc_in_last),
-                     .noc_in_valid      (noc_in_valid),
-                     .noc_out_ready     (noc_out_ready),
+     #(.CONFIG(CONFIG),
+       .ID(0),
+       .MEM_FILE("ct.vmem"),
+       .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 1))
+   u_compute_tile(
+                  // Debug ring ports
+                  .debug_ring_in(debug_ring_in),
+                  .debug_ring_in_ready(debug_ring_in_ready),
+                  .debug_ring_out(debug_ring_out),
+                  .debug_ring_out_ready(debug_ring_out_ready),
+                  // Outputs
+                  .noc_in_ready      (noc_in_ready),
+                  .noc_out_flit      (noc_out_flit),
+                  .noc_out_last      (noc_out_last),
+                  .noc_out_valid     (noc_out_valid),
+                  // Inputs
+                  .clk               (clk),
+                  .rst_cpu           (rst_cpu),
+                  .rst_sys           (rst_sys),
+                  .rst_dbg           (rst),
+                  .noc_in_flit       (noc_in_flit),
+                  .noc_in_last       (noc_in_last),
+                  .noc_in_valid      (noc_in_valid),
+                  .noc_out_ready     (noc_out_ready),
 
-                     // Unused
-                     .wb_ext_adr_i (),
-                     .wb_ext_cyc_i (),
-                     .wb_ext_dat_i (),
-                     .wb_ext_sel_i (),
-                     .wb_ext_stb_i (),
-                     .wb_ext_we_i  (),
-                     .wb_ext_cab_i (),
-                     .wb_ext_cti_i (),
-                     .wb_ext_bte_i (),
-                     .wb_ext_ack_o ('0),
-                     .wb_ext_rty_o ('0),
-                     .wb_ext_err_o ('0),
-                     .wb_ext_dat_o ('0)
-                     );
+                  // Unused
+                  .wb_ext_adr_i (),
+                  .wb_ext_cyc_i (),
+                  .wb_ext_dat_i (),
+                  .wb_ext_sel_i (),
+                  .wb_ext_stb_i (),
+                  .wb_ext_we_i  (),
+                  .wb_ext_cab_i (),
+                  .wb_ext_cti_i (),
+                  .wb_ext_bte_i (),
+                  .wb_ext_ack_o ('0),
+                  .wb_ext_rty_o ('0),
+                  .wb_ext_err_o ('0),
+                  .wb_ext_dat_o ('0)
+                  );
 
-// Generate testbench signals.
-// In Verilator, these signals are generated in the C++ toplevel testbench
+   // Generate testbench signals.
+   // In Verilator, these signals are generated in the C++ toplevel testbench
 `ifndef verilator
    initial begin
       clk = 1'b1;

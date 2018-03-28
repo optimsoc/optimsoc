@@ -65,12 +65,12 @@ module noc_router_input
          u_buffer
            (.*,
             .in_valid    (in_valid[v]),
-            .in_ready    (in_ready[v]),       
+            .in_ready    (in_ready[v]),
             .out_flit    (buffer_flit),
             .out_last    (buffer_last),
             .out_valid   (buffer_valid),
             .out_ready   (buffer_ready),
-	    .packet_size ()
+            .packet_size ()
             );
 
          noc_router_lookup
@@ -85,7 +85,7 @@ module noc_router_input
             .out_flit  (out_flit[v]),
             .out_last  (out_last[v]),
             .out_valid (out_valid[v]),
-            .out_ready (out_ready[v])       
+            .out_ready (out_ready[v])
             );
       end
    endgenerate

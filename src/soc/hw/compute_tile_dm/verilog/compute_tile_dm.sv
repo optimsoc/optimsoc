@@ -642,5 +642,3 @@ module compute_tile_dm
       end // else: !if(CONFIG.ENABLE_BOOTROM)
    endgenerate
 endmodule
-
-

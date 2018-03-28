@@ -98,5 +98,3 @@ module noc_demux
      end
 
 endmodule // noc_demux
-
-

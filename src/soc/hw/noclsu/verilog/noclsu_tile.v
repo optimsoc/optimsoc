@@ -27,15 +27,15 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 module noclsu_tile(/*AUTOARG*/
-   // Outputs
-   noc_out_flit, noc_out_valid, noc_in_ready, dc_dat_o, dc_ack_o,
-   dc_err_o, dc_rty_o, ic_dat_o, ic_ack_o, ic_err_o, ic_rty_o,
-   // Inputs
-   clk, rst, noc_out_ready, noc_in_flit, noc_in_valid, dc_dat_i,
-   dc_adr_i, dc_cyc_i, dc_stb_i, dc_we_i, dc_sel_i, dc_bte_i,
-   dc_cti_i, ic_dat_i, ic_adr_i, ic_cyc_i, ic_stb_i, ic_we_i,
-   ic_sel_i, ic_bte_i, ic_cti_i
-   );
+                   // Outputs
+                   noc_out_flit, noc_out_valid, noc_in_ready, dc_dat_o, dc_ack_o,
+                   dc_err_o, dc_rty_o, ic_dat_o, ic_ack_o, ic_err_o, ic_rty_o,
+                   // Inputs
+                   clk, rst, noc_out_ready, noc_in_flit, noc_in_valid, dc_dat_i,
+                   dc_adr_i, dc_cyc_i, dc_stb_i, dc_we_i, dc_sel_i, dc_bte_i,
+                   dc_cti_i, ic_dat_i, ic_adr_i, ic_cyc_i, ic_stb_i, ic_we_i,
+                   ic_sel_i, ic_bte_i, ic_cti_i
+                   );
 
    parameter TILEID = 0;
    parameter MEMORYID = 2;
@@ -46,7 +46,7 @@ module noclsu_tile(/*AUTOARG*/
    parameter PGAS_ADDRW = 15;
    parameter PGAS_BASE = 0;
 
-   `include "noclsu_nocparms.vh"
+`include "noclsu_nocparms.vh"
 
    input clk;
    input rst;
@@ -55,31 +55,31 @@ module noclsu_tile(/*AUTOARG*/
    output reg        noc_out_valid;
    input             noc_out_ready;
 
-   input [33:0]  noc_in_flit;
-   input         noc_in_valid;
-   output reg    noc_in_ready;
+   input [33:0]      noc_in_flit;
+   input             noc_in_valid;
+   output reg        noc_in_ready;
 
-   input [31:0]  dc_dat_i;
-   input [31:0]  dc_adr_i;
-   input         dc_cyc_i;
-   input         dc_stb_i;
-   input         dc_we_i;
-   input [3:0]   dc_sel_i;
-   input [1:0]   dc_bte_i;
-   input [2:0]   dc_cti_i;
+   input [31:0]      dc_dat_i;
+   input [31:0]      dc_adr_i;
+   input             dc_cyc_i;
+   input             dc_stb_i;
+   input             dc_we_i;
+   input [3:0]       dc_sel_i;
+   input [1:0]       dc_bte_i;
+   input [2:0]       dc_cti_i;
    output reg [31:0] dc_dat_o;
-   output reg       dc_ack_o;
-   output           dc_err_o;
-   output           dc_rty_o;
+   output reg        dc_ack_o;
+   output            dc_err_o;
+   output            dc_rty_o;
 
-   input [31:0]  ic_dat_i;
-   input [31:0]  ic_adr_i;
-   input         ic_cyc_i;
-   input         ic_stb_i;
-   input         ic_we_i;
-   input [3:0]   ic_sel_i;
-   input [1:0]   ic_bte_i;
-   input [2:0]   ic_cti_i;
+   input [31:0]      ic_dat_i;
+   input [31:0]      ic_adr_i;
+   input             ic_cyc_i;
+   input             ic_stb_i;
+   input             ic_we_i;
+   input [3:0]       ic_sel_i;
+   input [1:0]       ic_bte_i;
+   input [2:0]       ic_cti_i;
    output reg [31:0] ic_dat_o;
    output reg        ic_ack_o;
    output            ic_err_o;

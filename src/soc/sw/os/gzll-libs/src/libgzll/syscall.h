@@ -30,20 +30,20 @@
 #include <stdint.h>
 
 static inline uint32_t syscall(uint32_t id, uint32_t p0, uint32_t p1,
-		uint32_t p2, uint32_t p3, uint32_t p4, uint32_t p5)
+        uint32_t p2, uint32_t p3, uint32_t p4, uint32_t p5)
 {
-	register uint32_t r11 __asm__("r11") = id;
-	register uint32_t r3 __asm__("r3") = p0;
-	register uint32_t r4 __asm__("r4") = p1;
-	register uint32_t r5 __asm__("r5") = p2;
-	register uint32_t r6 __asm__("r6") = p3;
-	register uint32_t r7 __asm__("r7") = p4;
-	register uint32_t r8 __asm__("r8") = p5;
+    register uint32_t r11 __asm__("r11") = id;
+    register uint32_t r3 __asm__("r3") = p0;
+    register uint32_t r4 __asm__("r4") = p1;
+    register uint32_t r5 __asm__("r5") = p2;
+    register uint32_t r6 __asm__("r6") = p3;
+    register uint32_t r7 __asm__("r7") = p4;
+    register uint32_t r8 __asm__("r8") = p5;
 
-	__asm__ __volatile__ ("l.sys 0" : "=r"(r11) : "r"(r11), "r"(r3), "r"(r4),
-			"r"(r5), "r"(r6), "r"(r7), "r"(r8) : "memory");
+    __asm__ __volatile__ ("l.sys 0" : "=r"(r11) : "r"(r11), "r"(r3), "r"(r4),
+            "r"(r5), "r"(r6), "r"(r7), "r"(r8) : "memory");
 
-	return r11;
+    return r11;
 }
 
 #endif
