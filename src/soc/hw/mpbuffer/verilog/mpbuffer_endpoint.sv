@@ -43,10 +43,9 @@
  *  Egress ----+----> NoC
  */
 
-import optimsoc::*;
-
 module mpbuffer_endpoint
-  #(
+  import optimsoc_config::*;
+   #(
     parameter config_t CONFIG = 'x,
     parameter SIZE            = 16
     )
@@ -76,7 +75,7 @@ module mpbuffer_endpoint
     output                                 irq
     );
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    localparam SIZE_WIDTH = clog2_width(SIZE);
 

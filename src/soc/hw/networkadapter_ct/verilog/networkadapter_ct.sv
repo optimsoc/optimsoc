@@ -28,9 +28,9 @@
  */
 
 `include "lisnoc_def.vh"
-import optimsoc::*;
 
 module networkadapter_ct
+  import optimsoc_config::*;
   #(
     parameter config_t CONFIG = 'x,
 

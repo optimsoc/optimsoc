@@ -42,9 +42,9 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-package optimsoc;
+package optimsoc_config;
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    typedef enum { EXTERNAL, PLAIN } lmem_style_t;
 

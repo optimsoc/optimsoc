@@ -36,10 +36,6 @@
 
 `include "dbg_config.vh"
 
-import dii_package::dii_flit;
-import opensocdebug::mor1kx_trace_exec;
-import optimsoc::*;
-
 module tb_compute_tile
   (
 `ifdef verilator
@@ -48,7 +44,10 @@ module tb_compute_tile
 `endif
    );
 
-   import functions::*;
+   import dii_package::dii_flit;
+   import opensocdebug::mor1kx_trace_exec;
+   import optimsoc_config::*;
+   import optimsoc_functions::*;
 
    // Simulation parameters
    parameter USE_DEBUG = 0;

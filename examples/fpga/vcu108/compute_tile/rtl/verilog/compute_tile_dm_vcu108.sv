@@ -26,9 +26,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-import dii_package::dii_flit;
-import optimsoc::*;
-
 module compute_tile_dm_vcu108
   (
 
@@ -89,6 +86,9 @@ module compute_tile_dm_vcu108
    input         sm_fan_tach,
    output        sm_fan_pwm
    );
+
+   import dii_package::dii_flit;
+   import optimsoc_config::*;
 
    parameter integer NUM_CORES = 1;
    localparam integer LMEM_SIZE = 128*1024*1024;

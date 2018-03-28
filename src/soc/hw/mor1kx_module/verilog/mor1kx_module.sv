@@ -28,9 +28,8 @@
 
 `include "dbg_config.vh"
 
-import opensocdebug::mor1kx_trace_exec;
-
 module mor1kx_module
+  import opensocdebug::mor1kx_trace_exec;
   #(parameter ID = 0,
     parameter NUMCORES = 1,
     parameter CPU_IMPLEMENTATION = "CAPPUCCINO"

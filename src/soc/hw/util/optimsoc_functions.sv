@@ -27,7 +27,7 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-package functions;
+package optimsoc_functions;
    /**
     * Math function: $clog2 as specified in Verilog-2005
     *

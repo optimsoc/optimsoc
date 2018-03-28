@@ -43,7 +43,7 @@ module wb2sram(/*AUTOARG*/
    wb_stb_i, wb_we_i, wb_clk_i, wb_rst_i, sram_dout
    );
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    // Memory parameters
    // data width (word size)

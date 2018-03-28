@@ -36,7 +36,7 @@ module wb_sram_sp(/*AUTOARG*/
    wb_stb_i, wb_we_i, wb_clk_i, wb_rst_i
    );
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    // Memory size in bytes
    parameter MEM_SIZE_BYTE = 'hx;

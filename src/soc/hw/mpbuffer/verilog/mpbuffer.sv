@@ -27,9 +27,8 @@
  *
  */
 
-import optimsoc::*;
-
 module mpbuffer
+  import optimsoc_config::*;
   #(parameter config_t CONFIG = 'x,
     parameter SIZE            = 16,
     parameter N               = 1

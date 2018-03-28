@@ -39,10 +39,6 @@
 
 `include "dbg_config.vh"
 
-import dii_package::dii_flit;
-import opensocdebug::mor1kx_trace_exec;
-import optimsoc::*;
-
 module tb_system_2x2_cccc(
 `ifdef verilator
    input clk,
@@ -50,7 +46,10 @@ module tb_system_2x2_cccc(
 `endif
    );
 
-   import functions::*;
+   import dii_package::dii_flit;
+   import opensocdebug::mor1kx_trace_exec;
+   import optimsoc_config::*;
+   import optimsoc_functions::*;
 
    parameter USE_DEBUG = 0;
    parameter ENABLE_VCHANNELS = 1*1;

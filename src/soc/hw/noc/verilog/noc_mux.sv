@@ -27,9 +27,8 @@
  *   Andreas Lankes <andreas.lankes@tum.de>
  */
 
-import optimsoc::*;
-
 module noc_mux
+  import optimsoc_config::*;
   #(
     parameter FLIT_WIDTH = 32,
     parameter CHANNELS   = 2

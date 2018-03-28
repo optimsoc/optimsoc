@@ -27,8 +27,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-import dii_package::dii_flit;
-
 module system_2x2_cccc_nexys4
   (
    // 100 MHz system clock from board
@@ -58,6 +56,8 @@ module system_2x2_cccc_nexys4
    output                ddr2_ras_n,
    output                ddr2_we_n
    );
+
+   import dii_package::dii_flit;
 
    parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1;
