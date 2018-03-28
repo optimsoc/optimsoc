@@ -47,7 +47,7 @@ module sram_sp_impl_plain(/*AUTOARG*/
    clk, rst, ce, we, oe, waddr, din, sel
    );
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    // byte address width
    parameter AW = 32;

@@ -38,7 +38,7 @@
    clk, rst, ce, we, oe, waddr, din, sel
    );
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    parameter MEM_SIZE_BYTE = 'hx;
 

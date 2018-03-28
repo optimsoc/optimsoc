@@ -6,4 +6,4 @@ name = optimsoc:base:constants
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  optimsoc-const.sv
+  optimsoc_constants.sv

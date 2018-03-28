@@ -27,9 +27,8 @@
  *   Andreas Lankes <andreas.lankes@tum.de>
  */
 
-import optimsoc::*;
-
 module noc_mux
+  import optimsoc_config::*;
   #(
     parameter FLIT_WIDTH = 32,
     parameter CHANNELS   = 2
@@ -52,7 +51,7 @@ module noc_mux
    reg [CHANNELS-1:0]                                active;
 
    reg                                               activeroute, nxt_activeroute;
-   
+
    wire [CHANNELS-1:0]                               req_masked;
    assign req_masked = {CHANNELS{~activeroute & out_ready}} & in_valid;
 
@@ -70,7 +69,7 @@ module noc_mux
    always @(*) begin
       nxt_activeroute = activeroute;
       in_ready = {CHANNELS{1'b0}};
-      
+
       if (activeroute) begin
          if (|(in_valid & active) && out_ready) begin
             in_ready = active;
@@ -100,7 +99,7 @@ module noc_mux
          active <= select;
       end
    end
-   
+
    arb_rr
      #(.N(CHANNELS))
    u_arb
@@ -108,7 +107,5 @@ module noc_mux
       .req     (req_masked),
       .gnt     (active),
       .en      (1));
-   
+
 endmodule // noc_mux
-
-

@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2017 by the author(s)
+/* Copyright (c) 2013-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-package functions;
+package optimsoc_functions;
    /**
     * Math function: $clog2 as specified in Verilog-2005
     *
@@ -44,7 +44,7 @@ package functions;
     *   vector value. The argument shall be treated as an unsigned
     *   value, and an argument value of 0 shall produce a result of 0.
     */
-   function integer clog2;
+   function automatic integer clog2;
       input integer value;
       begin
          value = value - 1;
@@ -53,8 +53,8 @@ package functions;
          end
       end
    endfunction
-   
-   
+
+
    /**
     * Math function: enhanced clog2 function
     *
@@ -77,7 +77,7 @@ package functions;
     *   parameter ITEMS = 64;
     *   localparam ITEMS_WIDTH = clog2_width(ITEMS); // 6
     *   reg [ITEMS_WIDTH-1:0] item_register; // items_register is now [5:0]
-    *   
+    *
     * Note: I if you want to store the number "value" inside a
     * register, you need a register with size clog2(value + 1), since
     * you also need to store the number 0.
@@ -86,7 +86,7 @@ package functions;
     *   reg [clog2_width(64) - 1 : 0]     store_64_items;  // width is [5:0]
     *   reg [clog2_width(64 + 1) - 1 : 0] store_number_64; // width is [6:0]
     */
-   function integer clog2_width;
+   function automatic integer clog2_width;
       input integer value;
       begin
          if (value == 1) begin
@@ -96,12 +96,12 @@ package functions;
          end
       end
    endfunction
-   
-   function [23:0] index2string;
+
+   function automatic [23:0] index2string;
       input integer index;
-      integer 	    hundreds;
-      integer 	    tens;
-      integer 	    ones;
+      integer       hundreds;
+      integer       tens;
+      integer       ones;
       begin
          hundreds = index / 100;
          tens = (index - (hundreds * 100)) / 10;
@@ -113,4 +113,3 @@ package functions;
    endfunction
 
 endpackage // functions
-   

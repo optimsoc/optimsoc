@@ -1,4 +1,4 @@
-/* Copyright (c) 2015 by the author(s)
+/* Copyright (c) 2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -18,32 +18,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * This file is inspired by the syscall handling in the musl-libc port
+ * =============================================================================
+ *
+ * Constants
  *
  * Author(s):
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-#ifndef __SYSCALL_H__
-#define __SYSCALL_H__
+package optimsoc_constants;
+   // Maximum packet length
+   localparam NOC_MAX_LEN = 32;
 
-#include <stdint.h>
+   // NoC packet header
+   // Mandatory fields
+   localparam NOC_DEST_MSB = 31;
+   localparam NOC_DEST_LSB = 27;
+   localparam NOC_CLASS_MSB = 26;
+   localparam NOC_CLASS_LSB = 24;
+   localparam NOC_SRC_MSB = 23;
+   localparam NOC_SRC_LSB = 19;
 
-static inline uint32_t syscall(uint32_t id, uint32_t p0, uint32_t p1,
-        uint32_t p2, uint32_t p3, uint32_t p4, uint32_t p5)
-{
-    register uint32_t r11 __asm__("r11") = id;
-    register uint32_t r3 __asm__("r3") = p0;
-    register uint32_t r4 __asm__("r4") = p1;
-    register uint32_t r5 __asm__("r5") = p2;
-    register uint32_t r6 __asm__("r6") = p3;
-    register uint32_t r7 __asm__("r7") = p4;
-    register uint32_t r8 __asm__("r8") = p5;
+   // Classes
+   localparam NOC_CLASS_LSU = 3'h2;
 
-    __asm__ __volatile__ ("l.sys 0" : "=r"(r11) : "r"(r11), "r"(r3), "r"(r4),
-            "r"(r5), "r"(r6), "r"(r7), "r"(r8) : "memory");
+   // NoC LSU
+   localparam NOC_LSU_MSGTYPE_MSB = 18;
+   localparam NOC_LSU_MSGTYPE_LSB = 16;
+   localparam NOC_LSU_MSGTYPE_READREQ = 3'h0;
+   localparam NOC_LSU_SIZE_IDX = 15;
+   localparam NOC_LSU_SIZE_SINGLE = 0;
+   localparam NOC_LSU_SIZE_BURST = 1;
 
-    return r11;
-}
-
-#endif
+endpackage // constants

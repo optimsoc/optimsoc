@@ -23,8 +23,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-import dii_package::dii_flit;
-
 /**
  * Debug interface between the host and the target system
  *
@@ -32,6 +30,7 @@ import dii_package::dii_flit;
  * Interface Module (HIM) and the Subnet Controller Module (SCM).
  */
 module debug_interface
+  import dii_package::dii_flit;
   #(
     parameter SYSTEM_VENDOR_ID = 'x,
     parameter SYSTEM_DEVICE_ID = 'x,

@@ -26,9 +26,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-import dii_package::dii_flit;
-import optimsoc::*;
-
 module system_2x2_cccc_vcu108
   (
 
@@ -90,6 +87,9 @@ module system_2x2_cccc_vcu108
    input                 sm_fan_tach,
    output                sm_fan_pwm
    );
+
+   import dii_package::dii_flit;
+   import optimsoc_config::*;
 
    parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1;

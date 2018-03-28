@@ -26,10 +26,9 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-import optimsoc::*;
-import constants::*;
-
 module noc_demux
+  import optimsoc_config::*;
+   import optimsoc_constants::*;
   #(
     parameter FLIT_WIDTH = 32,
     parameter CHANNELS = 2,
@@ -98,5 +97,3 @@ module noc_demux
      end
 
 endmodule // noc_demux
-
-

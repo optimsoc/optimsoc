@@ -42,16 +42,16 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-package optimsoc;
+package optimsoc_config;
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    typedef enum { EXTERNAL, PLAIN } lmem_style_t;
 
    typedef struct packed {
       // System configuration
-      integer            NUMTILES;
-      integer            NUMCTS;
+      integer     NUMTILES;
+      integer     NUMCTS;
       logic [63:0][15:0] CTLIST;
       integer            CORES_PER_TILE;
       integer            GMEM_SIZE;
@@ -88,7 +88,7 @@ package optimsoc;
       integer            DEBUG_MAX_PKT_LEN;
    } base_config_t;
 
-   typedef struct packed {
+   typedef struct        packed {
       // System configuration
       integer            NUMTILES;
       integer            NUMCTS;
@@ -100,7 +100,7 @@ package optimsoc;
       integer            TOTAL_NUM_CORES;
 
       // NoC-related configuration
-      logic 		       NOC_ENABLE_VCHANNELS;
+      logic              NOC_ENABLE_VCHANNELS;
       //  -> derived
       integer            NOC_FLIT_WIDTH;
       integer            NOC_CHANNELS;

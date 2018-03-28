@@ -7,4 +7,4 @@ depend = optimsoc:base:functions
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  optimsoc-config.sv
+  optimsoc_config.sv

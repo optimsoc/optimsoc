@@ -66,9 +66,8 @@
  * +----------------------------+
  */
 
-import optimsoc::*;
-
 module networkadapter_conf
+  import optimsoc_config::*;
   #(parameter config_t CONFIG = 'x,
     parameter TILEID = 'x,
     parameter COREBASE = 'x

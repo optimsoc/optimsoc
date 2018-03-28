@@ -29,6 +29,7 @@
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
+
 module fifo_sync_standard #(
    parameter WIDTH = 8,
    parameter DEPTH = 32,

@@ -27,9 +27,8 @@
  *
  */
 
-import optimsoc::*;
-
 module mpbuffer_wb
+  import optimsoc_config::*;
   #(parameter config_t CONFIG = 'x,
     parameter SIZE            = 16,
     parameter N               = 1
@@ -47,7 +46,7 @@ module mpbuffer_wb
     input [N-1:0]                        noc_in_last,
     input [N-1:0]                        noc_in_valid,
     output [N-1:0]                       noc_in_ready,
-    
+
     input [31:0]                         wb_adr_i,
     input                                wb_we_i,
     input                                wb_cyc_i,
@@ -83,4 +82,3 @@ module mpbuffer_wb
    u_buffer(.*);
 
 endmodule // mpbuffer_wb
-

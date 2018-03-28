@@ -28,9 +28,6 @@
 
 `include "dbg_config.vh"
 
-import dii_package::dii_flit;
-import optimsoc::*;
-
 module system_2x2_cccc_dm(
    input clk, rst,
 
@@ -51,6 +48,9 @@ module system_2x2_cccc_dm(
    input [4*1-1:0]   wb_ext_err_o,
    input [4*32-1:0]  wb_ext_dat_o
    );
+
+   import dii_package::dii_flit;
+   import optimsoc_config::*;
 
    parameter config_t CONFIG = 'x;
 
@@ -169,5 +169,3 @@ module system_2x2_cccc_dm(
    endgenerate
 
 endmodule
-
-

@@ -27,9 +27,6 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-import dii_package::dii_flit;
-import optimsoc::*;
-
 module compute_tile_dm_nexys4
   (
    // 100 MHz system clock from board
@@ -59,6 +56,9 @@ module compute_tile_dm_nexys4
    output                ddr2_ras_n,
    output                ddr2_we_n
    );
+
+   import dii_package::dii_flit;
+   import optimsoc_config::*;
 
    parameter integer NUM_CORES = 1;
    localparam integer LMEM_SIZE = 128*1024*1024;

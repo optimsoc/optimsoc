@@ -26,12 +26,10 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-import dii_package::dii_flit;
-
-import opensocdebug::mor1kx_trace_exec;
-import optimsoc::config_t;
-
 module compute_tile_dm
+  import dii_package::dii_flit;
+   import opensocdebug::mor1kx_trace_exec;
+   import optimsoc_config::*;
   #(
     parameter config_t CONFIG = 'x,
 
@@ -78,7 +76,7 @@ module compute_tile_dm
    input [CHANNELS-1:0]                  noc_out_ready
    );
 
-   import functions::*;
+   import optimsoc_functions::*;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
    localparam NR_SLAVES = 4;
@@ -516,7 +514,7 @@ module compute_tile_dm
 
    generate
       if ((CONFIG.ENABLE_DM) &&
-       (CONFIG.LMEM_STYLE == optimsoc::PLAIN)) begin : gen_sram
+       (CONFIG.LMEM_STYLE == PLAIN)) begin : gen_sram
          /* wb_sram_sp AUTO_TEMPLATE(
           .wb_\(.*\) (wb_mem_\1),
           ); */
@@ -642,5 +640,3 @@ module compute_tile_dm
       end // else: !if(CONFIG.ENABLE_BOOTROM)
    endgenerate
 endmodule
-
-

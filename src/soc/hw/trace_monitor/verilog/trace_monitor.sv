@@ -32,6 +32,7 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
+
 module trace_monitor(/*AUTOARG*/
    // Outputs
    termination,

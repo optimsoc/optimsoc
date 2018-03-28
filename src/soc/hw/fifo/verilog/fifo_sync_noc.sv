@@ -27,6 +27,7 @@
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
+
 // synchronous FWFT FIFO with NoC naming (nothing else changed)
 module fifo_sync_noc #(
    parameter WIDTH = 34,
