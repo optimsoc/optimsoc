@@ -11,7 +11,7 @@ RUN apt-get update
 RUN ./tools/install-build-deps.sh
 
 # Python dependencies
-RUN pip3 install --upgrade pip && pip3 install pytest fusesoc
+RUN pip3 install pytest fusesoc
 
 # target/installation directory
 RUN mkdir -p /opt/optimsoc
