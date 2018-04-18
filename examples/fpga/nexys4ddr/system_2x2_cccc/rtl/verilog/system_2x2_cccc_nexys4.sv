@@ -58,6 +58,7 @@ module system_2x2_cccc_nexys4
    );
 
    import dii_package::dii_flit;
+   import optimsoc_config::*;
 
    parameter ENABLE_VCHANNELS = 1*1;
    parameter integer NUM_CORES = 1;
