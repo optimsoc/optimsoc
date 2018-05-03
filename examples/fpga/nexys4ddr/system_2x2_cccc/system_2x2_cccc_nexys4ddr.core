@@ -32,7 +32,7 @@ top_module = tb_system_2x2_cccc_nexys4ddr
 part = xc7a100tcsg324-1
 
 [vivado]
-top_module = system_2x2_cccc_nexys4ddr
+top_module = system_2x2_cccc_nexys4
 part = "xc7a100tcsg324-1"
 hw_device = xc7a100t_0
 
