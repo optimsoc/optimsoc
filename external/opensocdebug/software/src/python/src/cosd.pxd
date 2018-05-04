@@ -50,8 +50,17 @@ cdef extern from "osd/osd.h" nogil:
 
 
 cdef extern from "osd/packet.h" nogil:
+    # helper struct to avoid anonymous in-line structs, which are not well
+    # supported by Cython
+    struct _osd_packet_data:
+        uint16_t dest
+        uint16_t src
+        uint16_t flags
+        uint16_t *payload
+
     struct osd_packet:
-        pass
+        uint16_t data_size_words
+        _osd_packet_data data
 
     cdef enum osd_packet_type:
         OSD_PACKET_TYPE_REG = 0
@@ -67,9 +76,9 @@ cdef extern from "osd/packet.h" nogil:
 
     unsigned int osd_packet_get_src(const osd_packet *packet)
 
-    unsigned int osd_packet_get_type(const osd_packet*packet)
+    unsigned int osd_packet_get_type(const osd_packet *packet)
 
-    unsigned int osd_packet_get_type_sub(const osd_packet*packet)
+    unsigned int osd_packet_get_type_sub(const osd_packet *packet)
 
     osd_result osd_packet_set_header(osd_packet * packet,
                                      const unsigned int dest,
@@ -78,6 +87,10 @@ cdef extern from "osd/packet.h" nogil:
                                      const unsigned int type_sub)
 
     void osd_packet_to_string(const osd_packet *packet, char** str)
+
+    unsigned int osd_packet_sizeconv_payload2data(unsigned int payload_words)
+
+    unsigned int osd_packet_sizeconv_data2payload(unsigned int data_words)
 
 cdef extern from "osd/hostmod.h" nogil:
     struct osd_hostmod_ctx:

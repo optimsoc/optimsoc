@@ -308,29 +308,45 @@ osd_result worker_main_send_status(struct worker_ctx *ctx, const char *name,
 osd_result worker_wait_for_status(zsock_t *socket, const char *name,
                                   int *retvalue)
 {
-    zmsg_t *msg = zmsg_recv(socket);
-    if (!msg) {
-        if (errno == EAGAIN) {
-            return OSD_ERROR_TIMEDOUT;
-        } else {
+    assert(name[0] == 'I' && name[1] == '-' && "|name| must start with 'I-'");
+
+    bool status_received = false;
+
+    do {
+        zmsg_t *msg = zmsg_recv(socket);
+        if (!msg) {
+            if (errno == EAGAIN) {
+                return OSD_ERROR_TIMEDOUT;
+            } else {
+                return OSD_ERROR_FAILURE;
+            }
+        }
+
+        zframe_t *name_frame = zmsg_pop(msg);
+        char* status_received_name = zframe_strdup(name_frame);
+        zframe_destroy(&name_frame);
+        status_received = (strncmp("I-", status_received_name, 2) == 0);
+        if (!status_received) {
+            free(status_received_name);
+            zmsg_destroy(&msg);
+            continue;
+        }
+
+        if (strcmp(status_received_name, name) != 0) {
+            printf("Got status %s, expected %s.\n", status_received_name, name);
+            free(status_received_name);
+            zmsg_destroy(&msg);
             return OSD_ERROR_FAILURE;
         }
-    }
+        free(status_received_name);
 
-    zframe_t *name_frame = zmsg_pop(msg);
-    if (!zframe_streq(name_frame, name)) {
-        zframe_destroy(&name_frame);
+        zframe_t *data_frame = zmsg_pop(msg);
+        assert(zframe_size(data_frame) == sizeof(int));
+        memcpy(retvalue, zframe_data(data_frame), sizeof(int));
+        zframe_destroy(&data_frame);
+
         zmsg_destroy(&msg);
-        return OSD_ERROR_FAILURE;
-    }
-    zframe_destroy(&name_frame);
-
-    zframe_t *data_frame = zmsg_pop(msg);
-    assert(zframe_size(data_frame) == sizeof(int));
-    memcpy(retvalue, zframe_data(data_frame), sizeof(int));
-    zframe_destroy(&data_frame);
-
-    zmsg_destroy(&msg);
+    } while (!status_received);
 
     return OSD_OK;
 }
