@@ -122,7 +122,7 @@ class CocotbTest:
         args_hdl_params = []
         if "parameters" in self.manifest:
             for name, value in self.manifest["parameters"].items():
-                args_hdl_params.append("-pvalue+{}={}".format(name, value))
+                args_hdl_params.append("-pvalue+{}={}".format(self.manifest["toplevel"]+'.'+name, value))
 
         args_incdirs = []
         if "include_dirs" in self.manifest:
