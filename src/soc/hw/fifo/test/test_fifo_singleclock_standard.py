@@ -1,5 +1,5 @@
 """
-Test the module fifo_sync_standard, a synchronous FIFO with standard
+Test the module fifo_singleclock_standard, a synchronous FIFO with standard
 read characteristics
 """
 
@@ -13,10 +13,10 @@ from cocotb.result import TestFailure
 from fifo_test_common import read_fifo_standard, write_fifo
     
 @cocotb.test()
-def test_fifo_sync_standard(dut):
+def test_fifo_singleclock_standard(dut):
     """
-    Test the module fifo_sync, a synchronous FIFO with standard read
-    characteristics
+    Test the module fifo_singleclock_standard, a synchronous FIFO with standard
+    read characteristics
     """
 
     # Read the parameters back from the DUT to set up our model
@@ -40,8 +40,8 @@ def test_fifo_sync_standard(dut):
     dut.rst <= 0
 
     # start read and write processes
-    write_thread = cocotb.fork(write_fifo(dut))
-    read_thread = cocotb.fork(read_fifo_standard(dut))
+    write_thread = cocotb.fork(write_fifo(dut, dut.clk))
+    read_thread = cocotb.fork(read_fifo_standard(dut, dut.clk))
 
     # wait for read/write to finish. Read only finishes if all required data
     # has been obtained, i.e. it implicitly waits for write as well.

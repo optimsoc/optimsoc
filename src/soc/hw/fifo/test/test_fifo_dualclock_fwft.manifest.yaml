@@ -1,0 +1,16 @@
+module: test_fifo_dualclock_fwft
+
+sources:
+  - ../verilog/fifo_dualclock_fwft.sv
+  - ../verilog/fifo_dualclock_standard.sv
+
+toplevel: fifo_dualclock_fwft
+
+simulators:
+  - vcs
+
+parameters:
+    WIDTH: 16
+    DEPTH: 32
+    PROG_FULL: 4
+    PROG_EMPTY: 4

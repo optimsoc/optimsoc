@@ -29,7 +29,7 @@
  */
 
 // synchronous FWFT FIFO with NoC naming (nothing else changed)
-module fifo_sync_noc #(
+module fifo_singleclock_noc #(
    parameter WIDTH = 34,
    parameter DEPTH = 16
 )(
@@ -57,7 +57,7 @@ module fifo_sync_noc #(
    wire                empty;
 
    // Synchronous FWFT FIFO
-   fifo_sync_fwft
+   fifo_singleclock_fwft
       #(
          .WIDTH(WIDTH),
          .DEPTH(DEPTH)
