@@ -160,22 +160,25 @@ module glip_jtag_toplevel(/*AUTOARG*/
    wire in_fifo_full;
    wire in_valid;
 
-   cdc_fifo
-      #(.DW(WORD_WIDTH),
-        .ADDRSIZE(CDC_ADDRSIZE))
-      in_fifo(
-         // Outputs
-         .wr_full          (in_fifo_full),
-         .rd_empty         (in_fifo_empty),
-         .rd_data          (fifo_in_data),
-         // Inputs
-         .wr_clk           (tck),
-         .rd_clk           (clk),
-         .wr_rst           (~int_rst),
-         .rd_rst           (~int_rst),
-         .wr_data          (in_data),
-         .wr_en            (in_valid),
-         .rd_en            (fifo_in_ready));
+   fifo_dualclock_fwft #(
+      .WIDTH(WORD_WIDTH),
+      .DEPTH(2 ** CDC_ADDRSIZE))
+   in_fifo (
+      // write side
+      .wr_clk     (tck),
+      .wr_rst     (int_rst),
+      .din        (in_data),
+      .wr_en      (in_valid),
+      .full       (in_fifo_full),
+      .prog_full  (),
+
+      // read side
+      .rd_clk     (clk),
+      .rd_rst     (int_rst),
+      .dout       (fifo_in_data),
+      .rd_en      (fifo_in_ready),
+      .empty      (in_fifo_empty),
+      .prog_empty ());
 
    glip_jtag_input_fsm
      #(.WORD_WIDTH(WORD_WIDTH),
@@ -230,21 +233,24 @@ module glip_jtag_toplevel(/*AUTOARG*/
          .fifo_data      (out_data),
          .fifo_valid     (out_valid));
 
-   cdc_fifo
-      #(.DW(WORD_WIDTH),
-        .ADDRSIZE(CDC_ADDRSIZE))
-      out_fifo(
-         // Output ports
-         .wr_full          (out_fifo_full),
-         .rd_empty         (out_fifo_empty),
-         .rd_data          (out_data),
-         // Input ports
-         .wr_clk           (clk),
-         .rd_clk           (tck),
-         .wr_rst           (~int_rst),
-         .rd_rst           (~int_rst),
-         .wr_data          (fifo_out_data),
-         .wr_en            (fifo_out_valid),
-         .rd_en            (out_ready));
+   fifo_dualclock_fwft #(
+      .WIDTH(WORD_WIDTH),
+      .DEPTH(2 ** CDC_ADDRSIZE))
+   out_fifo (
+      // write side
+      .wr_clk     (clk),
+      .wr_rst     (int_rst),
+      .din        (fifo_out_data),
+      .wr_en      (fifo_out_valid),
+      .full       (out_fifo_full),
+      .prog_full  (),
+
+      // read side
+      .rd_clk     (tck),
+      .rd_rst     (int_rst),
+      .dout       (out_data),
+      .rd_en      (out_ready),
+      .empty      (out_fifo_empty),
+      .prog_empty ());
 
 endmodule

@@ -70,16 +70,8 @@ set files [list \
  "[file normalize "$origin_dir/lcd.v"]"\
  "[file normalize "$origin_dir/kc705_loopback_clock.v"]"\
  "[file normalize "$origin_dir/kc705_loopback.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/scaler/verilog/glip_downscale.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/scaler/verilog/glip_upscale.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_sync_fwft.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_sync_standard.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_wrptr_full.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_wr2rd.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_rd2wr.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_rdptr_empty.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo_mem.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_dualclock_fwft.sv"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_dualclock_standard.sv"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 by the author(s)
+/* Copyright (c) 2017-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,9 @@ module vcu108_fx3_stress_test
    // Stall flag
    input             stall_flag,
    
+   // Error flag
+   input             error_flag,
+
    // Stress test reset switch
    input             rst_sw,
 
@@ -63,17 +66,35 @@ module vcu108_fx3_stress_test
    input             clk_p
 );
 
-   wire  clk;
+   wire clk100;
+   wire clk50;
+
+   // Clock buffering
+   //------------------------------------
+   wire clk300;
+
+   IBUFDS clkin1_ibufds(
+      .O  (clk300),
+      .I  (clk_p),
+      .IB (clk_n));
 
    // Generate 100MHz clock for the FX3
    vcu108_stress_test_clock
       #(.FREQ(32'd100_000_000))
-   u_clock(
-      .rst(),
-      .locked(),
-      .clk_in_p (clk_p),
-      .clk_in_n (clk_n),
-      .clk_out  (clk));
+   u_clock_100(
+      .rst      (),
+      .locked   (),
+      .clk_in   (clk300),
+      .clk_out  (clk100));
+
+   // Generate 50MHz clock for the stress test logic to test cross domain clocking
+   vcu108_stress_test_clock
+      #(.FREQ(32'd50_000_000))
+   u_clock_50(
+      .rst      (),
+      .locked   (),
+      .clk_in   (clk300),
+      .clk_out  (clk50));
 
 
    wire [WIDTH-1:0]  fifo_out_data;
@@ -89,8 +110,8 @@ module vcu108_fx3_stress_test
       #(.WIDTH(WIDTH))
    u_glib_cypressfx3(
       // Clock/Reset
-      .clk        (clk),
-      .clk_io_100 (clk),
+      .clk        (clk50),
+      .clk_io_100 (clk100),
       .rst        (),
    
       // Cypress FX3 ports
@@ -127,7 +148,7 @@ module vcu108_fx3_stress_test
    io_stress_test
       #(.WIDTH(WIDTH))
    u_stress_test(
-      .clk              (clk),
+      .clk              (clk50),
       .rst              (glip_logic_rst | rst_sw),
       .fifo_out_ready   (fifo_out_ready),
       .fifo_out_valid   (fifo_out_valid),
@@ -136,6 +157,7 @@ module vcu108_fx3_stress_test
       .fifo_in_data     (fifo_in_data),
       .fifo_in_ready    (fifo_in_ready),
       .stall_flag       (stall_flag),
+      .error_flag       (error_flag),
       .error            (error_led),
       .idle             (idle_led));
 

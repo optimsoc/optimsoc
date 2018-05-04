@@ -188,21 +188,25 @@ module glip_cypressfx2_toplevel(/*AUTOARG*/
    assign fifo_out_ready = ~out_full;
    assign int_fifo_out_valid = ~out_empty;
 
-   cdc_fifo
-      #(.DW(16))
-      out_fifo_cdc(// Logic side (write input)
-                   .wr_full(out_full),
-                   .wr_clk(clk),
-                   .wr_en(fifo_out_valid),
-                   .wr_data(fifo_out_data),
-                   .wr_rst(~int_rst),
+   fifo_dualclock_fwft #(
+      .WIDTH(16),
+      .DEPTH(16))
+   out_fifo_cdc (
+      // Logic side (write input)
+      .wr_clk     (clk),
+      .wr_rst     (int_rst),
+      .din        (fifo_out_data),
+      .wr_en      (fifo_out_valid),
+      .full       (out_full),
+      .prog_full  (),
 
-                   // FX2 side (read output)
-                   .rd_empty(out_empty),
-                   .rd_data(int_fifo_out_data),
-                   .rd_clk(fx2_ifclk),
-                   .rd_rst(~int_rst),
-                   .rd_en(int_fifo_out_ready));
+      // FX2 side (read output)
+      .rd_clk     (fx2_ifclk),
+      .rd_rst     (int_rst),
+      .dout       (int_fifo_out_data),
+      .rd_en      (int_fifo_out_ready),
+      .empty      (out_empty),
+      .prog_empty ());
 
    // Clock domain crossing FX2 -> logic
    wire in_full;
@@ -210,21 +214,25 @@ module glip_cypressfx2_toplevel(/*AUTOARG*/
    assign int_fifo_in_ready = ~in_full;
    assign fifo_in_valid = ~in_empty;
 
-   cdc_fifo
-      #(.DW(16))
-      in_fifo_cdc(// FX2 side (write input)
-                  .wr_full(in_full),
-                  .wr_clk(fx2_ifclk),
-                  .wr_en(int_fifo_in_valid),
-                  .wr_data(int_fifo_in_data),
-                  .wr_rst(~int_rst),
+   fifo_dualclock_fwft #(
+      .WIDTH(16),
+      .DEPTH(16))
+   in_fifo_cdc (
+      // FX2 side (write input)
+      .wr_clk     (fx2_ifclk),
+      .wr_rst     (int_rst),
+      .din        (int_fifo_in_data),
+      .wr_en      (int_fifo_in_valid),
+      .full       (in_full),
+      .prog_full  (),
 
-                  // Logic side (read output)
-                  .rd_empty(in_empty),
-                  .rd_data(fifo_in_data),
-                  .rd_clk(clk),
-                  .rd_rst(~int_rst),
-                  .rd_en(fifo_in_ready));
+      // Logic side (read output)
+      .rd_clk     (clk),
+      .rd_rst     (int_rst),
+      .dout       (fifo_in_data),
+      .rd_en      (fifo_in_ready),
+      .empty      (in_empty),
+      .prog_empty ());
 
 endmodule
 

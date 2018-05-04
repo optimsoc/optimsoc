@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2017 by the author(s)
+/* Copyright (c) 2016-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -129,36 +129,21 @@ module glip_cypressfx3_toplevel
    assign fx3_in_full = !fx3_flaga_n;
    assign fx3_in_almost_full = !fx3_flagb_n;
 
-   // Wires for ingress cdc fifo
-   wire [WIDTH-1:0]     ingress_cdc_wr_data;
-   wire [WIDTH-1:0]     ingress_cdc_rd_data;
-   wire                 ingress_cdc_wr_en;
-   wire                 ingress_cdc_rd_en;
-   wire                 ingress_cdc_rd_empty;
+   // Wires for ingress dualclock fifo
+   wire [WIDTH-1:0]     ingress_dualclock_fifo_din;
+   wire [WIDTH-1:0]     ingress_dualclock_fifo_dout;
+   wire                 ingress_dualclock_fifo_wr_en;
+   wire                 ingress_dualclock_fifo_rd_en;
+   wire                 ingress_dualclock_fifo_prog_full;
+   wire                 ingress_dualclock_fifo_empty;
 
-   // Wires for ingress fx3 buffer
-   wire [WIDTH-1:0]     ingress_fx3_buffer_din;
-   wire [WIDTH-1:0]     ingress_fx3_buffer_dout;
-   wire                 ingress_fx3_buffer_wr_en;
-   wire                 ingress_fx3_buffer_full;
-   wire                 ingress_fx3_buffer_empty;
-   wire                 ingress_fx3_buffer_rd_en;
-
-   // Wires for egress fx3 buffer
-   wire [WIDTH-1:0]     egress_fx3_buffer_din;
-   wire [WIDTH-1:0]     egress_fx3_buffer_dout;
-   wire                 egress_fx3_buffer_wr_en;
-   wire                 egress_fx3_buffer_full;
-   wire                 egress_fx3_buffer_empty;
-   wire                 egress_fx3_buffer_rd_en;
-
-   // Wires for egress cdc fifo
-   wire [WIDTH-1:0]     egress_cdc_wr_data;
-   wire [WIDTH-1:0]     egress_cdc_rd_data;
-   wire                 egress_cdc_wr_en;
-   wire                 egress_cdc_wr_full;
-   wire                 egress_cdc_rd_en;
-   wire                 egress_cdc_rd_empty;
+   // Wires for egress dualclock fifo
+   wire [WIDTH-1:0]     egress_dualclock_fifo_din;
+   wire [WIDTH-1:0]     egress_dualclock_fifo_dout;
+   wire                 egress_dualclock_fifo_wr_en;
+   wire                 egress_dualclock_fifo_rd_en;
+   wire                 egress_dualclock_fifo_full;
+   wire                 egress_dualclock_fifo_empty;
 
    assign fx3_pmode = 3'bz1z;
 
@@ -209,6 +194,7 @@ module glip_cypressfx3_toplevel
    localparam STATE_SW_READ = 14;
    localparam STATE_SW_WRITE = 15;
    localparam STATE_SW_WRITE_WAITFLG = 16;
+   localparam STATE_DELAY_WR = 17;
 
    reg [4:0]   state;
    reg [4:0]   nxt_state;
@@ -265,7 +251,7 @@ module glip_cypressfx3_toplevel
             // If outgoing CDC FIFO contains data and FX3 FIFO on path to host
             // has enough space -> write data to FX3
             if (!fx3_in_full && !int_fifo_out_empty) begin
-               nxt_state = STATE_FLG_A_RCVD;
+               nxt_state = STATE_DELAY_WR;
                // Send zero-length packet after time-out to flush fx3_in_fifo
             end else if (flush) begin
                fifoadr = FX3_EPIN;
@@ -279,6 +265,14 @@ module glip_cypressfx3_toplevel
                // delay of latching, 2 delay of interface, see fig 12)
                nxt_state = STATE_FLG_C_RCVD;
             end
+         end
+
+         // Single wait state to avoid corner case.
+         // Without it, one word would be lost in the case the egress fifo is
+         // emptied while writing to the FX3 and then the fx3_in_almost_full
+         // flag is set to high by the FX3 in the next cycle.
+         STATE_DELAY_WR: begin
+            nxt_state = STATE_FLG_A_RCVD;
          end
 
          STATE_FLG_A_RCVD: begin
@@ -426,107 +420,65 @@ module glip_cypressfx3_toplevel
 
    //------------------ ingress data path (host -> FPGA) --------------------//
 
-   // Connect FX3 -> ingress_cdc
-   assign ingress_cdc_wr_data = fx3_dq_in;
-   assign ingress_cdc_wr_en = int_fifo_in_valid & ~fx3_out_empty;
+   assign ingress_dualclock_fifo_din = fx3_dq_in;
+   assign ingress_dualclock_fifo_wr_en = int_fifo_in_valid & ~fx3_out_empty;
+   assign int_fifo_in_almost_full = ingress_dualclock_fifo_prog_full;
 
-   wire ingress_cdc_wr_full;
-
-   cdc_fifo
-      #(.DW(WIDTH))
-   u_ingress_cdc(
+   fifo_dualclock_fwft #(
+      .WIDTH(WIDTH),
+      .DEPTH(BUFFER_DEPTH),
+      .PROG_FULL(4))
+   u_ingress_cdc (
       // write side (clk_io_100)
-      .wr_clk           (clk_io_100),
-      .wr_rst           (~int_rst),
-      .wr_full          (ingress_cdc_wr_full),
-      .wr_data          (ingress_cdc_wr_data),
-      .wr_en            (ingress_cdc_wr_en),
+      .wr_clk     (clk_io_100),
+      .wr_rst     (int_rst),
+      .din        (ingress_dualclock_fifo_din),
+      .wr_en      (ingress_dualclock_fifo_wr_en),
+      .full       (),
+      .prog_full  (ingress_dualclock_fifo_prog_full),
 
       // read side (clk)
-      .rd_clk           (clk),
-      .rd_rst           (~int_rst),
-      .rd_empty         (ingress_cdc_rd_empty),
-      .rd_data          (ingress_cdc_rd_data),
-      .rd_en            (ingress_cdc_rd_en));
-
-   // Connect ingress_cdc -> ingress_fx3_buffer.
-   assign ingress_fx3_buffer_din = ingress_cdc_rd_data;
-   assign ingress_fx3_buffer_wr_en = ~ingress_cdc_rd_empty;
-   assign ingress_cdc_rd_en = ~ingress_fx3_buffer_full;
-
-   // Stop read when ingress buffer is full.
-   // This is necessary since the cdc fifo has no 'almost_full' signal and the
-   // FX3 sends two more words after reading 'stops'.
-   assign int_fifo_in_almost_full = ingress_fx3_buffer_full;
-
-   fifo_sync_fwft
-      #(.WIDTH(WIDTH),
-      .DEPTH(BUFFER_DEPTH))
-   u_ingress_fx3_buffer(
-      .clk        (clk),
-      .rst        (int_rst),
-
-      .din        (ingress_fx3_buffer_din),
-      .wr_en      (ingress_fx3_buffer_wr_en),
-      .full       (ingress_fx3_buffer_full),
-      .prog_full  (),
-
-      .dout       (ingress_fx3_buffer_dout),
-      .empty      (ingress_fx3_buffer_empty),
-      .rd_en      (ingress_fx3_buffer_rd_en));
+      .rd_clk     (clk),
+      .rd_rst     (int_rst),
+      .dout       (ingress_dualclock_fifo_dout),
+      .rd_en      (ingress_dualclock_fifo_rd_en),
+      .empty      (ingress_dualclock_fifo_empty),
+      .prog_empty ());
 
    // Connect ingress_fx3_buffer -> output interface (to be used in attached
    // logic)
-   assign fifo_in_data = ingress_fx3_buffer_dout;
-   assign fifo_in_valid = ~ingress_fx3_buffer_empty;
-   assign ingress_fx3_buffer_rd_en = fifo_in_ready;
+   assign fifo_in_data = ingress_dualclock_fifo_dout;
+   assign fifo_in_valid = ~ingress_dualclock_fifo_empty;
+   assign ingress_dualclock_fifo_rd_en = fifo_in_ready;
 
    //-------------------------- egress data path --------------------------//
 
    // Connect input interface -> egress_fx3_buffer
-   assign egress_fx3_buffer_din = fifo_out_data;
-   assign egress_fx3_buffer_wr_en = fifo_out_valid;
-   assign fifo_out_ready = ~egress_fx3_buffer_full;
+   assign egress_dualclock_fifo_din = fifo_out_data;
+   assign egress_dualclock_fifo_wr_en = fifo_out_valid;
+   assign fifo_out_ready = ~egress_dualclock_fifo_full;
 
-   fifo_sync_fwft
-      #(.WIDTH(WIDTH),
+   fifo_dualclock_fwft #(
+      .WIDTH(WIDTH),
       .DEPTH(BUFFER_DEPTH))
-   u_egress_fx3_buffer(
-      .clk   (clk),
-      .rst   (int_rst),
+   u_egress_cdc (
+      .wr_clk     (clk),
+      .wr_rst     (int_rst),
+      .din        (egress_dualclock_fifo_din),
+      .wr_en      (egress_dualclock_fifo_wr_en),
+      .full       (egress_dualclock_fifo_full),
+      .prog_full  (),
 
-      .din   (egress_fx3_buffer_din),
-      .wr_en (egress_fx3_buffer_wr_en),
-      .full  (egress_fx3_buffer_full),
-      .prog_full(),
-
-      .dout  (egress_fx3_buffer_dout),
-      .empty (egress_fx3_buffer_empty),
-      .rd_en (egress_fx3_buffer_rd_en));
-
-   // Connect egress_fx3_buffer -> egress_cdc.
-   assign egress_cdc_wr_data = egress_fx3_buffer_dout;
-   assign egress_cdc_wr_en = ~egress_fx3_buffer_empty;
-   assign egress_fx3_buffer_rd_en = ~egress_cdc_wr_full;
-
-   cdc_fifo
-      #(.DW(WIDTH))
-   u_egress_cdc(
-      .wr_clk           (clk),
-      .wr_rst           (~int_rst),
-      .wr_full          (egress_cdc_wr_full),
-      .wr_data          (egress_cdc_wr_data),
-      .wr_en            (egress_cdc_wr_en),
-
-      .rd_clk           (clk_io_100),
-      .rd_rst           (~int_rst),
-      .rd_empty         (egress_cdc_rd_empty),
-      .rd_data          (egress_cdc_rd_data),
-      .rd_en            (egress_cdc_rd_en));
+      .rd_clk     (clk_io_100),
+      .rd_rst     (int_rst),
+      .dout       (egress_dualclock_fifo_dout),
+      .rd_en      (egress_dualclock_fifo_rd_en),
+      .empty      (egress_dualclock_fifo_empty),
+      .prog_empty ());
 
    // Connect egress_cdc -> FX3
-   assign fx3_dq_out = egress_cdc_rd_data;
-   assign int_fifo_out_empty = egress_cdc_rd_empty;
-   assign egress_cdc_rd_en = int_fifo_out_ready;
+   assign fx3_dq_out = egress_dualclock_fifo_dout;
+   assign int_fifo_out_empty = egress_dualclock_fifo_empty;
+   assign egress_dualclock_fifo_rd_en = int_fifo_out_ready;
 
 endmodule

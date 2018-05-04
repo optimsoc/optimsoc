@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+description = "Dual Clock First-Word Fall-Through (FWFT) FIFO"
+name = optimsoc:fifo:fifo_dualclock_fwft
+depend =
+  optimsoc:fifo:fifo_dualclock_standard
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/fifo_dualclock_fwft.sv

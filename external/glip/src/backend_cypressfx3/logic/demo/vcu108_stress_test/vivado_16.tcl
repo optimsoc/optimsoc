@@ -42,14 +42,8 @@ set files [list \
  "[file normalize "$origin_dir/vcu108_fx3_stress_test.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/stress_test/io_stress_test.v"]"\
  "[file normalize "$origin_dir/../../../../common/logic/stress_test/stress_test_lfsr.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_sync_fwft.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_sync_standard.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_wrptr_full.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_wr2rd.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_rd2wr.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_rdptr_empty.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo_mem.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_dualclock_fwft.sv"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_dualclock_standard.sv"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

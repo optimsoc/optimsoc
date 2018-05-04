@@ -52,6 +52,9 @@ module io_stress_test
    // Flag to stall read/write to simulate back pressure.
    input                   stall_flag,
 
+   // Flag to induce error. Simply stops the generation of new random numbers.
+   input                   error_flag,
+
    // Error flag for read test.
    output reg              error,
    // Idle state flag.
@@ -124,7 +127,7 @@ module io_stress_test
       .clk           (clk),
       .rnd_seed      (fifo_in_data),
       .set_seed      (rnd_init),
-      .generate_rnd  (gen_rnd),
+      .generate_rnd  (gen_rnd & ~error_flag),
       .rnd_data      (rnd_data));
 
    // Naming from host's point of view.
