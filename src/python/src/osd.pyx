@@ -219,6 +219,14 @@ cdef class Packet:
         self._ensure_cself()
         cosd.osd_packet_set_header(self._cself, dest, src, type, type_sub)
 
+    @property
+    def payload(self):
+        self._ensure_cself()
+        payload_size_words = cosd.osd_packet_sizeconv_data2payload(self._cself.data_size_words)
+
+        cdef uint16_t[:] payload_view = <uint16_t[:payload_size_words]>self._cself.data.payload
+        return payload_view
+
     def __str__(self):
         cdef char* c_str = NULL
         self._ensure_cself()
@@ -250,8 +258,10 @@ cdef class Hostmod:
         if self._cself is NULL:
             return
 
-        if self.is_connected:
-            self.disconnect()
+        # don't call python methods in here, as they might be partially
+        # destructed already
+        if cosd.osd_hostmod_is_connected(self._cself):
+            rv = cosd.osd_hostmod_disconnect(self._cself)
 
         cosd.osd_hostmod_free(&self._cself)
 
@@ -261,7 +271,6 @@ cdef class Hostmod:
     def disconnect(self):
         cosd.osd_hostmod_disconnect(self._cself)
 
-    @property
     def is_connected(self):
         return cosd.osd_hostmod_is_connected(self._cself)
 

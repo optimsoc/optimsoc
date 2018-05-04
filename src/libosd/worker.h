@@ -183,7 +183,14 @@ void worker_send_status(zsock_t* socket, const char* name, int value);
 /**
  * Wait for a status message of a given name and return its value
  *
- * @return OSD_ERROR_FAILURE if an unexpected error happened,
+ * Status messages are expected to start with "I-". All received messages which
+ * are not starting with "I-" are discarded.
+ *
+ * @param socket ZeroMQ socket to listen on for the status message
+ * @param name the expected status message, must start with "I-"
+ * @param[out] retvalue a pointer to an int variable where the return value is
+ *             stored.
+ * @return OSD_ERROR_FAILURE if an error happened,
  *         OSD_ERROR_TIMEOUT if the wait timeout was exceeded
  *         OSD_OK if operation was successful.
  */
