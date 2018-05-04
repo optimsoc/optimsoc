@@ -20,7 +20,7 @@
  *
  * =============================================================================
  *
- * Synchronous Standard FIFO
+ * Synchronous Standard FIFO (one clock)
  *
  * The memory block in this FIFO is following the "RAM HDL Coding Guidelines"
  * of Xilinx (UG901) to enable placing the FIFO memory into block ram during
@@ -29,7 +29,8 @@
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
-module fifo_sync_standard #(
+
+module fifo_singleclock_standard #(
    parameter WIDTH = 8,
    parameter DEPTH = 32,
    parameter PROG_FULL = DEPTH / 2
@@ -46,8 +47,14 @@ module fifo_sync_standard #(
    input                     rd_en,
    output                    empty
 );
+   localparam AW = $clog2(DEPTH);
 
-   localparam AW = $clog2(DEPTH); // rd_count width
+   // ensure that parameters are set to allowed values
+   initial begin
+      if ((1 << $clog2(DEPTH)) != DEPTH) begin
+         $fatal("fifo_singleclock_standard: the DEPTH must be a power of two.");
+      end
+   end
 
    reg [AW-1:0] wr_addr;
    reg [AW-1:0] rd_addr;

@@ -1,0 +1,12 @@
+CAPI=1
+[main]
+description = "Synchronous (single clock) First-Word Fall-Through (FWFT) FIFO"
+name = optimsoc:fifo:fifo_singleclock_fwft
+depend = optimsoc:fifo:fifo_singleclock_standard
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/fifo_singleclock_fwft.sv
+

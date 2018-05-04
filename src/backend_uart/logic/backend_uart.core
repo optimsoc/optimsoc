@@ -6,8 +6,8 @@ depend =
   glip:common:channel
   glip:common:scaler
   glip:common:credit
-  optimsoc:fifo:fifo_sync_fwft
-  glip:common:cdc
+  optimsoc:fifo:fifo_singleclock_fwft
+  optimsoc:fifo:fifo_dualclock_fwft
 
 [fileset src_files]
 file_type = verilogSource

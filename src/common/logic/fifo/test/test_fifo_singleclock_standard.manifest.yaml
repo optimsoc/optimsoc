@@ -1,0 +1,13 @@
+module: test_fifo_singleclock_standard
+
+sources:
+  - ../verilog/fifo_singleclock_standard.sv
+
+toplevel: fifo_singleclock_standard
+
+simulators:
+  - vcs
+
+parameters:
+    WIDTH: 16
+    DEPTH: 32

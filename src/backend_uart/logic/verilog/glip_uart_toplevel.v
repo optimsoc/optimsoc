@@ -180,13 +180,6 @@ module glip_uart_toplevel
    wire [7:0]         egress_cdc_rd_data;
    wire [7:0]         egress_cdc_wr_data;
 
-
-   wire [7:0]         egress_buffer_din;
-   wire [7:0]         egress_buffer_dout;
-
-   wire               egress_buffer_full;
-   wire               egress_buffer_empty;
-
    wire [7:0]         transmit_data;
    wire               transmit_done;
    wire               transmit_enable;
@@ -286,21 +279,24 @@ module glip_uart_toplevel
    assign ingress_cdc_wr_en = ingress_ctrl_out_valid & fifo_en_io[0];
    assign ingress_ctrl_out_ready = ~ingress_cdc_wr_full;
 
-   cdc_fifo
-      #(.DW(8))
+   fifo_dualclock_fwft
+      #(.WIDTH(8),
+      .DEPTH(16))
    u_ingress_cdc(
       // write side (clk_io)
       .wr_clk           (clk_io),
-      .wr_rst           (~fifo_rst),
-      .wr_full          (ingress_cdc_wr_full),
-      .wr_data          (ingress_cdc_wr_data),
+      .wr_rst           (fifo_rst),
+      .full             (ingress_cdc_wr_full),
+      .prog_full        (),
+      .din              (ingress_cdc_wr_data),
       .wr_en            (ingress_cdc_wr_en),
 
       // read side (clk)
       .rd_clk           (clk),
-      .rd_rst           (~fifo_rst),
-      .rd_empty         (ingress_cdc_rd_empty),
-      .rd_data          (ingress_cdc_rd_data),
+      .rd_rst           (fifo_rst),
+      .empty            (ingress_cdc_rd_empty),
+      .prog_empty       (),
+      .dout             (ingress_cdc_rd_data),
       .rd_en            (ingress_cdc_rd_en));
 
    // connect ingress_cdc -> ingress_upscale
@@ -327,7 +323,7 @@ module glip_uart_toplevel
    assign ingress_buffer_wr_en = ingress_upscale_out_valid & fifo_en_io[0];
    assign ingress_upscale_out_ready = ~ingress_buffer_full;
 
-   fifo_sync_fwft
+   fifo_singleclock_fwft
       #(.WIDTH(WIDTH),
         .DEPTH(32),
         .PROG_FULL(9'h006))
@@ -378,44 +374,28 @@ module glip_uart_toplevel
    assign egress_cdc_wr_en = egress_downscale_out_valid & fifo_en_logic[0];
    assign egress_downscale_out_ready = ~egress_cdc_wr_full;
 
-   cdc_fifo
-      #(.DW(8))
+   fifo_dualclock_fwft
+      #(.WIDTH(8),
+      .DEPTH(BUFFER_OUT_DEPTH))
    u_egress_cdc(
       .wr_clk           (clk),
-      .wr_rst           (~fifo_rst),
-      .wr_full          (egress_cdc_wr_full),
-      .wr_data          (egress_cdc_wr_data),
+      .wr_rst           (fifo_rst),
+      .full             (egress_cdc_wr_full),
+      .prog_full        (),
+      .din              (egress_cdc_wr_data),
       .wr_en            (egress_cdc_wr_en),
 
       .rd_clk           (clk_io),
-      .rd_rst           (~fifo_rst),
-      .rd_empty         (egress_cdc_rd_empty),
-      .rd_data          (egress_cdc_rd_data),
+      .rd_rst           (fifo_rst),
+      .empty            (egress_cdc_rd_empty),
+      .prog_empty       (),
+      .dout             (egress_cdc_rd_data),
       .rd_en            (egress_cdc_rd_en));
 
-   // connect u_egress_cdc -> u_egress_buffer
-   assign egress_buffer_din = egress_cdc_rd_data;
-   assign egress_buffer_wr_en = ~egress_cdc_rd_empty & fifo_en_io[0];
-   assign egress_cdc_rd_en = ~egress_buffer_full;
-
-   fifo_sync_fwft
-      #(.WIDTH(8),
-        .DEPTH(BUFFER_OUT_DEPTH))
-   u_egress_buffer(
-      .clk       (clk_io),
-      .rst       (rst),
-      .din       (egress_buffer_din),
-      .wr_en     (egress_buffer_wr_en),
-      .rd_en     (egress_buffer_rd_en),
-      .dout      (egress_buffer_dout),
-      .full      (egress_buffer_full),
-      .prog_full (),
-      .empty     (egress_buffer_empty));
-
-   // connect u_egress_buffer -> control
-   assign egress_ctrl_in_data = egress_buffer_dout;
-   assign egress_ctrl_in_valid = ~egress_buffer_empty;
-   assign egress_buffer_rd_en = egress_ctrl_in_ready;
+   // connect u_egress_cdc -> control
+   assign egress_ctrl_in_data = egress_cdc_rd_data;
+   assign egress_ctrl_in_valid = ~egress_cdc_rd_empty;
+   assign egress_cdc_rd_en = egress_ctrl_in_ready;
 
    // connect control -> u_transmit
    assign transmit_data = egress_ctrl_out_data;

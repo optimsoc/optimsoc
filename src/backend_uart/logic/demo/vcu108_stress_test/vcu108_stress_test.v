@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2017 by the author(s)
+/* Copyright (c) 2015-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,7 @@ module vcu108_stress_test
 
    // User Pushbuttons
    input          GPIO_SW_N,
+   input          GPIO_SW_C,
    input          GPIO_SW_S,
 
    // GPIO LEDs
@@ -83,6 +84,8 @@ module vcu108_stress_test
    wire     uart_rts_n;
    wire     stall_flag;
    assign   stall_flag = GPIO_SW_S;
+   wire     error_flag;
+   assign   error_flag = GPIO_SW_C;
    wire     idle_led;
    assign   GPIO_LED[7] = idle_led;
    wire     error_led;
@@ -170,6 +173,7 @@ module vcu108_stress_test
       .fifo_in_data     (in_data),
       .fifo_in_ready    (in_ready),
       .stall_flag       (stall_flag),
+      .error_flag       (error_flag),
       .error            (error_led),
       .idle             (idle_led));
 

@@ -4,8 +4,7 @@ module vcu108_stress_test_clock
    parameter FREQ = 32'hx
 )(
    // Clock in ports
-   input       clk_in_p,
-   input       clk_in_n,
+   input       clk_in,
    // Clock out ports
    output      clk_out,
    // Status and control signals
@@ -15,20 +14,10 @@ module vcu108_stress_test_clock
 
    localparam CLK_DIVISOR = 32'd1200000000 / FREQ;
 
-   // Input buffering
-   //------------------------------------
-   wire clk_in_clk_wiz_0;
-
-   IBUFDS clkin1_ibufds(
-      .O  (clk_in_clk_wiz_0),
-      .I  (clk_in_p),
-      .IB (clk_in_n));
-
-
    // Clocking PRIMITIVE
    //------------------------------------
-   wire        clk_out1_clk_wiz_0;
-   wire        clkfbout_clk_wiz_0;
+   wire        pll_clk_out;
+   wire        pll_clk_fb;
 
  
    PLLE3_ADV
@@ -44,14 +33,14 @@ module vcu108_stress_test_clock
       .CLKIN_PERIOD         (3.332))
    plle3_adv_inst(
       // Output clocks
-      .CLKFBOUT            (clkfbout_clk_wiz_0),
-      .CLKOUT0             (clk_out1_clk_wiz_0),
+      .CLKFBOUT            (pll_clk_fb),
+      .CLKOUT0             (pll_clk_out),
       .CLKOUT0B            (),
       .CLKOUT1             (),
       .CLKOUT1B            (),
        // Input clock control
-      .CLKFBIN             (clkfbout_clk_wiz_0),
-      .CLKIN               (clk_in_clk_wiz_0),
+      .CLKFBIN             (pll_clk_fb),
+      .CLKIN               (clk_in),
       // Ports for dynamic reconfiguration
       .DADDR               (7'h0),
       .DCLK                (1'b0),
@@ -72,6 +61,6 @@ module vcu108_stress_test_clock
    //-----------------------------------
    BUFG clkout1_buf(
       .O    (clk_out),
-      .I    (clk_out1_clk_wiz_0));
+      .I    (pll_clk_out));
 
 endmodule

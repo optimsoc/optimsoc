@@ -1,0 +1,14 @@
+module: test_fifo_singleclock_fwft
+
+sources:
+  - ../verilog/fifo_singleclock_fwft.sv
+  - ../verilog/fifo_singleclock_standard.sv
+
+toplevel: fifo_singleclock_fwft
+
+simulators:
+  - vcs
+
+parameters:
+    WIDTH: 16
+    DEPTH: 32

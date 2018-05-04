@@ -15,3 +15,6 @@ set_property -dict {PACKAGE_PIN D9 IOSTANDARD LVCMOS12} [get_ports stall_flag]
 
 ## User switch to reset stress test (north switch)
 set_property -dict {PACKAGE_PIN E34 IOSTANDARD LVCMOS12} [get_ports rst_sw]
+
+## User switch to induce error (center switch)
+set_property -dict {PACKAGE_PIN AW27 IOSTANDARD LVCMOS12} [get_ports error_flag]

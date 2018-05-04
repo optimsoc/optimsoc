@@ -4,8 +4,7 @@ name = glip:backend:cypressfx3
 description = "GLIP Cypress FX3 (USB 3) backend"
 depend =
   glip:common:channel
-  optimsoc:fifo:fifo_sync_fwft
-  glip:common:cdc
+  optimsoc:fifo:fifo_dualclock_fwft
 
 [fileset src_files]
 file_type = systemVerilogSource

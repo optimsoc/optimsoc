@@ -46,14 +46,8 @@ set files [list \
  "[file normalize "$origin_dir/../../verilog/glip_cypressfx3_toplevel.sv"]"\
  "[file normalize "$origin_dir/vcu108_loopback_clock.v"]"\
  "[file normalize "$origin_dir/vcu108_loopback.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_sync_fwft.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_sync_standard.sv"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_wrptr_full.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_wr2rd.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_sync_rd2wr.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_rdptr_empty.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo_mem.v"]"\
- "[file normalize "$origin_dir/../../../../common/logic/cdc/verilog/cdc_fifo.v"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_dualclock_fwft.sv"]"\
+ "[file normalize "$origin_dir/../../../../common/logic/fifo/verilog/fifo_dualclock_standard.sv"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

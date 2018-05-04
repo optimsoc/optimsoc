@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+description = "Synchronous (single clock) Standard FIFO"
+name = optimsoc:fifo:fifo_singleclock_standard
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/fifo_singleclock_standard.sv
+
