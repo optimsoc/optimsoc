@@ -212,7 +212,9 @@ module compute_tile_dm_nexys4
    // Single compute tile with all memory mapped to the DRAM
    compute_tile_dm
       #(.CONFIG(CONFIG),
-        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 1)
+        .DEBUG_BASEID((CONFIG.DEBUG_LOCAL_SUBNET << (16 - CONFIG.DEBUG_SUBNET_BITS)) + 1),
+        .ID(0),
+        .COREBASE(0)
       )
       u_compute_tile
         (
