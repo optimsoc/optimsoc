@@ -183,7 +183,7 @@ def check_fusesoc(min_version):
     else:
         dbg("Found FuseSoC version " + found_version)
 
-"""Check for fusesoc
+"""Check for vivado
 """
 def check_vivado(min_version):
     ver_str = check_program('vivado', '-version')
