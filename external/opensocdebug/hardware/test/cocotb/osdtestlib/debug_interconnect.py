@@ -167,7 +167,7 @@ class DiPacket:
         REQ_WRITE_REG_128 = 7
         RESP_READ_REG_SUCCESS_16 = 8
         RESP_READ_REG_SUCCESS_32 = 9
-        RESP_READ_REG_SUCCESS_6 = 10
+        RESP_READ_REG_SUCCESS_64 = 10
         RESP_READ_REG_SUCCESS_128 = 11
         RESP_READ_REG_ERROR = 12
         NOT_DEFINED = 13
@@ -368,7 +368,8 @@ class RegAccess:
                     DiPacket.TYPE_SUB.RESP_READ_REG_SUCCESS_128.value
             else:
                 raise RegAccessFailedException("An invalid register width " +
-                                               "parameter was chosen!")
+                                               "parameter was chosen! (%d)" %\
+                                               word_width)
 
             tx_packet.set_contents(dest=dest, src=src,
                                    type=DiPacket.TYPE.REG.value,
@@ -458,13 +459,14 @@ class RegAccess:
                 words = 2
             elif word_width == 64:
                 type_sub = DiPacket.TYPE_SUB.REQ_WRITE_REG_64.value
-                words = 3
+                words = 4
             elif word_width == 128:
                 type_sub = DiPacket.TYPE_SUB.REQ_WRITE_REG_128.value
-                words = 4
+                words = 8
             else:
                 raise RegAccessFailedException("An invalid register width "
-                                               "parameter was chosen!")
+                                               "parameter was chosen! (%d)" %\
+                                               word_width)
 
             # Assemble payload of REG debug packet
             payload = [regaddr]
@@ -509,10 +511,10 @@ class RegAccess:
         raise ReturnValue(success)
 
     @cocotb.coroutine
-    def assert_reg_value(self, dest, src, regaddr, exp_value):
+    def assert_reg_value(self, dest, src, regaddr, reg_width, exp_value):
         """ Assert that a register contains an expected value """
 
-        rx_value = yield self.read_register(dest, src, 16, regaddr)
+        rx_value = yield self.read_register(dest, src, reg_width, regaddr)
 
         if rx_value != exp_value:
             raise TestFailure("Read value 0x%04x from register %x, expected 0x%04x."
@@ -528,16 +530,19 @@ class RegAccess:
         self.dut._log.info("Check contents of MOD_VENDOR")
         yield self.assert_reg_value(dest, src,
                                     DiPacket.BASE_REG.MOD_VENDOR.value,
+                                    16,
                                     mod_vendor)
 
         self.dut._log.info("Check contents of MOD_TYPE")
         yield self.assert_reg_value(dest, src,
                                     DiPacket.BASE_REG.MOD_TYPE.value,
+                                    16,
                                     mod_type)
 
         self.dut._log.info("Check contents of MOD_VERSION")
         yield self.assert_reg_value(dest, src,
                                     DiPacket.BASE_REG.MOD_VERSION.value,
+                                    16,
                                     mod_version)
 
         # Check MOD_CS (only the MOD_CS_ACTIVE bit is used for now)
@@ -565,5 +570,6 @@ class RegAccess:
                                   DiPacket.BASE_REG.MOD_EVENT_DEST.value,
                                   event_dest)
         yield self.assert_reg_value(dest, src, DiPacket.BASE_REG.MOD_EVENT_DEST.value,
+                                    16,
                                     event_dest)
 

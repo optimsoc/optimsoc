@@ -19,125 +19,160 @@ import dii_package::dii_flit;
 module osd_dem_uart
   (input clk, rst,
 
-   input           dii_flit debug_in, output debug_in_ready,
-   output          dii_flit debug_out, input debug_out_ready,
+   input            dii_flit debug_in, output debug_in_ready,
+   output           dii_flit debug_out, input debug_out_ready,
 
-   input [15:0]    id,
+   input [15:0]     id,
 
-   output          drop,
+   output           drop,
 
-   input [7:0]     out_char,
-   input           out_valid,
-   output reg      out_ready,
+   input [7:0]      out_char,
+   input            out_valid,
+   output reg       out_ready,
 
    output reg [7:0] in_char,
-   output reg      in_valid,
-   input           in_ready);
+   output reg       in_valid,
+   input            in_ready
+   );
 
-   logic        reg_request;
-   logic        reg_write;
-   logic [15:0] reg_addr;
-   logic [1:0]  reg_size;
-   logic [15:0] reg_wdata;
-   logic        reg_ack;
-   logic        reg_err;
-   logic [15:0] reg_rdata;
+   localparam TYPE_EVENT          = 2'b10;
+   localparam TYPE_SUB_EVENT_LAST = 4'b0000;
 
-   assign reg_ack = 0;
-   assign reg_err = 0;
-   assign reg_rdata = 0;
-
-   logic        stall;
+   logic         stall;
    assign drop = stall;
 
-   dii_flit c_uart_out, c_uart_in;
+   dii_flit     c_uart_out, c_uart_in;
    logic        c_uart_out_ready, c_uart_in_ready;
 
+   reg [15:0]   event_dest;
+   reg [7:0]    out_char_buf;
+
    osd_regaccess_layer
-     #(.MODID(16'h2), .MODVERSION(16'h0),
+     #(.MOD_VENDOR(16'h1), .MOD_TYPE(16'h5), .MOD_VERSION(16'h0),
        .MAX_REG_SIZE(16), .CAN_STALL(1))
-   u_regaccess(.*,
+   u_regaccess(.clk (clk), .rst (rst), .id (id),
+               .debug_in (debug_in),
+               .debug_in_ready (debug_in_ready),
+               .debug_out (debug_out),
+               .debug_out_ready (debug_out_ready),
                .module_in (c_uart_out),
                .module_in_ready (c_uart_out_ready),
                .module_out (c_uart_in),
-               .module_out_ready (c_uart_in_ready));
+               .module_out_ready (c_uart_in_ready),
+               .stall (stall),
+               .event_dest(event_dest),
+               .reg_request (),
+               .reg_write (),
+               .reg_addr (),
+               .reg_size (),
+               .reg_wdata (),
+               .reg_ack (1'b0),
+               .reg_err (1'b0),
+               .reg_rdata (16'h0));
 
-   enum         { STATE_IDLE, STATE_HEADER, STATE_XFER } stateTx, stateRx;
+   enum         { STATE_IDLE, STATE_HDR_DEST, STATE_HDR_SRC, STATE_HDR_FLAGS,
+                  STATE_XFER } state_tx, state_rx;
+
    always @(posedge clk) begin
       if (rst) begin
-         stateTx <= STATE_IDLE;
-         stateRx <= STATE_IDLE;
+         state_tx <= STATE_IDLE;
+         state_rx <= STATE_IDLE;
       end else begin
-         case (stateTx)
+         case (state_tx)
            STATE_IDLE: begin
-              if (out_valid & !stall & c_uart_out_ready) begin
-                 stateTx <= STATE_HEADER;
+              if (out_valid & !stall) begin
+                 state_tx <= STATE_HDR_DEST;
+                 out_char_buf <= out_char;
               end
            end
-           STATE_HEADER: begin
+           STATE_HDR_DEST: begin
               if (c_uart_out_ready) begin
-                 stateTx <= STATE_XFER;
+                 state_tx <= STATE_HDR_SRC;
+              end
+           end
+           STATE_HDR_SRC: begin
+              if (c_uart_out_ready) begin
+                 state_tx <= STATE_HDR_FLAGS;
+              end
+           end
+           STATE_HDR_FLAGS: begin
+              if (c_uart_out_ready) begin
+                 state_tx <= STATE_XFER;
               end
            end
            STATE_XFER: begin
               if (c_uart_out_ready) begin
-                 stateTx <= STATE_IDLE;
+                 state_tx <= STATE_IDLE;
               end
            end
-         endcase // case (stateTx)
+         endcase
 
-         case (stateRx)
+         case (state_rx)
            STATE_IDLE: begin
               if (c_uart_in.valid) begin
-                 stateRx <= STATE_HEADER;
+                 state_rx <= STATE_HDR_SRC;
               end
            end
-           STATE_HEADER: begin
+           STATE_HDR_SRC: begin
               if (c_uart_in.valid) begin
-                 stateRx <= STATE_XFER;
+                 state_rx <= STATE_HDR_FLAGS;
+              end
+           end
+           STATE_HDR_FLAGS: begin
+              if (c_uart_in.valid) begin
+                 state_rx <= STATE_XFER;
               end
            end
            STATE_XFER: begin
               if (c_uart_in.valid & in_ready) begin
-                 stateRx <= STATE_IDLE;
+                 state_rx <= STATE_IDLE;
               end
            end
-         endcase // case (stateRx)
+         endcase
       end // else: !if(rst)
    end
 
-   always @(*) begin
+   always_comb begin
       c_uart_out.valid = 0;
       c_uart_out.last = 0;
-      c_uart_out.data = 'x;
+      c_uart_out.data = 16'h0;
       out_ready = 0;
 
-      case (stateTx)
+      case (state_tx)
         STATE_IDLE: begin
-           c_uart_out.valid = out_valid & !stall;
-           c_uart_out.data = 0;
+           out_ready = !stall;
         end
-        STATE_HEADER: begin
+        STATE_HDR_DEST: begin
            c_uart_out.valid = 1;
-           c_uart_out.data = {2'b01, 4'h01, 10'(id)};
+           c_uart_out.data = 0; // event_dest
+        end
+        STATE_HDR_SRC: begin
+           c_uart_out.valid = 1;
+           c_uart_out.data = id;
+        end
+        STATE_HDR_FLAGS: begin
+           c_uart_out.valid = 1;
+           c_uart_out.data = {TYPE_EVENT, TYPE_SUB_EVENT_LAST, 10'h0};
         end
         STATE_XFER: begin
            c_uart_out.valid = 1;
-           c_uart_out.data = {8'h0, out_char};
+           c_uart_out.data = {8'h0, out_char_buf};
            c_uart_out.last = 1;
-           out_ready = c_uart_out_ready;
         end
-      endcase // case (stateTx)
+      endcase
 
       c_uart_in_ready = 0;
       in_valid = 0;
-      in_char = 'x;
+      in_char = 8'h0;
 
-      case (stateRx)
+      case (state_rx)
         STATE_IDLE: begin
            c_uart_in_ready = 1;
         end
-        STATE_HEADER: begin
+        STATE_HDR_SRC: begin
+           c_uart_in_ready = 1;
+        end
+        STATE_HDR_FLAGS: begin
            c_uart_in_ready = 1;
         end
         STATE_XFER: begin

@@ -132,23 +132,23 @@ def test_scm_extended(dut):
 
     dut._log.info("Check contents of SYSTEM_VENDOR_ID")
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.SCM_REG.SYSTEM_VENDOR_ID.value, 1)
+                                  DiPacket.SCM_REG.SYSTEM_VENDOR_ID.value, 16, 1)
 
     dut._log.info("Check contents of SYSTEM_DEVICE_ID")
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.SCM_REG.SYSTEM_DEVICE_ID.value, 1)
+                                  DiPacket.SCM_REG.SYSTEM_DEVICE_ID.value, 16, 1)
 
     dut._log.info("Check contents of NUM_MOD")
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.SCM_REG.NUM_MOD.value, 1)
+                                  DiPacket.SCM_REG.NUM_MOD.value, 16, 1)
 
     dut._log.info("Check contents of MAX_PKT_LEN")
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.SCM_REG.MAX_PKT_LEN.value, 8)
+                                  DiPacket.SCM_REG.MAX_PKT_LEN.value, 16, 12)
 
     dut._log.info("Check contents of SYSRST")
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.SCM_REG.SYSRST.value, 0)
+                                  DiPacket.SCM_REG.SYSRST.value, 16, 0)
 
 
 @cocotb.test()

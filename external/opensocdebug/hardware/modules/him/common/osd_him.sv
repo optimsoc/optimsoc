@@ -17,7 +17,7 @@
 import dii_package::dii_flit;
 
 module osd_him
-  #(parameter MAX_PKT_LEN = 8)
+  #(parameter MAX_PKT_LEN = 12)
   (input clk, rst,
    glip_channel.slave glip_in,
    glip_channel.master glip_out,

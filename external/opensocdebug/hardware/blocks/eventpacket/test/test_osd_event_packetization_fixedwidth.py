@@ -14,6 +14,8 @@ from cocotb.binary import BinaryValue
 
 from osdtestlib.debug_interconnect import NocDiReader, RegAccess, DiPacket
 
+import random
+
 # DI address of the tested module
 MODULE_DI_ADDRESS = 1058
 
@@ -43,21 +45,30 @@ def test_fixedwidth(dut):
     """Test the generation of two packets with a byte padding"""
     yield _init_dut(dut)
 
+    
     dut.id <= MODULE_DI_ADDRESS
     dut.dest <= SENDER_DI_ADDRESS
-    data_str = '\xef\x12\x34\xde\xad\xbe\xef\xef\xab\xab\xcd'
-    dut.data.value = BinaryValue(data_str)
+    
+    # create data for two packets: one full packet, and one packet with 
+    # only a single payload word
+    payload_words_per_pkg = dut.MAX_PKT_LEN.value.integer - 3 # 3 header words
+    payload_bytes = (payload_words_per_pkg + 1) * 2
+    data_bytes = bytearray(random.getrandbits(8) for _ in range(payload_bytes))
+    data_int = int.from_bytes(data_bytes, byteorder='little', signed=False)
+    dut.data.value = BinaryValue(data_int)
+
     dut.overflow <= 0
     dut.event_available <= 1
 
 
     # packet 1
+    exp_pkg1_payload = [data_bytes[i+1] << 8 | data_bytes[i] for i in range(0, payload_words_per_pkg * 2, 2)]
     exp_pkg = DiPacket()
     exp_pkg.set_contents(dest=SENDER_DI_ADDRESS,
                          src=MODULE_DI_ADDRESS,
                          type=DiPacket.TYPE.EVENT,
                          type_sub=1,
-                         payload=[0xabcd, 0xefab, 0xbeef, 0x0dead, 0x1234])
+                         payload=exp_pkg1_payload)
 
     reader = NocDiReader(dut, dut.clk)
     rcv_pkg = yield reader.receive_packet(set_ready=True)
@@ -71,12 +82,13 @@ def test_fixedwidth(dut):
 
     # packet 2
     yield RisingEdge(dut.clk)
+    exp_pkg2_payload = [data_bytes[i+1] << 8 | data_bytes[i] for i in range(payload_words_per_pkg * 2, payload_bytes, 2)]
     exp_pkg = DiPacket()
     exp_pkg.set_contents(dest=SENDER_DI_ADDRESS,
                          src=MODULE_DI_ADDRESS,
                          type=DiPacket.TYPE.EVENT,
                          type_sub=0,
-                         payload=[0x00ef])
+                         payload=exp_pkg2_payload)
 
     reader = NocDiReader(dut, dut.clk)
     rcv_pkg = yield reader.receive_packet(set_ready=True)

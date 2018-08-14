@@ -34,7 +34,7 @@ module osd_event_packetization #(
    /**
     * The maximum length of a DI packet in flits, including the header flits
     */
-   parameter MAX_PKT_LEN = 8,
+   parameter MAX_PKT_LEN = 12,
 
    /**
     * The maximum number of payload words the packet could consist of.
@@ -78,7 +78,8 @@ module osd_event_packetization #(
 
    // packet counter within a single event transfer
    localparam PKG_CNT_WIDTH = $clog2((MAX_DATA_NUM_WORDS + (MAX_PAYLOAD_LEN - 1)) / MAX_PAYLOAD_LEN);
-   logic [PKG_CNT_WIDTH-1:0] pkg_cnt, nxt_pkg_cnt;
+   localparam PKG_CNT_WIDTH_NONZERO = PKG_CNT_WIDTH == 0 ? 1 : PKG_CNT_WIDTH;
+   logic [PKG_CNT_WIDTH_NONZERO-1:0] pkg_cnt, nxt_pkg_cnt;
 
    // number of packets required to transfer the event data
    // cnt from 0..(num_pkgs-1) => num_pkgs requires one more bit

@@ -1,0 +1,18 @@
+module: test_regaccess
+
+sources:
+  - ../../../interfaces/common/dii_channel.sv
+  - ../common/osd_regaccess.sv
+
+toplevel: osd_regaccess
+
+simulators:
+  - vcs
+
+parameters:
+    MOD_VENDOR: 1
+    MOD_TYPE: 2
+    MOD_VERSION: 3
+    MOD_EVENT_DEST_DEFAULT: 4
+    CAN_STALL: 1
+    MAX_REG_SIZE: 128
