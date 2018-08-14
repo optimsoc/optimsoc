@@ -11,6 +11,7 @@ simulators:
   - vcs
 
 parameters:
-  MAX_PKT_LEN: 8
-  # two packets: packet 1 with 80 bit of payload, and packet 2 with 8 bit of payload
-  DATA_WIDTH: 88
+  MAX_PKT_LEN: 12
+  # two packets: packet 1 with 144 bit of payload, and packet 2 with 12 bit of 
+  # payload
+  DATA_WIDTH: 160

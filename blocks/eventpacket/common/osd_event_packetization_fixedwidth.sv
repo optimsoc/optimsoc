@@ -34,7 +34,7 @@ module osd_event_packetization_fixedwidth #(
    /**
     * The maximum length of a DI packet in flits, including the header flits
     */
-   parameter MAX_PKT_LEN = 8,
+   parameter MAX_PKT_LEN = 12,
 
    /**
     * Width of |data| in bit

@@ -518,4 +518,4 @@ module osd_mam
    end
 
 
-endmodule // osd_dem_uart
+endmodule // osd_mam

@@ -96,13 +96,13 @@ def test_mam_extended_registers(dut):
 
     yield _init_dut(dut)
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.MAM_REG.AW.value,
+                                  DiPacket.MAM_REG.AW.value, 16,
                                   dut.ADDR_WIDTH.value.integer)
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.MAM_REG.DW.value,
+                                  DiPacket.MAM_REG.DW.value, 16,
                                   dut.DATA_WIDTH.value.integer)
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.MAM_REG.REGIONS.value,
+                                  DiPacket.MAM_REG.REGIONS.value, 16,
                                   dut.REGIONS.value.integer)
 
     for region in range(0, dut.REGIONS.value.integer):
@@ -116,30 +116,30 @@ def test_mam_extended_registers(dut):
 
         # REGION*_BASEADDR_*
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_baseaddr_basereg,
+                                      region_baseaddr_basereg, 16,
                                       baseaddr_exp & 0xFFFF)
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_baseaddr_basereg + 1,
+                                      region_baseaddr_basereg + 1, 16,
                                       (baseaddr_exp >> 16) & 0xFFFF)
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_baseaddr_basereg + 2,
+                                      region_baseaddr_basereg + 2, 16,
                                       (baseaddr_exp >> 32) & 0xFFFF)
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_baseaddr_basereg + 3,
+                                      region_baseaddr_basereg + 3, 16,
                                       (baseaddr_exp >> 48) & 0xFFFF)
 
         # REGION*_MEMSIZE_*
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_memsize_basereg,
+                                      region_memsize_basereg, 16,
                                       memsize_exp & 0xFFFF)
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_memsize_basereg + 1,
+                                      region_memsize_basereg + 1, 16,
                                       (memsize_exp >> 16) & 0xFFFF)
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_memsize_basereg + 2,
+                                      region_memsize_basereg + 2, 16,
                                       (memsize_exp >> 32) & 0xFFFF)
         yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                      region_memsize_basereg + 3,
+                                      region_memsize_basereg + 3, 16,
                                       (memsize_exp >> 48) & 0xFFFF)
 
 

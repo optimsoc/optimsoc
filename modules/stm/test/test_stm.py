@@ -119,13 +119,13 @@ def test_stm_activation(dut):
 
     dut._log.info("Check contents of MOD_CS")
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.BASE_REG.MOD_CS.value, 0)
+                                  DiPacket.BASE_REG.MOD_CS.value, 16, 0)
 
     yield _activate_module(dut)
 
     dut._log.info("Check contents of MOD_CS")
     yield access.assert_reg_value(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                  DiPacket.BASE_REG.MOD_CS.value, 1)
+                                  DiPacket.BASE_REG.MOD_CS.value, 16, 1)
 
 @cocotb.test()
 def test_stm_base_registers(dut):

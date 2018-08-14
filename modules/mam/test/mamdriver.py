@@ -47,7 +47,7 @@ class MamDiDriver:
     """
 
     def __init__(self, entity, clock, di_writer=None, di_reader=None,
-                 MAX_PKT_LEN=8, MODULE_DI_ADDRESS=1, SENDER_DI_ADDRESS=0):
+                 MAX_PKT_LEN=12, MODULE_DI_ADDRESS=1, SENDER_DI_ADDRESS=0):
         self.entity = entity
         self.clock = clock
         self.log = entity._log

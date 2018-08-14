@@ -20,7 +20,7 @@ module osd_scm
   #(parameter SYSTEM_VENDOR_ID='x,
     parameter SYSTEM_DEVICE_ID='x,
     parameter NUM_MOD='x,
-    parameter MAX_PKT_LEN=8)
+    parameter MAX_PKT_LEN=12)
    (input clk, rst,
 
     input [15:0] id,

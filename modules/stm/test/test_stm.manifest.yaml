@@ -9,6 +9,7 @@ sources:
   - ../../../blocks/timestamp/common/osd_timestamp.sv
   - ../../../blocks/buffer/common/osd_fifo.sv
   - ../../../blocks/eventpacket/common/osd_event_packetization.sv
+  - ../../../blocks/eventpacket/common/osd_event_packetization_fixedwidth.sv
   - ../../../blocks/tracesample/common/osd_tracesample.sv
   - ../common/osd_stm.sv
 
@@ -20,3 +21,4 @@ simulators:
 parameters:
   VALWIDTH: 32
   REG_ADDR_WIDTH: 5
+  MAX_PKT_LEN: 12

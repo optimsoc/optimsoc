@@ -39,14 +39,14 @@ module osd_regaccess_layer
     output        dii_flit module_out, input module_out_ready,
     input         dii_flit module_in, output module_in_ready,
 
-    output reg    reg_request,
-    output        reg_write,
-    output [15:0] reg_addr,
-    output [1:0]  reg_size,
-    output [15:0] reg_wdata,
-    input         reg_ack,
-    input         reg_err,
-    input [15:0]  reg_rdata,
+    output reg                reg_request,
+    output                    reg_write,
+    output [15:0]             reg_addr,
+    output [1:0]              reg_size,
+    output [MAX_REG_SIZE-1:0] reg_wdata,
+    input                     reg_ack,
+    input                     reg_err,
+    input [MAX_REG_SIZE-1:0]  reg_rdata,
 
     output [15:0] event_dest, // DI address of the event destination
     output        stall);
