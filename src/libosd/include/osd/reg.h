@@ -60,7 +60,14 @@
 
 // CTM register map
 #define OSD_REG_CTM_ADDR_WIDTH 0x0200
-#define OSD_REG_CTM_DATA_WIDTH 0x0200
+#define OSD_REG_CTM_DATA_WIDTH 0x0201
+
+// CDM register map
+#define OSD_REG_CDM_CORE_CTRL 0x0200
+#define OSD_REG_CDM_CORE_CTRL_STALL_BIT 0
+#define OSD_REG_CDM_CORE_REG_UPPER 0x0201
+#define OSD_REG_CDM_CORE_DATA_WIDTH 0x0202
+
 
 /**@}*/ /* end of doxygen group libosd-reg */
 

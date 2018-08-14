@@ -21,7 +21,9 @@ from libc.stdlib cimport malloc, free
 from libc.stdio cimport FILE, fopen, fclose
 from libc.errno cimport errno
 from libc.string cimport strerror
+from posix.time cimport timespec
 
+import time
 import logging
 import os
 
@@ -227,6 +229,18 @@ cdef class Packet:
         cdef uint16_t[:] payload_view = <uint16_t[:payload_size_words]>self._cself.data.payload
         return payload_view
 
+    @property
+    def size_payload_words(self):
+        """ Payload size in 16 bit words """
+        self._ensure_cself()
+        return cosd.osd_packet_sizeconv_data2payload(self._cself.data_size_words)
+
+    @property
+    def size_words(self):
+        """ Packet size in 16 bit words (including header) """
+        self._ensure_cself()
+        return self._cself.data_size_words
+
     def __str__(self):
         cdef char* c_str = NULL
         self._ensure_cself()
@@ -419,6 +433,19 @@ cdef class GatewayGlip:
     def is_connected(self):
         return cosd.osd_gateway_glip_is_connected(self._cself)
 
+    def get_transfer_stats(self):
+        cdef cosd.osd_gateway_transfer_stats *stats
+
+        stats = cosd.osd_gateway_glip_get_transfer_stats(self._cself)
+
+        connect_time_float = stats.connect_time.tv_sec + stats.connect_time.tv_nsec * 1e-9
+        cur_time = time.clock_gettime(time.CLOCK_MONOTONIC)
+        time_elapsed = cur_time - connect_time_float
+
+        return { 'bytes_from_device': stats.bytes_from_device,
+                 'bytes_to_device': stats.bytes_to_device,
+                 'connected_secs': time_elapsed }
+
 
 cdef class Hostctrl:
     cdef cosd.osd_hostctrl_ctx* _cself
@@ -594,8 +621,11 @@ cdef class MemoryAccess:
     def loadelf(self, MemoryDescriptor mem_desc, elf_file_path, verify):
         py_byte_string = elf_file_path.encode('UTF-8')
         cdef char* c_elf_file_path = py_byte_string
-        rv = cosd.osd_memaccess_loadelf(self._cself, &mem_desc._cself, c_elf_file_path,
-                                        verify)
+        cdef int c_verify = verify
+
+        with nogil:
+            rv = cosd.osd_memaccess_loadelf(self._cself, &mem_desc._cself,
+                                            c_elf_file_path, c_verify)
         check_osd_result(rv)
 
 

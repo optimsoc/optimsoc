@@ -9,6 +9,7 @@ check_PROGRAMS = \
 	check_cl_scm \
 	check_cl_stm \
 	check_cl_ctm \
+	check_cl_cdm \
 	check_memaccess \
 	check_systracelogger \
 	check_coretracelogger
@@ -35,6 +36,10 @@ check_cl_stm_SOURCES = \
 
 check_cl_ctm_SOURCES = \
 	check_cl_ctm.c \
+	mock_hostmod.c
+
+check_cl_cdm_SOURCES = \
+	check_cl_cdm.c \
 	mock_hostmod.c
 
 check_memaccess_SOURCES = \

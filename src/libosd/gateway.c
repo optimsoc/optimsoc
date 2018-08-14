@@ -116,6 +116,9 @@ struct osd_gateway_ctx {
 
     /** Callback argument pointer (passed to the callbacks, internally unused)*/
     void *cb_arg;
+
+    /** Transfer statistics */
+    struct osd_gateway_transfer_stats stats;
 };
 
 /**
@@ -148,6 +151,11 @@ struct hostiothread_usr_ctx {
      * Write only!
      */
     bool *device_disconnect_detected;
+
+    /**
+     * Non-synchronized pointer to the osd_gateway_ctx.stats struct.
+     */
+    struct osd_gateway_transfer_stats *stats;
 };
 
 /**
@@ -166,6 +174,20 @@ static void perform_outstanding_main_thread_tasks(struct osd_gateway_ctx *ctx)
         osd_gateway_disconnect(ctx);
         ctx->device_disconnect_detected = false;
     }
+}
+
+static void stats_start(struct osd_gateway_ctx *ctx)
+{
+    ctx->stats.bytes_from_device = 0;
+    ctx->stats.bytes_to_device = 0;
+
+    int irv = clock_gettime(CLOCK_MONOTONIC, &ctx->stats.connect_time);
+    assert(irv == 0);
+}
+
+static void stats_add_pkg(uint64_t *byte_counter, const struct osd_packet *pkg)
+{
+    *byte_counter += pkg->data_size_words * sizeof(uint16_t);
 }
 
 /**
@@ -208,6 +230,9 @@ static void *devicerxthread_main(void *gateway_ctx_void)
         zmq_rv = zmsg_addmem(msg, rcv_packet->data_raw,
                              osd_packet_sizeof(rcv_packet));
         zmsg_send(&msg, gateway_ctx->device_rx_socket);
+
+        stats_add_pkg(&gateway_ctx->stats.bytes_from_device, rcv_packet);
+
         osd_packet_free(&rcv_packet);
     }
 
@@ -250,7 +275,11 @@ static int hostiothread_rcv_from_hostctrl(zloop_t *loop, zsock_t *reader,
         rv = osd_packet_new_from_zframe(&pkg, data_frame);
         assert(OSD_SUCCEEDED(rv));
         osd_result device_write_rv = usrctx->packet_write(pkg, usrctx->cb_arg);
+
+        stats_add_pkg(&usrctx->stats->bytes_to_device, pkg);
+
         free(pkg);
+
         if (OSD_FAILED(device_write_rv)) {
             if (device_write_rv == OSD_ERROR_NOT_CONNECTED) {
                 dbg(thread_ctx->log_ctx, "Connection to device was terminated "
@@ -407,7 +436,7 @@ static osd_result hostiothread_unregister_gw(
  * Connect to the host controller in the I/O thread
  *
  * This function is called by the inprochelper as response to the I-CONNECT
- * message. It creates a new DIALER ZeroMQ socket and uses it to connect to the
+ * message. It creates a new DEALER ZeroMQ socket and uses it to connect to the
  * host controller. After completion the function sends out a I-CONNECT-DONE
  * message. The message value is -1 if the connection failed for any reason,
  * or the DI address assigned to the host module if the connection was
@@ -422,7 +451,7 @@ static void hostiothread_connect_to_hostctrl(
     osd_result retval;
     osd_result osd_rv;
 
-    // create new DIALER socket to connect with the host controller
+    // create new DEALER socket to connect with the host controller
     usrctx->hostctrl_socket = zsock_new_dealer(usrctx->host_controller_address);
     if (!usrctx->hostctrl_socket) {
         err(thread_ctx->log_ctx, "Unable to connect to %s",
@@ -591,6 +620,7 @@ osd_result osd_gateway_new(struct osd_gateway_ctx **ctx,
     c->packet_read = packet_read;
     c->cb_arg = cb_arg;
     c->device_disconnect_detected = false;
+    // c->stats is 0-initialized by calloc above
 
     // prepare custom data passed to I/O thread for host communication
     struct hostiothread_usr_ctx *hostiothread_usr_data =
@@ -603,6 +633,9 @@ osd_result osd_gateway_new(struct osd_gateway_ctx **ctx,
     hostiothread_usr_data->device_subnet_addr = device_subnet_addr;
     hostiothread_usr_data->device_disconnect_detected =
             &c->device_disconnect_detected;
+
+    // non-synchronized pointer to the statistics. Use with caution!
+    hostiothread_usr_data->stats = &c->stats;
 
     rv = worker_new(&c->ioworker_ctx, log_ctx, hostiothread_init,
                     hostiothread_destroy, hostiothread_handle_inproc_request,
@@ -679,6 +712,8 @@ osd_result osd_gateway_connect(struct osd_gateway_ctx *ctx)
     if (OSD_FAILED(rv)) {
         return rv;
     }
+
+    stats_start(ctx);
 
     return OSD_OK;
 }
@@ -790,4 +825,11 @@ void osd_gateway_free(struct osd_gateway_ctx **ctx_p)
 
     free(ctx);
     *ctx_p = NULL;
+}
+
+API_EXPORT
+struct osd_gateway_transfer_stats*
+osd_gateway_get_transfer_stats(struct osd_gateway_ctx *ctx)
+{
+    return &ctx->stats;
 }

@@ -52,7 +52,7 @@ Install perf using the package manager of your distribution.
    # for SUSE
    sudo zypper install perf
 
-Running oprofile as non-root user requires a couple kernel settings to be changed.
+Running perf as non-root user requires a couple kernel settings to be changed.
 
 .. code-block:: sh
 

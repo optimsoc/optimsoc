@@ -78,6 +78,18 @@ Register the source of this message as gateway for all traffic intended for subn
 If successsful, the subnet controller responds with an ``ACK`` message.
 If not successful, a ``NACK`` message is sent.
  
+GW_UNREGISTER <subnet-addr>
+"""""""""""""""""""""""""""
+
+- Source: any
+- Target: host subnet controller
+
+Remove the association of the gateway with subnet *<subnet-addr>*.
+*<subnet-addr>* is given as decimal integer (base 10).
+
+If successsful, the subnet controller responds with an ``ACK`` message.
+If not successful, a ``NACK`` message is sent.
+
 ACK
 """
 - Source: any

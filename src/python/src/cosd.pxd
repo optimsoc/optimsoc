@@ -15,6 +15,7 @@
 from cutil cimport va_list
 from libc.stdint cimport uint8_t, uint16_t, uint64_t
 from libc.stdio cimport FILE
+from posix.time cimport timespec
 
 
 cdef extern from "osd/osd.h" nogil:
@@ -173,6 +174,12 @@ cdef extern from "libglip.h" nogil:
         char *name
         char *value
 
+cdef extern from "osd/gateway.h" nogil:
+    struct osd_gateway_transfer_stats:
+        timespec connect_time
+        uint64_t bytes_from_device
+        uint64_t bytes_to_device
+
 cdef extern from "osd/gateway_glip.h" nogil:
     struct osd_gateway_glip_ctx:
         pass
@@ -192,6 +199,8 @@ cdef extern from "osd/gateway_glip.h" nogil:
     osd_result osd_gateway_glip_disconnect(osd_gateway_glip_ctx *ctx)
 
     int osd_gateway_glip_is_connected(osd_gateway_glip_ctx *ctx)
+
+    osd_gateway_transfer_stats* osd_gateway_glip_get_transfer_stats(osd_gateway_glip_ctx *ctx)
 
 cdef extern from "osd/cl_mam.h" nogil:
     cdef struct osd_mem_desc_region:

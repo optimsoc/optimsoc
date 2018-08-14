@@ -81,7 +81,7 @@ osd_result osd_memaccess_cpus_start(struct osd_memaccess_ctx *ctx,
  * @param subnet_addr the subnet to stop all CPUs in
  * @return OSD_OK on success, any other value indicates an error
  *
- * @osd_memaccess_cpus_start()
+ * @see osd_memaccess_cpus_start()
  */
 osd_result osd_memaccess_cpus_stop(struct osd_memaccess_ctx *ctx,
                                    unsigned int subnet_addr);
@@ -91,7 +91,7 @@ osd_result osd_memaccess_cpus_stop(struct osd_memaccess_ctx *ctx,
  *
  * @param ctx the context object
  * @param subnet_addr the subnet to find memories in
- * @param[ouŧ] the memories found in the subnet
+ * @param[out] the memories found in the subnet
  * @param[out] the number of entries in the @p memories array
  * @return OSD_OK if the operation was successful
  *         OSD_ERROR_PARTIAL_RESULT not all memories could be enumerated

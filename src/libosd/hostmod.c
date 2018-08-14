@@ -308,7 +308,7 @@ static osd_result iothread_obtain_diaddr(struct worker_thread_ctx *thread_ctx,
  * Connect to the host controller in the I/O thread
  *
  * This function is called by the I/O worker thread as response to the I-CONNECT
- * message. It creates a new DIALER ZeroMQ socket and uses it to connect to the
+ * message. It creates a new DEALER ZeroMQ socket and uses it to connect to the
  * host controller. After completion the function sends out a I-CONNECT-DONE
  * message. The message value is -1 if the connection failed for any reason,
  * or the DI address assigned to the host module if the connection was
@@ -322,7 +322,7 @@ static void iothread_connect_to_hostctrl(struct worker_thread_ctx *thread_ctx)
     osd_result retval;
     osd_result osd_rv;
 
-    // create new DIALER socket to connect with the host controller
+    // create new DEALER socket to connect with the host controller
     usrctx->hostctrl_socket = zsock_new_dealer(usrctx->host_controller_address);
     if (!usrctx->hostctrl_socket) {
         err(thread_ctx->log_ctx, "Unable to connect to %s",

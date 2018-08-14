@@ -22,6 +22,7 @@
 
 #include <czmq.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +42,17 @@ extern "C" {
  * object with osd_gateway_new() and delete it with osd_gateway_free().
  */
 struct osd_gateway_ctx;
+
+/**
+ * Data transfer statistics
+ *
+ * @see osd_gateway_get_transfer_stats()
+ */
+struct osd_gateway_transfer_stats {
+    struct timespec connect_time;
+    uint64_t bytes_from_device;
+    uint64_t bytes_to_device;
+};
 
 /**
  * Read a osd_packet from the device
@@ -129,6 +141,12 @@ osd_result osd_gateway_disconnect(struct osd_gateway_ctx *ctx);
  * @see osd_gateway_disconnect()
  */
 bool osd_gateway_is_connected(struct osd_gateway_ctx *ctx);
+
+/**
+ * Get statistics about the data transferred through the gateway
+ */
+struct osd_gateway_transfer_stats*
+osd_gateway_get_transfer_stats(struct osd_gateway_ctx *ctx);
 
 /**@}*/ /* end of doxygen group libosd-gateway */
 

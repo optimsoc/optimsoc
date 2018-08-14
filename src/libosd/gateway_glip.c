@@ -192,11 +192,6 @@ static struct glip_ctx* init_glip(struct osd_log_ctx *log_ctx,
     glip_set_caller_ctx(glip_ctx, log_ctx);
     glip_set_log_priority(glip_ctx, osd_log_get_priority(log_ctx));
 
-    if (glip_get_fifo_width(glip_ctx) != 2) {
-        err(log_ctx, "FIFO width of GLIP channel must be 16 bit, not %d bit.",
-            glip_get_fifo_width(glip_ctx) * 8);
-    }
-
     dbg(log_ctx, "Creating GLIP device context created.");
 
     return glip_ctx;
@@ -321,6 +316,14 @@ osd_result osd_gateway_glip_connect(struct osd_gateway_glip_ctx *ctx)
         err(ctx->log_ctx, "Unable to open connection to device (%d)", glip_rv);
         return OSD_ERROR_CONNECTION_FAILED;
     }
+
+    // Warn about (possibly) wrong channel width
+    unsigned int glip_fifo_width = glip_get_fifo_width(ctx->glip_ctx);
+    if (glip_fifo_width != 0 && glip_fifo_width != 2) {
+        info(ctx->log_ctx, "FIFO width of GLIP channel must be 16 bit, "
+             "not %d bit. Continuing anyway.", glip_fifo_width * 8);
+    }
+
     dbg(ctx->log_ctx, "Connected to device.");
 
     // connect to host controller
@@ -375,4 +378,10 @@ bool osd_gateway_glip_is_connected(struct osd_gateway_glip_ctx *ctx)
 {
     return osd_gateway_is_connected(ctx->gw_ctx) &&
            glip_is_connected(ctx->glip_ctx);
+}
+
+struct osd_gateway_transfer_stats*
+osd_gateway_glip_get_transfer_stats(struct osd_gateway_glip_ctx *ctx)
+{
+    return osd_gateway_get_transfer_stats(ctx->gw_ctx);
 }
