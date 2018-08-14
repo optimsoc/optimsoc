@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup libosd-cl_ctm STM client
+ * @defgroup libosd-cl_ctm CTM client
  * @ingroup libosd
  *
  * @{
@@ -39,8 +39,8 @@ extern "C" {
  */
 struct osd_ctm_desc {
     unsigned int di_addr; //!< DI address of the memory
-    uint16_t addr_width_bit; //<! Width of an address in bit
-    uint16_t data_width_bit; //<! Width of a data word in bit
+    uint16_t addr_width_bit; //!< Width of an address in bit
+    uint16_t data_width_bit; //!< Width of a data word in bit
 };
 
 /**
@@ -72,13 +72,13 @@ struct osd_ctm_event_handler {
 };
 
 /**
- * Populate the STM descriptor with data from the debug module
+ * Populate the CTM descriptor with data from the debug module
  *
  * @param hostmod_ctx the host module handling the communication
- * @param ctm_di_addr DI address of the STM module to get describe
+ * @param ctm_di_addr DI address of the CTM module to get describe
  * @param[out] ctm_desc pre-allocated memory descriptor for the result
  * @return OSD_OK on success
- *         OSD_ERROR_WRONG_MODULE if the module at ctm_di_addr is not a STM
+ *         OSD_ERROR_WRONG_MODULE if the module at ctm_di_addr is not a CTM
  *         any other value indicates an error
  */
 osd_result osd_cl_ctm_get_desc(struct osd_hostmod_ctx *hostmod_ctx,
@@ -86,7 +86,7 @@ osd_result osd_cl_ctm_get_desc(struct osd_hostmod_ctx *hostmod_ctx,
                                struct osd_ctm_desc *ctm_desc);
 
 /**
- * Event handler to process STM event, to be passed to a hostmod instance
+ * Event handler to process CTM event, to be passed to a hostmod instance
  */
 osd_result osd_cl_ctm_handle_event(void *arg, struct osd_packet *pkg);
 

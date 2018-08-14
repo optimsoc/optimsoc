@@ -39,7 +39,7 @@ extern "C" {
  */
 struct osd_stm_desc {
     unsigned int di_addr; //!< DI address of the memory
-    uint16_t value_width_bit; //<! Size of the value in a trace event in bit
+    uint16_t value_width_bit; //!< Size of the value in a trace event in bit
 };
 
 /**

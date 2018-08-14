@@ -48,7 +48,8 @@
     LIST_ENTRY(0x0002, DEM_UART, "Device Emulation Module UART") \
     LIST_ENTRY(0x0003, MAM, "Memory Access Module")              \
     LIST_ENTRY(0x0004, STM, "System Trace Module")               \
-    LIST_ENTRY(0x0005, CTM, "Core Trace Module")
+    LIST_ENTRY(0x0005, CTM, "Core Trace Module")                 \
+    LIST_ENTRY(0x0006, CDM, "Core Debug Module")
 
 /**
  * Vendor identifiers

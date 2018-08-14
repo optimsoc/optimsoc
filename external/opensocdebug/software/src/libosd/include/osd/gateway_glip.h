@@ -78,6 +78,12 @@ osd_result osd_gateway_glip_disconnect(struct osd_gateway_glip_ctx *ctx);
  */
 bool osd_gateway_glip_is_connected(struct osd_gateway_glip_ctx *ctx);
 
+/**
+ * @copydoc osd_gateway_get_transfer_stats();
+ */
+struct osd_gateway_transfer_stats*
+osd_gateway_glip_get_transfer_stats(struct osd_gateway_glip_ctx *ctx);
+
 /**@}*/ /* end of doxygen group libosd-gateway_glip */
 
 #ifdef __cplusplus
