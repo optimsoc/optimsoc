@@ -25,7 +25,7 @@
 CC_FOR_TARGET ?= @OR1K-CC@
 OBJDUMP_FOR_TARGET ?= @OR1K-OBJDUMP@
 OBJCOPY_FOR_TARGET ?= @OR1K-OBJCOPY@
-CFLAGS ?= -mnewlib -mboard=optimsoc
+CFLAGS ?= -mnewlib -mboard=optimsoc -O0 -Wall -std=gnu99
 
 BUILDSCRIPTS=$(shell pkg-config --variable=buildscriptdir optimsoc-baremetal-runtime)
 
@@ -48,7 +48,7 @@ $(PROGRAM)-pgas.bin: $(PROGRAM).bin
 	@PROGRAM=$(PROGRAM) sh $(BUILDSCRIPTS)/create_pgas_binary.sh 
 
 $(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS) $(EXTRA_DEPS)
-	$(CC_FOR_TARGET) $(CFLAGS) -Wall \
+	$(CC_FOR_TARGET) $(CFLAGS) \
 	$(PROGRAM).o $(EXTRA_OBJS) -o $@ \
 	$(LIBS)
 
@@ -62,7 +62,7 @@ $(PROGRAM).elf: $(PROGRAM).o $(EXTRA_OBJS) $(EXTRA_DEPS)
 	$(OBJCOPY_FOR_TARGET) -O binary $^ $@
 
 %.o: %.c
-	$(CC_FOR_TARGET) -O0 -std=gnu99 -c $(INCS) -o $@ $^
+	$(CC_FOR_TARGET) $(CFLAGS) -c $(INCS) -o $@ $^
 
 clean:
 	rm -f *.o *.elf *.bin *.vmem *.dis link.ld
