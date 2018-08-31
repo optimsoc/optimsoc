@@ -22,6 +22,21 @@
  *
  * This is the compute tile for distributed memory systems.
  *
+ *
+ * The assignment of the 32 bit IRQ vector connected to core 0 is as follows:
+ *  - Bit [1:0]:  N/A
+ *  - Bit 2:      UART
+ *  - Bit 3:      NA - message passing
+ *  - Bit 4:      NA - DMA
+ *  - Bit [31:5]: N/A
+ *
+ * The address ranges of the bus slaves are as follows:
+ *  - Slave 0 - DM:     0x00000000-0x7fffffff
+ *  - Slave 1 - PGAS:   not used
+ *  - Slave 2 - NA:     0xe0000000-0xefffffff
+ *  - Slave 3 - BOOT:   0xf0000000-0xffffffff
+ *  - Slave 4 - UART:   0x90000000-0x9000000f
+ *
  * Author(s):
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
@@ -79,11 +94,12 @@ module compute_tile_dm
    import optimsoc_functions::*;
 
    localparam NR_MASTERS = CONFIG.CORES_PER_TILE * 2 + 1;
-   localparam NR_SLAVES = 4;
+   localparam NR_SLAVES = 5;
    localparam SLAVE_DM   = 0;
    localparam SLAVE_PGAS = 1;
    localparam SLAVE_NA   = 2;
    localparam SLAVE_BOOT = 3;
+   localparam SLAVE_UART = 4;
 
    mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
@@ -114,7 +130,7 @@ module compute_tile_dm
    logic [DEBUG_MODS_PER_TILE_NONZERO-1:0] dii_out_ready;
 
    generate
-      if (CONFIG.USE_DEBUG == 1) begin
+      if (CONFIG.USE_DEBUG == 1) begin : gen_debug_ring
          genvar i;
          logic [CONFIG.DEBUG_MODS_PER_TILE-1:0][15:0] id_map;
          for (i = 0; i < CONFIG.DEBUG_MODS_PER_TILE; i = i+1) begin
@@ -171,7 +187,7 @@ module compute_tile_dm
    wire [31:0]   snoop_adr;
 
    wire [31:0]   pic_ints_i [0:CONFIG.CORES_PER_TILE-1];
-   assign pic_ints_i[0][31:4] = 28'h0;
+   assign pic_ints_i[0][31:5] = 27'h0;
    assign pic_ints_i[0][1:0] = 2'b00;
 
    genvar        c, m, s;
@@ -323,7 +339,7 @@ module compute_tile_dm
          assign busms_cab_o[c*2] = 1'b0;
          assign busms_cab_o[c*2+1] = 1'b0;
 
-         if (CONFIG.USE_DEBUG == 1) begin
+         if (CONFIG.USE_DEBUG == 1) begin : gen_ctm_stm
             osd_stm_mor1kx
               #(.MAX_PKT_LEN(CONFIG.DEBUG_MAX_PKT_LEN))
               u_stm
@@ -351,6 +367,33 @@ module compute_tile_dm
       end
    endgenerate
 
+   generate
+      if (CONFIG.USE_DEBUG != 0 && CONFIG.DEBUG_DEM_UART != 0) begin : gen_dem_uart
+         osd_dem_uart_wb
+         u_dem_uart(
+            .clk              (clk),
+            .rst              (rst_sys),
+            .id               (16'(DEBUG_BASEID + CONFIG.DEBUG_MODS_PER_TILE - 1)),
+            .irq              (pic_ints_i[0][2]),
+            .debug_in         (dii_out[CONFIG.DEBUG_MODS_PER_TILE - 1]),
+            .debug_in_ready   (dii_out_ready[CONFIG.DEBUG_MODS_PER_TILE - 1]),
+            .debug_out        (dii_in[CONFIG.DEBUG_MODS_PER_TILE - 1]),
+            .debug_out_ready  (dii_in_ready[CONFIG.DEBUG_MODS_PER_TILE - 1]),
+            .wb_adr_i         (bussl_adr_i[SLAVE_UART]),
+            .wb_cyc_i         (bussl_cyc_i[SLAVE_UART]),
+            .wb_dat_i         (bussl_dat_i[SLAVE_UART]),
+            .wb_sel_i         (bussl_sel_i[SLAVE_UART]),
+            .wb_stb_i         (bussl_stb_i[SLAVE_UART]),
+            .wb_we_i          (bussl_we_i[SLAVE_UART]),
+            .wb_cti_i         (bussl_cti_i[SLAVE_UART]),
+            .wb_bte_i         (bussl_bte_i[SLAVE_UART]),
+            .wb_ack_o         (bussl_ack_o[SLAVE_UART]),
+            .wb_err_o         (bussl_err_o[SLAVE_UART]),
+            .wb_rty_o         (bussl_rty_o[SLAVE_UART]),
+            .wb_dat_o         (bussl_dat_o[SLAVE_UART]));
+      end
+   endgenerate
+
    /* wb_bus_b3 AUTO_TEMPLATE(
     .clk_i      (clk),
     .rst_i      (rst_sys),
@@ -371,7 +414,9 @@ module compute_tile_dm
        .S1_RANGE_WIDTH(CONFIG.PGAS_RANGE_WIDTH),.S1_RANGE_MATCH(CONFIG.PGAS_RANGE_MATCH),
        .S2_RANGE_WIDTH(4),.S2_RANGE_MATCH(4'he),
        .S3_ENABLE(CONFIG.ENABLE_BOOTROM),
-       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf))
+       .S3_RANGE_WIDTH(4),.S3_RANGE_MATCH(4'hf),
+       .S4_ENABLE(CONFIG.DEBUG_DEM_UART),
+       .S4_RANGE_WIDTH(28),.S4_RANGE_MATCH(28'h9000000))
    u_bus(/*AUTOINST*/
          // Outputs
          .m_dat_o                       (busms_dat_i_flat),      // Templated
@@ -420,7 +465,7 @@ module compute_tile_dm
    logic [1:0]    mam_dm_bte_o;
    logic [3:0]    mam_dm_sel_o;
 
-   if (CONFIG.USE_DEBUG == 1) begin
+   if (CONFIG.USE_DEBUG == 1) begin : gen_mam_dm_wb
       //MAM
       osd_mam_wb #(
            .DATA_WIDTH(32),
@@ -447,7 +492,7 @@ module compute_tile_dm
            .sel_o(mam_dm_sel_o));
    end //if (USE_DEBUG == 1)
 
-   if (CONFIG.ENABLE_DM) begin
+   if (CONFIG.ENABLE_DM) begin : gen_mam_wb_adapter
       /* mam_wb_adapter AUTO_TEMPLATE(
        .wb_in_clk_i  (clk),
        .wb_in_rst_i  (rst_sys),
@@ -587,7 +632,7 @@ module compute_tile_dm
            .wbs_rty_o                   (bussl_rty_o[SLAVE_NA]),
            .wbs_err_o                   (bussl_err_o[SLAVE_NA]),
            .wbs_dat_o                   (bussl_dat_o[SLAVE_NA]),
-           .irq                         (pic_ints_i[0][3:2]),
+           .irq                         (pic_ints_i[0][4:3]),
            // Inputs
            .clk                         (clk),
            .rst                         (rst_sys),
@@ -610,7 +655,7 @@ module compute_tile_dm
            .wbs_bte_i                   (bussl_bte_i[SLAVE_NA]));
 
    generate
-      if (CONFIG.ENABLE_BOOTROM) begin
+      if (CONFIG.ENABLE_BOOTROM) begin : gen_bootrom
          /* bootrom AUTO_TEMPLATE(
           .clk(clk),
           .rst(rst_sys),
