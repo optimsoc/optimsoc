@@ -79,6 +79,7 @@ module tb_compute_tile
                       USE_DEBUG: 1'(USE_DEBUG),
                       DEBUG_STM: 1,
                       DEBUG_CTM: 1,
+                      DEBUG_DEM_UART: 1,
                       DEBUG_SUBNET_BITS: 6,
                       DEBUG_LOCAL_SUBNET: 0,
                       DEBUG_ROUTER_BUFFER_SIZE: 4,

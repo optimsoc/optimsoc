@@ -82,6 +82,7 @@ package optimsoc_config;
       logic              USE_DEBUG;
       logic              DEBUG_STM;
       logic              DEBUG_CTM;
+      logic              DEBUG_DEM_UART;
       integer            DEBUG_SUBNET_BITS;
       integer            DEBUG_LOCAL_SUBNET;
       integer            DEBUG_ROUTER_BUFFER_SIZE;
@@ -131,6 +132,7 @@ package optimsoc_config;
       logic              USE_DEBUG;
       logic              DEBUG_STM;
       logic              DEBUG_CTM;
+      logic              DEBUG_DEM_UART;
       integer            DEBUG_SUBNET_BITS;
       integer            DEBUG_LOCAL_SUBNET;
       integer            DEBUG_ROUTER_BUFFER_SIZE;
@@ -167,6 +169,7 @@ package optimsoc_config;
       derive_config.USE_DEBUG = conf.USE_DEBUG;
       derive_config.DEBUG_STM = conf.DEBUG_STM;
       derive_config.DEBUG_CTM = conf.DEBUG_CTM;
+      derive_config.DEBUG_DEM_UART = conf.DEBUG_DEM_UART;
       derive_config.DEBUG_SUBNET_BITS = conf.DEBUG_SUBNET_BITS;
       derive_config.DEBUG_LOCAL_SUBNET = conf.DEBUG_LOCAL_SUBNET;
       derive_config.DEBUG_ROUTER_BUFFER_SIZE = conf.DEBUG_ROUTER_BUFFER_SIZE;
@@ -183,6 +186,7 @@ package optimsoc_config;
       derive_config.DEBUG_MODS_PER_CORE = (int'(conf.DEBUG_STM) + int'(conf.DEBUG_CTM)) * int'(conf.USE_DEBUG);
       derive_config.DEBUG_MODS_PER_TILE = conf.USE_DEBUG *
                                           (1 /* MAM */
+                                           + int'(conf.DEBUG_DEM_UART)
                                            + derive_config.DEBUG_MODS_PER_CORE * conf.CORES_PER_TILE);
       derive_config.DEBUG_NUM_MODS = conf.USE_DEBUG *
                                      (1 /* SCM */

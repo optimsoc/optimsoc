@@ -216,13 +216,13 @@ module networkadapter_ct
       .wb_stb_i      (wbif_stb_i[ID_MPSIMPLE]),
       .wb_dat_i      (wbif_dat_i[ID_MPSIMPLE*32 +: 32]),
 
-      .irq           (irq[1])
+      .irq           (irq[0])
       );
 
    generate
       if (CONFIG.NA_ENABLE_DMA) begin
          wire [3:0] irq_dma;
-         assign irq[0] = |irq_dma;
+         assign irq[1] = |irq_dma;
 
          wire [1:0][CONFIG.NOC_FLIT_WIDTH+1:0] dma_in_flit, dma_out_flit;
    assign dma_in_flit[0] = {mod_in_last[C_DMA_REQ], 1'b0, mod_in_flit[C_DMA_REQ]};
@@ -292,7 +292,7 @@ module networkadapter_ct
          .wb_dat_i                (wbm_dat_i),             // Templated
          .wb_ack_i                (wbm_ack_i));            // Templated
 end else begin // if (CONFIG.NA_ENABLE_DMA)
-   assign irq[0] = 1'b0;
+   assign irq[1] = 1'b0;
 end
 endgenerate
 
