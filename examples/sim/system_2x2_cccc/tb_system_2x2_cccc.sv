@@ -37,8 +37,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "dbg_config.vh"
-
 module tb_system_2x2_cccc(
 `ifdef verilator
    input clk,

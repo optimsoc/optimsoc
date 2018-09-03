@@ -8,9 +8,3 @@ usage = sim synth
 files =
   verilog/mam_wb_adapter.sv
 
-[fileset include_files]
-file_type = systemVerilogSource
-is_include_file = true
-usage = sim synth
-files =
-  verilog/dbg_config.vh

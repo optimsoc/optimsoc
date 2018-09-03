@@ -38,7 +38,9 @@ module noc_mesh
     parameter X = 'x,
     parameter Y = 'x,
     parameter BUFFER_SIZE_IN = 4,
-    parameter BUFFER_SIZE_OUT = 4
+    parameter BUFFER_SIZE_OUT = 4,
+
+    localparam NODES = X*Y
     )
    (
     input                                            clk, rst,
@@ -53,8 +55,6 @@ module noc_mesh
     output [NODES-1:0][CHANNELS-1:0]                 out_valid,
     input [NODES-1:0][CHANNELS-1:0]                  out_ready
     );
-
-   localparam NODES = X*Y;
 
    // Those are indexes into the wiring arrays
    localparam LOCAL = 0;

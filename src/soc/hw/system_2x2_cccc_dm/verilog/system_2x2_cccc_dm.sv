@@ -26,8 +26,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "dbg_config.vh"
-
 module system_2x2_cccc_dm(
    input clk, rst,
 

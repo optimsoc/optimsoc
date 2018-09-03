@@ -27,8 +27,6 @@
  *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
 
-`include "lisnoc_def.vh"
-
 module networkadapter_ct
   import optimsoc_config::*;
   #(
