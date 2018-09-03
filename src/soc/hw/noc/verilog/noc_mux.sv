@@ -106,6 +106,6 @@ module noc_mux
      (.nxt_gnt (select),
       .req     (req_masked),
       .gnt     (active),
-      .en      (1));
+      .en      (1'b1));
 
 endmodule // noc_mux

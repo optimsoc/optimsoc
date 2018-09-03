@@ -173,7 +173,7 @@ module mpbuffer_endpoint
    reg [SIZE_WIDTH-1:0]       size_out;
    reg [SIZE_WIDTH-1:0]       nxt_size_out;
 
-   wire [SIZE_WIDTH:0]      size_in;
+   wire [SIZE_WIDTH-1:0]      size_in;
 
    // States of output state machine
    localparam OUT_IDLE    = 0;
@@ -195,7 +195,7 @@ module mpbuffer_endpoint
         IN_IDLE: begin
            if (if_fifo_in_en) begin
               if (in_valid) begin
-                 if_fifo_in_data = {{31-SIZE_WIDTH{1'b0}},size_in};
+                 if_fifo_in_data = {{32-SIZE_WIDTH{1'b0}},size_in};
                  if_fifo_in_ack = 1'b1;
                  if (size_in!=0) begin
                     nxt_state_in = IN_FLIT;
@@ -428,10 +428,12 @@ module mpbuffer_endpoint
       end
    end
 
+
    // The output packet buffer
    noc_buffer
      #(.DEPTH(SIZE), .FLIT_WIDTH(CONFIG.NOC_FLIT_WIDTH), .FULLPACKET(1))
-   u_packetbuffer_out(.*,
+   u_packetbuffer_out(.clk              (clk),
+                      .rst              (rst),
                       .in_ready         (out_ready),
                       .in_flit          (out_flit),
                       .in_last          (out_last),
@@ -445,7 +447,8 @@ module mpbuffer_endpoint
    // The input packet buffer
    noc_buffer
      #(.DEPTH(SIZE), .FLIT_WIDTH(CONFIG.NOC_FLIT_WIDTH), .FULLPACKET(1))
-   u_packetbuffer_in(.*,
+   u_packetbuffer_in(.clk               (clk),
+                     .rst               (rst),
                      .in_ready          (ingress_ready),
                      .in_flit           (ingress_flit),
                      .in_last           (ingress_last),
