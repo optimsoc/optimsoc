@@ -65,7 +65,7 @@ module noc_vchannel_mux
      #(.N (CHANNELS))
    u_arbiter
      (.req (in_valid & out_ready),
-      .en  (1),
+      .en  (1'b1),
       .gnt (select),
       .nxt_gnt (nxt_select));
 

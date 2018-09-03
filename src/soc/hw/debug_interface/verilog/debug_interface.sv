@@ -89,7 +89,7 @@ module debug_interface
          .rst(rst),
 
          // the gateway is always at local address 0
-         .id(0),
+         .id(16'h0),
 
          .ring_in0(ring_in[0]),
          .ring_in0_ready(ring_in_ready[0]),
