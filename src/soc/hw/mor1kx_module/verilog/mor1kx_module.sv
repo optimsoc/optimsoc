@@ -26,8 +26,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "dbg_config.vh"
-
 module mor1kx_module
   import opensocdebug::mor1kx_trace_exec;
   #(parameter ID = 0,

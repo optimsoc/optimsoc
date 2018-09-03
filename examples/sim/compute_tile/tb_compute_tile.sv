@@ -34,8 +34,6 @@
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
  */
 
-`include "dbg_config.vh"
-
 module tb_compute_tile
   (
 `ifdef verilator

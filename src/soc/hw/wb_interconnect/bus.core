@@ -7,9 +7,7 @@ depend =
   optimsoc:wb_interconnect:decode
 
 [fileset src_files]
-file_type = verilogSource
+file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/wb_bus_b3.v
-
-
+  verilog/wb_bus_b3.sv
