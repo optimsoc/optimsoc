@@ -103,10 +103,8 @@ module compute_tile_dm
 
    mor1kx_trace_exec [CONFIG.CORES_PER_TILE-1:0] trace;
 
-   wire wb_mem_clk_i, wb_mem_rst_i;
-   assign wb_mem_clk_i = clk;
-   assign wb_mem_rst_i = rst_sys;
-
+   logic        wb_mem_clk_i;
+   logic        wb_mem_rst_i;
    logic [31:0] wb_mem_adr_i;
    logic        wb_mem_cyc_i;
    logic [31:0] wb_mem_dat_i;
