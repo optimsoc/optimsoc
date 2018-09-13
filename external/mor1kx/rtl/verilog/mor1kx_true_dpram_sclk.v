@@ -42,12 +42,10 @@ module mor1kx_true_dpram_sclk
       end else begin
 	 rdata_a <= mem[addr_a];
       end
-   end
 
-   always @(posedge clk) begin
       if (we_b) begin
-	 mem[addr_b] <= din_b;
-	 rdata_b <= din_b;
+   	 mem[addr_b] <= din_b;
+   	 rdata_b <= din_b;
       end else begin
 	 rdata_b <= mem[addr_b];
       end
