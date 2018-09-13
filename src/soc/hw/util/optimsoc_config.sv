@@ -143,7 +143,7 @@ package optimsoc_config;
       integer            DEBUG_NUM_MODS;
    } config_t;
 
-   function config_t derive_config(base_config_t conf);
+   function automatic config_t derive_config(base_config_t conf);
       // Copy the basic parameters
       derive_config.NUMTILES = conf.NUMTILES;
       derive_config.NUMCTS = conf.NUMCTS;

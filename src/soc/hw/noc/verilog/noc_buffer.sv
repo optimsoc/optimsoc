@@ -95,7 +95,7 @@ module noc_buffer
          // extra logic to get the packet size in a stable manner
          assign data_last_shifted = data_last_buf << DEPTH - 1 - rp;
 
-         function logic [ID_W:0] find_first_one(input logic [DEPTH-1:0] data);
+         function automatic logic [ID_W:0] find_first_one(input logic [DEPTH-1:0] data);
             automatic int i;
             for(i=DEPTH-1; i>=0; i--)
               if(data[i]) return i;

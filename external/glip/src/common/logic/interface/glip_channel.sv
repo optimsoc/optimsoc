@@ -38,7 +38,7 @@ interface glip_channel
    modport slave(input data, input valid, output ready);
 
    // a helper function to ease the assembly of interface signals
-   function logic assemble ( input logic [WIDTH-1:0] m_data,
+   function automatic logic assemble ( input logic [WIDTH-1:0] m_data,
                              input logic m_valid
                              );
       data = m_data;

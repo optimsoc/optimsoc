@@ -79,7 +79,7 @@ module dii_buffer
          // extra logic to get the packet size in a stable manner
          assign data_last_shifted = data_last_buf << BUF_SIZE - 1 - rp;
 
-         function logic [ID_W:0] find_first_one(input logic [BUF_SIZE-1:0] data);
+         function automatic logic [ID_W:0] find_first_one(input logic [BUF_SIZE-1:0] data);
             automatic int i;
             for(i=BUF_SIZE-1; i>=0; i--)
               if(data[i]) return i;

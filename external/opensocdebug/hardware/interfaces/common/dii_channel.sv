@@ -23,7 +23,7 @@ package dii_package;
       logic [15:0] data;
    } dii_flit;
 
-   function dii_flit
+   function automatic dii_flit
      dii_flit_assemble(
                        input logic        m_valid,
                        input logic        m_last,
