@@ -224,7 +224,7 @@ module mor1kx_cpu_cappuccino
    wire                 ctrl_overflow_set_o;    // From mor1kx_execute_ctrl_cappuccino of mor1kx_execute_ctrl_cappuccino.v
    wire [`OR1K_FPCSR_WIDTH-1:0]   ctrl_fpcsr_o; // From mor1kx_execute_ctrl_cappuccino of mor1kx_execute_ctrl_cappuccino.v
    wire                           ctrl_fpcsr_set_o; // From mor1kx_execute_ctrl_cappuccino of mor1kx_execute_ctrl_cappuccino.v
-   wire [`OR1K_FPCSR_RM_SIZE-1:0] ctrl_fpu_round_mode_o; // From mor1kx_ctrl_cappuccino of mor1kx_ctrl_cappuccino.v 
+   wire [`OR1K_FPCSR_RM_SIZE-1:0] ctrl_fpu_round_mode_o; // From mor1kx_ctrl_cappuccino of mor1kx_ctrl_cappuccino.v
    wire                 ctrl_rf_wb_o;           // From mor1kx_execute_ctrl_cappuccino of mor1kx_execute_ctrl_cappuccino.v
    wire [OPTION_OPERAND_WIDTH-1:0] ctrl_rfb_o;  // From mor1kx_execute_ctrl_cappuccino of mor1kx_execute_ctrl_cappuccino.v
    wire [OPTION_RF_ADDR_WIDTH-1:0] ctrl_rfd_adr_o;// From mor1kx_execute_ctrl_cappuccino of mor1kx_execute_ctrl_cappuccino.v
@@ -1125,6 +1125,7 @@ module mor1kx_cpu_cappuccino
       .pipeline_flush_i                 (pipeline_flush_o));      // Templated
 
 
+`ifdef NOT_DEFINED
 `ifndef SYNTHESIS
 // synthesis translate_off
    /* Debug signals required for the debug monitor */
@@ -1164,7 +1165,7 @@ module mor1kx_cpu_cappuccino
    endtask
 // synthesis translate_on
 `endif
-
+`endif
 
    /* mor1kx_execute_ctrl_cappuccino AUTO_TEMPLATE (
     .padv_i				(padv_execute_o),
@@ -1359,7 +1360,7 @@ module mor1kx_cpu_cappuccino
     .ctrl_overflow_set_i       (ctrl_overflow_set_o),
     .ctrl_overflow_clear_i	(ctrl_overflow_clear_o),
     .ctrl_fpcsr_i       (ctrl_fpcsr_o),
-    .ctrl_fpcsr_set_i   (ctrl_fpcsr_set_o),      
+    .ctrl_fpcsr_set_i   (ctrl_fpcsr_set_o),
     .spr_gpr_ack_i		(spr_gpr_ack_o),
     .spr_gpr_dat_i		(spr_gpr_dat_o),
     ) */
