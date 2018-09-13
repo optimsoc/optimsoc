@@ -57,8 +57,11 @@ module wb_sram_sp(/*AUTOARG*/
                    (DW ==  8) ? 1 : 'hx;
 
    // Allowed values:
-   //   * PLAIN
+   `ifdef OPTIMSOC_DEFAULT_MEM_IMPL_TYPE
+   parameter MEM_IMPL_TYPE = `OPTIMSOC_DEFAULT_MEM_IMPL_TYPE;
+   `else
    parameter MEM_IMPL_TYPE = "PLAIN";
+   `endif
 
    /*
     * +--------------+--------------+

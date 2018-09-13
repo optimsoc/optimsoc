@@ -12,3 +12,4 @@ files =
   verilog/wb2sram.sv
   verilog/sram_sp.sv
   verilog/sram_sp_impl_plain.sv
+  verilog/sram_sp_impl_saed32.sv

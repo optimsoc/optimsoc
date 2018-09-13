@@ -8,4 +8,8 @@ depend = optimsoc:base:functions
 file_type = systemVerilogSource
 usage = sim synth
 files =
-  verilog/sram_sdp.sv
+  verilog/sram_sdp_dclk.sv
+  verilog/sram_sdp_dclk_impl_plain.sv
+  verilog/sram_tdp_dclk_impl_saed32.sv
+  verilog/sram_sdp_sclk.sv
+  

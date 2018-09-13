@@ -50,7 +50,11 @@
    parameter DW = 32;
 
    // type of the memory implementation
+   `ifdef OPTIMSOC_DEFAULT_MEM_IMPL_TYPE
+   parameter MEM_IMPL_TYPE = `OPTIMSOC_DEFAULT_MEM_IMPL_TYPE;
+   `else
    parameter MEM_IMPL_TYPE = "PLAIN";
+   `endif
    // VMEM memory file to load in simulation
    parameter MEM_FILE = "sram.vmem";
 
@@ -99,13 +103,31 @@
 `endif
 
    generate
-      if (MEM_IMPL_TYPE == "PLAIN") begin : gen_sram_sp_impl
+      if (MEM_IMPL_TYPE == "PLAIN") begin : gen_sram_sp_impl_plain
          sram_sp_impl_plain
             #(.AW                       (AW),
               .WORD_AW                  (WORD_AW),
               .DW                       (DW),
               .MEM_SIZE_BYTE            (MEM_SIZE_BYTE),
               .MEM_FILE                 (MEM_FILE))
+            u_impl(/*AUTOINST*/
+                   // Outputs
+                   .dout                (dout[DW-1:0]),
+                   // Inputs
+                   .clk                 (clk),
+                   .rst                 (rst),
+                   .ce                  (ce),
+                   .we                  (we),
+                   .oe                  (oe),
+                   .waddr               (waddr),
+                   .din                 (din[DW-1:0]),
+                   .sel                 (sel[SW-1:0]));
+      end else if (MEM_IMPL_TYPE == "SAED32") begin : gen_sram_sp_impl_saed32
+         sram_sp_impl_saed32
+            #(.AW                       (AW),
+              .WORD_AW                  (WORD_AW),
+              .DW                       (DW),
+              .MEM_SIZE_BYTE            (MEM_SIZE_BYTE))
             u_impl(/*AUTOINST*/
                    // Outputs
                    .dout                (dout[DW-1:0]),

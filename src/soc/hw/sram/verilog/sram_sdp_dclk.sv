@@ -41,27 +41,46 @@
  *   Philipp Wagner <philipp.wagner@tum.de>
  */
 
-module sram_sdp(
-   clk_a, rst_a, ce_a, we_a, waddr_a, din_a, sel_a,
-   clk_b, rst_b, ce_b, oe_b, waddr_b, dout_b
-   );
-
+module sram_sdp_dclk
+#(
    // address width
-   parameter AW = 32;
+   parameter AW = 32,
    // data width (must be multiple of 8 for byte selects to work)
-   parameter DW = 32;
+   parameter DW = 32,
 
    // byte select width (must be a power of two)
-   localparam SW = DW / 8;
+   localparam SW = DW / 8,
 
    // word address width
-   parameter WORD_AW = AW - (SW >> 1);
+   parameter WORD_AW = AW - (SW >> 1),
 
    // size of the memory in bytes. default is as large as the address space
    // allows for
-   parameter MEM_SIZE_BYTE = (1 << AW);
+   parameter MEM_SIZE_BYTE = (1 << AW),
 
-   localparam MEM_SIZE_WORDS = MEM_SIZE_BYTE / SW;
+   localparam MEM_SIZE_WORDS = MEM_SIZE_BYTE / SW,
+
+`ifdef OPTIMSOC_DEFAULT_MEM_IMPL_TYPE
+   parameter MEM_IMPL_TYPE = `OPTIMSOC_DEFAULT_MEM_IMPL_TYPE
+`else
+   parameter MEM_IMPL_TYPE = "PLAIN"
+`endif
+)(
+   input                   clk_a,     // Clock
+   input                   rst_a,     // Reset
+   input                   ce_a,   // Chip enable input
+   input                   we_a,   // Write enable input
+   input [WORD_AW-1:0]     waddr_a, // word address (write port)
+   input [DW-1:0]          din_a,  // input data bus
+   input [SW-1:0]          sel_a,  // select bytes
+
+   input                   clk_b,     // Clock
+   input                   rst_b,     // Reset
+   input                   ce_b,   // Chip enable input
+   input                   oe_b,   // Output enable input
+   input [WORD_AW-1:0]     waddr_b, // word address (read port)
+   output logic [DW-1:0]   dout_b // output data bus
+);
 
    // validate the memory address (check if it's inside the memory size bounds)
    `ifdef OPTIMSOC_SRAM_VALIDATE_ADDRESS
@@ -86,40 +105,62 @@ module sram_sdp(
       end
    `endif
 
-   input                   clk_a;  // Clock
-   input                   rst_a;  // Reset
-   input                   ce_a;   // Chip enable input
-   input                   we_a;   // Write enable input
-   input [WORD_AW-1:0]     waddr_a; // word address (write port)
-   input [DW-1:0]          din_a;  // input data bus
-   input [SW-1:0]          sel_a;  // select bytes
+   generate
+      if (MEM_IMPL_TYPE == "PLAIN") begin : gen_mem_plain
+         sram_sdp_dclk_impl_plain
+            #(.AW(AW),
+               .DW(DW),
+               .WORD_AW(WORD_AW),
+               .MEM_SIZE_BYTE(MEM_SIZE_BYTE))
+            u_impl(
+               .clk_a(clk_a),
+               .rst_a(rst_a),
+               .ce_a(ce_a),
+               .we_a(we_a),
+               .waddr_a(waddr_a),
+               .din_a(din_a),
+               .sel_a(sel_a),
 
-   input                   clk_b;  // Clock
-   input                   rst_b;  // Reset
-   input                   ce_b;   // Chip enable input
-   input                   oe_b;   // Output enable input
-   input [WORD_AW-1:0]     waddr_b; // word address (read port)
-   output logic [DW-1:0]   dout_b; // output data bus
+               .clk_b(clk_b),
+               .rst_b(rst_b),
+               .ce_b(ce_b),
+               .oe_b(oe_b),
+               .waddr_b(waddr_b),
+               .dout_b(dout_b));
 
-   reg [DW-1:0] mem [MEM_SIZE_WORDS-1:0];
+      end else if (MEM_IMPL_TYPE == "SAED32") begin : gen_mem_saed32
+         sram_tdp_dclk_impl_saed32
+            #(.AW(AW),
+              .DW(DW),
+              .WORD_AW(WORD_AW),
+              .MEM_SIZE_BYTE(MEM_SIZE_BYTE))
+            u_impl(
+               .clk_a(clk_a),
+               .rst_a(rst_a),
+               .ce_a(ce_a),
+               .we_a(we_a),
+               .oe_a(1'b0),
+               .waddr_a(waddr_a),
+               .din_a(din_a),
+               .sel_a(sel_a),
+               .dout_a(),
 
-   // Write port A
-   always_ff @(posedge clk_a) begin
-      if (we_a) begin
-         // memory write
-         for (int i = 0; i < SW; i = i + 1) begin
-            if (sel_a[i] == 1'b1) begin
-               mem[waddr_a][i*8 +: 8] <= din_a[i*8 +: 8];
-            end
+               .clk_b(clk_b),
+               .rst_b(rst_b),
+               .ce_b(ce_b),
+               .we_b(1'b0),
+               .oe_b(oe_b),
+               .waddr_b(waddr_b),
+               .din_b({DW{1'b0}}),
+               .sel_b({SW{1'b0}}),
+               .dout_b(dout_b));
+
+      end else begin
+         initial begin
+            $display("MEM_IMPL_TYPE '%s' not supported", MEM_IMPL_TYPE);
+            $stop;
          end
       end
-   end
-
-   // Read port B
-   always_ff @(posedge clk_b) begin
-      if (oe_b) begin
-         dout_b <= mem[waddr_b];
-      end
-   end
+   endgenerate
 
 endmodule

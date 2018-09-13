@@ -1,0 +1,13 @@
+CAPI=1
+[main]
+name = optimsoc:sram:tdp_plain
+description = "True Dual-Port SRAM"
+depend = optimsoc:base:functions
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/sram_sdp_tclk.sv
+  verilog/sram_sdp_tclk_impl_plain.sv
+  verilog/sram_sdp_tclk_impl_saed32.sv
