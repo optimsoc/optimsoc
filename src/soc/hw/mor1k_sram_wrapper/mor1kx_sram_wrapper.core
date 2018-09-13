@@ -1,0 +1,11 @@
+CAPI=1
+[main]
+name = optimsoc:core:mor1kx_sram_wrapper
+depend =
+   optimsoc:sram:sdp_plain
+
+[fileset src_files]
+file_type = systemVerilogSource
+usage = sim synth
+files =
+  verilog/mor1kx_simple_dpram_sclk.sv
