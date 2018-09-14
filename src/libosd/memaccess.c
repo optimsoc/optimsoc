@@ -108,6 +108,14 @@ osd_result osd_memaccess_cpus_stop(struct osd_memaccess_ctx *ctx,
     return osd_cl_scm_cpus_stop(ctx->hostmod_ctx, subnet_addr);
 }
 
+static bool is_supported_mam(struct osd_module_desc *mod)
+{
+    return mod->vendor == OSD_MODULE_VENDOR_OSD &&
+           mod->type == OSD_MODULE_TYPE_STD_MAM &&
+           mod->version == 0;
+}
+
+API_EXPORT
 osd_result osd_memaccess_find_memories(struct osd_memaccess_ctx *ctx,
                                        unsigned int subnet_addr,
                                        struct osd_mem_desc **memories,
@@ -125,7 +133,7 @@ osd_result osd_memaccess_find_memories(struct osd_memaccess_ctx *ctx,
 
     unsigned int mem_cnt = 0;
     for (unsigned int i = 0; i < mods_len; i++) {
-        if (mods[i].type == OSD_MODULE_TYPE_STD_MAM) {
+        if (is_supported_mam(&mods[i])) {
             mem_cnt++;
         }
     }
@@ -134,7 +142,7 @@ osd_result osd_memaccess_find_memories(struct osd_memaccess_ctx *ctx,
 
     unsigned int mem_nr = 0;
     for (unsigned int i = 0; i < mods_len; i++) {
-        if (mods[i].type == OSD_MODULE_TYPE_STD_MAM) {
+        if (is_supported_mam(&mods[i])) {
             rv = osd_cl_mam_get_mem_desc(ctx->hostmod_ctx, mods[i].addr,
                                          &mems[mem_nr]);
             if (OSD_FAILED(rv)) {
