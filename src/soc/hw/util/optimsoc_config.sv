@@ -72,6 +72,10 @@ package optimsoc_config;
       integer            PGAS_BASE;
       integer            PGAS_SIZE;
 
+      // CPU core configuration
+      logic              CORE_ENABLE_FPU;
+      logic              CORE_ENABLE_PERFCOUNTERS;
+
       // Network adapter configuration
       logic              NA_ENABLE_MPSIMPLE;
       logic              NA_ENABLE_DMA;
@@ -122,6 +126,10 @@ package optimsoc_config;
       integer            PGAS_RANGE_WIDTH;
       integer            PGAS_RANGE_MATCH;
 
+      // CPU core configuration
+      logic              CORE_ENABLE_FPU;
+      logic              CORE_ENABLE_PERFCOUNTERS;
+
       // Network adapter configuration
       logic              NA_ENABLE_MPSIMPLE;
       logic              NA_ENABLE_DMA;
@@ -162,6 +170,8 @@ package optimsoc_config;
       derive_config.ENABLE_PGAS = conf.ENABLE_PGAS;
       derive_config.PGAS_BASE = conf.PGAS_BASE;
       derive_config.PGAS_SIZE = conf.PGAS_SIZE;
+      derive_config.CORE_ENABLE_FPU = conf.CORE_ENABLE_FPU;
+      derive_config.CORE_ENABLE_PERFCOUNTERS = conf.CORE_ENABLE_PERFCOUNTERS;
       derive_config.NA_ENABLE_MPSIMPLE = conf.NA_ENABLE_MPSIMPLE;
       derive_config.NA_ENABLE_DMA = conf.NA_ENABLE_DMA;
       derive_config.NA_DMA_GENIRQ = conf.NA_DMA_GENIRQ;

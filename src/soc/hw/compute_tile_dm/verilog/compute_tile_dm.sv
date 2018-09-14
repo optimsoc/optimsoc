@@ -259,6 +259,10 @@ module compute_tile_dm
    endgenerate
 
 
+   localparam MOR1KX_FEATURE_FPU = (CONFIG.CORE_ENABLE_FPU ? "ENABLED" : "NONE");
+   localparam MOR1KX_FEATURE_PERFCOUNTERS = (CONFIG.CORE_ENABLE_PERFCOUNTERS ? "ENABLED" : "NONE");
+   localparam MOR1KX_FEATURE_DEBUGUNIT = "NONE"; // XXX: Enable debug unit with OSD CDM module (once it's ready)
+
    generate
       for (c = 0; c < CONFIG.CORES_PER_TILE; c = c + 1) begin : gen_cores
          /* mor1kx_module AUTO_TEMPLATE(
@@ -282,7 +286,10 @@ module compute_tile_dm
           ); */
          mor1kx_module
                #(.ID(c),
-                 .NUMCORES(CONFIG.CORES_PER_TILE))
+                 .NUMCORES(CONFIG.CORES_PER_TILE),
+                 .FEATURE_FPU(MOR1KX_FEATURE_FPU),
+                 .FEATURE_PERFCOUNTERS(MOR1KX_FEATURE_PERFCOUNTERS),
+                 .FEATURE_DEBUGUNIT(MOR1KX_FEATURE_DEBUGUNIT))
          u_core (
                  /*AUTOINST*/
                  // Interfaces

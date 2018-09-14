@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 by the author(s)
+/* Copyright (c) 2013-2018 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
  *
  * =============================================================================
  *
- * This is a wrapper module for the OpenRISC processor
+ * This is a wrapper module for the mor1kx OpenRISC processor
  *
  * Author(s):
  *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
@@ -30,9 +30,12 @@ module mor1kx_module
   import opensocdebug::mor1kx_trace_exec;
   #(parameter ID = 0,
     parameter NUMCORES = 1,
-    parameter CPU_IMPLEMENTATION = "CAPPUCCINO"
+    parameter CPU_IMPLEMENTATION = "CAPPUCCINO",
+    parameter FEATURE_FPU = "NONE", // NONE | ENABLED
+    parameter FEATURE_DEBUGUNIT = "NONE", // NONE | ENABLED
+    parameter FEATURE_PERFCOUNTERS = "NONE" // NONE | ENABLED
     )
-   (input          clk_i,
+   (input         clk_i,
     input         bus_clk_i,
     input         rst_i,
     input         bus_rst_i,
@@ -93,22 +96,32 @@ module mor1kx_module
    wire dbg_stall_o;
 
    mor1kx
-     #(.FEATURE_DATACACHE               ("NONE"),
-       .OPTION_DCACHE_LIMIT_WIDTH       (31),
+     #(.OPTION_CPU0                     (CPU_IMPLEMENTATION),
+       .OPTION_OPERAND_WIDTH            (32),
+       .OPTION_RF_NUM_SHADOW_GPR        (1),
+
        .FEATURE_INSTRUCTIONCACHE        ("ENABLED"),
+       .OPTION_ICACHE_WAYS              (2),
+       .OPTION_ICACHE_SET_WIDTH         (8),
+
+       .IBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
+       .FEATURE_IMMU                    ("ENABLED"),
+
+       .FEATURE_DATACACHE               ("NONE"),
+       .OPTION_DCACHE_LIMIT_WIDTH       (31),
        .OPTION_DCACHE_WAYS              (2),
        .OPTION_DCACHE_SET_WIDTH         (8),
        .OPTION_DCACHE_SNOOP             ("ENABLED"),
-       .OPTION_ICACHE_WAYS              (2),
-       .OPTION_ICACHE_SET_WIDTH         (8),
-       .FEATURE_DMMU                    ("ENABLED"),
-       .FEATURE_IMMU                    ("ENABLED"),
-       .IBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
+
        .DBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
+       .FEATURE_DMMU                    ("ENABLED"),
+
        .FEATURE_MULTICORE               ("ENABLED"),
-       .FEATURE_TRACEPORT_EXEC          ("ENABLED"),
-       .OPTION_OPERAND_WIDTH            (32),
-       .OPTION_RF_NUM_SHADOW_GPR        (1))
+       .FEATURE_FPU                     (FEATURE_FPU),
+       .FEATURE_PERFCOUNTERS            (FEATURE_PERFCOUNTERS),
+       .OPTION_PERFCOUNTERS_NUM         (0),
+       .FEATURE_DEBUGUNIT               (FEATURE_DEBUGUNIT),
+       .FEATURE_TRACEPORT_EXEC          ("ENABLED"))
      u_cpu(/*AUTOINST*/
            // Outputs
            .iwbm_adr_o                  (iwb_adr_o[31:0]),
