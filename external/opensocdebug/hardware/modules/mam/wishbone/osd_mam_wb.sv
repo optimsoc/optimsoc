@@ -66,7 +66,7 @@ module osd_mam_wb
    logic                        req_we;
    logic [ADDR_WIDTH-1:0]       req_addr;
    logic                        req_burst;
-   logic [13:0]                 req_beats;
+   logic [12:0]                 req_beats;
    logic                        req_sync;
 
    logic                        write_valid;
