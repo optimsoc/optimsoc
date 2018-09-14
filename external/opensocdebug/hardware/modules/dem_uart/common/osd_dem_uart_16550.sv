@@ -51,7 +51,6 @@ module osd_dem_uart_16550
    localparam REG_IIR_FCR = 2;
    localparam REG_LCR     = 3;
    localparam REG_LSR     = 5;
-   localparam REG_SCR     = 7;
 
    // Interrupt identification codes as per the UART 16550 specification
    localparam INTR_NONE = 4'b0001;
@@ -127,7 +126,7 @@ module osd_dem_uart_16550
       nxt_fifo_tx_clear = fifo_tx_clear;
       nxt_dma_mode = dma_mode;
       nxt_lcr = lcr;
-      
+
       out_char = 8'h0;
       out_valid = 1'b0;
       in_ready = 1'b0;
@@ -203,6 +202,10 @@ module osd_dem_uart_16550
             REG_LSR: begin
                // TEMT=1, THRE=1, DR (data ready) when input
                bus_rdata = {7'b0110000, in_valid};
+               bus_ack = bus_req;
+            end
+            default: begin
+               // Not acknowledging access to unimplemented registers could hang the bus.
                bus_ack = bus_req;
             end
          endcase

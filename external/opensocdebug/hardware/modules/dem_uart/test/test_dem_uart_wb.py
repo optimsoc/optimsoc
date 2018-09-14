@@ -150,7 +150,7 @@ def _bus_to_di_rx(dut, num_transfers=500, max_delay=100):
         if not rx_packet.equal_to(dut, ex_packet, mask=None):
             raise TestFailure("Unexpected content of " + rx_packet.__str__() +
                               "\n Expected " + ex_packet.__str__())
-        
+
         yield RisingEdge(dut.clk)
 
 @cocotb.test()
@@ -239,7 +239,7 @@ def test_both_directions(dut):
     Randomly alternate between read/write cycles on the WISHBONE bus
     """
 
-    NUM_TRANSFERS = 1000
+    NUM_TRANSFERS = 10000
     MAX_DELAY     = 100
     RANDOM_DATA   = True
 

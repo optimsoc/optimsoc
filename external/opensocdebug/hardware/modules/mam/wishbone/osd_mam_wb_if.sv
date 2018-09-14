@@ -31,7 +31,7 @@ module osd_mam_wb_if
     input                       req_we, // 0: Read, 1: Write
     input [ADDR_WIDTH-1:0]      req_addr, // Request base address
     input                       req_burst, // 0 for single beat access, 1 for incremental burst
-    input [13:0]                req_beats, // Burst length in number of words
+    input [12:0]                req_beats, // Burst length in number of words
 
     input                       write_valid, // Next write data is valid
     input [DATA_WIDTH-1:0]      write_data, // Write data
@@ -70,8 +70,8 @@ module osd_mam_wb_if
 
    logic [ADDR_WIDTH-1:0] nxt_addr_o;
 
-   reg [13:0]             beats;
-   logic [13:0]           nxt_beats;
+   reg [12:0]             beats;
+   logic [12:0]           nxt_beats;
 
    //registers
    always_ff @(posedge clk_i) begin
