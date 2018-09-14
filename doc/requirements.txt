@@ -1,4 +1,4 @@
-Sphinx
+Sphinx<1.8
 breathe>=4.7.3
 gitpython
 cairosvg
