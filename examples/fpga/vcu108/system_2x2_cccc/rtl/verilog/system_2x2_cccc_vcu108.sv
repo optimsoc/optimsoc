@@ -134,6 +134,8 @@ module system_2x2_cccc_vcu108
          ENABLE_PGAS: 0,
          PGAS_BASE: 0,
          PGAS_SIZE: 0,
+         CORE_ENABLE_FPU: 0,
+         CORE_ENABLE_PERFCOUNTERS: 0,
          NA_ENABLE_MPSIMPLE: 1,
          NA_ENABLE_DMA: 1,
          NA_DMA_GENIRQ: 1,
