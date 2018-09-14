@@ -49,7 +49,7 @@ module osd_dem_uart
 
    osd_regaccess_layer
      #(.MOD_VENDOR(16'h1), .MOD_TYPE(16'h5), .MOD_VERSION(16'h0),
-       .MAX_REG_SIZE(16), .CAN_STALL(1))
+       .MAX_REG_SIZE(16), .CAN_STALL(1), .MOD_EVENT_DEST_DEFAULT(16'h0))
    u_regaccess(.clk (clk), .rst (rst), .id (id),
                .debug_in (debug_in),
                .debug_in_ready (debug_in_ready),
@@ -129,7 +129,7 @@ module osd_dem_uart
               end
            end
          endcase
-      end // else: !if(rst)
+      end
    end
 
    always_comb begin
@@ -144,7 +144,7 @@ module osd_dem_uart
         end
         STATE_HDR_DEST: begin
            c_uart_out.valid = 1;
-           c_uart_out.data = 0; // event_dest
+           c_uart_out.data = event_dest;
         end
         STATE_HDR_SRC: begin
            c_uart_out.valid = 1;
