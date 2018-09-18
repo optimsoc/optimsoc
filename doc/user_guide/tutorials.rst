@@ -84,9 +84,9 @@ Congratulations, you've ran your first OpTiMSoC system!
 
    .. code:: c
 
-      void sim_putc(unsigned char c) {
-        asm("l.addi\tr3,%0,0": :"r" (c));
-        asm("l.nop %0": :"K" (NOP_PUTC));
+      static void sim_putc(unsigned char c) {
+          asm("l.addi r3,%0,0" : : "r" (c) : "r3");
+          asm("l.nop 4");
       }
 
    This function is called from printf as write function.
@@ -97,7 +97,7 @@ Congratulations, you've ran your first OpTiMSoC system!
    .. code:: c
 
       #define OPTIMSOC_TRACE(id,v)                \
-         asm("l.addi\tr3,%0,0": :"r" (v) : "r3"); \
+         asm("l.addi r3,%0,0" : : "r" (v) : "r3"); \
          asm("l.nop %0": :"K" (id));
 
 See the Waves
