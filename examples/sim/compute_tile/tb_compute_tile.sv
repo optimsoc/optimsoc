@@ -83,7 +83,7 @@ module tb_compute_tile
                       DEBUG_SUBNET_BITS: 6,
                       DEBUG_LOCAL_SUBNET: 0,
                       DEBUG_ROUTER_BUFFER_SIZE: 4,
-                      DEBUG_MAX_PKT_LEN: 8
+                      DEBUG_MAX_PKT_LEN: 12
                       };
 
    localparam config_t CONFIG = derive_config(BASE_CONFIG);
