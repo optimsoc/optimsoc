@@ -29,33 +29,6 @@
 
 package optimsoc_functions;
    /**
-    * Math function: $clog2 as specified in Verilog-2005
-    *
-    * clog2 =          0        for value == 0
-    *         ceil(log2(value)) for value >= 1
-    *
-    * This implementation is a synthesizable variant of the $clog2 function as
-    * specified in the Verilog-2005 standard (IEEE 1364-2005).
-    *
-    * To quote the standard:
-    *   The system function $clog2 shall return the ceiling of the log
-    *   base 2 of the argument (the log rounded up to an integer
-    *   value). The argument can be an integer or an arbitrary sized
-    *   vector value. The argument shall be treated as an unsigned
-    *   value, and an argument value of 0 shall produce a result of 0.
-    */
-   function automatic integer clog2;
-      input integer value;
-      begin
-         value = value - 1;
-         for (clog2 = 0; value > 0; clog2 = clog2 + 1) begin
-            value = value >> 1;
-         end
-      end
-   endfunction
-
-
-   /**
     * Math function: enhanced clog2 function
     *
     *                        0        for value == 0
@@ -92,7 +65,7 @@ package optimsoc_functions;
          if (value == 1) begin
             clog2_width = 1;
          end else begin
-            clog2_width = clog2(value);
+            clog2_width = $clog2(value);
          end
       end
    endfunction
