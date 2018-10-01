@@ -936,6 +936,15 @@ def optparse_parse_boolean(option, opt_str, value, parser):
 
     setattr(parser.values, option.dest, value_boolean)
 
+"""Check the build environment (i.e. the system we're running on)
+"""
+def check_build_environment():
+    if 'OPTIMSOC' in os.environ:
+        fatal('Please unset the OPTIMSOC environment variable when building.')
+        return False
+
+    return True
+
 if __name__ == '__main__':
     scriptname = os.path.realpath(__file__)
     mysrcdir = os.path.dirname(os.path.dirname(scriptname))
@@ -1011,6 +1020,8 @@ if __name__ == '__main__':
     info(" objdir: {}".format(options.objdir))
 
     try:
+        check_build_environment()
+
         # Prepare build output directory structure
         ensure_directory(options.objdir)
         prepare_distdir(options)
