@@ -278,7 +278,8 @@ module compute_tile_dm_vcu108
        .NUM_MODULES              (CONFIG.DEBUG_NUM_MODS),
        .SUBNET_BITS              (CONFIG.DEBUG_SUBNET_BITS),
        .LOCAL_SUBNET             (CONFIG.DEBUG_LOCAL_SUBNET),
-       .DEBUG_ROUTER_BUFFER_SIZE (CONFIG.DEBUG_ROUTER_BUFFER_SIZE)
+       .DEBUG_ROUTER_BUFFER_SIZE (CONFIG.DEBUG_ROUTER_BUFFER_SIZE),
+       .MAX_PKT_LEN              (CONFIG.DEBUG_MAX_PKT_LEN)
        )
    u_debuginterface
      (
