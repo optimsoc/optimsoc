@@ -20,13 +20,14 @@
 #define CLI_TOOL_PROGNAME "osd-target-run"
 #define CLI_TOOL_SHORTDESC "Run software on an Open SoC Debug-enabled target"
 
-#include <osd/hostctrl.h>
-#include <osd/gateway_glip.h>
-#include <osd/packet.h>
-#include <osd/coretracelogger.h>
-#include <osd/systracelogger.h>
-#include <osd/memaccess.h>
 #include <czmq.h>
+#include <osd/coretracelogger.h>
+#include <osd/gateway_glip.h>
+#include <osd/hostctrl.h>
+#include <osd/memaccess.h>
+#include <osd/packet.h>
+#include <osd/systracelogger.h>
+#include <osd/terminal.h>
 #include "../cli-util.h"
 
 #include <unistd.h>
@@ -51,6 +52,7 @@ struct arg_str *a_hostctrl_ep;
 struct arg_lit *a_coretrace;
 struct arg_lit *a_systrace;
 struct arg_lit *a_verify_memload;
+struct arg_lit *a_terminal;
 struct arg_file *a_elf_file;
 
 // global objects
@@ -58,11 +60,11 @@ struct glip_ctx *glip_ctx;
 struct osd_log_ctx *osd_log_ctx;
 struct osd_hostctrl_ctx *hostctrl_ctx;
 struct osd_gateway_glip_ctx *gateway_glip_ctx;
+struct osd_terminal_ctx *terminal_ctx;
 
 zlist_t *ctloggers;
 zlist_t *stloggers;
 zlist_t *open_files;
-
 
 osd_result setup(void)
 {
@@ -78,9 +80,11 @@ osd_result setup(void)
         arg_lit0(NULL, "systrace", "create a system trace for all CPU cores");
     osd_tool_add_arg(a_systrace);
 
-    a_verify_memload =
-        arg_lit0(NULL, "verify-memload", "verify loaded memory");
+    a_verify_memload = arg_lit0(NULL, "verify-memload", "verify loaded memory");
     osd_tool_add_arg(a_verify_memload);
+
+    a_terminal = arg_lit0(NULL, "terminal", "create pseudo-terminal device");
+    osd_tool_add_arg(a_terminal);
 
     a_glip_backend =
         arg_str0("b", "glip-backend", "<name>", "GLIP backend name");
@@ -110,10 +114,9 @@ static osd_result run_gateway_glip(void)
         return OSD_ERROR_FAILURE;
     }
 
-    rv = osd_gateway_glip_new(&gateway_glip_ctx, osd_log_ctx,
-                              HOSTCTRL_EP, DEVICE_SUBNET_ADDRESS,
-                              a_glip_backend->sval[0], glip_backend_options,
-                              glip_backend_options_len);
+    rv = osd_gateway_glip_new(&gateway_glip_ctx, osd_log_ctx, HOSTCTRL_EP,
+                              DEVICE_SUBNET_ADDRESS, a_glip_backend->sval[0],
+                              glip_backend_options, glip_backend_options_len);
     if (OSD_FAILED(rv)) {
         fatal("Unable to create gateway.");
         return OSD_ERROR_FAILURE;
@@ -158,7 +161,7 @@ static osd_result run_systrace(uint16_t stm_di_addr)
 
     struct osd_systracelogger_ctx *systracelogger_ctx = NULL;
     rv = osd_systracelogger_new(&systracelogger_ctx, osd_log_ctx, HOSTCTRL_EP,
-                                 stm_di_addr);
+                                stm_di_addr);
     if (OSD_FAILED(rv)) {
         retval = rv;
         goto free_return;
@@ -171,15 +174,15 @@ static osd_result run_systrace(uint16_t stm_di_addr)
     }
 
     // event output
-    char systrace_log_filename_event[18] = { 0 };
+    char systrace_log_filename_event[18] = {0};
     irv = snprintf(systrace_log_filename_event, 18, "systrace.%04d.log",
                    osd_diaddr_localaddr(stm_di_addr));
     assert(irv >= 0);
 
     FILE *fp = fopen(systrace_log_filename_event, "w");
     if (!fp) {
-        err("Unable to open file %s: %s (%d)",
-            systrace_log_filename_event, strerror(errno), errno);
+        err("Unable to open file %s: %s (%d)", systrace_log_filename_event,
+            strerror(errno), errno);
         retval = OSD_ERROR_FILE;
         goto free_return;
     }
@@ -194,18 +197,16 @@ static osd_result run_systrace(uint16_t stm_di_addr)
     info("Writing system trace event output to file %s",
          systrace_log_filename_event);
 
-
-
-    char systrace_log_filename_sysprint[24] = { 0 };
-    irv = snprintf(systrace_log_filename_sysprint, 24,
-                   "systrace.print.%04d.log",
-                   osd_diaddr_localaddr(stm_di_addr));
+    char systrace_log_filename_sysprint[24] = {0};
+    irv =
+        snprintf(systrace_log_filename_sysprint, 24, "systrace.print.%04d.log",
+                 osd_diaddr_localaddr(stm_di_addr));
     assert(irv >= 0);
 
     fp = fopen(systrace_log_filename_sysprint, "w");
     if (!fp) {
-        err("Unable to open file %s: %s (%d)",
-            systrace_log_filename_sysprint, strerror(errno), errno);
+        err("Unable to open file %s: %s (%d)", systrace_log_filename_sysprint,
+            strerror(errno), errno);
         retval = OSD_ERROR_FILE;
         goto free_return;
     }
@@ -234,8 +235,8 @@ static osd_result run_systrace(uint16_t stm_di_addr)
     retval = OSD_OK;
 free_return:
     if (OSD_FAILED(retval)) {
-        if (systracelogger_ctx
-            && osd_systracelogger_is_connected(systracelogger_ctx)) {
+        if (systracelogger_ctx &&
+            osd_systracelogger_is_connected(systracelogger_ctx)) {
             osd_systracelogger_disconnect(systracelogger_ctx);
         }
         osd_systracelogger_free(&systracelogger_ctx);
@@ -273,15 +274,15 @@ static osd_result run_coretrace(uint16_t ctm_di_addr)
     }
 
     // trace output file
-    char coretrace_log_filename[19] = { 0 };
+    char coretrace_log_filename[19] = {0};
     irv = snprintf(coretrace_log_filename, 19, "coretrace.%04d.log",
                    osd_diaddr_localaddr(ctm_di_addr));
     assert(irv >= 0);
 
     FILE *fp = fopen(coretrace_log_filename, "w");
     if (!fp) {
-        err("Unable to open file %s: %s (%d)",
-            coretrace_log_filename, strerror(errno), errno);
+        err("Unable to open file %s: %s (%d)", coretrace_log_filename,
+            strerror(errno), errno);
         retval = OSD_ERROR_FILE;
         goto free_return;
     }
@@ -308,8 +309,8 @@ static osd_result run_coretrace(uint16_t ctm_di_addr)
     retval = OSD_OK;
 free_return:
     if (OSD_FAILED(retval)) {
-        if (coretracelogger_ctx
-            && osd_coretracelogger_is_connected(coretracelogger_ctx)) {
+        if (coretracelogger_ctx &&
+            osd_coretracelogger_is_connected(coretracelogger_ctx)) {
             osd_coretracelogger_disconnect(coretracelogger_ctx);
         }
         osd_coretracelogger_free(&coretracelogger_ctx);
@@ -345,15 +346,13 @@ static osd_result run_tracing(void)
     }
 
     for (size_t i = 0; i < modules_len; i++) {
-        if (a_coretrace->count
-            && modules[i].vendor == OSD_MODULE_VENDOR_OSD
-            && modules[i].type == OSD_MODULE_TYPE_STD_CTM) {
+        if (a_coretrace->count && modules[i].vendor == OSD_MODULE_VENDOR_OSD &&
+            modules[i].type == OSD_MODULE_TYPE_STD_CTM) {
             rv = run_coretrace(modules[i].addr);
             if (OSD_FAILED(rv)) return rv;
         }
-        if (a_systrace->count
-            && modules[i].vendor == OSD_MODULE_VENDOR_OSD
-            && modules[i].type == OSD_MODULE_TYPE_STD_STM) {
+        if (a_systrace->count && modules[i].vendor == OSD_MODULE_VENDOR_OSD &&
+            modules[i].type == OSD_MODULE_TYPE_STD_STM) {
             rv = run_systrace(modules[i].addr);
             if (OSD_FAILED(rv)) return rv;
         }
@@ -367,6 +366,82 @@ free_return:
     free(modules);
     osd_hostmod_free(&hostmod_enum);
     return retval;
+}
+
+static osd_result run_terminal(void)
+{
+    struct osd_module_desc *modules;
+    struct osd_hostmod_ctx *hostmod_enum;
+    osd_result rv;
+    size_t modules_len;
+
+    // We only create the pseudo-terminal if it was explicitly specified
+    if (!a_terminal->count) {
+        return OSD_OK;
+    }
+
+    rv = osd_hostmod_new(&hostmod_enum, osd_log_ctx, HOSTCTRL_EP, NULL, NULL);
+    if (OSD_FAILED(rv)) {
+        goto free_return;
+    }
+
+    rv = osd_hostmod_connect(hostmod_enum);
+    if (OSD_FAILED(rv)) {
+        goto free_return;
+    }
+
+    rv = osd_hostmod_get_modules(hostmod_enum, DEVICE_SUBNET_ADDRESS, &modules,
+                                 &modules_len);
+    if (OSD_FAILED(rv)) {
+        goto free_return;
+    }
+
+    for (size_t i = 0; i < modules_len; i++) {
+        if (modules[i].vendor == OSD_MODULE_VENDOR_OSD &&
+            modules[i].type == OSD_MODULE_TYPE_STD_DEM_UART) {
+            rv = osd_terminal_new(&terminal_ctx, osd_log_ctx, HOSTCTRL_EP,
+                                  modules[i].addr);
+            if (OSD_FAILED(rv)) {
+                fatal("osd_terminal_new() failed with code: %i", rv);
+                goto free_return;
+            }
+
+            rv = osd_terminal_connect(terminal_ctx);
+            if (OSD_FAILED(rv)) {
+                fatal("osd_terminal_connect() failed with code: %i", rv);
+
+                if (rv != OSD_ERROR_CONNECTION_FAILED) {
+                    osd_terminal_disconnect(terminal_ctx);
+                }
+
+                osd_terminal_free(&terminal_ctx);
+                goto free_return;
+            }
+
+            rv = osd_terminal_start(terminal_ctx);
+            if (OSD_FAILED(rv)) {
+                fatal("osd_terminal_start() failed with code: %i", rv);
+
+                osd_terminal_disconnect(terminal_ctx);
+                osd_terminal_free(&terminal_ctx);
+                goto free_return;
+            }
+
+            // Currently, we can only handle a single osd_terminal.
+            break;
+        }
+    }
+
+    rv = osd_hostmod_disconnect(hostmod_enum);
+    if (OSD_FAILED(rv)) {
+        goto free_return;
+    }
+
+    rv = OSD_OK;
+free_return:
+    free(modules);
+    osd_hostmod_free(&hostmod_enum);
+    return rv;
 }
 
 int run(void)
@@ -430,12 +505,20 @@ int run(void)
         goto free_return;
     }
 
+    // setup terminal
+    info("Setting up terminal");
+    rv = run_terminal();
+    if (OSD_FAILED(rv)) {
+        exitcode = -1;
+        goto free_return;
+    }
+
     // load memories
     info("Loading memories ...");
     struct osd_mem_desc *mems;
     size_t mems_len;
-    rv = osd_memaccess_find_memories(memaccess_ctx, DEVICE_SUBNET_ADDRESS, &mems,
-                                     &mems_len);
+    rv = osd_memaccess_find_memories(memaccess_ctx, DEVICE_SUBNET_ADDRESS,
+                                     &mems, &mems_len);
     if (OSD_FAILED(rv)) {
         fatal("Unable to enumerate memories on target (%d)", rv);
         exitcode = -1;
@@ -450,14 +533,13 @@ int run(void)
             info("Loading memory at DI address %d with ELF file %s (not "
                  "verifying write)",
                  mems[i].di_addr, a_elf_file->filename[0]);
-
         }
         rv = osd_memaccess_loadelf(memaccess_ctx, &mems[i],
                                    a_elf_file->filename[0],
                                    a_verify_memload->count);
         if (OSD_FAILED(rv)) {
-            err("Unable to load memory at DI address %d (%d)",
-                mems[i].di_addr, rv);
+            err("Unable to load memory at DI address %d (%d)", mems[i].di_addr,
+                rv);
             // continue anyways
         }
     }
@@ -490,7 +572,17 @@ int run(void)
 
     exitcode = 0;
 
-free_return: ;
+free_return:;
+    dbg("Shutting down terminal");
+    if (terminal_ctx) {
+        rv = osd_terminal_disconnect(terminal_ctx);
+        if (OSD_FAILED(rv) && rv != OSD_ERROR_NOT_CONNECTED) {
+            fatal("Unable to shut down terminal");
+            exitcode = -1;
+        }
+        osd_terminal_free(&terminal_ctx);
+    }
+
     dbg("Shutting down systrace loggers");
     struct osd_systracelogger_ctx *s = zlist_first(stloggers);
     while (s) {
