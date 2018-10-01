@@ -3,7 +3,7 @@ CAPI=1
 name = wallento:boards:nexys4ddr
 depend =
   wallento:boards:nexys4ddr-ddr
-  wallento:boards:nexys4ddr-clk_sys
+#  wallento:boards:nexys4ddr-clk_sys
 
 [fileset rtl_files]
 files =
