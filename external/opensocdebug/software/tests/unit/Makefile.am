@@ -10,9 +10,11 @@ check_PROGRAMS = \
 	check_cl_stm \
 	check_cl_ctm \
 	check_cl_cdm \
+	check_cl_dem_uart \
 	check_memaccess \
 	check_systracelogger \
-	check_coretracelogger
+	check_coretracelogger \
+	check_terminal
 
 check_hostmod_SOURCES = \
 	check_hostmod.c \
@@ -42,6 +44,10 @@ check_cl_cdm_SOURCES = \
 	check_cl_cdm.c \
 	mock_hostmod.c
 
+check_cl_dem_uart_SOURCES = \
+	check_cl_dem_uart.c \
+	mock_hostmod.c
+
 check_memaccess_SOURCES = \
 	check_memaccess.c \
 	mock_host_controller.c
@@ -52,6 +58,10 @@ check_systracelogger_SOURCES = \
 
 check_coretracelogger_SOURCES = \
 	check_coretracelogger.c \
+	mock_host_controller.c
+	
+check_terminal_SOURCES = \
+	check_terminal.c \
 	mock_host_controller.c
 
 TESTS = $(check_PROGRAMS)

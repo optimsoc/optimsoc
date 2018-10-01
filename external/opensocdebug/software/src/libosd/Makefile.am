@@ -13,7 +13,9 @@ pkginclude_HEADERS =\
 	include/osd/cl_cdm.h \
 	include/osd/memaccess.h \
 	include/osd/systracelogger.h \
-	include/osd/coretracelogger.h
+	include/osd/coretracelogger.h \
+	include/osd/cl_dem_uart.h \
+	include/osd/terminal.h
 
 lib_LTLIBRARIES = libosd.la
 
@@ -31,9 +33,11 @@ libosd_la_SOURCES =\
 	cl_stm.c \
 	cl_ctm.c \
 	cl_cdm.c \
+	cl_dem_uart.c \
 	memaccess.c \
 	systracelogger.c \
-	coretracelogger.c
+	coretracelogger.c \
+	terminal.c
 
 libosd_la_CFLAGS = $(AM_CFLAGS)
 
