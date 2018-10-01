@@ -256,7 +256,7 @@ int cbuf_init(struct cbuf **buf, size_t size)
  * Free all resources of the buffer
  *
  * This function frees all resources inside the buffer, including the buffer
- * struct @p buf itself.
+ * struct @p buf itself. If @p buf is NULL, no action is performed.
  *
  * @param buf the buffer
  * @return 0 on success
@@ -264,6 +264,10 @@ int cbuf_init(struct cbuf **buf, size_t size)
  */
 int cbuf_free(struct cbuf *buf)
 {
+    if (!buf) {
+        return 0;
+    }
+
     _cbuf_cancel_waits(buf);
 
     pthread_mutex_destroy(&buf->level_mutex);
