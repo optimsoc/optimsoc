@@ -51,7 +51,7 @@ def test_dem_uart_baseregisters(dut):
     yield _init_dut(dut)
 
     yield access.test_base_registers(MODULE_DI_ADDRESS, SENDER_DI_ADDRESS,
-                                     mod_vendor=1, mod_type=5, mod_version=0,
+                                     mod_vendor=1, mod_type=2, mod_version=0,
                                      can_stall=True)
 
 @cocotb.coroutine

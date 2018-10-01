@@ -48,7 +48,7 @@ module osd_dem_uart
    reg [7:0]    out_char_buf;
 
    osd_regaccess_layer
-     #(.MOD_VENDOR(16'h1), .MOD_TYPE(16'h5), .MOD_VERSION(16'h0),
+     #(.MOD_VENDOR(16'h1), .MOD_TYPE(16'h2), .MOD_VERSION(16'h0),
        .MAX_REG_SIZE(16), .CAN_STALL(1), .MOD_EVENT_DEST_DEFAULT(16'h0))
    u_regaccess(.clk (clk), .rst (rst), .id (id),
                .debug_in (debug_in),

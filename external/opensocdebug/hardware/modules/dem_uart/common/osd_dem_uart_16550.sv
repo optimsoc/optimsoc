@@ -61,13 +61,14 @@ module osd_dem_uart_16550
    // DLAB (LCR7):
    // 0: RBR, THR and IER accessible (during communication)
    // 1: DLL and DLM accessible (during initialization to set baud rate)
-   reg [7:0]    lcr;
+   logic [7:0]  lcr;
    logic [7:0]  nxt_lcr;
 
-   reg [15:0]   divisor_latch;
+   logic [15:0]   divisor;
+   logic [15:0]   nxt_divisor;
 
    // Interrupt enable registers
-   reg          erbfi, etbei, elsi;
+   logic        erbfi, etbei, elsi;
    logic        nxt_erbfi, nxt_etbei, nxt_elsi;
 
    // Interrupts
@@ -114,6 +115,7 @@ module osd_dem_uart_16550
          fifo_tx_clear <= nxt_fifo_tx_clear;
          dma_mode <= nxt_dma_mode;
          lcr <= nxt_lcr;
+         divisor <= nxt_divisor;
       end
    end
 
@@ -126,6 +128,7 @@ module osd_dem_uart_16550
       nxt_fifo_tx_clear = fifo_tx_clear;
       nxt_dma_mode = dma_mode;
       nxt_lcr = lcr;
+      nxt_divisor = divisor;
 
       out_char = 8'h0;
       out_valid = 1'b0;
@@ -138,19 +141,19 @@ module osd_dem_uart_16550
             REG_RBR_THR: begin
                if (lcr[7]) begin
                   if (write) begin
-                     divisor_latch[7:0] = bus_wdata;
+                     nxt_divisor = {divisor[15:8], bus_wdata};
                   end else begin
-                     bus_rdata = divisor_latch[7:0];
+                     bus_rdata = divisor[7:0];
                   end
                   bus_ack = bus_req;
                end else begin
                   if (write) begin
                      out_char = bus_wdata;
-                     out_valid = 1;
+                     out_valid = 1'b1;
                      bus_ack = out_ready;
                   end else begin
                      bus_rdata = in_char;
-                     in_ready = 1;
+                     in_ready = 1'b1;
                      bus_ack = in_valid;
                   end
                end
@@ -158,9 +161,9 @@ module osd_dem_uart_16550
             REG_IER: begin
                if (lcr[7]) begin
                   if (write) begin
-                     divisor_latch[15:8] = bus_wdata;
+                     nxt_divisor = {bus_wdata, divisor[7:0]};
                   end else begin
-                     bus_rdata = divisor_latch[15:8];
+                     bus_rdata = divisor[15:8];
                   end
                   bus_ack = bus_req;
                end else begin
