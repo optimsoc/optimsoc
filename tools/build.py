@@ -188,9 +188,7 @@ def check_fusesoc(min_version):
 """
 def check_vivado(min_version):
     ver_str = check_program('vivado', '-version')
-    # XXX: most likely doesn't cover service releases, extend if we see one of
-    # those.
-    m = re.search('Vivado v(\d{4}\.\d) ', ver_str)
+    m = re.search('Vivado v(\d{4}\.\d(.\d)?) ', ver_str)
     found_version = m.group(1)
 
     if version.parse(found_version) < version.parse(min_version):
