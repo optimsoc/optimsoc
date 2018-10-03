@@ -174,14 +174,15 @@ def check_autotools():
 """Check for fusesoc
 """
 def check_fusesoc(min_version):
-    found_version = check_program("fusesoc")
+    found_version_str = check_program("fusesoc")
+    found_version = version.parse(version.parse(found_version_str).base_version)
 
-    if version.parse(found_version) < version.parse(min_version):
+    if found_version < version.parse(min_version):
         fatal("OpTiMSoC requires at least FuseSoC version {}, version {} found. "
               "Use 'pip3 install --upgrade fusesoc' to update."
-              .format(min_version, found_version))
+              .format(min_version, found_version_str))
     else:
-        dbg("Found FuseSoC version " + found_version)
+        dbg("Found FuseSoC version " + found_version_str)
 
 """Check for vivado
 """
