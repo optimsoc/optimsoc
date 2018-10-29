@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup:ProductCatalog
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:setup="http://www.eclipse.org/oomph/setup/1.0"
+    xmlns:setup.p2="http://www.eclipse.org/oomph/setup/p2/1.0"
+    name="optimsoc.products"
+    label="OpTiMSoC Products">
+
+  <setupTask
+      xsi:type="setup:InstallationTask"
+      id="installation"/>
+  <setupTask
+      xsi:type="setup.p2:P2Task">
+    <requirement
+        name="org.eclipse.oomph.setup.feature.group"/>
+    <repository
+        url="${oomph.update.url}"/>
+  </setupTask>
+
+  <!-- Set default preferences -->
+  <setupTask
+      xsi:type="setup:CompoundTask"
+      name="preferences">
+    <setupTask
+        xsi:type="setup:PreferenceTask"
+        key="/instance/org.eclipse.ui.editors/lineNumberRuler"
+        value="true"/>
+    <setupTask
+        xsi:type="setup:PreferenceTask"
+        key="/instance/org.eclipse.core.resources/refresh.enabled"
+        value="true"/>
+    <setupTask
+        xsi:type="setup:PreferenceTask"
+        key="/instance/org.eclipse.core.resources/encoding"
+        value="UTF-8"/>
+    <setupTask
+        xsi:type="setup:PreferenceTask"
+        key="/instance/org.eclipse.ui.editors/printMarginColumn"
+        value="80"/>
+    <setupTask
+        xsi:type="setup:PreferenceTask"
+        key="/instance/org.eclipse.ui.editors/spacesForTabs"
+        value="true"/>
+    <setupTask
+        xsi:type="setup:PreferenceTask"
+        key="/instance/org.eclipse.ui.editors/tabWidth"
+        value="3"/>
+  </setupTask>
+
+
+  <!-- Create .desktop file -->
+  <setupTask
+      xsi:type="setup:ResourceCreationTask"
+      excludedTriggers="STARTUP MANUAL"
+      filter="(osgi.os=linux)"
+      content="[Desktop Entry]&#xA;Type=Application&#xA;Name=${scope.product.label}&#xA;Exec=${product.location/}eclipse&#xA;Icon=${product.location/}optimsoc-icon.png&#xA;Terminal=false&#xA;Categories=Development;IDE;"
+      targetURL="${product.location|uri}/optimsocide.desktop"/>
+  <setupTask
+      xsi:type="setup:VariableTask"
+      name="product.location"
+      value="${installation.location/}${installation.relativeProductFolder}"/>
+  <setupTask
+      xsi:type="setup:ResourceCopyTask"
+      excludedTriggers="STARTUP MANUAL"
+      filter="(osgi.os=linux)"
+      sourceURL="${product.location|uri}/optimsocide.desktop"
+      targetURL="${HOME}/.local/share/applications/optimsocide.desktop"/>
+  <setupTask
+      xsi:type="setup:ResourceCopyTask"
+      excludedTriggers="STARTUP MANUAL"
+      filter="(osgi.os=linux)"
+      sourceURL="https://www.optimsoc.org/img/optimsoc_logo.png"
+      targetURL="${product.location}/optimsoc-icon.png"/>
+
+  <product name="optimsoc.products.ide" label="OpTiMSoC IDE">
+    <annotation
+          source="http://www.eclipse.org/oomph/setup/BrandingInfo">
+      <detail
+          key="imageURI">
+        <value>https://www.optimsoc.org/img/optimsoc_logo.png</value>
+      </detail>
+      <detail
+          key="siteURI">
+        <value>https://www.optimsoc.org</value>
+      </detail>
+      <detail
+          key="folderName">
+        <value>optimsocide</value>
+      </detail>
+      <detail
+          key="folderName.macosx">
+        <value>OptimsocIde</value>
+      </detail>
+    </annotation>
+    <version
+        name="latest"
+        label="latest"
+        requiredJavaVersion="1.8">
+      <setupTask
+          xsi:type="setup.p2:P2Task"
+          label="${scope.product.label}"
+          licenseConfirmationDisabled="true">
+        <repository
+            url="http://download.eclipse.org/releases/2018-09"/>
+
+        <!-- base IDE -->
+        <requirement
+            name="org.eclipse.platform.ide"/>
+        <requirement
+            name="org.eclipse.platform.feature.group"/>
+        <requirement
+            name="org.eclipse.rcp.feature.group"/>
+
+        <!-- C/C++ (CDT and friends) -->
+        <requirement
+            name="epp.package.cpp"/>
+        <requirement
+            name="org.eclipse.cdt.autotools.feature.group"/>
+        <requirement
+            name="org.eclipse.cdt.build.crossgcc.feature.group"/>
+        <requirement
+            name="org.eclipse.cdt.feature.group"/>
+        <requirement
+            name="org.eclipse.cdt.launch.remote.feature.group"/>
+        <requirement
+            name="org.eclipse.cdt.mylyn.feature.group"/>
+        <requirement
+            name="org.eclipse.egit.feature.group"/>
+        <requirement
+            name="org.eclipse.linuxtools.cdt.libhover.devhelp.feature.feature.group"/>
+        <requirement
+            name="org.eclipse.linuxtools.cdt.libhover.feature.feature.group"/>
+        <requirement
+            name="org.eclipse.linuxtools.changelog.c.feature.group"/>
+
+        <!-- TCL -->
+        <requirement
+            name="org.eclipse.dltk.core.feature.group"/>
+        <requirement
+            name="org.eclipse.dltk.tcl.feature.group"/>
+
+        <!-- Python -->
+        <repository
+            url="http://www.pydev.org/updates"/>
+        <requirement
+            name="org.python.pydev.feature.feature.group"
+            filter=""/>
+
+        <!-- SystemVerilog support (SVEditor) -->
+        <repository
+            url="http://sveditor.sourceforge.net/update"/>
+        <requirement
+            name="net.sf.sveditor.feature.group"
+            filter=""/>
+
+        <!-- ReST editor (to edit documentation)-->
+        <repository
+            url="http://resteditor.sourceforge.net/eclipse"/>
+        <requirement
+            name="org.psem2m.eclipse.rest.editor.feature.group"/>
+
+        <!-- yedit (YAML editor) -->
+        <requirement
+            name="org.dadacoalition.yedit.feature.feature.group"/>
+        <repository
+            url="http://dadacoalition.org/yedit"/>
+      </setupTask>
+      <description>OpTiMSoC Development Environment based on Eclipse</description>
+    </version>
+    <description>A development environment for creating projects with OpTiMSoC and hacking OpTiMSoC itself. Both for hardware and software engineers.</description>
+  </product>
+  <description>Eclipse products for the development and use with OpTiMSoC.</description>
+</setup:ProductCatalog>
