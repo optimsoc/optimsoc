@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup:Index
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:setup="http://www.eclipse.org/oomph/setup/1.0"
+    name="optimsoc.index"
+    label="OpTiMSoC Setup Index">
+
+  <productCatalog
+      href="optimsoc.products.setup#/"/>
+  <projectCatalog
+      href="optimsoc.projects.setup#/"/>
+</setup:Index>

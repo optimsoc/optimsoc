@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup:ProjectCatalog
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:setup="http://www.eclipse.org/oomph/setup/1.0"
+    name="org.optimsoc.projects"
+    label="OpTiMSoC Projects">
+  <setupTask
+      xsi:type="setup:WorkspaceTask"
+      id="workspace"/>
+  <setupTask
+      xsi:type="setup:ResourceCreationTask"
+      content="MAX_RECENT_WORKSPACES=5&#xD;&#xA;RECENT_WORKSPACES=${workspace.location|property}&#xD;&#xA;RECENT_WORKSPACES_PROTOCOL=3&#xD;&#xA;SHOW_WORKSPACE_SELECTION_DIALOG=true&#xD;&#xA;eclipse.preferences.version=1"
+      targetURL="configuration:/.settings/org.eclipse.ui.ide.prefs"/>
+  <setupTask
+      xsi:type="setup:TextModifyTask"
+      url="configuration:/config.ini">
+    <modification
+        pattern="osgi\.instance\.area\.default=(@user\.home/optimsoc-workspace)">
+      <substitution>${workspace.location|path}</substitution>
+    </modification>
+  </setupTask>
+  <project name="optimsoc-dev"
+      label="Enhance OpTiMSoC itself">
+    <setupTask
+        xsi:type="setup:CompoundTask"
+        name="User Preferences">
+      <annotation
+          source="http://www.eclipse.org/oomph/setup/UserPreferences"/>
+    </setupTask>
+    <project
+        href="optimsoc.project.develop-hw.setup#/"/>
+  </project>
+  <project name="optimsoc-user"
+      label="Build on top of OpTiMSoC"/>
+  <description>Projects in the scope of OpTiMSoC</description>
+</setup:ProjectCatalog>

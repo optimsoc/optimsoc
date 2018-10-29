@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup:Project
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:setup="http://www.eclipse.org/oomph/setup/1.0"
+    name="optimsoc.project.develop-hw"
+    label="Develop on OpTiMSoC hardware components">
+  <setupTask
+      xsi:type="setup:CompoundTask"
+      name="User Preferences">
+    <annotation
+        source="http://www.eclipse.org/oomph/setup/UserPreferences"/>
+  </setupTask>
+  <stream name="master"
+      label="master">
+    <description>master</description>
+  </stream>
+  <description>This project allows you to enhance the hardware components in OpTiMSoC</description>
+</setup:Project>
