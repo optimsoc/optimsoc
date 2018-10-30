@@ -197,9 +197,9 @@ module wb_decode
    always @(*) begin : bus_s_mux
       integer i;
       m_dat_o = {DATA_WIDTH{1'b0}};
-      m_ack = 1'bz;
-      m_err = 1'bz;
-      m_rty = 1'bz;
+      m_ack = 1'b0;
+      m_err = 1'b0;
+      m_rty = 1'b0;
       for (i = 0; i < SLAVES; i = i + 1) begin
          s_adr_o[i*ADDR_WIDTH +: ADDR_WIDTH] = m_adr_i;
          s_dat_o[i*DATA_WIDTH +: DATA_WIDTH] = m_dat_i;
