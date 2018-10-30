@@ -97,6 +97,11 @@ package optimsoc_functions;
       end
    endfunction
 
+   /**
+    * Get a string representing an integer
+    *
+    * This function works only for up to three-digit numbers, e.g. 0 - 999.
+    */
    function automatic [23:0] index2string;
       input integer index;
       integer       hundreds;
@@ -106,9 +111,9 @@ package optimsoc_functions;
          hundreds = index / 100;
          tens = (index - (hundreds * 100)) / 10;
          ones = (index - (hundreds * 100) - (tens * 10));
-         index2string[23:16] = hundreds[7:0] + 8'd48;
-         index2string[15:8] = tens[7:0] + 8'd48;
-         index2string[7:0] = ones[7:0] + 8'd48;
+         index2string[23:16] = 8'(hundreds) + 8'd48;
+         index2string[15:8] = 8'(tens) + 8'd48;
+         index2string[7:0] = 8'(ones) + 8'd48;
       end
    endfunction
 
