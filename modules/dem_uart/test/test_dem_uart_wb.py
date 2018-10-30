@@ -9,6 +9,7 @@ import cocotb
 
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.result import ReturnValue
 
 from osdtestlib.debug_interconnect import RegAccess, DiPacket, NocDiReader, NocDiWriter
 from osdtestlib.asserts import *
@@ -95,6 +96,8 @@ def test_dem_uart_activation(dut):
     # receive parts of the RegAccess response packet
     yield RisingEdge(dut.clk)
 
+    # Don't confuse users of this test when they see a warning message
+    dut._log.warning("The following warning 'packet receive timed out' is expected:")
     packet = yield NocDiReader(dut, dut.clk).receive_packet(set_ready=True)
     if packet:
         raise TestFailure("Received packet while module was deactivated")
@@ -118,8 +121,14 @@ def _bus_to_di_tx(dut, num_transfers=500, max_delay=100, random_data=False):
         for _ in range(delay):
             yield RisingEdge(dut.clk)
 
-        data = random.randint(0, 255) if random_data else 0x42
+        # Wait until the UART signals that it is ready for writes
+        while True:
+            lsr_can_write = yield _lsr_can_write(dut, wb_master)
+            if lsr_can_write:
+                break
+            yield RisingEdge(dut.clk)
 
+        data = random.randint(0, 255) if random_data else 0x42
         _bus_to_di_fifo.append(data)
 
         yield wb_master.send_cycle([WBOp(adr=0x0, dat=data, sel=0x8)])
@@ -136,16 +145,18 @@ def _bus_to_di_rx(dut, num_transfers=500, max_delay=100):
         for _ in range(delay):
             yield RisingEdge(dut.clk)
 
+        # Wait until data has been written to the device
+        while not _bus_to_di_fifo:
+            yield RisingEdge(dut.clk)
+
         rx_packet = yield reader.receive_packet(set_ready=True)
-
-        data = _bus_to_di_fifo.pop(0)
-
-        ex_packet.set_contents(dest=SENDER_DI_ADDRESS, src=MODULE_DI_ADDRESS,
-                               type=DiPacket.TYPE.EVENT, type_sub=0,
-                               payload=[data])
-
         if not rx_packet:
             raise TestFailure("receive_packet() timed out")
+
+        exp_data = _bus_to_di_fifo.pop(0)
+        ex_packet.set_contents(dest=SENDER_DI_ADDRESS, src=MODULE_DI_ADDRESS,
+                               type=DiPacket.TYPE.EVENT, type_sub=0,
+                               payload=[exp_data])
 
         if not rx_packet.equal_to(dut, ex_packet, mask=None):
             raise TestFailure("Unexpected content of " + rx_packet.__str__() +
@@ -184,8 +195,6 @@ def _di_to_bus_tx(dut, num_transfers=500, max_delay=100, random_data=False):
 
         data = random.randint(0, 255) if random_data else 0x42
 
-        _di_to_bus_fifo.append(data)
-
         tx_packet.set_contents(dest=MODULE_DI_ADDRESS, src=SENDER_DI_ADDRESS,
                                type=DiPacket.TYPE.EVENT.value, type_sub=0,
                                payload=[data])
@@ -193,6 +202,8 @@ def _di_to_bus_tx(dut, num_transfers=500, max_delay=100, random_data=False):
         yield writer.send_packet(tx_packet)
 
         yield RisingEdge(dut.clk)
+
+        _di_to_bus_fifo.append(data)
 
 @cocotb.coroutine
 def _di_to_bus_rx(dut, num_transfers=500, max_delay=100):
@@ -203,6 +214,13 @@ def _di_to_bus_rx(dut, num_transfers=500, max_delay=100):
         delay = random.randint(0, max_delay)
 
         for _ in range(delay):
+            yield RisingEdge(dut.clk)
+
+        # Wait until the UART signals that it is ready for a read
+        while True:
+            lsr_can_read = yield _lsr_can_read(dut, wb_master)
+            if lsr_can_read:
+                break
             yield RisingEdge(dut.clk)
 
         # Only look at the LSB of the 32-bit wide result.
@@ -233,14 +251,36 @@ def test_di_to_bus(dut):
 
     yield read_thread.join()
 
+@cocotb.coroutine
+def _lsr_can_write(dut, wb_master):
+    """
+    Check if the UART LSR register signals space in its output buffers
+    """
+    ret = yield wb_master.send_cycle([WBOp(adr=0x4, dat=None, sel=0x4)])
+    lsr = ret.pop(0).datrd & 0xFF
+
+    # Writing is possible if THRE (bit 5) and TEMPT (bit 6) are set
+    raise ReturnValue(lsr & (1 << 5) and lsr & (1 << 6))
+
+@cocotb.coroutine
+def _lsr_can_read(dut, wb_master):
+    """
+    Check if the UART LSR register signals data available in its input buffer
+    """
+    ret = yield wb_master.send_cycle([WBOp(adr=0x4, dat=None, sel=0x4)])
+    lsr = ret.pop(0).datrd & 0xFF
+
+    # Reading is possible if DR (bit 0) is set
+    raise ReturnValue(lsr & (1 << 0))
+
 @cocotb.test()
 def test_both_directions(dut):
     """
     Randomly alternate between read/write cycles on the WISHBONE bus
     """
 
-    NUM_TRANSFERS = 10000
-    MAX_DELAY     = 100
+    NUM_TRANSFERS = 1000
+    MAX_DELAY     = 50
     RANDOM_DATA   = True
 
     yield _init_dut(dut)
@@ -269,7 +309,10 @@ def test_both_directions(dut):
             for _ in range(random.randint(0, MAX_DELAY)):
                 yield RisingEdge(dut.clk)
 
-            tx_packets -= 1
+            # Check if the UART signals space in its send buffer
+            lsr_can_write = yield _lsr_can_write(dut, wb_master)
+            if not lsr_can_write:
+                continue
 
             data = random.randint(0, 255) if RANDOM_DATA else 0x42
             _bus_to_di_fifo.append(data)
@@ -277,6 +320,8 @@ def test_both_directions(dut):
             yield wb_master.send_cycle([WBOp(adr=0x0, dat=data, sel=0x8)])
 
             yield RisingEdge(dut.clk)
+
+            tx_packets -= 1
         else:
             if not rx_packets:
                 continue
@@ -284,7 +329,10 @@ def test_both_directions(dut):
             for _ in range(random.randint(0, MAX_DELAY)):
                 yield RisingEdge(dut.clk)
 
-            rx_packets -= 1
+            # Check if the UART signals available data in its read buffer
+            lsr_can_read = yield _lsr_can_read(dut, wb_master)
+            if not lsr_can_read:
+                continue
 
             ret = yield wb_master.send_cycle([WBOp(adr=0x0, dat=None, sel=0x8)])
             res = ret.pop(0).datrd & 0xFF
@@ -296,6 +344,8 @@ def test_both_directions(dut):
                                   % (data, res))
 
             yield RisingEdge(dut.clk)
+
+            rx_packets -= 1
 
     # we implicitly wait for the write_thread in the loop above
     yield read_thread.join()
@@ -320,6 +370,9 @@ def test_uart_16550_registers(dut):
         raise TestFailure("IER test failed! Wrong reset values: 0x%x" % res)
 
     yield wb_master.send_cycle([WBOp(adr=0x0, dat=0x3, sel=0x4)])
+
+    for _ in range(10):
+        yield RisingEdge(dut.clk)
 
     ret = yield wb_master.send_cycle([WBOp(adr=0x0, dat=None, sel=0x4)])
     res = ret.pop(0).datrd & 0xFF
@@ -381,3 +434,113 @@ def test_uart_16550_registers(dut):
     if res != 0x0:
         raise TestFailure("DLM test failed! Wrote: 0x%x, Read: 0x%x"
                           % (0x0, res))
+
+@cocotb.test()
+def test_uart_read_empty(dut):
+    """
+    Ensure that the bus doesn't block even though no data is available to read
+    """
+
+    yield _init_dut(dut)
+    yield _activate_module(dut)
+
+    # WB master with 10 cycles timeout
+    wb_master = WishboneMaster(dut, dut.clk, timeout=10)
+
+    # Read from Receiver Buffer Register (RBR)
+    ret = yield wb_master.send_cycle([WBOp(adr=0x0, dat=None, sel=0x0)])
+    res = ret.pop(0).datrd & 0xFF
+
+
+@cocotb.test()
+def test_uart_irq_tbe(dut):
+    """
+    Check if the Transmit Buffer Empty interrupt is sent
+    """
+
+    yield _init_dut(dut)
+    yield _activate_module(dut)
+
+    wb_master = WishboneMaster(dut, dut.clk)
+
+    # ensure that IRQ is lowered before we start sending
+    if dut.irq.value != 0:
+        raise TestFailure("irq is not lowered at start.")
+
+    # Enable TBE interrupt by setting bit 2 in IER
+    yield wb_master.send_cycle([WBOp(adr=0x0, dat=0x2, sel=0x4)])
+    yield RisingEdge(dut.clk)
+
+    # ensure that IRQ is still lowered before we start sending
+    if dut.irq.value != 1:
+        raise TestFailure("irq is not high (indicating an empty transmit buffer)")
+
+    yield RisingEdge(dut.clk)
+
+    # simulate the CPU sending a single char to the UART device
+    yield _bus_to_di_tx(dut, num_transfers=1, random_data=False)
+
+    # check that IRQ is now lowered
+    if dut.irq.value != 0:
+        raise TestFailure("irq it not lowered after receiving data.")
+
+    # Let the UART module empty its send buffer
+    yield _bus_to_di_rx(dut, num_transfers=1)
+
+    # check that IRQ is now high again, indicating an empty transmit buffer
+    if dut.irq.value != 1:
+        raise TestFailure("irq not high again after emptying the transmit buffer.")
+
+    # Disable the TBE interrupt again
+    yield wb_master.send_cycle([WBOp(adr=0x0, dat=0x0, sel=0x4)])
+    yield RisingEdge(dut.clk)
+
+    # Ensure that the interrupt signal is now lowered
+    if dut.irq.value != 0:
+        raise TestFailure("irq not lowered after disabling the interrupt.")
+
+
+@cocotb.test()
+def test_uart_irq_rbf(dut):
+    """
+    Check if the Receive Buffer Full interrupt is sent
+    """
+
+    yield _init_dut(dut)
+    yield _activate_module(dut)
+
+    _di_to_bus_fifo.clear()
+
+    wb_master = WishboneMaster(dut, dut.clk)
+
+    # ensure that IRQ is lowered before we start sending
+    if dut.irq.value != 0:
+        raise TestFailure("irq is not lowered at start.")
+
+    # Enable RBF interrupt by setting bit 1 in IER
+    yield wb_master.send_cycle([WBOp(adr=0x0, dat=0x1, sel=0x4)])
+    yield RisingEdge(dut.clk)
+
+    # ensure that IRQ is still lowered before we start sending
+    if dut.irq.value != 0:
+        raise TestFailure("irq is not low, even though receive buffer is empty")
+
+    yield RisingEdge(dut.clk)
+
+    # send a single packet to the UART module
+    yield _di_to_bus_tx(dut, num_transfers=1, random_data=False)
+
+    for _ in range(4):
+        yield RisingEdge(dut.clk)
+
+    # check that IRQ is now high
+    if dut.irq.value != 1:
+        raise TestFailure("irq it not high after receiving a character")
+
+    # simulate CPU consuming the incoming character
+    yield _di_to_bus_rx(dut, num_transfers=1)
+
+    # check that IRQ is now lowered again
+    if dut.irq.value != 0:
+        raise TestFailure("irq it not lowered after the incoming character has been consumed")
+

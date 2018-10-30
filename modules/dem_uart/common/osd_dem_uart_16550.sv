@@ -1,4 +1,4 @@
-// Copyright 2016 by the authors
+// Copyright 2016-2018 by the authors
 //
 // Copyright and related rights are licensed under the Solderpad
 // Hardware License, Version 0.51 (the "License"); you may not use
@@ -13,6 +13,7 @@
 //
 // Authors:
 //    Stefan Wallentowitz <stefan@wallentowitz.de>
+//    Thomas Leyk <thomas.leyk@tum.de>
 
 import dii_package::dii_flit;
 
@@ -58,21 +59,28 @@ module osd_dem_uart_16550
    localparam INTR_RBF  = 4'b0100;
    localparam INTR_TBE  = 4'b0010;
 
+   // Bits in the Line Status Register (LSR)
+   localparam BIT_LSR_DR   = 0; // Data Ready
+   localparam BIT_LSR_THRE = 5; // Transmitter Holding Register Empty
+   localparam BIT_LSR_TEMT = 6; // Transmitter Empty
+
    // DLAB (LCR7):
    // 0: RBR, THR and IER accessible (during communication)
    // 1: DLL and DLM accessible (during initialization to set baud rate)
    logic [7:0]  lcr;
    logic [7:0]  nxt_lcr;
 
-   logic [15:0]   divisor;
-   logic [15:0]   nxt_divisor;
+   logic [15:0] divisor;
+   logic [15:0] nxt_divisor;
 
    // Interrupt enable registers
    logic        erbfi, etbei, elsi;
    logic        nxt_erbfi, nxt_etbei, nxt_elsi;
 
    // Interrupts
-   logic        irq_rbf, irq_tbe, irq_ls;
+   logic        irq_rbf;
+   logic        irq_tbe;
+   logic        irq_ls;
 
    assign irq_rbf = erbfi & in_valid;            // Receive data available
    assign irq_tbe = etbei & (out_ready | drop);  // (THRE) Transmitter holding register empty
@@ -81,19 +89,17 @@ module osd_dem_uart_16550
    assign irq = irq_rbf | irq_tbe | irq_ls;
 
    // FIFO
-   reg          fifo_enable, fifo_rx_clear, fifo_tx_clear, dma_mode;
-   logic        nxt_fifo_enable, nxt_fifo_rx_clear, nxt_fifo_tx_clear, nxt_dma_mode;
-
-   reg          req;
-   reg [2:0]    addr;
-   reg          write;
+   logic        fifo_enable;
+   logic        fifo_rx_clear;
+   logic        fifo_tx_clear;
+   logic        dma_mode;
+   logic        nxt_fifo_enable;
+   logic        nxt_fifo_rx_clear;
+   logic        nxt_fifo_tx_clear;
+   logic        nxt_dma_mode;
 
    always_ff @(posedge clk) begin
       if (rst) begin
-         req <= 1'b0;
-         addr <= 3'h0;
-         write <= 1'b0;
-
          erbfi <= 1'b0;
          etbei <= 1'b0;
          elsi <= 1'b0;
@@ -103,10 +109,6 @@ module osd_dem_uart_16550
          dma_mode <= 1'b0;
          lcr <= 8'h0;
       end else begin
-         req <= bus_req;
-         addr <= bus_addr;
-         write <= bus_write;
-
          erbfi <= nxt_erbfi;
          etbei <= nxt_etbei;
          elsi <= nxt_elsi;
@@ -118,6 +120,11 @@ module osd_dem_uart_16550
          divisor <= nxt_divisor;
       end
    end
+
+   logic dlab;
+   assign dlab = lcr[7];
+
+   assign bus_ack = bus_req;
 
    always_comb begin
       nxt_erbfi = erbfi;
@@ -134,51 +141,49 @@ module osd_dem_uart_16550
       out_valid = 1'b0;
       in_ready = 1'b0;
       bus_rdata = 8'h0;
-      bus_ack = 1'b0;
 
-      if (req) begin
-         case (addr)
+      if (bus_req) begin
+         case (bus_addr)
             REG_RBR_THR: begin
-               if (lcr[7]) begin
-                  if (write) begin
+               if (dlab) begin
+                  if (bus_write) begin
                      nxt_divisor = {divisor[15:8], bus_wdata};
                   end else begin
                      bus_rdata = divisor[7:0];
                   end
-                  bus_ack = bus_req;
                end else begin
-                  if (write) begin
+                  if (bus_write) begin
                      out_char = bus_wdata;
                      out_valid = 1'b1;
-                     bus_ack = out_ready;
                   end else begin
                      bus_rdata = in_char;
                      in_ready = 1'b1;
-                     bus_ack = in_valid;
                   end
                end
             end
             REG_IER: begin
-               if (lcr[7]) begin
-                  if (write) begin
+               if (dlab) begin
+                  // Divisor Latch MS (DLM)
+                  if (bus_write) begin
                      nxt_divisor = {bus_wdata, divisor[7:0]};
                   end else begin
                      bus_rdata = divisor[15:8];
                   end
-                  bus_ack = bus_req;
                end else begin
-                  if (write) begin
+                  // Interrupt Enable Register (IER)
+                  if (bus_write) begin
                      {nxt_elsi, nxt_etbei, nxt_erbfi} = bus_wdata[2:0];
                   end else begin
-                     bus_rdata = {5'h0, nxt_elsi, nxt_etbei, nxt_erbfi};
+                     bus_rdata = {5'h0, elsi, etbei, erbfi};
                   end
-                  bus_ack = bus_req;
                end
             end
             REG_IIR_FCR: begin
-               if (write) begin
+               if (bus_write) begin
+                  // FIFO Control Register (FCR)
                   {nxt_dma_mode, nxt_fifo_tx_clear, nxt_fifo_rx_clear, nxt_fifo_enable} = bus_wdata[3:0];
                end else begin
+                  // Interrupt Indent. Register (IIR)
                   bus_rdata[7:6] = {fifo_enable, fifo_enable};
                   bus_rdata[5:4] = 2'h0;
 
@@ -192,27 +197,24 @@ module osd_dem_uart_16550
                      bus_rdata[3:0] = INTR_NONE;
                   end
                end
-               bus_ack = bus_req;
             end
             REG_LCR: begin
-               if (write) begin
+               // Line Control Register (LCR)
+               if (bus_write) begin
                   nxt_lcr = bus_wdata;
                end else begin
                   bus_rdata = lcr;
                end
-               bus_ack = bus_req;
             end
             REG_LSR: begin
-               // TEMT=1, THRE=1, DR (data ready) when input
-               bus_rdata = {7'b0110000, in_valid};
-               bus_ack = bus_req;
-            end
-            default: begin
-               // Not acknowledging access to unimplemented registers could hang the bus.
-               bus_ack = bus_req;
+               // Line Status Register (LSR)
+               bus_rdata = 8'h0;
+               bus_rdata[BIT_LSR_DR] = in_valid;
+               bus_rdata[BIT_LSR_TEMT] = out_ready;
+               bus_rdata[BIT_LSR_THRE] = out_ready;
             end
          endcase
-      end // if (req)
+      end
 
       if (fifo_enable & fifo_rx_clear) begin
          // TODO Clear all data in RXFifo
