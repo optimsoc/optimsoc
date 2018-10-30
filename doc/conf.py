@@ -41,7 +41,6 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
 #    'sphinx.ext.imgconverter', # add after we bump to Sphinx 1.6
-    'local_toctree',
     'breathe',
     'rstFlatTable',
     'cairosvgconverter'
