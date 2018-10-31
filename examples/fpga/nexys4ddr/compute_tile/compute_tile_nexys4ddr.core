@@ -24,6 +24,11 @@ filesets:
       - tbench/verilog/tb_compute_tile_nexys4ddr.sv
     file_type: systemVerilogSource
 
+  files_spyglass_waivers:
+    files:
+      - spyglass-waiver.awl
+    file_type: awl
+
 targets:
   synth:
     default_tool: vivado
@@ -41,6 +46,24 @@ targets:
       - files_testbench
     tools:
       xsim: ~
+
+  lint:
+    default_tool: spyglass
+    filesets:
+      - files_rtl
+      - files_spyglass_waivers
+    toplevel: [compute_tile_dm_nexys4]
+    tools:
+      spyglass:
+        spyglass_options:
+          - handlememory 1
+
+        rule_parameters:
+          # Do not give W263 when using a localparam within a case, as we
+          # typically do for state machines.
+          - handle_static_caselabels 1
+      verilator:
+        mode: lint-only
 
 parameters:
   NUM_CORES:

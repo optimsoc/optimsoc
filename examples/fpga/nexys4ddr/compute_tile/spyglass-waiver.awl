@@ -1,0 +1,116 @@
+#
+# Waivers for Spyglass lint
+#
+
+# Blackboxes for Xilinx IP are expected
+waive -msg {Design Unit 'clk_gen_ddr' has no definition; black-box behavior assumed}  -rule {  {ErrorAnalyzeBBox}  } 
+waive -msg {Design Unit 'mig_7series' has no definition; black-box behavior assumed}  -rule {  {ErrorAnalyzeBBox}  } 
+
+# "Initial Assignment at Declaration for ( <MODULE> ) is ignored by synthesis"
+waive -rule {  {SynthesisWarning}  {SYNTH_89}  }  -comment {Initial assignments are fine in FPGA designs.} 
+
+# "Initial block is ignored for synthesis"
+waive -rule {  {SYNTH_5143}  }  -comment {Initial blocks are useful for simulation, and can be safely ignored in synthesis. }
+
+# For easier debugging/viewing in waveform viewers, we sometimes assign X to unused signals.
+waive -rule {  {NoAssignX-ML}  }  -comment {Do not assignment of X as error, we use this for debugging.}
+
+# clog2() is fine
+waive -msg {*'clog2'*}  -rules {  {W481a} {W499} } -comment {Standard clog2() code which is known to work.}
+
+# Passing a constant to an enable signal isn't a big deal.
+waive -rule {  {FlopEConst}  }  -comment {Passing a constant to an enable signal isn't a big deal.} 
+
+# Unconnected outputs (e.g. ".signal()" in an instantiation)
+waive -rule { {W287a}  {W287b}  }  
+ 
+# "Signal may be multiply assigned (beside initialization) in the same scope."
+# We do this regularly in our state machine code
+waive -rule {  {W415a}  } 
+
+# Ignore warnings about unread bits and variables
+# W528: "A signal or variable is set but never read"
+# W240: "Following Bits of signal ... are not read"
+waive -rule { W528 W240 }
+
+# XXX: We need to globally waive the W123 rule even though it would be useful.
+# I didn't find another way to waive the warning
+# "W123 : Following Bits of signal 'pstep' (File Name: ../../../../../../../../home/no56hud/src/optimsoc/objdir/dist/external/mor1kx/rtl/verilog/mor1kx_ctrl_cappuccino.v Line No.: 468) are read but not set
+#   [2:0] "
+# which is within the SignalUsageReport.
+waive -rule { W123 }
+
+##########################################################
+# mor1kx
+##########################################################
+
+# mor1kx: waive uncritical warnings from imported code 
+waive -du {  {mor1kx_fetch_cappuccino}  }  -msg {Combinational and sequential parts of an FSM 'mor1kx_fetch_cappuccino.state' described in same always block}  -rule {  {STARC05-2.11.3.1}  }   
+waive -du {  {mor1kx_icache}  }  -msg {Combinational and sequential parts of an FSM 'mor1kx_icache.state' described in same always block}  -rule {  {STARC05-2.11.3.1}  } 
+waive -du {  {mor1kx_lsu_cappuccino}  }  -msg {Combinational and sequential parts of an FSM 'mor1kx_lsu_cappuccino.state' described in same always block}  -rule {  {STARC05-2.11.3.1}  }
+
+# Bit/range selects on integers are harmless, but trigger warnings
+# XXX: Fix them in the mor1kx code
+waive -du {  {mor1kx_rf_cappuccino}  }  -msg {Inappropriate bit select for int_bit_sel variable: \"in[i]\"}  -severity {  {Warning}  }  -rule {  {W215}  }  -weight {5} 
+waive -du {  {mor1kx_rf_cappuccino}  }  -msg {Inappropriate bit select for int_bit_sel variable: \"in[i]\"}  -severity {  {Warning}  }  -rule {  {W215}  }  -weight {5} 
+waive -du {  {mor1kx_rf_cappuccino}  }  -msg {Inappropriate bit select for int_bit_sel variable: \"in[i]\"}  -severity {  {Warning}  }  -rule {  {W215}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_rf_cappuccino}  }  -msg {Inappropriate range select for int_part_sel variable: \"in[i +:8] \"}  -severity {  {Warning}  }  -rule {  {W216}  }  -weight {5}   
+waive -du {  {mor1kx_immu}  }  -msg {Inappropriate range select for int_part_sel variable: \"j[(WAYS_WIDTH - 1):0] \"}  -severity {  {Warning}  }  -rule {  {W216}  }  -weight {5} 
+waive -du {  {mor1kx_immu}  }  -msg {Inappropriate range select for int_part_sel variable: \"j[(WAYS_WIDTH - 1):0] \"}  -severity {  {Warning}  }  -rule {  {W216}  }  -weight {5} 
+waive -du {  {mor1kx_dmmu}  }  -msg {Inappropriate range select for int_part_sel variable: \"j[(WAYS_WIDTH - 1):0] \"}  -severity {  {Warning}  }  -rule {  {W216}  }  -weight {5} 
+waive -du {  {mor1kx_dmmu}  }  -msg {Inappropriate range select for int_part_sel variable: \"j[(WAYS_WIDTH - 1):0] \"}  -severity {  {Warning}  }  -rule {  {W216}  }  -weight {5} 
+
+# STARC05-2.2.3.3 
+waive -du {  {mor1kx_fetch_cappuccino}  }  -msg {Flipflop 'ibus_req' is assigned over the same signal in an always construct for sequential circuits (at line '383')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_fetch_cappuccino}  }  -msg {Flipflop 'state' is assigned over the same signal in an always construct for sequential circuits (at line '388')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_icache}  }  -msg {Flipflop 'spr_bus_ack_o' is assigned over the same signal in an always construct for sequential circuits (at line '305')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_icache}  }  -msg {Flipflop 'state' is assigned over the same signal in an always construct for sequential circuits (at line '267')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_icache}  }  -msg {Flipflop 'state' is assigned over the same signal in an always construct for sequential circuits (at line '267')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_icache}  }  -msg {Flipflop 'state' is assigned over the same signal in an always construct for sequential circuits (at line '267')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_lsu_cappuccino}  }  -msg {Flipflop 'dbus_req_o' is assigned over the same signal in an always construct for sequential circuits (at line '449')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_lsu_cappuccino}  }  -msg {Flipflop 'state' is assigned over the same signal in an always construct for sequential circuits (at line '450')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_lsu_cappuccino}  }  -msg {Flipflop 'last_write' is assigned over the same signal in an always construct for sequential circuits (at line '479')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_lsu_cappuccino}  }  -msg {Flipflop 'state' is assigned over the same signal in an always construct for sequential circuits (at line '412')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+waive -du {  {mor1kx_ctrl_cappuccino}  }  -msg {Flipflop 'spr_sr[14:0] ' is assigned over the same signal in an always construct for sequential circuits (at line '728')}  -severity {  {Warning}  }  -rule {  {STARC05-2.2.3.3}  }  -weight {5}  -exact 
+
+# unassigned signals
+waive -du {  {mor1kx_ctrl_cappuccino}  }  -rule { W240 }
+
+# Detected undriven input terminal 
+waive -du {  {mor1kx_ctrl_cappuccino} {mor1kx_dmmu}  } -rule {  {UndrivenInTerm-ML}  }   
+
+waive -du { mor1kx_cpu_cappuccino }  -msg {Detected undriven input terminal compute_tile_dm_nexys4.u_compute_tile.\gen_cores[0].u_core .u_cpu.mor1kx_cpu.\cappuccino.mor1kx_cpu .mor1kx_ctrl_cappuccino.spr_bus_dat_ic_i[31:0]}  -severity {  {Error}  }  -rule {  {UndrivenInTerm-ML}  }  -weight {10}  -exact
+
+
+##########################################################
+# lisnoc
+##########################################################
+# XXX: Some of these warnings should/could be fixed, but leaving LISNoC as-is for now
+waive -du {  {lisnoc_packet_buffer}  }  -msg {Loop index 'i' is not of type integer}  -severity {  {Warning}  }  -rule {  {W480}  }  -weight {5}  -exact 
+waive -du {  {lisnoc_dma_target}  }  -msg {Flipflop 'noc_resp_packet_wcount' is assigned over the same signal in an always construct for sequential circuits (at line '586')}  -rule {  {STARC05-2.2.3.3}  } 
+waive -du {  {lisnoc_dma_initiator_nocreq}  }  -msg {For operator (-), left expression: \"req_size\" width 30 should match right expression: \"noc_req_counter\" width 32. [Hierarchy: ':compute_tile_dm_nexys4:u_compute_tile@compute_tile_dm:u_na@networkadapter_ct:\genblk1.u_dma @lisnoc_dma:ctrl_initiator@lisnoc_dma_initiator:u_nocreq@lisnoc_dma_initiator_nocreq']}  -severity {  {Warning}  }  -rule {  {W116}  }  -weight {10}  -exact 
+waive -du {  {lisnoc_dma_initiator_nocreq}  }  -msg {For operator (-), left expression: \"req_size\" width 30 should match right expression: \"noc_req_counter\" width 32. [Hierarchy: ':compute_tile_dm_nexys4:u_compute_tile@compute_tile_dm:u_na@networkadapter_ct:\genblk1.u_dma @lisnoc_dma:ctrl_initiator@lisnoc_dma_initiator:u_nocreq@lisnoc_dma_initiator_nocreq']}  -severity {  {Warning}  }  -rule {  {W116}  }  -weight {10}  -exact 
+waive -du {  {lisnoc_dma_target}  }  -msg {For operator (-), left expression: \"resp_wsize\" width 30 should match right expression: \"noc_resp_wcounter\" width 32. [Hierarchy: ':compute_tile_dm_nexys4:u_compute_tile@compute_tile_dm:u_na@networkadapter_ct:\genblk1.u_dma @lisnoc_dma:target@lisnoc_dma_target']}  -severity {  {Warning}  }  -rule {  {W116}  }  -weight {10}  -exact 
+waive -du {  {lisnoc_dma_target}  }  -msg {For operator (-), left expression: \"resp_wsize\" width 30 should match right expression: \"noc_resp_wcounter\" width 32. [Hierarchy: ':compute_tile_dm_nexys4:u_compute_tile@compute_tile_dm:u_na@networkadapter_ct:\genblk1.u_dma @lisnoc_dma:target@lisnoc_dma_target']}  -severity {  {Warning}  }  -rule {  {W116}  }  -weight {10}  -exact 
+ 
+waive -du {  {lisnoc_dma_initiator_nocreq}  }  -msg {For operator (==), left expression: \"(noc_req_packet_count + noc_req_counter)\" width 32 should match right expression: \"req_size\" width 30 [Hierarchy: ':compute_tile_dm_nexys4:u_compute_tile@compute_tile_dm:u_na@networkadapter_ct:\genblk1.u_dma @lisnoc_dma:ctrl_initiator@lisnoc_dma_initiator:u_nocreq@lisnoc_dma_initiator_nocreq']}  -rule {  {W362}  }  
+waive -du {  {lisnoc_dma_target}  }  -msg {For operator (==), left expression: \"wb_resp_count\" width 12 should match right expression: \"resp_wsize\" width 30 [Hierarchy: ':compute_tile_dm_nexys4:u_compute_tile@compute_tile_dm:u_na@networkadapter_ct:\genblk1.u_dma @lisnoc_dma:target@lisnoc_dma_target']}  -rule {  {W362}  }  
+waive -du {  {lisnoc_dma_target}  }  -msg {For operator (==), left expression: \"wb_resp_count\" width 12 should match right expression: \"resp_wsize\" width 30 [Hierarchy: ':compute_tile_dm_nexys4:u_compute_tile@compute_tile_dm:u_na@networkadapter_ct:\genblk1.u_dma @lisnoc_dma:target@lisnoc_dma_target']}  -rule {  {W362}  }  
+
+
+##########################################################
+# Open SoC Debug
+##########################################################
+waive -du {  {osd_mam}  }  -msg {Not all bits of the function 'endian_conv' value are set in the function body or in all branches of the function*} -rule {  {W499}  }
+
+waive -du {  {osd_stm_mor1kx}  }  -msg {Input 'trace_port.*' declared but not read.*} -rule {  {W240}  } 
+waive -du {  {osd_ctm}  }  -msg {Input 'trace_*' declared but not read.*} -rule {  {W240}  } 
+waive -du {  {osd_dem_uart_wb}  }  -msg {Input 'wb_cti_i[2:0]' declared but not read.*}  -rule {  {W240}  }  
+waive -du {  {osd_dem_uart_wb}  }  -msg {Input 'wb_bte_i[1:0]' declared but not read.*}  -rule {  {W240}  }  
+waive -du {  {osd_mam_wb_if}  }  -msg {Input 'write_strb[3:0]' declared but not read.*}  -rule {  {W240}  }  
+
+
+##########################################################
+# GLIP
+##########################################################
+waive -msg {Function should not set a global variable: *} -rule {  {W424}  } 
