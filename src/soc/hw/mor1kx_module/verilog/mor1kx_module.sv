@@ -170,7 +170,7 @@ module mor1kx_module
            .du_dat_i                    (dbg_dat_i[31:0]),
            .du_we_i                     (dbg_we_i),
            .du_stall_i                  (dbg_stall_i),
-           .multicore_coreid_i          (ID),
+           .multicore_coreid_i          (32'(ID)),
            .multicore_numcores_i        (NUMCORES),
            .snoop_adr_i                 (snoop_adr_i[31:0]),
            .snoop_en_i                  (snoop_enable_i));
