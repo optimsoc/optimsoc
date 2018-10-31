@@ -68,6 +68,59 @@ So let's look at a couple of examples how to build a SoC hardware with fusesoc.
 
      fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
 
+Linting Hardware
+================
+
+When writing hardware code it's easy to make small mistakes which result in a non-working design.
+A great help to write working code are static analysis or lint tools.
+Such tools go through the Verilog code and check if certain rules of "good programming" are obeyed.
+
+The OpTiMSoC source code supports two lint tools, the commercial Synopsys Spyglass tools, and the open source Verilator tool.
+
+Linting with Spyglass
+---------------------
+
+Synopsys Spyglass offers an extensive set of lint rules.
+To run Spyglass, the fusesoc core file of the design must be prepared for it.
+We did that in all our example systems; just look at them to learn about the required settings.
+
+To run Spyglass use ``fusesoc run`` with the ``--target=lint`` argument and specify that you want to use Spyglass by adding the option ``--tool=spyglass`` to it.
+The full command line to lint a simple ``compute_tile`` system for the Nexys 4 DDR board looks like this.
+
+.. code:: sh
+
+    # --no-export is useful for development and waiving messages.
+    # Do not use it when running lint in CI environments.
+    fusesoc --cores-root $OPTIMSOC_SOURCE/examples run --target=lint --tool=spyglass --no-export optimsoc:examples:compute_tile_nexys4ddr
+
+At the end of the process Spyglass writes a summary of its findings.
+It could look like this:
+
+.. code:: plain
+
+   ---------------------------------------------------------------------------------------------------
+      Goal Violation Summary:
+          Waived   Messages:                      2 Errors,      0 Warnings,      0 Infos
+          Reported Messages:         0 Fatals,  153 Errors,    521 Warnings,     10 Infos
+   ---------------------------------------------------------------------------------------------------
+
+If any warnings, errors, or fatal errors are found, we consider the linting "failed" and fusesoc returns a non-zero exit code.
+Hence you need to fix all those messages.
+You have two options for that: either fix the source code, or tell Spyglass that this message is bogous by "waiving" the message.
+
+To make things easier, Spyglass offers a nice GUI.
+Open it in the following way:
+
+.. code:: sh
+
+   cd build/optimsoc_examples_compute_tile_nexys4ddr_0/lint-spyglass
+   make run-gui
+
+You can then graphically view the violations and waive them as needed.
+Be aware that waivers are by default saved into a new file within the build directory.
+To be permanent, you need to copy them from there to the ``spyglass-waiver.awl`` file in the OpTiMSoC source directory.
+
+
 Choosing an Editor/IDE
 ======================
 
