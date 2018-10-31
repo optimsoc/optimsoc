@@ -384,7 +384,7 @@ module compute_tile_dm
             .debug_in_ready   (dii_out_ready[CONFIG.DEBUG_MODS_PER_TILE - 1]),
             .debug_out        (dii_in[CONFIG.DEBUG_MODS_PER_TILE - 1]),
             .debug_out_ready  (dii_in_ready[CONFIG.DEBUG_MODS_PER_TILE - 1]),
-            .wb_adr_i         (bussl_adr_i[SLAVE_UART]),
+            .wb_adr_i         (bussl_adr_i[SLAVE_UART][3:0]),
             .wb_cyc_i         (bussl_cyc_i[SLAVE_UART]),
             .wb_dat_i         (bussl_dat_i[SLAVE_UART]),
             .wb_sel_i         (bussl_sel_i[SLAVE_UART]),
