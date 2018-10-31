@@ -6,7 +6,7 @@ After you have worked through some, or even all, of the tutorials in the previou
 This chapter gives you a quick introduction on how to setup your development environment, like editors and the revision control system, and how to contribute back to the OpTiMSoC project.
 
 We assumed in this whole tutorial that you are working on Linux.
-While it is certainly possible to use Windows or OS~X for development, we cannot provide help for those systems and you're on your own.
+While it is certainly possible to use Windows or macOS for development, we cannot provide help for those systems and you're on your own.
 
 Building Hardware
 =================
@@ -69,7 +69,7 @@ So let's look at a couple of examples how to build a SoC hardware with fusesoc.
      fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
 
 Choosing an Editor/IDE
-======================     
+======================
 
 When editing code, an editor or IDE usually comes handy.
 While there is clearly no "best" or even "recommended" editor or IDE, we will present two or our choices here, together with some settings that make working on OpTiMSoC a pleasant experience.
@@ -194,7 +194,7 @@ configuration, it also configures Verilog-mode).
 Open the file ``~/.emacs`` and add the following lines at the end:
 
 .. code:: lisp
-	  
+
    (add-hook 'verilog-mode-hook '(lambda ()
      ;; Don't auto-insert spaces after ";"
      (setq verilog-auto-newline nil)
@@ -243,7 +243,7 @@ tab, write ``/usr/bin/emacs`` into the field *Location*. Leave the field
 *Arguments*:
 
 .. code:: sh
-	  
+
    --batch --no-site-file -u ${env_var:USER}
    -l /usr/share/emacs/24.3/lisp/progmodes/verilog-mode.elc
    "${selected_resource_loc}" -f verilog-auto -f save-buffer
