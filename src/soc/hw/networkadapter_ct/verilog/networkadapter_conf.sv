@@ -85,12 +85,14 @@ module networkadapter_conf
    clk, rst, adr, we, data_i
    );
 
-   reg [31:0] seed = 0;
+   reg [31:0] seed;
 
 `ifdef verilator
    initial begin
       seed = $random();
    end
+`else
+   assign seed = 32'h0;
 `endif
 
    localparam REG_TILEID   = 0;
