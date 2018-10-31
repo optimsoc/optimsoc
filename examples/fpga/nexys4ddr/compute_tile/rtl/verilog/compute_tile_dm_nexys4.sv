@@ -64,7 +64,7 @@ module compute_tile_dm_nexys4
    localparam integer LMEM_SIZE = 128*1024*1024;
 
    localparam AXI_ID_WIDTH = 4;
-   localparam DDR_ADDR_WIDTH = 28;
+   localparam DDR_ADDR_WIDTH = 32;
    localparam DDR_DATA_WIDTH = 32;
 
    localparam base_config_t
