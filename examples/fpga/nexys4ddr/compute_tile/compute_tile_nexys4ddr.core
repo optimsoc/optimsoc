@@ -1,43 +1,49 @@
-CAPI=1
-[main]
-name = optimsoc:examples:compute_tile_nexys4ddr
-description = "Xilinx/Digilent Nexys4 DDR board with compute tile"
-depend =
-  wallento:boards:nexys4ddr
-  wallento:svchannels:nasti
-  wallento:svchannels:wishbone
-  wallento:wb2axi:wb2axi
-  optimsoc:tile:compute_tile_dm
-  optimsoc:debug:debug_interface
-  opensocdebug:interconnect:debug_ring
-  glip:backend:uart
-  optimsoc:base:config
+CAPI=2:
+name: optimsoc:examples:compute_tile_nexys4ddr
+description: "Xilinx/Digilent Nexys4 DDR board with compute tile"
 
-simulators = xsim
-backend = vivado
+filesets:
+  files_rtl:
+    files:
+      - rtl/verilog/compute_tile_dm_nexys4.sv
+    file_type: systemVerilogSource
 
-[fileset rtl_files]
-file_type = systemVerilogSource
-usage = sim synth
-files =
-  rtl/verilog/compute_tile_dm_nexys4.sv
+    depend:
+      - wallento:boards:nexys4ddr
+      - wallento:svchannels:nasti
+      - wallento:svchannels:wishbone
+      - wallento:wb2axi:wb2axi
+      - optimsoc:tile:compute_tile_dm
+      - optimsoc:debug:debug_interface
+      - opensocdebug:interconnect:debug_ring
+      - glip:backend:uart
+      - optimsoc:base:config
 
-[fileset testbench]
-file_type = systemVerilogSource
-usage = sim
-files =
-  tbench/verilog/tb_compute_tile_nexys4ddr.sv
+  files_testbench:
+    files:
+      - tbench/verilog/tb_compute_tile_nexys4ddr.sv
+    file_type: systemVerilogSource
 
-[xsim]
-top_module = tb_compute_tile_nexys4ddr
-part = xc7a100tcsg324-1
+targets:
+  synth:
+    default_tool: vivado
+    filesets:
+      - files_rtl
+    toplevel: [compute_tile_dm_nexys4]
+    tools:
+      vivado:
+        part: "xc7a100tcsg324-1"
 
-[vivado]
-top_module = compute_tile_dm_nexys4
-part = "xc7a100tcsg324-1"
-hw_device = xc7a100t_0
+  sim:
+    default_tool: xsim
+    filesets:
+      - files_rtl
+      - files_testbench
+    tools:
+      xsim: ~
 
-[parameter NUM_CORES]
-datatype = int
-paramtype = vlogparam
-scope = public
+parameters:
+  NUM_CORES:
+    datatype: int
+    paramtype: vlogparam
+    scope: public
