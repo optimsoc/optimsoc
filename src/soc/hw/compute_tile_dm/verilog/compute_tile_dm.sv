@@ -456,6 +456,9 @@ module compute_tile_dm
          .s_rty_i                       (bussl_rty_o_flat),      // Templated
          .bus_hold                      (1'b0));                         // Templated
 
+   // Unused leftover from an older Wishbone spec version
+   assign bussl_cab_i_flat = NR_SLAVES'(1'b0);
+
    //MAM - WB adapter signals
    logic          mam_dm_stb_o;
    logic          mam_dm_cyc_o;
@@ -560,6 +563,13 @@ module compute_tile_dm
       assign bussl_ack_o[SLAVE_DM] = 1'b0;
       assign bussl_err_o[SLAVE_DM] = 1'b0;
       assign bussl_rty_o[SLAVE_DM] = 1'b0;
+   end
+
+   if (!CONFIG.ENABLE_PGAS) begin : gen_tieoff_pgas
+      assign bussl_dat_o[SLAVE_PGAS] = 32'h0;
+      assign bussl_ack_o[SLAVE_PGAS] = 1'b0;
+      assign bussl_err_o[SLAVE_PGAS] = 1'b0;
+      assign bussl_rty_o[SLAVE_PGAS] = 1'b0;
    end
 
    generate
