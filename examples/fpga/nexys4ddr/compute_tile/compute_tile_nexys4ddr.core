@@ -31,6 +31,8 @@ filesets:
 
 targets:
   synth:
+    parameters:
+      - NUM_CORES
     default_tool: vivado
     filesets:
       - files_rtl
@@ -40,6 +42,8 @@ targets:
         part: "xc7a100tcsg324-1"
 
   sim:
+    parameters:
+      - NUM_CORES
     default_tool: xsim
     filesets:
       - files_rtl
@@ -48,6 +52,8 @@ targets:
       xsim: ~
 
   lint:
+    parameters:
+      - NUM_CORES
     default_tool: spyglass
     filesets:
       - files_rtl
@@ -70,3 +76,5 @@ parameters:
     datatype: int
     paramtype: vlogparam
     scope: public
+    default: 1
+    description: Number of CPU cores per tile
