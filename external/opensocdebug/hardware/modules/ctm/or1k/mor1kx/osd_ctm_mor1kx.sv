@@ -67,5 +67,18 @@ module osd_ctm_mor1kx
    assign trace_jal = trace_port.jal;
    assign trace_jalr = trace_port.jr;
 
+   assign trace_branch = 1'b0;
+   assign trace_load = 1'b0;
+   assign trace_store = 1'b0;
+   assign trace_trap = 1'b0;
+   assign trace_xcpt = 1'b0;
+   assign trace_mem = 1'b0;
+   assign trace_csr = 1'b0;
+   assign trace_br_taken = 1'b0;
+   assign trace_prv = 2'b0;
+   assign trace_addr = ADDR_WIDTH'(1'b0);
+   assign trace_rdata = DATA_WIDTH'(1'b0);
+   assign trace_wdata = DATA_WIDTH'(1'b0);
+   assign trace_time = DATA_WIDTH'(1'b0);
 
 endmodule // osd_stm_mor1kx
