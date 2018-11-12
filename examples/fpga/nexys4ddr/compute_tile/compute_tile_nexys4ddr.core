@@ -68,8 +68,6 @@ targets:
           # Do not give W263 when using a localparam within a case, as we
           # typically do for state machines.
           - handle_static_caselabels 1
-      verilator:
-        mode: lint-only
 
 parameters:
   NUM_CORES:
