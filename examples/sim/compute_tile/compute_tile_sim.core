@@ -1,44 +1,84 @@
-CAPI=1
-[main]
-name = optimsoc:examples:compute_tile_sim
-depend =
-  optimsoc:tile:compute_tile_dm
-  optimsoc:trace_monitor:trace_monitor
-  glip:backend:tcp
-  optimsoc:debug:debug_interface
-  opensocdebug:interconnect:debug_ring
-  opensocdebug:interfaces:mor1kx_trace_exec
-  optimsoc:base:config
+CAPI=2:
+name: optimsoc:examples:compute_tile_sim
 
-simulators = verilator xsim
+filesets:
+  files_rtl:
+    depend:
+      - optimsoc:tile:compute_tile_dm
+      - optimsoc:trace_monitor:trace_monitor
+      - glip:backend:tcp
+      - optimsoc:debug:debug_interface
+      - opensocdebug:interconnect:debug_ring
+      - opensocdebug:interfaces:mor1kx_trace_exec
+      - optimsoc:base:config
 
-[fileset testbench]
-file_type = systemVerilogSource
-usage = sim synth
-files =
-  tb_compute_tile.sv
+  files_sim:
+    files:
+      - tb_compute_tile.sv
+    file_type: systemVerilogSource
 
-[verilator]
-verilator_options = --trace -Wno-fatal -CFLAGS "-std=c++11" -LDFLAGS "-pthread" -Wwarn-lint
-tb_toplevel = tb_compute_tile.cpp
-top_module = tb_compute_tile
-depend = wallento:simutil:verilator
-cli_parser = fusesoc
+  files_sim_verilator:
+    files:
+      - tb_compute_tile.cpp: {file_type : cppSource}
+    depend:
+      - wallento:simutil:verilator
 
-[xsim]
-top_module = tb_compute_tile
+targets:
+  sim:
+    parameters:
+      - USE_DEBUG
+      - NUM_CORES
+    default_tool: verilator
+    filesets:
+      - files_rtl
+      - files_sim
+      - tool_verilator? (files_sim_verilator)
+    toplevel: tb_compute_tile
+    tools:
+      verilator:
+        mode: cc
+        verilator_options:
+          - "--trace"
+          - '-CFLAGS "-std=c++11"'
+          - '-LDFLAGS "-pthread"'
+          - "-Wall"
+          # XXX: Cleanup all warnings and remove this option
+          # (or make it more fine-grained at least)
+          - "-Wno-fatal"
 
-[parameter USE_DEBUG]
-datatype = int
-paramtype = vlogparam
-scope = public
+  lint:
+    parameters:
+      - USE_DEBUG
+      - NUM_CORES
+      - vcd
+    default_tool: verilator
+    filesets:
+      - files_rtl
+      - files_sim
+      - files_sim_verilator
+    tools:
+      verilator:
+        mode: lint-only
+        verilator_options:
+          - '-CFLAGS "-std=c++11"'
+          - '-LDFLAGS "-pthread"'
+          - "-Wall"
+    toplevel: tb_compute_tile
 
-[parameter NUM_CORES]
-datatype = int
-paramtype = vlogparam
-scope = public
-
-[parameter vcd]
-datatype = bool
-paramtype = cmdlinearg
-scope = public
+parameters:
+  USE_DEBUG:
+    datatype: bool
+    paramtype: vlogparam
+    scope: public
+    description: Enable the debug system
+  NUM_CORES:
+    datatype: int
+    paramtype: vlogparam
+    scope: public
+    default: 1
+    description: Specify the number of CPU cores per tile
+  vcd:
+    datatype: bool
+    paramtype: cmdlinearg
+    scope: public
+    description: Let Verilator create a VCD trace file
