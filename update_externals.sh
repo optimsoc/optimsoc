@@ -23,7 +23,7 @@ git subtree pull -m "Update external/mor1kx" --prefix external/mor1kx https://gi
 git subtree pull -m "Update external/opensocdebug/osd-sw" --prefix external/opensocdebug/software https://github.com/opensocdebug/osd-sw.git master --squash
 
 # opensocdebug/hardware: OSD hardware
-git subtree pull -m "Update external/opensocdebug/osd-hw" --prefix external/opensocdebug/hardware https://github.com/opensocdebug/osd-hw.git osd-next --squash
+git subtree pull -m "Update external/opensocdebug/osd-hw" --prefix external/opensocdebug/hardware https://github.com/opensocdebug/osd-hw.git master --squash
 
 # reapply our changes to the working directory
 [ $WD_HAS_CHANGES == 1 ] && git stash pop
