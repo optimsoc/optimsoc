@@ -33,19 +33,19 @@ module creditor
    (
     input                         clk,
     input                         rst,
-    
+
     input                         payback,
     output reg [CREDIT_WIDTH-1:0] credit,
     input                         borrow,
     output reg                    grant,
-    
+
     output                        error
     );
-   
+
    reg [WIDTH-1:0]                resources = INITIAL_VALUE;
    reg [WIDTH:0]                  nxt_resources;
    reg [CREDIT_WIDTH-1:0]         nxt_credit;
-   
+
    // Error is an overflow of the resources. The host cannot payback
    // more than originally granted.
    assign error = nxt_resources[WIDTH] | (resources > INITIAL_VALUE);
@@ -64,9 +64,9 @@ module creditor
    always @(*) begin
       nxt_resources = resources;
       nxt_credit = credit;
-      
+
       grant = 0;
-      
+
       if (payback) begin
          nxt_resources = resources + 1;
       end else if (borrow) begin
@@ -85,5 +85,5 @@ module creditor
          end // else: !if(WIDTH > CREDIT_WIDTH)
       end
    end
-   
-endmodule // glip_creditgen
+
+endmodule
