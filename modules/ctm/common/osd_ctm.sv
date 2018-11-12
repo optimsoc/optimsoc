@@ -77,6 +77,9 @@ module osd_ctm
                .module_out (dp_in),
                .module_out_ready (dp_in_ready));
 
+   // this module cannot receive data except for configuration packets
+   assign dp_in_ready = 1'b0;
+
 
    always @(*) begin
       reg_ack = 1;

@@ -132,7 +132,7 @@ module osd_regaccess_demux
       & (buf_reg_is_bypass[2] | mark_bypass);
 
    logic no_buf_entry_is_tagged;
-   assign no_buf_entry_is_tagged = ~do_tag & ~(|buf_reg_is_regaccess | |buf_reg_is_bypass);
+   assign no_buf_entry_is_tagged = ~do_tag & ~((|buf_reg_is_regaccess) | (|buf_reg_is_bypass));
 
    assign in_ready = (out_bypass_ready & out_reg_ready) |
       (out_bypass_ready & (buf_reg_is_bypass[2] | mark_bypass)) |
