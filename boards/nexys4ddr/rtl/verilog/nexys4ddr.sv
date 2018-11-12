@@ -63,7 +63,7 @@ module nexys4ddr
    output                sys_rst,
 
    input [3:0]           ddr_awid,
-   input [27:0]          ddr_awaddr,
+   input [31:0]          ddr_awaddr,
    input [7:0]           ddr_awlen,
    input [2:0]           ddr_awsize,
    input [1:0]           ddr_awburst,
@@ -82,7 +82,7 @@ module nexys4ddr
    output                ddr_bvalid,
    input                 ddr_bready,
    input [3:0]           ddr_arid,
-   input [27:0]          ddr_araddr,
+   input [31:0]          ddr_araddr,
    input [7:0]           ddr_arlen,
    input [2:0]           ddr_arsize,
    input [1:0]           ddr_arburst,
@@ -185,8 +185,7 @@ module nexys4ddr
 
    mig_7series
      u_mig_7series
-       (.*,
-        .init_calib_complete            (ddr_calib_done),
+       (.init_calib_complete            (ddr_calib_done),
         .sys_clk_i                      (clk_ddr_sys),
 //        .clk_ref_i                      (clk_ddr_ref),
         .sys_rst                        (clk_ddr_locked | rst),
@@ -213,7 +212,7 @@ module nexys4ddr
 
         // Slave Interface Write Address Ports
         .s_axi_awid                     (ddr_awid),
-        .s_axi_awaddr                   (ddr_awaddr),
+        .s_axi_awaddr                   (ddr_awaddr[27:0]),
         .s_axi_awlen                    (ddr_awlen),
         .s_axi_awsize                   (ddr_awsize),
         .s_axi_awburst                  (ddr_awburst),
@@ -236,7 +235,7 @@ module nexys4ddr
         .s_axi_bready                   (ddr_bready),
         // Slave Interface Read Address Ports
         .s_axi_arid                     (ddr_arid),
-        .s_axi_araddr                   (ddr_araddr),
+        .s_axi_araddr                   (ddr_araddr[27:0]),
         .s_axi_arlen                    (ddr_arlen),
         .s_axi_arsize                   (ddr_arsize),
         .s_axi_arburst                  (ddr_arburst),
