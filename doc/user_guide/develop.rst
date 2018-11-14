@@ -96,7 +96,7 @@ The full command line to lint a simple ``compute_tile`` system for the Nexys 4 D
 At the end of the process Spyglass writes a summary of its findings.
 It could look like this:
 
-.. code:: plain
+.. code:: text
 
    ---------------------------------------------------------------------------------------------------
       Goal Violation Summary:

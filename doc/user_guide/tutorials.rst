@@ -252,7 +252,7 @@ To do that, it internally performs the following steps:
 
 If you switch back to the first console where you started the simulation you should see something like this:
 
-.. code:: none
+.. code:: text
 
    $> $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore_debug
    Glip TCP DPI listening on port 23000 and 23001
