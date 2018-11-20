@@ -365,6 +365,7 @@ Programming the FPGA on the Command Line
 
    optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/compute_tile/compute_tile_nexys4ddr_singlecore.bit xc7a100t_0
 
+
 Connecting
 ----------
 
@@ -382,8 +383,10 @@ Usually the easiest way is to do a
 If you have only the Nexys 4 DDR board connected, you'll see only one device, e.g. ``/dev/ttyUSB1``.
 Make note of this device name, and replace it accordingly in all the following steps in this tutorial.
 
+
 Running Software
 ----------------
+
 
 Now that you've connected to the system, can you run software on it?
 Just like in the previous chapter we'll use the ``osd-target-run`` tool, this time passing it some paramters to connect to the FPGA instead to a simulation.
@@ -508,6 +511,74 @@ More important is the output of tile 0 in ``stdout.000``:
    [               72050, 0] Received from 1
    [               78792, 0] Received from 2
    [              179834, 0] Received from 3
+
+
+Run Linux on OpTiMSoC
+=====================
+
+Up to now all software running on OpTiMSoC was "baremetal" software, similar to software run on a microcontroller.
+For many purposes "baremetal" software is sufficient.
+However, if you want to write more advanced software an operating system (OS) can help: it provides task management (scheduling), separates resources between tasks, and provides standardized interfaces which are expected by many of today's applications (e.g. pthreads).
+For many, the operating system of choice is Linux, and it's natively supported by OpTiMSoC.
+This tutorial section explores how to build a Linux "image,". i.e. a binary which contains both the Linux kernel (the actual operating system), together with a root filesystem containing all userspace components.
+
+.. code:: sh
+
+   # get the OpTiMSoC buildroot configuration (a "br2-external tree")
+   git clone https://github.com/optimsoc/optimsoc-buildroot.git
+   cd optimsoc-buildroot
+   OPTIMSOC_BUILDROOT_DIR=$PWD
+   OPTIMSOC_BUILDROOT_VERSION=$(cat $OPTIMSOC_BUILDROOT_DIR/buildroot_version)
+   cd .. # back to your source directory
+
+   # get buildroot itself
+   git clone https://git.busybox.net/buildroot
+   cd buildroot
+   git checkout $OPTIMSOC_BUILDROOT_VERSION
+   make BR2_EXTERNAL=$OPTIMSOC_BUILDROOT_DIR optimsoc_computetile_singlecore_defconfig
+   make
+
+This leaves a file ``output/images/vmlinux`` in the buildroot directory, which is in fact a regular ELF file for OpenRISC, which can be loaded on the system like a baremetal application.
+To see the output of the Linux during boot, and to have a console to interact with the Linux system we make use of the UART device emulation provided by Open SoC Debug, and built into the ``compute_tile`` designs.
+
+To continue with this tutorial we use the ``compute_tile`` design with a with a single core and the debug system for the Nexys 4 DDR board.
+You can find this design in the folder ``$OPTIMSOC/examples/fpga/nexys4ddr/compute_tile/compute_tile_nexys4ddr_singlecore``.
+
+.. code:: sh
+
+    # Program the FPGA on the Nexys 4 DDR board
+    optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/compute_tile/compute_tile_nexys4ddr_singlecore.bit xc7a100t_0
+
+Now you can load the Linux image on the FPGA.
+See notes earlier in this tutorial for a discussion on the correct parameters for ``osd-target-run``.
+
+.. code:: sh
+
+   osd-target-run -e YOUR_BUILDROOT_DIR/output/images/vmlinux -b uart -o device=/dev/ttyUSB1,speed=12000000 --systrace -vvv
+
+Watch the output of this command.
+If all goes well the output should contain a line similar to ``libosd: DEM-UART pseudo-terminal available at /dev/pts/19``.
+Keep note of the device file (starting with ``/dev/pts/``), you'll need this path to connect to the Linux console on the OpTiMSoC system.
+
+To connect, open a second terminal window on your machine, and use ``screen`` to connect to the remote console (use the appropriate device name as displayed by ``osd-target-run`` instead of ``/dev/pts/19``):
+
+.. code:: sh
+
+   screen /dev/pts/19
+
+You should now see the output of Linux booting, and as soon as the boot process is done you can log into the system as ``root`` user (no password is required).
+You can now interact with the system as it would be a normal Linux system.
+
+If you have some time to spare, how about playing a round of pacman?
+
+.. code:: sh
+
+   # convince Linux that our console supports colors
+   stty cols 80 rows 80
+   export TERM=linux
+
+   # and run pacman
+   /usr/games/pacman4linux
 
 
 
