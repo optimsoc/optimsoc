@@ -1,4 +1,4 @@
-# Copyright (c) 2016 by the author(s)
+# Copyright (c) 2016-2018 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -321,6 +321,7 @@ class TestTutorialFpga:
     to be connected to the node that executes this test. Currently, this is the
     Nexus 4 DDR board.
     """
+
     def test_tutorial7(self, tmpdir, localconf, baremetal_apps_hello):
         """
         Tutorial 7: Program a compute_tile system to a Nexys4 DDR board and run
@@ -339,7 +340,7 @@ class TestTutorialFpga:
 
         # run hello.elf on target board
         nexys4ddr_device = localconf['boards']['nexys4ddr']['device']
-        logging.getLogger(__name__).info("Using Nexys 4 board connected to " + nexys4ddr_device)
+        logging.getLogger(__name__).info("Using Nexys 4 DDR board connected to " + nexys4ddr_device)
         glip_backend = 'uart'
         glip_backend_options = 'device=%s,speed=12000000' % nexys4ddr_device
 
@@ -355,7 +356,7 @@ class TestTutorialFpga:
 
         startup_done_string = '[INFO]  osd-target-run: System is now running. Press CTRL-C to end tracing.'
 
-        p_targetrun = util.Process(cmd_targetrun, logdir=str(tmpdir), 
+        p_targetrun = util.Process(cmd_targetrun, logdir=str(tmpdir),
                                    cwd=str(tmpdir),
                                    startup_done_expect=startup_done_string,
                                    startup_timeout=300)
@@ -388,3 +389,78 @@ class TestTutorialFpga:
             assert tmpdir.join(f).isfile()
             assert util.matches_golden_reference(str(tmpdir), f,
                                                  filter_func=util.filter_osd_trace_timestamps)
+
+    def test_tutorial_linux(self, tmpdir, localconf, linux_compute_tile_singlecore):
+        """
+        Tutorial 8: Execute the Linux example in the tutorial
+        """
+
+        # program FPGA with bitstream
+        bitstream = "{}/examples/fpga/nexys4ddr/compute_tile/compute_tile_nexys4ddr_singlecore.bit".format(os.environ['OPTIMSOC'])
+        cmd_pgm = ['optimsoc-pgm-fpga', bitstream, 'xc7a100t_0']
+        p_pgm = util.Process(cmd_pgm, logdir=str(tmpdir), cwd=str(tmpdir))
+        p_pgm.run()
+        p_pgm.proc.wait(timeout=300)
+        assert p_pgm.proc.returncode == 0
+
+        time.sleep(2)
+
+        # run hello.elf on target board
+        nexys4ddr_device = localconf['boards']['nexys4ddr']['device']
+        logging.getLogger(__name__).info("Using Nexys 4 DDR board connected to " + nexys4ddr_device)
+        glip_backend = 'uart'
+        glip_backend_options = 'device=%s,speed=12000000' % nexys4ddr_device
+
+        vmlinux = str(linux_compute_tile_singlecore)
+        cmd_targetrun = ['osd-target-run',
+                         '-e', vmlinux,
+                         '-b', glip_backend,
+                         '-o', glip_backend_options,
+                         '--systrace',
+                         '--verify',
+                         '--terminal',
+                         '-vvv']
+
+        startup_done_string = '[INFO]  osd-target-run: System is now running. Press CTRL-C to end tracing.'
+
+        p_targetrun = util.Process(cmd_targetrun, logdir=str(tmpdir),
+                                   cwd=str(tmpdir),
+                                   startup_done_expect=startup_done_string,
+                                   startup_timeout=300)
+        p_targetrun.run()
+
+        # Find allocated pseudo-terminal (expected to appear within 10 seconds)
+        tty_dev = None
+        search = re.compile(r'^.+DEM-UART pseudo-terminal available at (/dev/pts/\d+)')
+        match = p_targetrun._find_in_output(search, timeout = 5)
+        tty_dev = match.group(1)
+        assert tty_dev
+        logging.getLogger(__name__).info("Linux console available at " + tty_dev)
+
+        # Wait for Linux to boot
+        logging.getLogger(__name__).info("Run Linux until we get a login prompt")
+        cmd_tty_cat = ['cat', tty_dev]
+        p_tty_cat = util.Process(cmd_tty_cat, logdir=str(tmpdir),
+                                 cwd=str(tmpdir),
+                                 startup_done_expect="Welcome to OpTiMSoC",
+                                 startup_timeout=60)
+        p_tty_cat.run()
+        p_tty_cat.send_ctrl_c()
+        p_tty_cat.proc.wait(timeout=5)
+        try:
+            p_tty_cat.terminate()
+        except ProcessLookupError:
+            # process is already dead
+            pass
+
+        p_targetrun.send_ctrl_c()
+
+        # Give the process some time to clean up
+        p_targetrun.proc.wait(timeout=30)
+        assert p_targetrun.proc.returncode == 0
+
+        try:
+            p_targetrun.terminate()
+        except ProcessLookupError:
+            # process is already dead
+            pass

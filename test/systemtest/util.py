@@ -44,7 +44,7 @@ def matches_golden_reference(basedir, testfile, filter_func=None):
     this_test_file = os.path.splitext(os.path.basename(str(stack[1][0].f_code.co_filename)))[0]
     this_test_name = str(stack[1][0].f_code.co_name)
 
-    path_test = os.path.join(basedir, testfile);
+    path_test = os.path.join(basedir, testfile)
     path_ref = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             this_test_file + '.data',
                             this_test_name, testfile)
@@ -54,7 +54,7 @@ def matches_golden_reference(basedir, testfile, filter_func=None):
         ref_lines = open(path_ref, 'r').readlines()
         ref_lines_filtered = filter_func(ref_lines)
         path_ref_filtered = os.path.join(basedir,
-                                          testfile+'.reference.filtered');
+                                          testfile+'.reference.filtered')
         f = open(path_ref_filtered, 'w')
         f.write(''.join(ref_lines_filtered))
         f.close()
@@ -184,7 +184,7 @@ class Process:
         init_done = self._find_in_output(pattern=self.startup_done_expect,
                                          timeout=self.startup_timeout)
 
-        if not init_done:
+        if init_done == None:
             raise subprocess.TimeoutExpired
 
         self.logger.info("Startup sequence matched, startup done.")
@@ -192,9 +192,13 @@ class Process:
         return True
 
     def terminate(self):
+        if not self.proc:
+            return
         self.proc.terminate()
 
     def send_ctrl_c(self):
+        if not self.proc:
+            return
         self.proc.send_signal(signal.SIGINT)
 
     def expect(self, stdin_data=None, pattern=None, timeout=None):
@@ -215,17 +219,32 @@ class Process:
         if pattern == None:
             return True
 
-        return self._find_in_output(pattern, timeout)
+        return self._find_in_output(pattern, timeout) != None
 
     def _find_in_output(self, pattern, timeout):
         """
-        read STDOUT and STDERR from file to find an expected pattern within
-        timeout seconds
+        Read STDOUT and STDERR to find an expected pattern within timeout sec.
+
+        Both streams are reset to the start of the stream before searching.
+
+        pattern can be of two types:
+        1. A regular expression (a re object). In this case, the pattern is
+           matched against all lines and the result of re.match(pattern) is
+           returned. Multi-line matches are not supported.
+        2. A string. In this case pattern is compared to each line with
+           startswith(), and the full matching line is returned on a match.
+
+        If no match is found None is returned.
+
+        timeout is given in seconds.
         """
-        found = False
 
         if timeout != None:
             t_end = time.time() + timeout
+
+        # reset streams
+        self._f_stdout_r.seek(0)
+        self._f_stderr_r.seek(0)
 
         while True:
             # check STDOUT as long as there is one
@@ -233,12 +252,12 @@ class Process:
             for line in self._f_stdout_r:
                 i += 1
                 if hasattr(pattern, "match"):
-                    if pattern.match(line):
-                        found = True
+                    m = pattern.match(line)
+                    if m:
+                        return m
                 else:
                     if line.startswith(pattern):
-                        found = True
-                        break
+                        return line
 
                 # check if we exceed the timeout while reading from STDOUT
                 # do so only every 100 lines to reduce the performance impact
@@ -251,21 +270,18 @@ class Process:
             for line in self._f_stderr_r:
                 i += 1
                 if hasattr(pattern, "match"):
-                    if pattern.match(line):
-                        found = True
+                    m = pattern.match(line)
+                    if m:
+                        return m
                 else:
                     if line.startswith(pattern):
-                        found = True
-                        break
+                        return line
 
                 # check if we exceed the timeout while reading from STDERR
                 # do so only every 100 lines to reduce the performance impact
                 if timeout != None:
                     if i % 100 == 99 and time.time() >= t_end:
                         break
-
-            if found:
-                break
 
             # wait for 200ms for new output
             if timeout != None:
@@ -274,4 +290,4 @@ class Process:
                 except subprocess.TimeoutExpired:
                     pass
 
-        return found
+        return None
