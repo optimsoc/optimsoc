@@ -461,6 +461,17 @@ def build_hw_modules(options):
     else:
         file_copytree(modsrcdir, moddistdir)
 
+
+def _choose_file_from_alternatives(buildobjdir, alternatives):
+    filename = None
+    if not isinstance(alternatives, list):
+        return alternatives
+
+    for alternative_file in alternatives:
+        if os.path.isfile(os.path.join(buildobjdir, alternative_file)):
+              return alternative_file
+
+
 """Build and install the simulation examples
 """
 def build_examples_sim(options, env):
@@ -477,38 +488,48 @@ def build_examples_sim(options, env):
     exdist = os.path.join(dist, "examples", "sim")
 
     # Newer fusesoc versions use bld-verilator as output directory, older ones
-    # use sim-verilator. Support both by giving alternatives for the filename.
+    # use sim-verilator. Support both by giving alternatives for the artifact.
     examples = [
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_singlecore",
         "path": "compute_tile",
-        "files": [ [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
-                     "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile" ] ],
+        "artifact": [
+          "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+          "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile",
+        ],
         "options": "--NUM_CORES 1" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_dualcore",
         "path": "compute_tile",
-        "files": [ [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
-                     "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile" ] ],
+        "artifact": [
+          "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+          "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile",
+        ],
         "options": "--NUM_CORES 2" },
       { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_quadcore",
         "path": "compute_tile",
-        "files": [ [ "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
-                     "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile" ] ],
+        "artifact": [
+          "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+          "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile",
+        ],
         "options": "--NUM_CORES 4" },
 
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore",
         "path": "system_2x2_cccc",
-        "files": [ [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc",
-                     "build/optimsoc_examples_system_2x2_cccc_sim_0/bld-verilator/Vtb_system_2x2_cccc"] ],
+        "artifact": [
+          "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc",
+          "build/optimsoc_examples_system_2x2_cccc_sim_0/bld-verilator/Vtb_system_2x2_cccc",
+        ],
         "options": "--NUM_CORES 2"},
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore_debug",
         "path": "system_2x2_cccc",
-        "files": [ [ "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc",
-                     "build/optimsoc_examples_system_2x2_cccc_sim_0/bld-verilator/Vtb_system_2x2_cccc"] ],
+        "artifact": [
+          "build/optimsoc_examples_system_2x2_cccc_sim_0/sim-verilator/Vtb_system_2x2_cccc",
+          "build/optimsoc_examples_system_2x2_cccc_sim_0/bld-verilator/Vtb_system_2x2_cccc",
+        ],
         "options": "--NUM_CORES 2 --USE_DEBUG 1"},
     ]
 
@@ -525,22 +546,14 @@ def build_examples_sim(options, env):
 
         info("  + Copy build artifacts")
         ensure_directory(builddist)
-        for f in ex["files"]:
-            filename = None
-            if isinstance(f, list):
-                for alternative_file in f:
-                    if os.path.isfile(os.path.join(buildobjdir, alternative_file)):
-                        filename = alternative_file
-                        break
-                if not filename:
-                    fatal("No alternative file for build artifact %s found." % ex["name"])
-            else:
-                filename = f
 
-            srcf = os.path.join(buildobjdir, filename)
-            destf = os.path.join(builddist, ex["outname"])
-            file_copy(srcf, destf)
+        filename = _choose_file_from_alternatives(buildobjdir, ex["artifact"])
+        if not filename:
+            fatal("No alternative file for build artifact for %s found." % ex["outname"])
 
+        srcf = os.path.join(buildobjdir, filename)
+        destf = os.path.join(builddist, ex["outname"])
+        file_copy(srcf, destf)
 
 
 """Build and install the FPGA examples
@@ -560,30 +573,55 @@ def build_examples_fpga(options, env):
 
     examples = [
       { "name": "compute_tile_nexys4ddr",
+        "outname": "compute_tile_nexys4ddr_singlecore",
         "path": "nexys4ddr/compute_tile",
-        "files": [ "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit" ] },
+        "artifact": [
+          "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit",
+          "build/optimsoc_examples_compute_tile_nexys4ddr_0/synth-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit",
+        ],
+        "options": "--NUM_CORES 1",
+      },
+      { "name": "compute_tile_nexys4ddr",
+        "outname": "compute_tile_nexys4ddr_quadcore",
+        "path": "nexys4ddr/compute_tile",
+        "artifact":  [
+          "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit",
+          "build/optimsoc_examples_compute_tile_nexys4ddr_0/synth-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit",
+        ],
+        "options": "--NUM_CORES 4",
+      },
       { "name": "system_2x2_cccc_nexys4ddr",
+        "outname": "system_2x2_cccc_nexys4ddr",
         "path": "nexys4ddr/system_2x2_cccc",
-        "files": [ "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit" ] },
+        "artifact": [
+          "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit",
+          "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/synth-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit",
+        ],
+        "options": "",
+      },
     ]
 
     for ex in examples:
-        info(" + {}".format(ex["name"]))
+        info(" + {} ({} {})".format(ex["outname"], ex["name"], ex["options"]))
         buildsrcdir = os.path.join(exsrc, ex["path"])
         buildobjdir = os.path.join(exobjdir, ex["path"])
         builddist = os.path.join(exdist, ex["path"])
 
         info("  + Build")
         ensure_directory(buildobjdir)
-        cmd = "fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{}".format(buildsrcdir, ex["name"])
+        cmd = "fusesoc --verbose --monochrome --cores-root {} build optimsoc:examples:{} {}".format(buildsrcdir, ex["name"], ex["options"])
         run_command(cmd, cwd=buildobjdir, env=env)
 
         info("  + Copy build artifacts")
         ensure_directory(builddist)
-        for f in ex["files"]:
-            srcf = os.path.join(buildobjdir, f)
-            destf = os.path.join(builddist, ex["name"]+".bit")
-            file_copy(srcf, destf)
+
+        filename = _choose_file_from_alternatives(buildobjdir, ex["artifact"])
+        if not filename:
+            fatal("No alternative file for build artifact for %s found." % ex["outname"])
+
+        srcf = os.path.join(buildobjdir, filename)
+        destf = os.path.join(builddist, ex["outname"]+".bit")
+        file_copy(srcf, destf)
 
 """Build and install the documentation
 """
@@ -798,11 +836,11 @@ def build_externals_opensocdebug_software_pybindings(options, env):
 
     # The OSD Python bindings use setuptools_scm to determine the version from
     # the git repository the bindings live in. Since we vendor OSD into our
-    # optimsoc source tree that mechanism doesn't work. As a workaround we use 
-    # a "fake" version number "0", representing "unknown". 
+    # optimsoc source tree that mechanism doesn't work. As a workaround we use
+    # a "fake" version number "0", representing "unknown".
     #
     # Unfortunately setuptools_scm is rather picky in what it accepts
-    # as valid version numbers, so putting the OpTiMSoC version number into it 
+    # as valid version numbers, so putting the OpTiMSoC version number into it
     # is more tricky than hoped for. (Tested with setuptools_scm 1.15.6)
     env['SETUPTOOLS_SCM_PRETEND_VERSION'] = '0'
 
