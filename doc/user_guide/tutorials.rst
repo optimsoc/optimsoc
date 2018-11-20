@@ -407,8 +407,8 @@ You may remember that exchanging this data involved forming and parsing messages
 To abstract from these low level details and to encapsulate certain extensions OpTiMSoC comes with the message passing library (``libmp``).
 It is a rather simple, straight-forward message passing API.
 Two different styles of communication are supported: message-oriented and connection-oriented.
-Message-oriented communication is prefered when you have spurious communication between many different communication partners.
-Connection-oriented communication is prefered when you have a fixed setup of channels between communication partners.
+Message-oriented communication is preferred when you have spurious communication between many different communication partners.
+Connection-oriented communication is preferred when you have a fixed setup of channels between communication partners.
 
 In this part of the tutorial you will learn the basic usage of the message passing library using message-oriented communication.
 In the ``baremetal-apps`` you can find the ``hello_mp`` example.
