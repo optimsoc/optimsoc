@@ -20,7 +20,7 @@ FuseSoC allows developers to write *core files*: short declarative files in an I
 When you look around in ``$OPTIMSOC/soc/hw`` you'll find such core files for all components that make up the SoC.
 But the core files not only describe the modules inside the SoC design, they are also used to describe the toplevel SoC.
 
-For example, let's have a look at the file \path{$OPTIMSOC_SOURCE/examples/sim/compute_tile/compute_tile_sim.core} inside the OpTiMSoC source tree (it's not installed!).
+For example, let's have a look at the file \path{$OPTIMSOC_SRC/examples/sim/compute_tile/compute_tile_sim.core} inside the OpTiMSoC source tree (it's not installed!).
 In there you find all dependencies that are needed to build the system with only one compute tile.
 You also find the toplevel files that are used to simulate the system in Verilator and in XSIM (the Vivado built-in simulator).
 
@@ -28,45 +28,45 @@ The great benefit of using FuseSoC is that you can now simply compile and run th
 
 Before we start, two notes:
 
-- We set an environment variable (``$FUSESOC_CORES``) during the installation that makes FuseSoC find all OpTiMSoC hardware modules. You do not need to add a special configuration for this. However, the examples inside ``$OPTIMSOC_SOURCE`` are not part of this search path.
+- We set an environment variable (``$FUSESOC_CORES``) during the installation that makes FuseSoC find all OpTiMSoC hardware modules. You do not need to add a special configuration for this. However, the examples inside ``$OPTIMSOC_SRC`` are not part of this search path.
 - You can call ``fusesoc`` from any directory. We recommend **not** calling FuseSoC from inside your source directory. (This allows you to just delete the build folder and retain a clean source folder.)
 
 So let's look at a couple of examples how to build a SoC hardware with fusesoc.
 
-.. note:: All the examples require an OpTiMSoC source tree to be available at ``$OPTIMSOC_SOURCE``.
+.. note:: All the examples require an OpTiMSoC source tree to be available at ``$OPTIMSOC_SRC``.
 
 - Build and run a Verilator-based simulation of a single compute tile.
 
   .. code:: sh
 
      cd some/directory
-     fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim optimsoc:examples:compute_tile_sim
+     fusesoc --cores-root $OPTIMSOC_SRC/examples sim optimsoc:examples:compute_tile_sim
 
 - Only build a Verilator simulation of a single compute tile
 
   .. code:: sh
 
-     fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim
+     fusesoc --cores-root $OPTIMSOC_SRC/examples sim --build-only optimsoc:examples:compute_tile_sim
 
 - Set the parameter ``NUM_CORES`` to 2 to create a system with two CPU cores inside the compute tile.
-  You can have a look inside the top-level source file \path{$OPTIMSOC_SOURCE/examples/sim/compute_tile/tb_compute_tile.sv} for other parameters that are available.
+  You can have a look inside the top-level source file \path{$OPTIMSOC_SRC/examples/sim/compute_tile/tb_compute_tile.sv} for other parameters that are available.
 
   .. code:: sh
 
-     fusesoc --cores-root $OPTIMSOC_SOURCE/examples sim --build-only optimsoc:examples:compute_tile_sim --NUM_CORES 2
+     fusesoc --cores-root $OPTIMSOC_SRC/examples sim --build-only optimsoc:examples:compute_tile_sim --NUM_CORES 2
 
 - Synthesize a 2x2 system with four compute tiles for the Nexys 4 DDR board using Xilinx Vivado.
   This step requires Vivado to be installed and working, and a lot of time (approx. 30 minutes, depending on your machine).
 
   .. code:: sh
 
-     fusesoc --cores-root $OPTIMSOC_SOURCE/examples build optimsoc:examples:system_2x2_cccc_nexys4ddr
+     fusesoc --cores-root $OPTIMSOC_SRC/examples build optimsoc:examples:system_2x2_cccc_nexys4ddr
 
 - Now flash the bitstream that the previous step generated to the FPGA.
 
   .. code:: sh
 
-     fusesoc --cores-root $OPTIMSOC_SOURCE/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
+     fusesoc --cores-root $OPTIMSOC_SRC/examples pgm optimsoc:examples:system_2x2_cccc_nexys4ddr
 
 Linting Hardware
 ================
@@ -91,7 +91,7 @@ The full command line to lint a simple ``compute_tile`` system for the Nexys 4 D
 
     # --no-export is useful for development and waiving messages.
     # Do not use it when running lint in CI environments.
-    fusesoc --cores-root $OPTIMSOC_SOURCE/examples run --target=lint --tool=spyglass --no-export optimsoc:examples:compute_tile_nexys4ddr
+    fusesoc --cores-root $OPTIMSOC_SRC/examples run --target=lint --tool=spyglass --no-export optimsoc:examples:compute_tile_nexys4ddr
 
 At the end of the process Spyglass writes a summary of its findings.
 It could look like this:
