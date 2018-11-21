@@ -187,8 +187,23 @@ module nexys4ddr
      u_mig_7series
        (.init_calib_complete            (ddr_calib_done),
         .sys_clk_i                      (clk_ddr_sys),
-//        .clk_ref_i                      (clk_ddr_ref),
         .sys_rst                        (clk_ddr_locked | rst),
+
+        // off-chip connection
+        .ddr2_dq                        (ddr2_dq),
+        .ddr2_dqs_n                     (ddr2_dqs_n),
+        .ddr2_dqs_p                     (ddr2_dqs_p),
+        .ddr2_addr                      (ddr2_addr),
+        .ddr2_ba                        (ddr2_ba),
+        .ddr2_ras_n                     (ddr2_ras_n),
+        .ddr2_cas_n                     (ddr2_cas_n),
+        .ddr2_we_n                      (ddr2_we_n),
+        .ddr2_ck_p                      (ddr2_ck_p),
+        .ddr2_ck_n                      (ddr2_ck_n),
+        .ddr2_cke                       (ddr2_cke),
+        .ddr2_cs_n                      (ddr2_cs_n),
+        .ddr2_dm                        (ddr2_dm),
+        .ddr2_odt                       (ddr2_odt),
 
         // Application interface ports
         .ui_clk                         (mig_ui_clk),
