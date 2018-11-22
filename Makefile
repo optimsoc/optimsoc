@@ -75,9 +75,9 @@ install:
 	cp -rT $(OBJDIR)/dist $(INSTALL_TARGET)
 
 srcdist:
-	tar -cz --exclude-vcs --exclude $(OBJDIR) --exclude doc/_build \
-		--transform "s/^./optimsoc-$(version)/" \
-		-f $(OBJDIR)/optimsoc-$(version)-src.tar.gz .
+	@git archive --format=tar --prefix optimsoc-$(version)/ HEAD | \
+		gzip > $(OBJDIR)/optimsoc-$(version)-src.tar.gz
+	@echo $(OBJDIR)/optimsoc-$(version)-src.tar.gz
 
 dist:
 	@test -d "$(OBJDIR)/dist" || (echo "Run make build first."; exit 1)
