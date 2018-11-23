@@ -339,7 +339,7 @@ Programming the FPGA
 --------------------
 
 With the board connected, we can program (or "flash") the FPGA with our hardware design, the *bitstream*.
-The OpTiMSoC release contains pre-built bitstreams for the single compute tile system and a 2x2 system with four compute tiles, meaning we can start directly with programming the FPGA.
+The OpTiMSoC release contains pre-built bitstreams for the single compute tile system, meaning we can start directly with programming the FPGA.
 
 There are two ways to program the device: using the Vivado GUI, or using the command line.
 
@@ -348,11 +348,11 @@ Programming the FPGA with the Vivado GUI
 
 - Open Vivado (e.g. by typing ``vivado`` into a terminal window)
 - On the welcome screen, click on "Hardware Manager"
-- Ensure that your Nexys4 DDR board is plugged into your PC and is turned on.
+- Ensure that your Nexys 4 DDR board is plugged into your PC and is turned on.
 - Click on "Open Target" in the green bar on the top, and then on "Auto Connect"
-- Now click on "Program Device" in the same green bar and select the only option ``xc7a100t\_0`` (that's the FPGA on the board).
+- Now click on "Program Device" in the same green bar and select the only option ``xc7a100t_0`` (that's the FPGA on the board).
 - In the dialog window, select the bitstream file. We'll start directly with the larger 2x2 system, you can find the bitstream in
-   ``$OPTISMOC/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit``.
+   ``$OPTISMOC/examples/fpga/nexys4ddr/compute_tile/compute_tile_nexys4ddr_singlecore.bit``.
 - You can leave the other field "Debug probes file" empty.
 - Click on "Program" to download the bitstream onto the FPGA.
 
@@ -363,7 +363,7 @@ Programming the FPGA on the Command Line
 
 .. code:: sh
 
-   optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit xc7a100t_0
+   optimsoc-pgm-fpga $OPTIMSOC/examples/fpga/nexys4ddr/compute_tile/compute_tile_nexys4ddr_singlecore.bit xc7a100t_0
 
 Connecting
 ----------
@@ -379,7 +379,7 @@ Usually the easiest way is to do a
 
    ls /dev/ttyUSB*
 
-If you have only the Nexys 4 DDR board connected, you'll see only one device, e.g. ``/dev/ttyUSB0``.
+If you have only the Nexys 4 DDR board connected, you'll see only one device, e.g. ``/dev/ttyUSB1``.
 Make note of this device name, and replace it accordingly in all the following steps in this tutorial.
 
 Running Software
@@ -394,7 +394,7 @@ Just like in the previous chapter we'll use the ``osd-target-run`` tool, this ti
    # let it run for a couple of seconds, then press CTRL-C to stop collecting traces
 
 When you run software, you'll notice two things: first, the output is the same as you've already seen when running the system in simulation.
-But: it's much faster. The FPGA runs at 50~MHz, which is still quite slow compared to current desktop processors, but still much faster than the simulation.
+But: it's much faster. The FPGA runs at 50 MHz, which is still quite slow compared to current desktop processors, but still much faster than the simulation.
 
 Before we end, let's discuss one more topic which helps you in writing good software for OpTiMSoC: message passing.
 
