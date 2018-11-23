@@ -323,12 +323,12 @@ class TestTutorialFpga:
     """
     def test_tutorial7(self, tmpdir, localconf, baremetal_apps_hello):
         """
-        Tutorial 7: Program a 2x2 CCCC system to a Nexys4 DDR board and run
+        Tutorial 7: Program a compute_tile system to a Nexys4 DDR board and run
         hello world on it.
         """
 
         # program FPGA with bitstream
-        bitstream = "{}/examples/fpga/nexys4ddr/system_2x2_cccc/system_2x2_cccc_nexys4ddr.bit".format(os.environ['OPTIMSOC'])
+        bitstream = "{}/examples/fpga/nexys4ddr/compute_tile/compute_tile_nexys4ddr_singlecore.bit".format(os.environ['OPTIMSOC'])
         cmd_pgm = ['optimsoc-pgm-fpga', bitstream, 'xc7a100t_0']
         p_pgm = util.Process(cmd_pgm, logdir=str(tmpdir), cwd=str(tmpdir))
         p_pgm.run()
@@ -376,16 +376,14 @@ class TestTutorialFpga:
             pass
 
         # Ensure that the STM logs are written
-        stmlogs = [ 'systrace.0002.log', 'systrace.0005.log',
-                    'systrace.0008.log', 'systrace.0011.log' ]
+        stmlogs = [ 'systrace.0002.log' ]
         for f in stmlogs:
             assert tmpdir.join(f).isfile()
             assert util.matches_golden_reference(str(tmpdir), f,
                                                  filter_func=util.filter_osd_trace_timestamps)
 
         # Ensure that the CTM logs are written
-        ctmlogs = [ 'coretrace.0003.log', 'coretrace.0006.log',
-                    'coretrace.0009.log', 'coretrace.0012.log' ]
+        ctmlogs = [ 'coretrace.0003.log' ]
         for f in ctmlogs:
             assert tmpdir.join(f).isfile()
             assert util.matches_golden_reference(str(tmpdir), f,
