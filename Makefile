@@ -75,8 +75,16 @@ install:
 	cp -rT $(OBJDIR)/dist $(INSTALL_TARGET)
 
 srcdist:
-	@git archive --format=tar --prefix optimsoc-$(version)/ HEAD | \
-		gzip > $(OBJDIR)/optimsoc-$(version)-src.tar.gz
+	@mkdir -p $(OBJDIR)/srcdist
+	@echo $(version) > $(OBJDIR)/srcdist/.optimsoc_version
+	@git archive --format=tar --prefix optimsoc-$(version)/ HEAD \
+		> $(OBJDIR)/optimsoc-$(version)-src.tar
+	@tar --append --file=$(OBJDIR)/optimsoc-$(version)-src.tar \
+		--transform="s@$(OBJDIR)/srcdist/@optimsoc-$(version)/@" \
+		--owner=0 --group=0 \
+		$(OBJDIR)/srcdist/.optimsoc_version
+	@gzip -f $(OBJDIR)/optimsoc-$(version)-src.tar \
+		> $(OBJDIR)/optimsoc-$(version)-src.tar.gz
 	@echo $(OBJDIR)/optimsoc-$(version)-src.tar.gz
 
 dist:

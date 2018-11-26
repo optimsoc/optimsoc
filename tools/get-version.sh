@@ -20,6 +20,17 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd "$DIR/.."
 
+# Report version from '.optimsoc_version' file if not a git repository
+if [ ! -d '.git' ]; then
+    if [ -f '.optimsoc_version' ]; then
+        cat '.optimsoc_version'
+        exit 0
+    else
+        echo 'unknown'
+        exit 255
+    fi
+fi
+
 # get the most recent git version tag
 GIT_LATEST_TAG=$(git describe --abbrev=0 --match 'v*' 2>/dev/null)
 if [ $? -eq 0 ]; then
