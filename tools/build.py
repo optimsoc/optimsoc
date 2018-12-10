@@ -499,6 +499,14 @@ def build_examples_sim(options, env):
         ],
         "options": "--NUM_CORES 1" },
       { "name": "compute_tile_sim",
+        "outname": "compute_tile_sim_singlecore_debug",
+        "path": "compute_tile",
+        "artifact": [
+          "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+          "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile",
+        ],
+        "options": "--NUM_CORES 1 --USE_DEBUG" },
+      { "name": "compute_tile_sim",
         "outname": "compute_tile_sim_dualcore",
         "path": "compute_tile",
         "artifact": [
@@ -514,6 +522,14 @@ def build_examples_sim(options, env):
           "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile",
         ],
         "options": "--NUM_CORES 4" },
+      { "name": "compute_tile_sim",
+        "outname": "compute_tile_sim_quadcore_debug",
+        "path": "compute_tile",
+        "artifact": [
+          "build/optimsoc_examples_compute_tile_sim_0/sim-verilator/Vtb_compute_tile",
+          "build/optimsoc_examples_compute_tile_sim_0/bld-verilator/Vtb_compute_tile",
+        ],
+        "options": "--NUM_CORES 4 --USE_DEBUG" },
 
       { "name": "system_2x2_cccc_sim",
         "outname": "system_2x2_cccc_sim_dualcore",
