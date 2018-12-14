@@ -1,4 +1,4 @@
-# Copyright (c) 2016 by the author(s)
+# Copyright (c) 2016-2018 by the author(s)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ srcdist:
 	@git archive --format=tar --prefix optimsoc-$(version)/ HEAD \
 		> $(OBJDIR)/optimsoc-$(version)-src.tar
 	@tar --append --file=$(OBJDIR)/optimsoc-$(version)-src.tar \
-		--transform="s@$(OBJDIR)/srcdist/@optimsoc-$(version)/@" \
+		--transform="s@$(OBJDIR)/srcdist/@optimsoc-$(version)-src/@" \
 		--owner=0 --group=0 \
 		$(OBJDIR)/srcdist/.optimsoc_version
 	@gzip -f $(OBJDIR)/optimsoc-$(version)-src.tar \
@@ -90,12 +90,12 @@ srcdist:
 dist:
 	@test -d "$(OBJDIR)/dist" || (echo "Run make build first."; exit 1)
 	tar -cz --directory $(OBJDIR) --exclude examples \
-		--transform "s/dist/$(version)/" \
+		--transform "s@dist@optimsoc-$(version)@" \
 		-f $(OBJDIR)/optimsoc-$(version)-base.tar.gz dist
 
 ifeq ($(BUILD_EXAMPLES),yes)
 	tar -cz --directory $(OBJDIR) \
-		--transform "s/dist/$(version)/" \
+		--transform "s@dist@optimsoc-$(version)@" \
 		-f $(OBJDIR)/optimsoc-$(version)-examples.tar.gz dist/examples
 endif
 
