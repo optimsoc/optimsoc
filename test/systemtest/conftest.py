@@ -203,11 +203,6 @@ def linux_compute_tile_singlecore(optimsoc_buildroot):
 
     config = 'optimsoc_computetile_singlecore_defconfig'
 
-    cmd = ['make',
-           '-C', str(src_buildroot),
-           'BR2_EXTERNAL='+str(src_optimsoc_buildroot),
-           config]
-
     # buildroot doesn't like our OpTiMSoC compiler being in the path. Error is:
     # ---
     # You seem to have the current working directory in your
@@ -215,12 +210,19 @@ def linux_compute_tile_singlecore(optimsoc_buildroot):
     # support/dependencies/dependencies.mk:21: recipe for target 'dependencies' failed
     # ---
     env = dict(os.environ, LD_LIBRARY_PATH='', PATH='/bin:/usr/bin:/usr/local/bin')
-    subprocess.check_output(cmd, env=env)
+
+    cmd = ['make',
+           '-C', str(src_buildroot),
+           'BR2_EXTERNAL='+str(src_optimsoc_buildroot),
+           config]
+    subprocess.check_output(cmd, env=env, stderr=subprocess.STDOUT,
+                            universal_newlines=True)
 
     cmd = ['make',
            '-C', str(src_buildroot)]
     env = dict(os.environ, LD_LIBRARY_PATH='')
-    subprocess.check_output(cmd, env=env)
+    subprocess.check_output(cmd, env=env, stderr=subprocess.STDOUT,
+                            universal_newlines=True)
 
     linux_img = src_buildroot.join('output/images/vmlinux')
 
