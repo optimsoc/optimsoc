@@ -14,9 +14,10 @@
 
 import sys
 import os
-import git
+import subprocess
 from datetime import date
 import yaml
+import re
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -71,15 +72,37 @@ author = u'OpTiMSoC Contributors'
 #
 topsrcdir = os.path.join(os.path.dirname(__file__), '..')
 try:
-    repo = git.repo.Repo(topsrcdir)
-    gitdescribe = repo.git.describe()
-    lastversion = gitdescribe[1:7]
-    if len(gitdescribe) > 7:
-        version = "dev-" + repo.git.rev_parse('--abbrev-ref', 'HEAD')
-        release = "development commit " + repo.git.rev_parse('HEAD')[0:11]
+    cmd = os.path.join(topsrcdir, 'tools', 'get-version.sh')
+    version = subprocess.check_output(cmd, universal_newlines=True)
+
+    is_release = False
+    is_prerelease = False
+    if re.match(r'^\d{4}(\.\d+)+$', version):
+        is_release = True
+    if re.match(r'^\d{4}(\.\d+)+-rc[^-]+$', version):
+        is_prerelease = True
+
+    if is_release:
+        lastversion = version
     else:
-        version = lastversion
-        release = lastversion
+        # Getting the last released version is a bit more tricky since we want
+        # to exclude release candidates (e.g. v2018.1-rc1) and other tagged
+        # commits which are used as base in get-version.sh.
+        # We get all tags from git, filter out tags which are not releases,
+        # sort the list in descending order, and take the top list entry.
+        cmd = [ 'git', '-C', topsrcdir, 'for-each-ref', 'refs/tags/v*',
+            '--format', '%(objecttype) %(refname:short)']
+        all_tags = subprocess.check_output(cmd, universal_newlines=True).split('\n')[:-1]
+        version_tags = [t.replace('tag v', '') for t in sorted(all_tags, reverse=True) if re.match(r'^tag v\d{4}(\.\d+)+$', t)]
+        lastversion = version_tags[0]
+
+    if is_prerelease:
+        release = version + " (prerelease)"
+    elif is_release:
+        release = version
+    else:
+        release = version + " (development snapshot)"
+
 except:
     lastversion = 'unknown'
     version = 'unknown'
@@ -87,9 +110,13 @@ except:
 
 rst_epilog = """
 .. |lastversion| replace:: {0}
+.. |dl_src| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-src.tar.gz
 .. |dl_base| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-base.tar.gz
 .. |dl_examples| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-examples.tar.gz
-""".format(lastversion)
+.. |dl_examples_ext| replace:: https://github.com/optimsoc/sources/releases/download/v{0}/optimsoc-{0}-examples-ext.tar.gz
+.. |version| replace:: {1}
+.. |release| replace:: {2}
+""".format(lastversion, version, release)
 
 # Add minimum versions of required tools as variables for use inside the
 # documentation.

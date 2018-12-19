@@ -1,5 +1,4 @@
 Sphinx
 breathe>=4.7.3
-gitpython
 cairosvg
 pyyaml
