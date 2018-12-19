@@ -24,7 +24,7 @@ Our demonstration software is available in an extra repository:
 
 .. parsed-literal::
 
-   git clone -b |version| https://github.com/optimsoc/baremetal-apps
+   git clone https://github.com/optimsoc/baremetal-apps
    cd baremetal-apps
 
 Build a simple "Hello World" example:
