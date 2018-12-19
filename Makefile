@@ -38,7 +38,7 @@ BUILD_DOCS := yes
 # Only for |make install|: use either INSTALL_PREFIX /or/ INSTALL_TARGET to
 # choose an installation destination. In most cases use INSTALL_PREFIX.
 # Installation prefix: the OpTiMSoC version will be appended as subdirectory.
-INSTALL_PREFIX := /opt/optimsoc
+INSTALL_PREFIX := $(HOME)/optimsoc/framework
 # Full installation directory: OpTiMSoC will be installed into exactly that
 # directory
 INSTALL_TARGET := $(INSTALL_PREFIX)/$(version)
