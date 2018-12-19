@@ -42,8 +42,8 @@ With the communication link now ready to go, switch back to the OpTiMSoC source 
 
 .. note::
 
-  For the next steps you can create a symlink to your modified GLIP version to ``$OPTIMSOC_SOURCE/externals/glip``, until all your changes are merged upstream.
-  After your GLIP changes are merged upstream, you can run ``$OPTIMSOC_SOURCE/update_externals.sh`` to update the copy of GLIP inside the OpTiMSoC source tree.
+  For the next steps you can create a symlink to your modified GLIP version to ``$OPTIMSOC_SRC/externals/glip``, until all your changes are merged upstream.
+  After your GLIP changes are merged upstream, you can run ``$OPTIMSOC_SRC/update_externals.sh`` to update the copy of GLIP inside the OpTiMSoC source tree.
 
 
 
@@ -52,7 +52,7 @@ Create a board support package
 
 After you have ported GLIP, you're now ready to port OpTiMSoC itself.
 OpTiMSoC abstracts many parts of the FPGA and board as "board support package" (BSP).
-The BSPs live in ``$OPTIMSOC_SOURCE/external/extra_cores/boards`` and are synchronized with an `external repository <https://github.com/wallento/fusesoc_cores/>`_.
+The BSPs live in ``$OPTIMSOC_SRC/external/extra_cores/boards`` and are synchronized with an `external repository <https://github.com/wallento/fusesoc_cores/>`_.
 Until everything is working, we recommend editing the files directly in the OpTiMSoC source tree, and pushing them to the upstream wallento/fusesoc_cores repository as last step.
 
 Porting a BSP involves work mostly in the areas of clocking and DDR memory interface.
@@ -62,7 +62,7 @@ The following instructions are necessarily vague, since the exact steps differ s
 
 1. Copy an existing compute_tile example as base four your changes.
    Use the most closely related board that you can find.
-   For example, copy ``$OPTIMSOC_SOURCE/examples/fpga/nexys4ddr/compute_tile`` to ``$OPTIMSOC_SOURCE/examples/fpga/YOUR_BOARD/compute_tile``.
+   For example, copy ``$OPTIMSOC_SRC/examples/fpga/nexys4ddr/compute_tile`` to ``$OPTIMSOC_SRC/examples/fpga/YOUR_BOARD/compute_tile``.
 
 2. Rename the ``.core`` file and other files in the ``rtl/`` subdirectory to match your board name.
 
@@ -76,7 +76,7 @@ The following instructions are necessarily vague, since the exact steps differ s
      In return, the BSP provides a standardized interface for clock, reset, UART, and a AXI bus connected to the DDR memory.
      Change the name of the BSP module to match your board, before we continue creating this module.
 
-4. Now it's time to create the BSP itself: go to ``$OPTIMSOC_SOURCE/external/extra_cores/boards`` and copy the directory from the closest related board.
+4. Now it's time to create the BSP itself: go to ``$OPTIMSOC_SRC/external/extra_cores/boards`` and copy the directory from the closest related board.
    Also rename all files to match your board name.
 
 5. If the board vendor provides a constraint files with pin locations, drop that file into the ``data/`` subdirectory of the BSP.
@@ -108,13 +108,13 @@ The following instructions are necessarily vague, since the exact steps differ s
 
      .. code-block:: shell
 
-       cd $OPTIMSOC_SOURCE
+       cd $OPTIMSOC_SRC
        ./tools/build.py --link-hw  --without-docs --without-examples-fpga --without-examples-sim
 
-     This command will build all tools and link (instead of copy) all RTL/Verilog files to the ``$OPTIMSOC_SOURCE/objdir/dist``.
+     This command will build all tools and link (instead of copy) all RTL/Verilog files to the ``$OPTIMSOC_SRC/objdir/dist``.
      In the following, you can edit RTL files in ``externals/`` without running this command again.
 
-   - Ensure that you're using the OpTiMSoC version you've just built by running ``source $OPTIMSOC_SOURCE/objdir/dist/optimsoc-environment.sh``.
+   - Ensure that you're using the OpTiMSoC version you've just built by running ``source $OPTIMSOC_SRC/objdir/dist/optimsoc-environment.sh``.
      Do this in every shell you're using (or add it to your ``~/.bashrc``).
 
    - Now synthesize the compute_tile example with fusesoc:
@@ -125,7 +125,7 @@ The following instructions are necessarily vague, since the exact steps differ s
         mkdir $HOME/synthesis
         cd $HOME/synthesis
 
-        fusesoc --verbose --cores-root $OPTIMSOC_SOURCE/examples/fpga/YOURBOARD build optimsoc:examples:YOURBOARD
+        fusesoc --verbose --cores-root $OPTIMSOC_SRC/examples/fpga/YOURBOARD build optimsoc:examples:YOURBOARD
 
      Most likely you will need to iterate a couple times until everything works as you want.
      For easier debugging, you can open the fusesoc-generated project file directly in your synthesis tool.
