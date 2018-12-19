@@ -77,7 +77,7 @@ install:
 srcdist:
 	@mkdir -p $(OBJDIR)/srcdist
 	@echo $(version) > $(OBJDIR)/srcdist/.optimsoc_version
-	@git archive --format=tar --prefix optimsoc-$(version)/ HEAD \
+	@git archive --format=tar --prefix optimsoc-$(version)-src/ HEAD \
 		> $(OBJDIR)/optimsoc-$(version)-src.tar
 	@tar --append --file=$(OBJDIR)/optimsoc-$(version)-src.tar \
 		--transform="s@$(OBJDIR)/srcdist/@optimsoc-$(version)-src/@" \
@@ -127,4 +127,3 @@ else
 endif
 
 .PHONY: build test install-build-deps
-
