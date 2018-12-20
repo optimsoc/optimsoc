@@ -109,7 +109,7 @@ This is done by running the following command **in every terminal session that y
 
    .. code:: sh
 
-      echo 'source ~/setup_prebuilt.sh' >> ~/.bashrc
+      echo 'source ~/optimsoc/setup_prebuilt.sh' >> ~/.bashrc
 
 Install OpTiMSoC
 ================
@@ -120,6 +120,14 @@ We recommend starting with a binary release installation, and move to a custom-b
 
 Recommended: OpTiMSoC binary releases
 -------------------------------------
+
+.. ifconfig:: lastversion != version
+
+   .. warning::
+
+      This documentation was generated for a development version of OpTiMSoC newer than version |lastversion|.
+      We only provide binaries for released versions, not for this development version.
+      Please go to our documentation page at https://www.optimsoc.org/docs to read the documentation matching |lastversion|.
 
 The most simple way to get started is with the release packages.
 You can find the OpTiMSoC releases here: https://github.com/optimsoc/optimsoc/releases.
@@ -135,15 +143,7 @@ There are three packages:
 Additionally a ``src`` package exists, containing the source code used to build the other packages.
 In many cases that package won't be needed: if you need access to the source code check it out from our git repository instead.
 
-.. ifconfig:: lastversion != version
-
-   .. warning::
-
-      This documentation was generated for a development version and you cannot download prebuilt packages for it.
-      Some parts of this documentation will vary from the release documentation and examples not work anymore.
-      Please refer to the documentation matching the last release that you can find here: https://www.optimsoc.org/docs.
-
-To install the |lastversion| release into ``~/optimsoc/framework`` run the following commands:
+To install the OpTiMSoC release |lastversion| into ``~/optimsoc/framework`` run the following commands:
 
 .. parsed-literal::
 
