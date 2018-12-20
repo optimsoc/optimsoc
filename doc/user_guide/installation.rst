@@ -121,7 +121,7 @@ We recommend starting with a binary release installation, and move to a custom-b
 Recommended: OpTiMSoC binary releases
 -------------------------------------
 
-.. ifconfig:: lastversion != version
+.. ifconfig:: optimsoc_lastversion != optimsoc_version
 
    .. warning::
 
