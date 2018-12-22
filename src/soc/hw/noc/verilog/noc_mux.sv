@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2017 by the author(s)
+/* Copyright (c) 2015-2019 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,10 +82,10 @@ module noc_mux
          end
       end else begin
          out_valid = 0;
-         if (|in_valid) begin
+         if (|in_valid && out_ready) begin
             out_valid = 1'b1;
             nxt_activeroute = ~out_last;
-            in_ready = select & {CHANNELS{out_ready}};
+            in_ready = select;
          end
       end
    end // always @ (*)
