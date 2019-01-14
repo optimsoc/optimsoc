@@ -26,6 +26,7 @@
 #define __OPTIMSOC_MP_H__
 
 #include <stdint.h>
+#include <stdlib.h>
 
 /**
  * \defgroup libmp Message passing library
@@ -49,52 +50,35 @@
  * \{
  */
 
+typedef struct endpoint_handle* optimsoc_mp_endpoint_handle;
 
-#ifndef __OPTIMSOC_INTERNAL__
-/**
- * This is the handle for an endpoint
- *
- * The endpoint is an opaque type to hide the implementaiton details.
- */
-typedef uint32_t optimsoc_mp_endpoint_handle;
-#endif
-
-/**
- * The endpoint types
- *
- * Each endpoint is of a certain type and can only be used in a subset
- * of functions.
- */
 typedef enum {
-  OPTIMSOC_MP_EP_CONNECTIONLESS = 0, /*!< Connection-less communication */
-  OPTIMSOC_MP_EP_CHANNEL = 1 /*!< Connection-oriented communication */
-} optimsoc_endpoint_type;
+	OPTIMSOC_MP_SUCCESS = 0,
+	OPTIMSOC_MP_ERR_NOT_INITIALIZED,
+	OPTIMSOC_MP_ERR_NO_MEMORY,
+	OPTIMSOC_MP_ERR_INVALID_PARAMETER,
+	OPTIMSOC_MP_ERR_GENERIC,
+	OPTIMSOC_MP_ERR_CANNOT_RESOLVE,
+	OPTIMSOC_MP_ERR_ALIGNMENT
+} optimsoc_mp_result_t;
 
-#define OPTIMSOC_MP_CONF_DOMAINS 1
-
-/**
- * Configuration attributes
- *
- * Currently not used.
- */
-struct optimsoc_mp_attributes {
-    uint32_t flags;
-};
+typedef enum {
+	OPTIMSOC_MP_MGMT_DOMAIN_IS_TILE = 0
+} optimsoc_mp_mgmt_type_t;
 
 /**
  * Initialize the message passing subsystem
  *
- * \param attr Configuration attributes (currently ignored)
  * \return 0 on success, an error code otherwise
  */
-int optimsoc_mp_initialize(struct optimsoc_mp_attributes* attr);
+optimsoc_mp_result_t optimsoc_mp_initialize(optimsoc_mp_mgmt_type_t mgmt_type);
 
 /**
  * Create an endpoint
  *
- * Creates a message passing endpoint in this tile for a specific node on a
- * port. Other endpoints can send messages or connect to the endpoint via the
- * <tile, node, port> tuple.
+ * Creates a message passing endpoint in this tile for a specific node.
+ * Other endpoints can send messages or connect to the endpoint via the
+ * <app, task, port> tuple.
  *
  * The buffer can either be connection-less or
  * connection-oriented. When connection-oriented you need to connect
@@ -106,18 +90,25 @@ int optimsoc_mp_initialize(struct optimsoc_mp_attributes* attr);
  * size can be overwritten for this endpoint.
  *
  * \param endpoint Pointer to the handle to initialize
- * \param node Local node number
- * \param port Local port number
+ * \param app Application ID
+ * \param node Node ID
+ * \param port Port of the remote endpoint
  * \param type Type of the endpoint
  * \param buffer_size Number of messages the endpoint accepts
  * \param overwrite_max_size Set the maximum message size or 0 for the default
  * \return 0 if success, error code otherwise
  */
 
-int optimsoc_mp_endpoint_create(optimsoc_mp_endpoint_handle *endpoint,
-        uint32_t node, uint32_t port,
-        optimsoc_endpoint_type type,
-        uint32_t buffer_size, int overwrite_max_size);
+typedef enum {
+	OPTIMSOC_MP_EP_DEFAULTS = 0,
+	OPTIMSOC_MP_EP_CHANNEL = 1, /*!< Connection-oriented communication */
+	OPTIMSOC_MP_EP_BUFFERED = 2, /*!< Send buffered */
+	OPTIMSOC_MP_EP_NORECV = 4, /*!< Only used for sending */
+} optimsoc_endpoint_attr_t;
+
+optimsoc_mp_result_t optimsoc_mp_endpoint_create(optimsoc_mp_endpoint_handle *endpoint,
+		uint32_t domain, uint32_t node, uint32_t port,
+		uint32_t buffer_size, size_t msg_size, optimsoc_endpoint_attr_t attr);
 
 /**
  * Retrieve a remote endpoint
@@ -126,18 +117,16 @@ int optimsoc_mp_endpoint_create(optimsoc_mp_endpoint_handle *endpoint,
  * must be configured. This function initializes the endpoint for the
  * remote endpoint.
  *
- * The remote tile is the compute tile rank.
- *
  * This function blocks until the remote endpoint is available.
  *
  * \param endpoint Handle to initialize
- * \param tile Remote compute tile rank
- * \param node Node of the remote endpoint
+ * \param app ID of the application of the remote endpoint
+ * \param node ID of the node of the remote endpoint
  * \param port Port of the remote endpoint
  * \return Return 0 on success, an error code otherwise
  */
-int optimsoc_mp_endpoint_get(optimsoc_mp_endpoint_handle *endpoint,
-        uint32_t tile, uint32_t node, uint32_t port);
+optimsoc_mp_result_t optimsoc_mp_endpoint_get(optimsoc_mp_endpoint_handle *endpoint,
+        uint32_t domain, uint32_t node, uint32_t port);
 
 /**
  * Send a message to a remote endpoint
@@ -158,8 +147,8 @@ int optimsoc_mp_endpoint_get(optimsoc_mp_endpoint_handle *endpoint,
  * \param size Size of the data to transfer
  * \return 0 on success, an error code otherwise
  */
-int optimsoc_mp_msg_send(optimsoc_mp_endpoint_handle from,
-                         optimsoc_mp_endpoint_handle to, uint8_t *data,
+optimsoc_mp_result_t optimsoc_mp_msg_send(optimsoc_mp_endpoint_handle from,
+                         optimsoc_mp_endpoint_handle to, uint32_t *data,
                          uint32_t size);
 
 /**
@@ -196,11 +185,18 @@ int optimsoc_mp_channel_pause(optimsoc_mp_endpoint_handle ep);
 
 int optimsoc_mp_channel_continue(optimsoc_mp_endpoint_handle ep);
 
-#define OPTIMSOC_MP_ERROR_NOT_INITIALIZED       -1
-#define OPTIMSOC_MP_ERROR_DOMAINS_NOT_SUPPORTED -2
-#define OPTIMSOC_MP_ERROR_BUFFEROVERFLOW        -3
-
 char* optimsoc_mp_error_string(int errno);
+
+typedef enum {
+	TRACE_MP_FUNC_CALLS        = 0x00000001,
+	TRACE_MP_LOWLVL_FUNC_CALLS = 0x00000002,
+	TRACE_MP_PROTO         = 0x00000004,
+	TRACE_MP_ALL               = 0xffffffff
+} optimsoc_mp_trace_config_t;
+
+void optimsoc_mp_trace_config_set(optimsoc_mp_trace_config_t config);
+
+optimsoc_mp_trace_config_t optimsoc_mp_trace_config_get();
 
 /**
  * \}

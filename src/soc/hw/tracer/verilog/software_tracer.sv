@@ -53,14 +53,14 @@ module software_tracer(/*AUTOARG*/
 
    import "DPI-C" function
      void software_tracer_trace(input longint unsigned timestamp,
-				input shortint unsigned cpu,
-				input shortint unsigned id,
-				input int unsigned 	value);
+                                input shortint unsigned cpu,
+                                input shortint unsigned id,
+                                input int unsigned      value);
 
    localparam TRACE_RESET = 15;
    localparam TRACE_EXCEPTION_ENTER = 16;
    localparam TRACE_EXCEPTION_LEAVE = 17;
-   
+
    input clk;
    input enable;
    input [31:0] wb_pc;
@@ -113,7 +113,7 @@ module software_tracer(/*AUTOARG*/
          if (ENABLE_TRACE) begin
             if ((wb_pc_prev + 4 == wb_pc) || (wb_pc_prev == wb_pc)) begin
                count <= count + 1;
-            end 
+            end
             else if (count > 0) begin
                $fwrite(tracefile, "[%0t, %0d] %3d, 0x%08x\n", $time, ID, count, wb_pc);
                $fflush(tracefile);
@@ -142,21 +142,22 @@ module software_tracer(/*AUTOARG*/
                  end else begin
                     is_newline <= 0;
                  end
+                 software_tracer_trace($time, ID, wb_insn[15:0], r3);
               end // case: 16'h0004
               default: begin
-		 software_tracer_trace($time, ID, wb_insn[15:0], r3);
+                 software_tracer_trace($time, ID, wb_insn[15:0], r3);
               end
             endcase
          end // if (wb_insn[31:16] == 16'h1500)
          else if ((wb_pc[31:12] == 0) && (wb_pc[7:0] == 0)) begin
             if (wb_pc[11:8] != wb_pc_prev[11:8]) begin
             // record every exception only when it first occurs, not every cycle
-	       if (wb_pc[11:8] == 1) begin
-		  software_tracer_trace($time, ID, TRACE_RESET, 0);
-	       end else begin
-		  software_tracer_trace($time, ID, TRACE_EXCEPTION_ENTER, wb_pc[11:8]);
-	       end
-	    end
+               if (wb_pc[11:8] == 1) begin
+                  software_tracer_trace($time, ID, TRACE_RESET, 0);
+               end else begin
+                  software_tracer_trace($time, ID, TRACE_EXCEPTION_ENTER, wb_pc[11:8]);
+               end
+            end
          end
          else if (wb_insn[31:0] == 32'h24000000) begin
             software_tracer_trace($time, ID, TRACE_EXCEPTION_LEAVE, 0);

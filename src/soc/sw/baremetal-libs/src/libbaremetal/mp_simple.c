@@ -29,6 +29,7 @@
 #include <or1k-support.h>
 
 #include "include/optimsoc-baremetal.h"
+#include "trace.h"
 
 #include <stdlib.h>
 
@@ -43,40 +44,6 @@
 #define SEND(ep) REG32(EP_BASE + ep*EP_OFFSET+REG_SEND)
 #define RECV(ep) REG32(EP_BASE + ep*EP_OFFSET+REG_RECV)
 #define ENABLE(ep) REG32(EP_BASE + ep*EP_OFFSET+REG_ENABLE)
-
-//#define TRACE_ENABLE
-
-#define OPTIMSOC_TRACE_MPSIMPLE_SEND          0x100
-#define OPTIMSOC_TRACE_MPSIMPLE_SEND_FINISHED 0x101
-#define OPTIMSOC_TRACE_MPSIMPLE_RECV          0x102
-#define OPTIMSOC_TRACE_MPSIMPLE_RECV_FINISHED 0x103
-
-static inline void trace_mp_simple_send(uint32_t dest, uint32_t size, void *buf) {
-#ifdef TRACE_ENABLE
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_SEND, dest);
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_SEND, size);
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_SEND, buf);
-#endif
-}
-static inline void trace_mp_simple_send_finished(uint32_t dest) {
-#ifdef TRACE_ENABLE
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_SEND_FINISHED, dest);
-#endif
-}
-
-static inline void trace_mp_simple_recv(uint32_t src, uint32_t class, uint32_t size) {
-#ifdef TRACE_ENABLE
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV, src);
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV, class);
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV, size);
-#endif
-}
-
-static inline void trace_mp_simple_recv_finished(uint32_t src) {
-#ifdef TRACE_ENABLE
-    OPTIMSOC_TRACE(OPTIMSOC_TRACE_MPSIMPLE_RECV_FINISHED, src);
-#endif
-}
 
 #define EXTRACT(x,msb,lsb) ((x>>lsb) & ~(~0 << (msb-lsb+1)))
 #define SET(x,v,msb,lsb) (((~0 << ((msb)+1) | ~(~0 << (lsb)))&x) | \
@@ -120,8 +87,10 @@ void optimsoc_mp_simple_enable(uint16_t endpoint) {
 }
 
 int optimsoc_mp_simple_ctready(uint32_t rank, uint16_t endpoint) {
+	trace_mpsimple_ctready_enter(rank, endpoint);
     uint32_t ready = _domains_ready[rank];
     if ((ready >> endpoint) & 0x1) {
+    	trace_mpsimple_ctready_leave(1);
         return 1;
     }
 
@@ -135,6 +104,8 @@ int optimsoc_mp_simple_ctready(uint32_t rank, uint16_t endpoint) {
     SEND(endpoint) = 1;
     SEND(endpoint) = req;
 
+    trace_mpsimple_ctready_leave(0);
+
     return 0;
 }
 
@@ -146,6 +117,8 @@ void optimsoc_mp_simple_addhandler(uint8_t class,
 void _irq_handler(void* arg) {
 
     (void) arg;
+
+    trace_mpsimple_irqhandler_enter();
 
     while (1) {
         uint16_t empty = 0;
@@ -194,19 +167,18 @@ void _irq_handler(void* arg) {
             }
 
             uint32_t src = (_buffer[0]>>OPTIMSOC_SRC_LSB) & 0x1f;
-            trace_mp_simple_recv(src, class, size);
 
             cls_handlers[class](_buffer,size);
-
-            trace_mp_simple_recv_finished(src);
         }
         if (empty == _num_endpoints)
             break;
     }
+
+    trace_mpsimple_irqhandler_leave();
 }
 
 void optimsoc_mp_simple_send(uint16_t endpoint, size_t size, uint32_t *buf) {
-    trace_mp_simple_send(buf[0]>>OPTIMSOC_DEST_LSB, size, buf);
+    trace_mpsimple_send_enter(buf[0]>>OPTIMSOC_DEST_LSB, size, buf);
 
     uint32_t restore = or1k_critical_begin();
 
@@ -217,6 +189,6 @@ void optimsoc_mp_simple_send(uint16_t endpoint, size_t size, uint32_t *buf) {
 
     or1k_critical_end(restore);
 
-    trace_mp_simple_send_finished(buf[0] >> OPTIMSOC_DEST_LSB);
+    trace_mpsimple_send_leave();
 }
 

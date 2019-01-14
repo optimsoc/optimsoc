@@ -881,6 +881,40 @@ def build_externals_opensocdebug_software_pybindings(options, env):
     cmd = "python3 setup.py sdist --dist-dir {}".format(dist)
     run_command(cmd, cwd=src, env=env)
 
+""" Build and install our private copy of Babeltrace
+"""
+def build_externals_babeltrace(options, env):
+    src = options.src
+    objdir = options.objdir
+    dist = os.path.join(objdir, "dist")
+    nthreads = multiprocessing.cpu_count()
+
+    src = os.path.join(src, "external", "babeltrace")
+    objdir = os.path.join(objdir, "external", "babeltrace")
+    dist = os.path.join(dist, "host")
+    prefix = os.path.join("\$\$\\{OPTIMSOC\\}", "host")
+
+    info("Build babeltrace")
+    check_autotools()
+    check_make()
+
+    info(" + bootstrap")
+    cmd = "./bootstrap"
+    run_command(cmd, cwd=src, env=env)
+
+    info(" + Configure")
+    ensure_directory(objdir)
+    cmd = "{}/configure --prefix={} --disable-man-pages --enable-python-bindings". format(src, prefix)
+    run_command(cmd, cwd=objdir, env=env)
+
+    info(" + Build")
+    cmd = "make -j {}".format(nthreads)
+    run_command(cmd, cwd=objdir, env=env)
+
+    info(" + Install build artifacts")
+    cmd = "make install"
+    run_command(cmd, cwd=objdir, env=env)
+
 """Setup the OpTiMSoC environment variables pointing towards the dist directory
 
 This environment can be used to build software depending on an OpTiMSoC
@@ -1121,6 +1155,9 @@ if __name__ == '__main__':
         set_environment(options, env)
         build_externals_opensocdebug_software(options, env)
         build_externals_opensocdebug_software_pybindings(options, env)
+
+        # Babeltrace
+        build_externals_babeltrace(options, env)
 
         # write out optimsoc-environment.sh for our users
         write_environment_file(options)

@@ -26,16 +26,20 @@ libmp_LTLIBRARIES = libmp.la libmp-runtime.la
 libmpdir = $(libdir)/baremetal
 
 libmp_la_SOURCES = mp.c \
-                   endpoints.c \
-                   control.c
+                   endpoint.c \
+                   mgmt.c \
+                   control.c \
+                   buffer.c
                              
 libmp_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 libmp_la_CPPFLAGS = $(AM_CPPFLAGS) -Wall \
                     -I $(top_srcdir)/src/libbaremetal/include
 
 libmp_runtime_la_SOURCES = mp.c \
-                                     endpoints.c \
-                                     control.c
+                           endpoint.c \
+		                   mgmt.c \
+                           control.c \
+                           buffer.c
     
 libmp_runtime_la_LDFLAGS = $(AM_LDFLAGS) $(LTLDFLAGS)
 libmp_runtime_la_CPPFLAGS = $(AM_CPPFLAGS) -DRUNTIME -Wall\

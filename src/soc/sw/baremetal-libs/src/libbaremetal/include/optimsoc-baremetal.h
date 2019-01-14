@@ -318,6 +318,11 @@ static inline unsigned int extract_bits(uint32_t x, uint32_t msb,
     return ((x>>lsb) & ~(~0 << (msb-lsb+1)));
 }
 
+
+static inline unsigned int extract_bit(uint32_t x, uint32_t bit) {
+    return (x>>bit) & 0x1;
+}
+
 /**
  * Set bits in variable between MSB and LSB (including)
 
@@ -596,6 +601,15 @@ void optimsoc_mp_simple_send(uint16_t endpoint, size_t size, uint32_t* buf);
  * \param hnd Function pointer to handler for this class
  */
 void optimsoc_mp_simple_addhandler(uint8_t cls, void (*hnd)(uint32_t*, size_t));
+
+typedef enum {
+	TRACE_FUNC_CALLS        = 0x00000001,
+	TRACE_ALL               = 0xffffffff
+} optimsoc_trace_config_t;
+
+void optimsoc_trace_config_set(optimsoc_trace_config_t config);
+
+optimsoc_trace_config_t optimsoc_trace_config_get();
 
 /**
  * @}

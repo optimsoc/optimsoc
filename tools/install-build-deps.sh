@@ -33,7 +33,7 @@ case "$ID" in
     PKGLIST="curl git build-essential autoconf automake \
       libtool pkg-config tcl libusb-1.0-0-dev libboost-dev python \
       python3 python3-pip python3-venv libffi-dev python3-packaging \
-      python3-yaml"
+      python3-yaml uuid-dev libpopt-dev"
     if [ "$INSTALL_DOC_DEPS" == "yes" ]; then
       PKGLIST="$PKGLIST doxygen latexmk texlive texlive-latex-extra \
         texlive-fonts-extra"

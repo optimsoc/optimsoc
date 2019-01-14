@@ -20,7 +20,7 @@ void Tracer::init(bool nocfull) {
 
     mFolder = folder;
 
-    std::string swfolder = mFolder + "/sw";
+    std::string swfolder = mFolder + "/sw-raw";
     mkdir(swfolder.c_str(), 0777);
 
     std::string metadata = swfolder + "/metadata";
@@ -132,24 +132,12 @@ void Tracer::traceSoftware(uint64_t timestamp, uint16_t cpu, uint16_t id, uint32
     if (!mEnabled)
         return;
 
-    try {
-        if (mSoftwareStates.find(cpu) == mSoftwareStates.end()) {
-            mSoftwareStates[cpu] = new SoftwareState();
-        }
-        if (mSoftwareStates[cpu]->trace(id, value)) {
-            fwrite(&timestamp, 8, 1, mSoftwareTrace);
-            fwrite(&id, 2, 1, mSoftwareTrace);
-            fwrite(&cpu, 2, 1, mSoftwareTrace);
-            mSoftwareStates[cpu]->emit(id, mSoftwareTrace);
-        }
-    } catch(SoftwareState::UnknownEventException &) {
-        uint16_t evid = 0;
-        fwrite(&timestamp, 8, 1, mSoftwareTrace);
-        fwrite(&evid, 2, 1, mSoftwareTrace);
-        fwrite(&cpu, 2, 1, mSoftwareTrace);
-        fwrite(&id, 2, 1, mSoftwareTrace);
-        fwrite(&value, 4, 1, mSoftwareTrace);
-    }
+    fwrite(&timestamp, 8, 1, mSoftwareTrace);
+    fwrite(&cpu, 2, 1, mSoftwareTrace);
+    fwrite(&id, 2, 1, mSoftwareTrace);
+    fwrite(&value, 4, 1, mSoftwareTrace);
+
+    return;
 }
 
 

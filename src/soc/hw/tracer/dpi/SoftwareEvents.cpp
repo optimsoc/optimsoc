@@ -1,5 +1,6 @@
 #include <SoftwareEvents.h>
 
+/*
 SOFTWARE_EVENT_BEGIN_DECL(0x0f, reset)
 SOFTWARE_EVENT_END_DECL(0x0f, reset)
 
@@ -24,3 +25,4 @@ SOFTWARE_EVENT_END_DECL(0x10, exception_enter)
 
 SOFTWARE_EVENT_BEGIN_DECL(0x11, exception_leave)
 SOFTWARE_EVENT_END_DECL(0x11, exception_leave)
+*/

@@ -1,11 +1,9 @@
-#include "endpoints.h"
-#include "control.h"
-
-// The handles are opaque to the application
-typedef struct endpoint_handle* optimsoc_mp_endpoint_handle;
-
-#define __OPTIMSOC_INTERNAL__
 #include "include/optimsoc-mp.h"
+
+#include "control.h"
+#include "endpoint.h"
+#include "mgmt.h"
+#include "trace.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,24 +18,26 @@ typedef struct endpoint_handle* optimsoc_mp_endpoint_handle;
  */
 
 enum {
-    OPTIMSOC_MP_CONTROL_FIFO = 0
-} _optimsoc_mp_control;
+    MP_OFFLOAD_NONE = 0,
+	MP_OFFLOAD_RMA = 1,
+	MP_OFFLOAD_NAMP = 2
+} _optimsoc_mp_offload;
 
-enum {
-    OPTIMSOC_MP_DATA_FIFO = 0,
-    OPTIMSOC_MP_DATA_DMA = 1
-} _optimsoc_mp_data;
+uint32_t _mp_trace_config;
 
-int optimsoc_mp_initialize(struct optimsoc_mp_attributes *attr) {
-
+optimsoc_mp_result_t optimsoc_mp_initialize(optimsoc_mp_mgmt_type_t mgmt_type) {
+	optimsoc_mp_result_t ret;
     // Initialize endpoints
-    endpoints_init();
+    ret = mgmt_init(mgmt_type);
+    if (ret != OPTIMSOC_MP_SUCCESS) {
+    	return ret;
+    }
 
     // Initialize control plane
     control_init();
 
-    _optimsoc_mp_control = OPTIMSOC_MP_CONTROL_FIFO;
-    _optimsoc_mp_data = OPTIMSOC_MP_DATA_FIFO;
+    _optimsoc_mp_offload = MP_OFFLOAD_NONE;
+    _mp_trace_config = 0;
 
     return 0;
 }
@@ -46,15 +46,6 @@ char* optimsoc_mp_error_string(int errno) {
     char* str;
 
     switch(errno) {
-    case OPTIMSOC_MP_ERROR_NOT_INITIALIZED:
-        str = "not initialized";
-        break;
-    case OPTIMSOC_MP_ERROR_DOMAINS_NOT_SUPPORTED:
-        str = "domains not supported";
-        break;
-    case OPTIMSOC_MP_ERROR_BUFFEROVERFLOW:
-        str = "buffer overflow";
-        break;
     default:
         str = "unknown error";
         break;
@@ -63,25 +54,87 @@ char* optimsoc_mp_error_string(int errno) {
     return str;
 }
 
-int optimsoc_mp_endpoint_create(struct endpoint_handle **eph,
-                                uint32_t node, uint32_t port,
-                                optimsoc_endpoint_type buffer_type,
-                                uint32_t buffer_size, int overwrite_max_size) {
+optimsoc_mp_result_t optimsoc_mp_endpoint_create(optimsoc_mp_endpoint_handle *endpoint,
+		uint32_t domain, uint32_t node, uint32_t port,
+		uint32_t buffer_size, size_t msg_size, optimsoc_endpoint_attr_t attr) {
+	optimsoc_mp_result_t ret;
 
-    // Endpoint creation only requires access to the local database, no
-    // messages between the tiles
-    *eph = endpoint_create(node, port, buffer_type, buffer_size, overwrite_max_size);
+	trace_mp_endpoint_create_enter(domain, node, port, buffer_size, msg_size, attr);
+
+	// Convert to exponent value and validate parameters are power of two
+	uint32_t btmp = buffer_size;
+	uint32_t mtmp = msg_size;
+	uint32_t bsize = 0;
+	uint32_t msize = 0;
+	while (btmp >>= 1) bsize++;
+	while (mtmp >>= 1) msize++;
+	if (((1 << bsize) != buffer_size) || ((1 << msize) != msg_size)
+			|| (msg_size < 4)) {
+		return OPTIMSOC_MP_ERR_INVALID_PARAMETER;
+	}
+
+	// Create local endpoint
+	ret = endpoint_create(endpoint, domain, node, port, bsize, msize, attr);
+	if (ret != OPTIMSOC_MP_SUCCESS) {
+		return ret;
+	}
+
+	// Make known via the management system
+	ret = mgmt_register(*endpoint);
+	if (ret != OPTIMSOC_MP_SUCCESS) {
+		endpoint_destroy(*endpoint);
+		return ret;
+	}
+
+	trace_mp_endpoint_create_leave(*endpoint);
 
     return 0;
 }
 
-int optimsoc_mp_endpoint_get(struct endpoint_handle **eph, uint32_t tile,
-                             uint32_t node, uint32_t port) {
-    // This gets the endpoint from the local database or creates a request to
-    // the tile if it is not found
-    *eph = endpoint_get(tile, node, port);
-    return 0;
+optimsoc_mp_result_t optimsoc_mp_endpoint_get(optimsoc_mp_endpoint_handle *endpoint,
+        uint32_t domain, uint32_t node, uint32_t port) {
+	optimsoc_mp_result_t ret;
+
+	trace_mp_endpoint_get_enter(domain, node, port);
+
+	ret = mgmt_get(endpoint, domain, node, port, 0);
+
+	trace_mp_endpoint_get_leave(*endpoint);
+
+	return ret;
 }
+
+optimsoc_mp_result_t optimsoc_mp_msg_send(optimsoc_mp_endpoint_handle from,
+		optimsoc_mp_endpoint_handle to, uint32_t *data, uint32_t size) {
+
+	trace_mp_msg_send_enter(from, to, data, size);
+
+	if (((uint32_t) data & 0x3) != 0) {
+		return OPTIMSOC_MP_ERR_ALIGNMENT;
+	}
+
+	if (_optimsoc_mp_offload == MP_OFFLOAD_NAMP) {
+		return OPTIMSOC_MP_ERR_GENERIC;
+	} else {
+		uint32_t addr, index;
+
+		control_msg_alloc(to, &addr, &index);
+
+		if (_optimsoc_mp_offload == MP_OFFLOAD_RMA) {
+			return OPTIMSOC_MP_ERR_GENERIC;
+		} else {
+			control_msg_data(to, addr, data, size);
+		}
+
+		control_msg_final(to, size, index);
+	}
+
+	trace_mp_msg_send_leave();
+
+	return OPTIMSOC_MP_SUCCESS;
+}
+
+/*
 
 int optimsoc_mp_channel_connect(struct endpoint_handle *from,
                               struct endpoint_handle *to) {
@@ -139,6 +192,7 @@ int optimsoc_mp_channel_send(struct endpoint_handle *from,
                            uint32_t size) {
     //printf("%d\n", from->ep->remotecredit);
     trace_chan_send_begin(from, size);
+
     if (from->ep->remotecredit == 0) {
         if (endpoint_full(from->ep)) {
             assert(0==1);
@@ -158,12 +212,12 @@ int optimsoc_mp_channel_send(struct endpoint_handle *from,
 
     trace_chan_send_xmit(from);
 
-    if (_optimsoc_mp_data == OPTIMSOC_MP_DATA_FIFO) {
+//    if (_optimsoc_mp_data == OPTIMSOC_MP_DATA_FIFO) {
         control_channel_send(to, buffer, size);
-    } else {
+//    } else {
 //        dma_transfer()
 //        control_channel_send(to, buffer, size);
-    }
+//    }
 
     trace_chan_send_end(from);
 
@@ -187,19 +241,10 @@ int optimsoc_mp_channel_send_i(struct endpoint_handle *from,
     from->ep->remotecredit--;
 
     return 0;
-}
+}*/
 
-int optimsoc_mp_msg_send(optimsoc_mp_endpoint_handle from,
-                         optimsoc_mp_endpoint_handle to, uint8_t *data,
-                         uint32_t size) {
 
-    uint32_t addr = control_msg_alloc(to, size);
-
-    control_msg_data(to, addr, data, size);
-
-    return 0;
-}
-
+/*
 int optimsoc_mp_msg_recv(optimsoc_mp_endpoint_handle eph, uint8_t *buffer,
                          uint32_t buffer_size, uint32_t *received_size) {
     int ret = 0;
@@ -215,4 +260,13 @@ int optimsoc_mp_msg_recv(optimsoc_mp_endpoint_handle eph, uint8_t *buffer,
     endpoint_msg_recv(eph->ep, (uint32_t*) buffer, buffer_size, received_size);
 
     return ret;
+}*/
+
+void optimsoc_mp_trace_config_set(optimsoc_mp_trace_config_t config) {
+	_mp_trace_config = config;
 }
+
+optimsoc_mp_trace_config_t optimsoc_mp_trace_config_get() {
+	return _mp_trace_config;
+}
+

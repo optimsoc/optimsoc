@@ -28,6 +28,8 @@
 
 #include "include/optimsoc-baremetal.h"
 
+uint32_t _optimsoc_trace_config;
+
 uint32_t optimsoc_get_numct(void) {
     return REG32(OPTIMSOC_NA_CT_NUM);
 }
@@ -102,4 +104,12 @@ void optimsoc_mutex_unlock(optimsoc_mutex_t *mutex) {
 
 uint32_t optimsoc_get_seed(void) {
     return REG32(OPTIMSOC_NA_SEED);
+}
+
+void optimsoc_trace_config_set(optimsoc_trace_config_t config) {
+	_optimsoc_trace_config = config;
+}
+
+optimsoc_trace_config_t optimsoc_trace_config_get() {
+	return _optimsoc_trace_config;
 }
