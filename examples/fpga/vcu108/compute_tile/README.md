@@ -83,7 +83,7 @@ The VCU108 board has an onboard dual UART over USB chip.
 Unfortunately, this chip is only usable for baud rates below 1 MBaud and no reasonable flow control.
 
 Set the design parameters as follows: `HOST_IF=uart` and `UART0_SOURCE=onboard`.
-Connect in `osd-target-run` with the `uart` backend and pass as GLIP backend option `speed=3000000`.
+Connect in `osd-target-run` with the `uart` backend and pass as GLIP backend option `speed=921600`.
 
 
 ### External UART over PMOD
@@ -92,4 +92,4 @@ We recommend the [Digilent USBUART pmod](https://store.digilentinc.com/pmod-usbu
 Connect this board to bottom row of the J52 PMOD connector on the board.
 
 Set the design parameters as follows: `HOST_IF=uart` and `UART0_SOURCE=pmod`.
-Connect in `osd-target-run` with the `uart` backend and pass as GLIP backend option `speed=921600`.
+Connect in `osd-target-run` with the `uart` backend and pass as GLIP backend option `speed=3000000`.
