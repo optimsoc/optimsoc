@@ -29,12 +29,13 @@
  */
 
 /**
- * FIFO buffer for NoC use cases
+ * FIFO buffer for NoC use cases (2 delay cycle version)
  *
- * This FIFO buffer for NoC use cases has 1 clock cycle minimum delay from input
- * to output and is coded according to the "Vivado User Guide UG901", allowing
- * it to be synthesized using LUT RAM.
- * The actual depth is DEPTH + 1 because of the output register stage.
+ * This FIFO buffer for NoC use cases has 2 clock cycles minimum delay from
+ * input to output and is coded according to the "Vivado User Guide UG901",
+ * allowing it to be synthesized using LUT RAM.
+ * The required logic of this buffer is smaller in comparison to the version
+ * with 1 cycle minimum delay.
  * The FIFO provides a feature which will only signal a valid flit at the output
  * if a full packet is stored inside the buffer (i.e. at least one last-flit is
  * stored). If this feature is activated (FULLPACKET = 1) the size of the packet
@@ -62,7 +63,7 @@ module noc_buffer #(
    output                        out_valid,
    input                         out_ready,
 
-   output [AW:0]                 packet_size
+   output [AW-1:0]               packet_size
 );
 
    // Ensure that parameters are set to allowed values
@@ -73,36 +74,36 @@ module noc_buffer #(
    end
 
    reg [AW-1:0]   wr_addr;
-   reg [AW-1:0]   rd_addr;
-   reg [AW:0]     rd_count;
+   reg [AW-1:0]   rd_addr_reg;
+   reg [AW-1:0]   rd_count;
+   wire [AW-1:0]  rd_addr;
    wire           fifo_read;
    wire           fifo_write;
-   wire           read_ram;
-   wire           write_through;
-   wire           write_ram;
+   wire           update_out;
 
-   assign in_ready = (rd_count < DEPTH + 1); // The actual depth is DEPTH+1 because of the output register
+   assign in_ready = (rd_count < (DEPTH-1));
+   assign rd_addr = fifo_read ? rd_addr_reg + 1'b1 : rd_addr_reg;
    assign fifo_read = out_valid & out_ready;
    assign fifo_write = in_ready & in_valid;
-   assign read_ram = fifo_read & (rd_count > 1);
-   assign write_through = ((rd_count == 0) | ((rd_count == 1) & fifo_read));
-   assign write_ram = fifo_write & ~write_through;
+   assign update_out = (rd_count == 1) | fifo_read;
 
    // Address logic
    always_ff @(posedge clk) begin
       if (rst) begin
          wr_addr <= 'b0;
-         rd_addr <= 'b0;
+         rd_addr_reg <= 'b0;
          rd_count <= 'b0;
       end else begin
-         if (fifo_write & ~fifo_read)
-            rd_count <=  rd_count + 1'b1;
-         if (fifo_read & ~fifo_write)
-            rd_count <= rd_count - 1'b1;
-         if (write_ram)
+         if (fifo_write & fifo_read) begin
             wr_addr <= wr_addr + 1'b1;
-         if (read_ram)
-            rd_addr <= rd_addr + 1'b1;
+            rd_addr_reg <= rd_addr_reg + 1'b1;
+         end else if (fifo_write) begin
+            wr_addr <= wr_addr + 1'b1;
+            rd_count <= rd_count + 1'b1;
+         end else if (fifo_read) begin
+            rd_addr_reg <= rd_addr_reg + 1'b1;
+            rd_count <= rd_count - 1'b1;
+         end
       end
    end
 
@@ -111,26 +112,24 @@ module noc_buffer #(
 
    // Write
    always_ff @(posedge clk) begin
-      if (write_ram) begin
+      if (fifo_write) begin
          ram[wr_addr] <= {in_last, in_flit};
       end
    end
 
    // Read
    always_ff @(posedge clk) begin
-      if (read_ram) begin
+      if (update_out) begin
          out_flit <= ram[rd_addr][0 +: FLIT_WIDTH];
          out_last <= ram[rd_addr][FLIT_WIDTH];
-      end else if (fifo_write & write_through) begin
-         out_flit <= in_flit;
-         out_last <= in_last;
       end
    end
 
    generate
       if (FULLPACKET != 0) begin
-         reg [DEPTH:0] data_last_buf;
-         wire [DEPTH:0] data_last_shifted;
+         reg [DEPTH-1:0] data_last_buf;
+         wire [DEPTH-1:0] data_last_shifted;
+         reg nxt_out_valid;
 
          always @(posedge clk)
             if (rst)
@@ -139,19 +138,27 @@ module noc_buffer #(
                data_last_buf <= {data_last_buf, in_last};
 
          // Extra logic to get the packet size in a stable manner
-         assign data_last_shifted = data_last_buf << DEPTH + 1 - rd_count;
+         assign data_last_shifted = data_last_buf << DEPTH - 1 - (rd_count-1);
 
-         function logic [AW:0] find_first_one(input logic [DEPTH:0] data);
+         function logic [AW:0] find_first_one(input logic [DEPTH-1:0] data);
             automatic int i;
-            for (i = DEPTH; i >= 0; i--)
+            for (i = DEPTH-1; i >= 0; i--)
                if (data[i]) return i;
-            return DEPTH + 1;
+                  return DEPTH;
          endfunction // size_count
 
-         assign out_valid = (rd_count > 0) & |data_last_shifted;
-         assign packet_size = DEPTH + 1 - find_first_one(data_last_shifted);
+         // Delay out_valid signal by one cycle to match flit delay
+         always @(posedge clk)
+            nxt_out_valid <= (rd_count > 1 || (rd_count == 1 && ~fifo_read)) && |data_last_shifted;
+
+         assign out_valid = nxt_out_valid;
+         assign packet_size = DEPTH - find_first_one(data_last_shifted);
       end else begin // if (FULLPACKET)
-         assign out_valid = rd_count > 0;
+         reg nxt_out_valid;
+         // Delay out_valid signal by one cycle to match flit delay
+         always @(posedge clk)
+            nxt_out_valid <= (rd_count > 1 || (rd_count == 1 && ~fifo_read));
+         assign out_valid = nxt_out_valid;
          assign packet_size = 0;
       end
    endgenerate

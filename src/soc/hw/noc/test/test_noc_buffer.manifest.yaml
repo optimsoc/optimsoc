@@ -1,0 +1,22 @@
+module: test_noc_buffer
+
+sources:
+  - ../verilog/noc_buffer.sv
+
+toplevel: noc_buffer
+
+simulators:
+  - vcs
+
+parameters:
+    FLIT_WIDTH: [8,32]
+    DEPTH: [2,4,16]
+
+parameter_includes:
+  - FLIT_WIDTH: 32
+    DEPTH: 8
+  # Test case to test the FULLPACKET feature. The test is hardcoded and only
+  # works with these parameters.
+  - FLIT_WIDTH: 8
+    DEPTH: 4
+    FULLPACKET: 1
