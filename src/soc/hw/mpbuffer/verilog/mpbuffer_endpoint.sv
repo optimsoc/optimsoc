@@ -77,7 +77,7 @@ module mpbuffer_endpoint
 
    import optimsoc_functions::*;
 
-   localparam SIZE_WIDTH = clog2_width(SIZE);
+   localparam SIZE_WIDTH = clog2_width(SIZE+1);
 
    // Connect from the outgoing state machine to the packet buffer
    wire [CONFIG.NOC_FLIT_WIDTH-1:0] out_flit;
