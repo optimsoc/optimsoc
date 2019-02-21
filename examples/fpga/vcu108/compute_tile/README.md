@@ -43,7 +43,7 @@ If you plan to use the board more extensively, we recommend choosing either an e
 # run Vivado to generate the bitstream
 # With HOST_IF=uart and UART0_SOURCE=onboard the design can be used without
 # additional hardware.
-fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/system_2x2_cccc build optimsoc:examples:system_2x2_cccc_vcu108 --UART0_SOURCE=onboard --HOST_IF=uart
+fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/compute_tile build optimsoc:examples:compute_tile_vcu108 --UART0_SOURCE=onboard --HOST_IF=uart
 ```
 
 ### Step 3: Connect Board
@@ -60,7 +60,7 @@ After pressing any key you should see the System Controller Main Menu.
 
 ### Step 4: Program Bitstream
 ```sh
-fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/system_2x2_cccc pgm optimsoc:examples:system_2x2_cccc_vcu108
+fusesoc --cores-root $HOME/src/optimsoc/examples/fpga/vcu108/compute_tile pgm optimsoc:examples:compute_tile_vcu108
 ```
 
 ### Step 5: Run software
