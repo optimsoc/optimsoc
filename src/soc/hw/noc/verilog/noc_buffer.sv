@@ -97,7 +97,7 @@ module noc_buffer #(
       end else begin
          if (fifo_write & ~fifo_read)
             rd_count <=  rd_count + 1'b1;
-         if (fifo_read & ~fifo_write)
+         else if (fifo_read & ~fifo_write)
             rd_count <= rd_count - 1'b1;
          if (write_ram)
             wr_addr <= wr_addr + 1'b1;
