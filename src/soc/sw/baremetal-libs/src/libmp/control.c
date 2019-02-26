@@ -12,7 +12,8 @@
 #include <assert.h>
 #include <stdio.h>
 
-unsigned int timeout_insns = 1000;
+#define TIMEOUT_BASE = 1000;
+unsigned int timeout_insns = TIMEOUT_BASE;
 
 #define EXTRACT(x,msb,lsb) ((x>>lsb) & ~(~0 << (msb-lsb+1)))
 #define SET(x,v,msb,lsb) (((~0 << (msb+1) | ~(~0 << lsb))&x) | ((v & ~(~0<<(msb-lsb+1))) << lsb))
@@ -237,9 +238,12 @@ struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node,
             //optimsoc_thread_yield();
 #endif
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
-            timeout_insns = timeout_insns * 10; // somewhat arbitrary..
+            timeout_insns = timeout_insns * 2; // somewhat arbitrary..
         }
     } while ((int)ep==-1);
+
+    // Restore original timeout
+    timeout_insns = TIMEOUT_BASE;
 
     trace_ep_get_req_end(ep);
 
@@ -269,10 +273,13 @@ uint32_t control_msg_alloc(struct endpoint_handle *to_ep, uint32_t size) {
 
         if (ctrl_request.buffer[1]==CTRL_REQUEST_NACK) {
             for (int t=0;t<timeout_insns;t++) { asm __volatile__("l.nop 0x0"); }
-            timeout_insns = timeout_insns * 10; // somewhat arbitrary..
+            timeout_insns = timeout_insns * 2; // somewhat arbitrary..
         }
 
     } while (ctrl_request.buffer[1]==CTRL_REQUEST_NACK);
+
+    // Restore original timeout
+    timeout_insns = TIMEOUT_BASE;
 
     trace_msg_alloc_end(to_ep, ctrl_request.buffer[2]);
 
