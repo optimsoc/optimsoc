@@ -5,4 +5,4 @@ name = wallento:boards:vcu108-system_management
 [fileset core]
 usage = vivado
 files =
-  ip/system_management.xci[file_type=xci]
+  ip/system_management/system_management.xci[file_type=xci]
