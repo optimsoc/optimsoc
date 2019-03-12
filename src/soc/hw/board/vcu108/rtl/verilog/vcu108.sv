@@ -84,7 +84,7 @@ module vcu108
 
    // DRAM AXI interface
    input [3:0]           ddr_awid,
-   input [29:0]          ddr_awaddr,
+   input [30:0]          ddr_awaddr,
    input [7:0]           ddr_awlen,
    input [2:0]           ddr_awsize,
    input [1:0]           ddr_awburst,
@@ -104,7 +104,7 @@ module vcu108
    output [1:0]          ddr_bresp,
    output                ddr_bvalid,
    input [3:0]           ddr_arid,
-   input [29:0]          ddr_araddr,
+   input [30:0]          ddr_araddr,
    input [7:0]           ddr_arlen,
    input [2:0]           ddr_arsize,
    input [1:0]           ddr_arburst,
@@ -192,7 +192,7 @@ module vcu108
    // connection signals between the DRAM (slave) and the AXI clock converter
    // (master)
    logic [3:0]           c0_ddr4_s_axi_awid;
-   logic [29:0]          c0_ddr4_s_axi_awaddr;
+   logic [30:0]          c0_ddr4_s_axi_awaddr;
    logic [7:0]           c0_ddr4_s_axi_awlen;
    logic [2:0]           c0_ddr4_s_axi_awsize;
    logic [1:0]           c0_ddr4_s_axi_awburst;
@@ -212,7 +212,7 @@ module vcu108
    logic [1:0]           c0_ddr4_s_axi_bresp;
    logic                 c0_ddr4_s_axi_bvalid;
    logic [3:0]           c0_ddr4_s_axi_arid;
-   logic [29:0]          c0_ddr4_s_axi_araddr;
+   logic [30:0]          c0_ddr4_s_axi_araddr;
    logic [7:0]           c0_ddr4_s_axi_arlen;
    logic [2:0]           c0_ddr4_s_axi_arsize;
    logic [1:0]           c0_ddr4_s_axi_arburst;
@@ -359,7 +359,7 @@ module vcu108
          .s_axi_arlock(ddr_arlock),
          .s_axi_arlen(ddr_arlen),
          .s_axi_arqos(ddr_arqos),
-         .s_axi_arregion(),
+         .s_axi_arregion(4'b0000), // not supported by MIG
          .s_axi_arid(ddr_arid),
          /**************** Read Data Channel Signals ****************/
          .s_axi_rdata(ddr_rdata),
@@ -409,7 +409,7 @@ module vcu108
          .m_axi_arlock(c0_ddr4_s_axi_arlock),
          .m_axi_arlen(c0_ddr4_s_axi_arlen),
          .m_axi_arqos(c0_ddr4_s_axi_arqos),
-         .m_axi_arregion(),
+         .m_axi_arregion(), // not supported by MIG
          .m_axi_arid(c0_ddr4_s_axi_arid),
          /**************** Read Data Channel Signals ****************/
          .m_axi_rdata(c0_ddr4_s_axi_rdata),

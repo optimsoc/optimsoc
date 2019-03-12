@@ -1,0 +1,8 @@
+CAPI=1
+[main]
+name = optimsoc:examples:system_2x2_cccc_vcu108-xilinx_axi_register_slice
+
+[fileset core]
+usage = vivado xsim
+files =
+  ip/xilinx_axi_register_slice/xilinx_axi_register_slice.xci[file_type=xci]
