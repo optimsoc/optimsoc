@@ -1,8 +1,0 @@
-CAPI=1
-[main]
-name = optimsoc:ip:xilinx_axi_register_slice
-
-[fileset core]
-usage = vivado xsim
-files =
-  data/xilinx_axi_register_slice/xilinx_axi_register_slice.xci[file_type=xci]
