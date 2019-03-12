@@ -11,9 +11,9 @@ depend =
   glip:backend:uart
   glip:backend:cypressfx3
   glip:backend:cypressfx3-vcu108-16bit
-  optimsoc:ip:xilinx_axi_interconnect_4to1
-  optimsoc:ip:xilinx_axi_register_slice
   optimsoc:base:config
+  optimsoc:examples:system_2x2_cccc_vcu108-xilinx_axi_interconnect_4to1
+  optimsoc:examples:system_2x2_cccc_vcu108-xilinx_axi_register_slice
 
 backend = vivado
 

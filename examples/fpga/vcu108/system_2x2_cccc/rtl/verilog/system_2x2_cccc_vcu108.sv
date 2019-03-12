@@ -111,7 +111,7 @@ module system_2x2_cccc_vcu108
 
 
    localparam AXI_ID_WIDTH = 4;
-   localparam DDR_ADDR_WIDTH = 30;
+   localparam DDR_ADDR_WIDTH = 31;
    localparam DDR_DATA_WIDTH = 32;
    localparam TILE_ADDR_WIDTH = DDR_ADDR_WIDTH - 2;
 
@@ -444,6 +444,11 @@ module system_2x2_cccc_vcu108
       .m_axi_rready    (c_axi_tile0.r_ready)
    );
 
+   assign c_axi_tile0.aw_lock = 1'h0;
+   assign c_axi_tile0.aw_region = 4'h0;
+   assign c_axi_tile0.ar_lock = 1'h0;
+   assign c_axi_tile0.ar_region = 4'h0;
+
 xilinx_axi_register_slice
    u_slice0
      (.aclk(sys_clk_50),
@@ -576,6 +581,11 @@ wb2axi
       .m_axi_rvalid    (c_axi_tile1.r_valid),
       .m_axi_rready    (c_axi_tile1.r_ready)
    );
+
+   assign c_axi_tile1.aw_lock = 1'h0;
+   assign c_axi_tile1.aw_region = 4'h0;
+   assign c_axi_tile1.ar_lock = 1'h0;
+   assign c_axi_tile1.ar_region = 4'h0;
 
 xilinx_axi_register_slice
    u_slice1
@@ -710,6 +720,11 @@ wb2axi
       .m_axi_rready    (c_axi_tile2.r_ready)
    );
 
+   assign c_axi_tile2.aw_lock = 1'h0;
+   assign c_axi_tile2.aw_region = 4'h0;
+   assign c_axi_tile2.ar_lock = 1'h0;
+   assign c_axi_tile2.ar_region = 4'h0;
+
 xilinx_axi_register_slice
    u_slice2
      (.aclk(sys_clk_50),
@@ -842,6 +857,11 @@ wb2axi
       .m_axi_rvalid    (c_axi_tile3.r_valid),
       .m_axi_rready    (c_axi_tile3.r_ready)
    );
+
+   assign c_axi_tile3.aw_lock = 1'h0;
+   assign c_axi_tile3.aw_region = 4'h0;
+   assign c_axi_tile3.ar_lock = 1'h0;
+   assign c_axi_tile3.ar_region = 4'h0;
 
 xilinx_axi_register_slice
    u_slice3
