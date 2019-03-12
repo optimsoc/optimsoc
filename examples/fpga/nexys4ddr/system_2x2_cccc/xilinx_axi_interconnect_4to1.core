@@ -1,0 +1,8 @@
+CAPI=1
+[main]
+name = optimsoc:examples:system_2x2_cccc_nexys4ddr-xilinx_axi_interconnect_4to1
+
+[fileset core]
+usage = vivado xsim
+files =
+  ip/xilinx_axi_interconnect_4to1/xilinx_axi_interconnect_4to1.xci[file_type=xci]
