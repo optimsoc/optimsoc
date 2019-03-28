@@ -897,7 +897,8 @@ def set_environment(options, env):
 """
 def write_environment_file(options):
     dist = os.path.join(options.objdir, "dist")
-    environment_sh = open("{}/optimsoc-environment.sh".format(dist), "w")
+    environment_sh = open("{}/optimsoc-environment.sh".format(dist), "w",
+                          encoding="UTF-8")
 
     info("Write OpTiMSoC environment file")
 
@@ -1047,7 +1048,8 @@ if __name__ == '__main__':
     ensure_directory(options.objdir)
 
     # open the build log file
-    build_log_fp = open(os.path.join(options.objdir, 'build.log'), 'w');
+    build_log_fp = open(os.path.join(options.objdir, 'build.log'), 'w',
+                        encoding='UTF-8')
 
     options.requirement_versions = get_requirement_versions(options.src)
 
