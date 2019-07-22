@@ -48,7 +48,8 @@
 
 module pfpu32_top
 #(
-  parameter OPTION_OPERAND_WIDTH = 32
+  parameter OPTION_OPERAND_WIDTH = 32,
+  parameter OPTION_FTOI_ROUNDING = "CPP" // "CPP" / "IEEE"
 )
 (
   input clk,
@@ -152,7 +153,8 @@ wire cmp_result, cmp_ready,
 pfpu32_fcmp u_f32_cmp
 (
   .fpu_op_is_comp_i(op_cmp),
-  .cmp_type_i(op_fpu),
+  .generic_cmp_opc_i(op_fpu[`OR1K_FPUOP_GENERIC_CMP_SELECT]),
+  .unordered_cmp_bit_i(op_fpu[`OR1K_FPUOP_UNORDERED_CMP_BIT]),
   // operand 'a' related inputs
   .signa_i(in_signa),
   .exp10a_i(in_exp10a),
@@ -373,7 +375,11 @@ pfpu32_f2i u_f2i_cnv
 
 
 // multiplexing and rounding
-pfpu32_rnd u_f32_rnd
+pfpu32_rnd
+#(
+  .OPTION_FTOI_ROUNDING (OPTION_FTOI_ROUNDING) // rounding instance
+)
+u_f32_rnd
 (
   // clocks, resets and other controls
   .clk             (clk),
