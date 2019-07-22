@@ -42,35 +42,35 @@ module osd_event_packetization #(
     */
    parameter MAX_DATA_NUM_WORDS = 'hx
 ) (
-   input                                   clk,
-   input                                   rst,
+   input                                     clk,
+   input                                     rst,
 
-   output dii_flit                         debug_out,
-   input                                   debug_out_ready,
+   output dii_flit                           debug_out,
+   input                                     debug_out_ready,
 
    // DI address of this module (SRC)
-   input [15:0]                            id,
+   input [15:0]                              id,
 
    // DI address of the event destination (DEST)
-   input [15:0]                            dest,
+   input [15:0]                              dest,
    // Generate an overflow packet
-   input                                   overflow,
+   input                                     overflow,
 
    // a new event is available
-   input                                   event_available,
+   input                                     event_available,
    // the packet has been sent
-   output logic                            event_consumed,
+   output logic                              event_consumed,
 
    // number of data words this event consists of
-   input [$clog2(MAX_DATA_NUM_WORDS)-1:0]  data_num_words,
+   input [$clog2(MAX_DATA_NUM_WORDS+1)-1:0]  data_num_words,
 
    // data request: index of the data word
-   output [$clog2(MAX_DATA_NUM_WORDS)-1:0] data_req_idx,
+   output [$clog2(MAX_DATA_NUM_WORDS)-1:0]   data_req_idx,
    // data request: request is valid
-   output                                  data_req_valid,
+   output                                    data_req_valid,
 
    // a data word
-   input [15:0]                            data
+   input [15:0]                              data
 );
 
    localparam NUM_HEADER_FLITS = 3; // header flits: SRC, DEST, FLAGS

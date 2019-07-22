@@ -103,7 +103,7 @@ module osd_event_packetization_fixedwidth #(
          .event_available(event_available),
          .event_consumed(event_consumed),
 
-         .data_num_words(DATA_NUM_WORDS[$clog2(DATA_NUM_WORDS)-1:0]),
+         .data_num_words($clog2(DATA_NUM_WORDS+1)'(DATA_NUM_WORDS)),
          .data_req_valid(),
          .data_req_idx(data_req_idx),
 
