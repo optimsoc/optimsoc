@@ -1,4 +1,4 @@
-# Copyright 2017-2018 The Open SoC Debug Project
+# Copyright 2017-2019 The Open SoC Debug Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +20,13 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from libc.stdlib cimport malloc, free
 from libc.stdio cimport FILE, fopen, fclose
 from libc.errno cimport errno
-from libc.string cimport strerror
+from libc.string cimport strerror, memmove
 from posix.time cimport timespec
 
-import time
 import logging
 import os
+import time
+from collections.abc import MutableSequence
 
 
 def osd_library_version():
@@ -182,20 +183,98 @@ cdef class Log:
         if self._cself is not NULL:
             cosd.osd_log_free(&self._cself)
 
+class PacketPayloadView(MutableSequence):
+    # Keep this constant in sync with packet.c. (Or read it at runtime, which we
+    # avoid here for performance reasons.)
+    PACKET_HEADER_WORD_CNT = 3
 
-cdef class Packet:
+    def __init__(self, packet):
+        self.packet = packet
+
+    def __len__(self):
+        return len(self.packet) - self.PACKET_HEADER_WORD_CNT
+
+    def __getitem__(self, index):
+        return self.packet[index + self.PACKET_HEADER_WORD_CNT]
+
+    def __setitem__(self, index, value):
+        self.packet[index + self.PACKET_HEADER_WORD_CNT] = value
+
+    def __delitem__(self, index):
+        del self.packet[index + self.PACKET_HEADER_WORD_CNT]
+
+    def insert(self, index, value):
+        self.packet.insert(index + self.PACKET_HEADER_WORD_CNT, value)
+
+cdef class Packet(PacketType, MutableSequence):
+    pass
+
+# It would be nice to directly inherit from abc.collections.MutableType, but
+# that's not possible currently in Cython 0.28 as we can only inherit from
+# types, not from Python objects.
+#
+cdef class PacketType:
+
     cdef cosd.osd_packet* _cself
 
     def _ensure_cself(self):
         if not self._cself:
-            # XXX: don't make the length fixed! Might require API changes on C side
-            cosd.osd_packet_new(&self._cself, 10)
+            cosd.osd_packet_new(&self._cself,
+                                cosd.osd_packet_sizeconv_payload2data(0))
             if self._cself is NULL:
                 raise MemoryError()
 
     def __dealloc__(self):
         if self._cself is not NULL:
             cosd.osd_packet_free(&self._cself)
+
+    # Container API for sequences (lists) with Cython extensions
+    # https://docs.python.org/3/reference/datamodel.html#emulating-container-types
+    # https://cython.readthedocs.io/en/latest/src/userguide/special_methods.html#sequences-and-mappings
+    # https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types
+    # https://docs.python.org/3/library/stdtypes.html#list
+
+    def __len__(self):
+        self._ensure_cself()
+        return self._cself.data_size_words
+
+    def __getitem__(self, index):
+        self._ensure_cself()
+        if index >= self._cself.data_size_words:
+            raise IndexError
+        return self._cself.data_raw[index]
+
+    def __setitem__(self, index, value):
+        self._ensure_cself()
+        if index >= self._cself.data_size_words:
+            raise IndexError
+        self._cself.data_raw[index] = value
+
+    def __delitem__(self, index):
+        if len(self) <= 3:
+            raise ValueError("Packet must have at least 3 (header) words.")
+
+        memmove(&self._cself.data_raw[index], &self._cself.data_raw[index + 1],
+                (len(self) - index) * sizeof(uint16_t))
+        rv = cosd.osd_packet_realloc(&self._cself,
+                                     self._cself.data_size_words - 1)
+        check_osd_result(rv)
+
+    def insert(self, index, value):
+        """ insert value before index """
+
+        old_size_words = self._cself.data_size_words
+
+        # enlarge packet by one word
+        cosd.osd_packet_realloc(&self._cself, old_size_words + 1)
+
+        # move existing elements out of the way (if any)
+        if index < old_size_words:
+            memmove(&self._cself.data_raw[index + 1],
+                    &self._cself.data_raw[index], (old_size_words - index) * sizeof(uint16_t))
+
+        # set value
+        self._cself.data_raw[index] = value
 
     @property
     def src(self):
@@ -223,23 +302,7 @@ cdef class Packet:
 
     @property
     def payload(self):
-        self._ensure_cself()
-        payload_size_words = cosd.osd_packet_sizeconv_data2payload(self._cself.data_size_words)
-
-        cdef uint16_t[:] payload_view = <uint16_t[:payload_size_words]>self._cself.data.payload
-        return payload_view
-
-    @property
-    def size_payload_words(self):
-        """ Payload size in 16 bit words """
-        self._ensure_cself()
-        return cosd.osd_packet_sizeconv_data2payload(self._cself.data_size_words)
-
-    @property
-    def size_words(self):
-        """ Packet size in 16 bit words (including header) """
-        self._ensure_cself()
-        return self._cself.data_size_words
+        return PacketPayloadView(self)
 
     def __str__(self):
         cdef char* c_str = NULL
@@ -657,13 +720,13 @@ cdef class SystraceLogger:
         if self.is_connected():
             self.disconnect()
 
+        cosd.osd_systracelogger_free(&self._cself)
+
         if self._fp_sysprint:
             fclose(self._fp_sysprint)
 
         if self._fp_event:
             fclose(self._fp_event)
-
-        cosd.osd_systracelogger_free(&self._cself)
 
     def connect(self):
         rv = cosd.osd_systracelogger_connect(self._cself)

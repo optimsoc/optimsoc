@@ -4,7 +4,7 @@
 
 This package is compatible with Python 3 on Linux only.
 The source code is available from [GitHub](https://github.com/opensocdebug/osd-sw/tree/master/src/python).
-The bindings are implemented using [Cython](http://cython.org/).
+The bindings are implemented using [Cython](https://cython.org/).
 
 ## Install from Source
 

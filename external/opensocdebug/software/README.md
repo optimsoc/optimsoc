@@ -28,3 +28,5 @@ make install
 This software is licensed under the Apache 2 license.
 See the [LICENSE](LICENSE) file for the full license text.
 
+The included command line tools use [argtable3](https://www.argtable.org/), which is licensed under a BSD license.
+Pleaes find the full license and attribution notice in [LICENSE.argtable](LICENSE.argtable).
