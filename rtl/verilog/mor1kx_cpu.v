@@ -89,6 +89,7 @@ module mor1kx_cpu
     parameter FEATURE_ATOMIC		= "ENABLED",
 
     parameter FEATURE_FPU		= "NONE", // ENABLED|NONE
+    parameter OPTION_FTOI_ROUNDING = "CPP", // "CPP" / "IEEE"
 
     parameter FEATURE_CUST1		= "NONE",
     parameter FEATURE_CUST2		= "NONE",
@@ -198,6 +199,58 @@ module mor1kx_cpu
    wire [OPTION_OPERAND_WIDTH-1:0]   monitor_spr_esr/* verilator public */;
    wire 			     monitor_branch_mispredict/* verilator public */;
 
+	// synthesis translate_off
+`ifndef SYNTHESIS
+   /* Provide interface hooks for register functions. */
+   generate
+      if (OPTION_CPU=="CAPPUCCINO") begin : monitor
+
+`include "mor1kx_utils.vh"
+         localparam RF_ADDR_WIDTH = calc_rf_addr_width(OPTION_RF_ADDR_WIDTH,
+                                                       OPTION_RF_NUM_SHADOW_GPR);
+
+         function [OPTION_OPERAND_WIDTH-1:0] get_gpr;
+            // verilator public
+            input [RF_ADDR_WIDTH-1:0] gpr_num;
+            get_gpr = cappuccino.mor1kx_cpu.get_gpr(gpr_num);
+         endfunction
+         task set_gpr;
+            // verilator public
+            input [RF_ADDR_WIDTH-1:0] gpr_num;
+            input [OPTION_OPERAND_WIDTH-1:0] gpr_value;
+            cappuccino.mor1kx_cpu.set_gpr(gpr_num, gpr_value);
+         endtask
+      end
+      if (OPTION_CPU=="ESPRESSO") begin : monitor
+         function [OPTION_OPERAND_WIDTH-1:0] get_gpr;
+            // verilator public
+            input [15:0] gpr_num;
+            get_gpr = espresso.mor1kx_cpu.get_gpr(gpr_num);
+         endfunction
+         task set_gpr;
+            // verilator public
+            input [15:0] gpr_num;
+            input [OPTION_OPERAND_WIDTH-1:0] gpr_value;
+            espresso.mor1kx_cpu.set_gpr(gpr_num, gpr_value);
+         endtask
+      end
+      /* verilator lint_off WIDTH */
+      if (OPTION_CPU=="PRONTO_ESPRESSO") begin : monitor
+         function [OPTION_OPERAND_WIDTH-1:0] get_gpr;
+            // verilator public
+            input [15:0] gpr_num;
+            get_gpr = prontoespresso.mor1kx_cpu.get_gpr(gpr_num);
+         endfunction
+         task set_gpr;
+            // verilator public
+            input [15:0] gpr_num;
+            input [OPTION_OPERAND_WIDTH-1:0] gpr_value;
+            prontoespresso.mor1kx_cpu.set_gpr(gpr_num, gpr_value);
+         endtask
+      end
+   endgenerate
+`endif
+	// synthesis translate_on
 
    generate
       /* verilator lint_off WIDTH */
@@ -261,6 +314,7 @@ module mor1kx_cpu
 	     .FEATURE_CSYNC(FEATURE_CSYNC),
 	     .FEATURE_ATOMIC(FEATURE_ATOMIC),
 	     .FEATURE_FPU(FEATURE_FPU),
+       .OPTION_FTOI_ROUNDING(OPTION_FTOI_ROUNDING),
 	     .FEATURE_CUST1(FEATURE_CUST1),
 	     .FEATURE_CUST2(FEATURE_CUST2),
 	     .FEATURE_CUST3(FEATURE_CUST3),
@@ -331,7 +385,7 @@ module mor1kx_cpu
 	    .snoop_adr_i		(snoop_adr_i[31:0]),
 	    .snoop_en_i			(snoop_en_i));
 
-	 // synthesis translate_off
+	// synthesis translate_off
 `ifndef SYNTHESIS
 
 	 assign monitor_flag =  monitor_flag_set ? 1 :
@@ -358,8 +412,9 @@ module mor1kx_cpu
 
         assign monitor_execute_insn = monitor_execute_insn_reg;
 
+
 `endif
-	 // synthesis translate_on
+	// synthesis translate_on
 
 
       end // block: cappuccino
