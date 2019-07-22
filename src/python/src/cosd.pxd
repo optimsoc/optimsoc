@@ -1,4 +1,4 @@
-# Copyright 2017-2018 The Open SoC Debug Project
+# Copyright 2017-2019 The Open SoC Debug Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ cdef extern from "osd/osd.h" nogil:
 cdef extern from "osd/packet.h" nogil:
     # helper struct to avoid anonymous in-line structs, which are not well
     # supported by Cython
-    struct _osd_packet_data:
+    struct _osd_packet_data_struct:
         uint16_t dest
         uint16_t src
         uint16_t flags
@@ -61,7 +61,13 @@ cdef extern from "osd/packet.h" nogil:
 
     struct osd_packet:
         uint16_t data_size_words
-        _osd_packet_data data
+        # Note that the two fields below are actually an union referencing the
+        # same memory. Cython doesn't support anonymous unions as of v0.28,
+        # therefore we use this workaround. It works because Cython doesn't
+        # make assumptions about the memory layout, it only calls into the C
+        # code with the given member names.
+        _osd_packet_data_struct data
+        uint16_t *data_raw
 
     cdef enum osd_packet_type:
         OSD_PACKET_TYPE_REG = 0
@@ -92,6 +98,11 @@ cdef extern from "osd/packet.h" nogil:
     unsigned int osd_packet_sizeconv_payload2data(unsigned int payload_words)
 
     unsigned int osd_packet_sizeconv_data2payload(unsigned int data_words)
+
+    size_t osd_packet_sizeof(const osd_packet *packet)
+
+    osd_result osd_packet_realloc(osd_packet **packet_p,
+                                  size_t data_size_words_new)
 
 cdef extern from "osd/hostmod.h" nogil:
     struct osd_hostmod_ctx:

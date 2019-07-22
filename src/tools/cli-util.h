@@ -344,6 +344,6 @@ int main(int argc, char** argv)
     exitcode = run();
 
 exit:
-    arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+    arg_freetable(argtable, argtable_len);
     return exitcode;
 }
