@@ -33,7 +33,27 @@ module mor1kx_module
     parameter CPU_IMPLEMENTATION = "CAPPUCCINO",
     parameter FEATURE_FPU = "NONE", // NONE | ENABLED
     parameter FEATURE_DEBUGUNIT = "NONE", // NONE | ENABLED
-    parameter FEATURE_PERFCOUNTERS = "NONE" // NONE | ENABLED
+    parameter FEATURE_PERFCOUNTERS = "ENABLED", // NONE | ENABLED
+    parameter OPTION_PERFCOUNTERS_NUM = 7,
+    parameter FEATURE_BRANCH_PREDICTOR = "SIMPLE", //SIMPLE | GSHARE | SAT_COUNTER
+    parameter FEATURE_PIC = "ENABLED", // NONE | ENABLED
+    parameter OPTION_ICACHE_BLOCK_WIDTH = 5,
+    parameter OPTION_ICACHE_WAYS = 2,
+    parameter OPTION_ICACHE_SET_WIDTH = 8,
+    parameter FEATURE_IMMU = "ENABLED", // NONE | ENABLED
+    parameter OPTION_IMMU_SET_WIDTH	= 6,
+    parameter OPTION_IMMU_WAYS = 1,
+    parameter FEATURE_DATACACHE = "NONE", // NONE | ENABLED
+    parameter OPTION_DCACHE_BLOCK_WIDTH = 5,
+    parameter OPTION_DCACHE_WAYS = 2,
+    parameter OPTION_DCACHE_SET_WIDTH = 8,
+    parameter OPTION_DCACHE_SNOOP = "ENABLED", // NONE | ENABLED
+    parameter FEATURE_DMMU = "ENABLED", // NONE | ENABLED
+    parameter OPTION_DMMU_SET_WIDTH	= 6,
+    parameter OPTION_DMMU_WAYS = 1,
+    parameter FEATURE_MULTIPLIER = "THREESTAGE", // THREESTAGE | PIPELINED | SERIAL | SIMULATION | NONE
+    parameter FEATURE_DIVIDER = "SERIAL", // SERIAL | SIMULATION | NONE
+    parameter OPTION_SHIFTER = "BARREL"  // BARREL | SERIAL
     )
    (input         clk_i,
     input         bus_clk_i,
@@ -101,27 +121,38 @@ module mor1kx_module
        .OPTION_RF_NUM_SHADOW_GPR        (1),
 
        .FEATURE_INSTRUCTIONCACHE        ("ENABLED"),
-       .OPTION_ICACHE_WAYS              (2),
-       .OPTION_ICACHE_SET_WIDTH         (8),
+       .OPTION_ICACHE_BLOCK_WIDTH       (OPTION_ICACHE_BLOCK_WIDTH),
+       .OPTION_ICACHE_WAYS              (OPTION_ICACHE_WAYS),
+       .OPTION_ICACHE_SET_WIDTH         (OPTION_ICACHE_SET_WIDTH),
 
        .IBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
-       .FEATURE_IMMU                    ("ENABLED"),
+       .FEATURE_IMMU                    (FEATURE_IMMU),
+       .OPTION_IMMU_SET_WIDTH           (OPTION_IMMU_SET_WIDTH),
+       .OPTION_IMMU_WAYS                (OPTION_IMMU_WAYS),
 
-       .FEATURE_DATACACHE               ("NONE"),
+       .FEATURE_DATACACHE               (FEATURE_DATACACHE),
        .OPTION_DCACHE_LIMIT_WIDTH       (31),
-       .OPTION_DCACHE_WAYS              (2),
-       .OPTION_DCACHE_SET_WIDTH         (8),
-       .OPTION_DCACHE_SNOOP             ("ENABLED"),
+       .OPTION_DCACHE_BLOCK_WIDTH       (OPTION_DCACHE_BLOCK_WIDTH),
+       .OPTION_DCACHE_WAYS              (OPTION_DCACHE_WAYS),
+       .OPTION_DCACHE_SET_WIDTH         (OPTION_DCACHE_SET_WIDTH),
+       .OPTION_DCACHE_SNOOP             (OPTION_DCACHE_SNOOP),
 
        .DBUS_WB_TYPE                    ("B3_REGISTERED_FEEDBACK"),
-       .FEATURE_DMMU                    ("ENABLED"),
+       .FEATURE_DMMU                    (FEATURE_DMMU),
+       .OPTION_DMMU_SET_WIDTH           (OPTION_DMMU_SET_WIDTH),
+       .OPTION_DMMU_WAYS                (OPTION_DMMU_WAYS),
 
        .FEATURE_MULTICORE               ("ENABLED"),
        .FEATURE_FPU                     (FEATURE_FPU),
        .FEATURE_PERFCOUNTERS            (FEATURE_PERFCOUNTERS),
-       .OPTION_PERFCOUNTERS_NUM         (0),
+       .OPTION_PERFCOUNTERS_NUM         (OPTION_PERFCOUNTERS_NUM),
        .FEATURE_DEBUGUNIT               (FEATURE_DEBUGUNIT),
-       .FEATURE_TRACEPORT_EXEC          ("ENABLED"))
+       .FEATURE_TRACEPORT_EXEC          ("ENABLED"),
+       .FEATURE_BRANCH_PREDICTOR        (FEATURE_BRANCH_PREDICTOR),
+       .FEATURE_PIC                     (FEATURE_PIC),
+       .FEATURE_MULTIPLIER              (FEATURE_MULTIPLIER),
+       .FEATURE_DIVIDER                 (FEATURE_DIVIDER),
+       .OPTION_SHIFTER                  (OPTION_SHIFTER))
      u_cpu(/*AUTOINST*/
            // Outputs
            .iwbm_adr_o                  (iwb_adr_o[31:0]),
