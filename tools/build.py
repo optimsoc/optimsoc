@@ -606,6 +606,15 @@ def build_examples_fpga(options, env):
         ],
         "options": "--NUM_CORES 4",
       },
+      { "name": "compute_tile_nexys4ddr",
+        "outname": "compute_tile_nexys4ddr_pentacore",
+        "path": "nexys4ddr/compute_tile",
+        "artifact":  [
+          "build/optimsoc_examples_compute_tile_nexys4ddr_0/bld-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit",
+          "build/optimsoc_examples_compute_tile_nexys4ddr_0/synth-vivado/optimsoc_examples_compute_tile_nexys4ddr_0.bit",
+        ],
+        "options": "--NUM_CORES 5 --ENABLE_PERFCOUNTERS 1",
+      },
 # Currently too large to fit into the Nexys 4 DDR FPGA
 #      { "name": "system_2x2_cccc_nexys4ddr",
 #        "outname": "system_2x2_cccc_nexys4ddr",
