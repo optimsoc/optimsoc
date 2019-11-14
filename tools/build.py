@@ -606,16 +606,15 @@ def build_examples_fpga(options, env):
         ],
         "options": "--NUM_CORES 4",
       },
-# Currently too large to fit into the Nexys 4 DDR FPGA
-#      { "name": "system_2x2_cccc_nexys4ddr",
-#        "outname": "system_2x2_cccc_nexys4ddr",
-#        "path": "nexys4ddr/system_2x2_cccc",
-#        "artifact": [
-#          "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit",
-#          "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/synth-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit",
-#        ],
-#        "options": "",
-#      },
+      { "name": "system_2x2_cccc_nexys4ddr",
+        "outname": "system_2x2_cccc_nexys4ddr",
+        "path": "nexys4ddr/system_2x2_cccc",
+        "artifact": [
+          "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/bld-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit",
+          "build/optimsoc_examples_system_2x2_cccc_nexys4ddr_0/synth-vivado/optimsoc_examples_system_2x2_cccc_nexys4ddr_0.bit",
+        ],
+        "options": "",
+      },
     ]
 
     for ex in examples:
