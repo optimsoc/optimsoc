@@ -36,11 +36,11 @@ case "$ID" in
       libcheck0 check-devel libcheck0-debuginfo \
       doxygen \
       python3 python3-pip \
-      python-tox \
+      python3-tox \
       lcov valgrind \
       zeromq-devel zeromq \
       czmq-devel czmq-debuginfo \
-      xsltproc \
+      libxslt-tools \
       libelf1 libelf-devel
     $SUDO_CMD pip3 install pytest
     ;;

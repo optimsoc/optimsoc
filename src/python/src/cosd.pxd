@@ -71,9 +71,9 @@ cdef extern from "osd/packet.h" nogil:
 
     cdef enum osd_packet_type:
         OSD_PACKET_TYPE_REG = 0
-        OSD_PACKET_TYPE_RES_1 = 1
+        OSD_PACKET_TYPE_RES1 = 1
         OSD_PACKET_TYPE_EVENT = 2
-        OSD_PACKET_TYPE_RES_2 = 3
+        OSD_PACKET_TYPE_RES2 = 3
 
     osd_result osd_packet_new(osd_packet **packet, size_t size_data_words)
 
@@ -103,6 +103,8 @@ cdef extern from "osd/packet.h" nogil:
 
     osd_result osd_packet_realloc(osd_packet **packet_p,
                                   size_t data_size_words_new)
+
+    bint osd_packet_equal(const osd_packet *p1, const osd_packet *p2)
 
 cdef extern from "osd/hostmod.h" nogil:
     struct osd_hostmod_ctx:
@@ -135,7 +137,7 @@ cdef extern from "osd/hostmod.h" nogil:
 
     uint16_t osd_hostmod_get_diaddr(osd_hostmod_ctx *ctx)
 
-    int osd_hostmod_is_connected(osd_hostmod_ctx *ctx)
+    bint osd_hostmod_is_connected(osd_hostmod_ctx *ctx)
 
     osd_result osd_hostmod_get_modules(osd_hostmod_ctx *ctx,
                                        unsigned int subnet_addr,
@@ -177,7 +179,7 @@ cdef extern from "osd/hostctrl.h" nogil:
 
     void osd_hostctrl_free(osd_hostctrl_ctx **ctx_p)
 
-    int osd_hostctrl_is_running(osd_hostctrl_ctx *ctx)
+    bint osd_hostctrl_is_running(osd_hostctrl_ctx *ctx)
 
 # XXX: move this into cglip
 cdef extern from "libglip.h" nogil:
@@ -209,7 +211,7 @@ cdef extern from "osd/gateway_glip.h" nogil:
 
     osd_result osd_gateway_glip_disconnect(osd_gateway_glip_ctx *ctx)
 
-    int osd_gateway_glip_is_connected(osd_gateway_glip_ctx *ctx)
+    bint osd_gateway_glip_is_connected(osd_gateway_glip_ctx *ctx)
 
     osd_gateway_transfer_stats* osd_gateway_glip_get_transfer_stats(osd_gateway_glip_ctx *ctx)
 
@@ -263,7 +265,7 @@ cdef extern from "osd/memaccess.h" nogil:
 
     osd_result osd_memaccess_disconnect(osd_memaccess_ctx *ctx)
 
-    int osd_memaccess_is_connected(osd_memaccess_ctx *ctx)
+    bint osd_memaccess_is_connected(osd_memaccess_ctx *ctx)
 
     void osd_memaccess_free(osd_memaccess_ctx **ctx_p)
 
@@ -296,7 +298,7 @@ cdef extern from "osd/systracelogger.h" nogil:
 
     osd_result osd_systracelogger_disconnect(osd_systracelogger_ctx *ctx)
 
-    int osd_systracelogger_is_connected(osd_systracelogger_ctx *ctx)
+    bint osd_systracelogger_is_connected(osd_systracelogger_ctx *ctx)
 
     void osd_systracelogger_free(osd_systracelogger_ctx **ctx_p)
 
@@ -324,7 +326,7 @@ cdef extern from "osd/coretracelogger.h" nogil:
 
     osd_result osd_coretracelogger_disconnect(osd_coretracelogger_ctx *ctx)
 
-    int osd_coretracelogger_is_connected(osd_coretracelogger_ctx *ctx)
+    bint osd_coretracelogger_is_connected(osd_coretracelogger_ctx *ctx)
 
     void osd_coretracelogger_free(osd_coretracelogger_ctx **ctx_p)
 
