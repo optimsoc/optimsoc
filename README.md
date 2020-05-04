@@ -35,5 +35,5 @@ on GitHub.
 
 ## License
 
-OpTiMSoC is licensed under the permissive MIT license, see [LICENSE](LICENSE)
+OpTiMSoC is licensed under the permissive MIT license, see [COPYING](COPYING)
 for details.
