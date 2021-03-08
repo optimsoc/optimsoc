@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/optimsoc/optimsoc.svg?branch=master)](https://travis-ci.org/optimsoc/optimsoc)
+[![LibreCores](https://www.librecores.org/optimsoc/optimsoc/badge.svg?style=flat)](https://www.librecores.org/optimsoc/optimsoc)
 
 # OpTiMSoC: Open Tiled Manycore System-on-Chip
 
