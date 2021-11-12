@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016 by the author(s)
+/* Copyright (c) 2012-2017 by the author(s)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,10 +30,9 @@
  *
  * Author(s):
  *   Philipp Wagner <philipp.wagner@tum.de>
- *   Stefan Wallentowitz <stefan.wallentowitz@tum.de>
+ *   Stefan Wallentowitz <stefan@wallentowitz.de>
  */
-
-module trace_monitor(/*AUTOARG*/
+module software_tracer(/*AUTOARG*/
    // Outputs
    termination,
    // Inputs
@@ -52,6 +51,16 @@ module trace_monitor(/*AUTOARG*/
    // this parameter
    parameter TERM_CROSS_NUM = 1;
 
+   import "DPI-C" function
+     void software_tracer_trace(input longint unsigned timestamp,
+				input shortint unsigned cpu,
+				input shortint unsigned id,
+				input int unsigned 	value);
+
+   localparam TRACE_RESET = 15;
+   localparam TRACE_EXCEPTION_ENTER = 16;
+   localparam TRACE_EXCEPTION_LEAVE = 17;
+   
    input clk;
    input enable;
    input [31:0] wb_pc;
@@ -104,7 +113,7 @@ module trace_monitor(/*AUTOARG*/
          if (ENABLE_TRACE) begin
             if ((wb_pc_prev + 4 == wb_pc) || (wb_pc_prev == wb_pc)) begin
                count <= count + 1;
-            end
+            end 
             else if (count > 0) begin
                $fwrite(tracefile, "[%0t, %0d] %3d, 0x%08x\n", $time, ID, count, wb_pc);
                $fflush(tracefile);
@@ -126,7 +135,7 @@ module trace_monitor(/*AUTOARG*/
                  if (is_newline) begin
                     $fwrite(stdout, "[%t, %0d] ", $time, ID);
                  end
-                 $fwrite(stdout, "%c", r3[7:0]);
+                 $fwrite(stdout,"%c",r3);
                  if (r3 == "\n") begin
                     $fflush(stdout);
                     is_newline <= 1;
@@ -135,32 +144,22 @@ module trace_monitor(/*AUTOARG*/
                  end
               end // case: 16'h0004
               default: begin
-                 $display("[%t, %0d] Event 0x%x: 0x%x", $time, ID, wb_insn[15:0], r3);
+		 software_tracer_trace($time, ID, wb_insn[15:0], r3);
               end
             endcase
          end // if (wb_insn[31:16] == 16'h1500)
          else if ((wb_pc[31:12] == 0) && (wb_pc[7:0] == 0)) begin
-            // record every exception only when it first occurs, not every cycle
             if (wb_pc[11:8] != wb_pc_prev[11:8]) begin
-               case (wb_pc[11:8])
-                 1: $display("[%t, %0d] Software reset", $time, ID);
-                 2: $display("[%t, %0d] Bus error exception", $time, ID);
-                 3: $display("[%t, %0d] Data page fault exception", $time, ID);
-                 4: $display("[%t, %0d] Instruction page fault exception", $time, ID);
-                 5: $display("[%t, %0d] Tick timer interrupt exception", $time, ID);
-                 6: $display("[%t, %0d] Alignment exception", $time, ID);
-                 7: $display("[%t, %0d] Illegal instruction exception", $time, ID);
-                 8: $display("[%t, %0d] External interrupt exception", $time, ID);
-                 9: $display("[%t, %0d] D-TLB miss exception", $time, ID);
-                 10: $display("[%t, %0d] I-TLB miss exception", $time, ID);
-                 11: $display("[%t, %0d] Range exception", $time, ID);
-                 12: $display("[%t, %0d] System call exception", $time, ID);
-                 13: $display("[%t, %0d] Trap exception", $time, ID);
-               endcase
-            end
+            // record every exception only when it first occurs, not every cycle
+	       if (wb_pc[11:8] == 1) begin
+		  software_tracer_trace($time, ID, TRACE_RESET, 0);
+	       end else begin
+		  software_tracer_trace($time, ID, TRACE_EXCEPTION_ENTER, wb_pc[11:8]);
+	       end
+	    end
          end
          else if (wb_insn[31:0] == 32'h24000000) begin
-            $display("[%t, %0d] Return from exception", $time, ID);
+            software_tracer_trace($time, ID, TRACE_EXCEPTION_LEAVE, 0);
          end
       end
    end

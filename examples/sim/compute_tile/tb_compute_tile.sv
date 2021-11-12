@@ -135,23 +135,23 @@ module tb_compute_tile
                             .r3 (trace_r3[i])
                             );
 
-         trace_monitor
-           #(
-             .STDOUT_FILENAME({"stdout.",index2string(i)}),
-             .TRACEFILE_FILENAME({"trace.",index2string(i)}),
-             .ENABLE_TRACE(0),
-             .ID(i),
-             .TERM_CROSS_NUM(NUM_CORES)
-             )
-         u_mon0(
-                .termination            (termination[i]),
-                .clk                    (clk),
-                .enable                 (trace[i].valid),
-                .wb_pc                  (trace[i].pc),
-                .wb_insn                (trace[i].insn),
-                .r3                     (trace_r3[i]),
-                .termination_all        (termination)
-                );
+         software_tracer
+            #(
+               .STDOUT_FILENAME({"stdout.",index2string(i)}),
+               .TRACEFILE_FILENAME({"trace.",index2string(i)}),
+               .ENABLE_TRACE(0),
+               .ID(i),
+               .TERM_CROSS_NUM(NUM_CORES)
+            )
+            u_swtrace(
+               .termination            (termination[i]),
+               .clk                    (clk),
+               .enable                 (trace[i].valid),
+               .wb_pc                  (trace[i].pc),
+               .wb_insn                (trace[i].insn),
+               .r3                     (trace_r3[i]),
+               .termination_all        (termination)
+           );
       end
    endgenerate
 

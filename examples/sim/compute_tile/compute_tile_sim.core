@@ -5,7 +5,7 @@ filesets:
   files_rtl:
     depend:
       - optimsoc:tile:compute_tile_dm
-      - optimsoc:trace_monitor:trace_monitor
+      - optimsoc:trace:software
       - glip:backend:tcp
       - optimsoc:debug:debug_interface
       - opensocdebug:interconnect:debug_ring
@@ -82,3 +82,11 @@ parameters:
     paramtype: cmdlinearg
     scope: public
     description: Let Verilator create a VCD trace file
+  trace:
+    datatype: bool
+    paramtype: cmdlinearg
+    scope: public
+  trace-noc-full:
+    datatype: bool
+    paramtype: cmdlinearg
+    scope: public

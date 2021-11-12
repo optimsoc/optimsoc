@@ -54,7 +54,7 @@ And you'll get roughly this output:
 
    [                  22, 0] Software reset
    [               63128, 0] Terminated at address 0x0000e958 (status:          0)
-   - ../src/optimsoc_trace_monitor_trace_monitor/verilog/trace_monitor.sv:89: Verilog $finish
+   - ../src/optimsoc_trace_software_0/verilog/software_tracer.sv:104: Verilog $finish
 
 Furthermore, you will find a file called ``stdout.000`` which shows the actual output:
 
@@ -473,36 +473,25 @@ You can now run the example using:
    # start from the the baremetal-apps source code directory
    cd hello_mp
    make
-   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_dualcore --meminit=hello_mp.vmem
+   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim_singlecore --meminit=hello_mp.vmem
 
 ::
 
-   ... (we've skipped some output here) ...
-   [               37812, 0] Event 0x0380: 0x00018c08
-   [               37844, 2] Event 0x0380: 0x00018c08
-   [               37872, 4] Event 0x0380: 0x00018c08
-   [               37900, 6] Event 0x0380: 0x00018c08
-   [               39984, 2] External interrupt exception
-   [               40012, 4] External interrupt exception
-   [               40040, 6] External interrupt exception
-   [               42048, 2] Return from exception
-   [               42076, 4] Return from exception
-   [               42104, 6] Return from exception
-   ... (we've skipped some output here) ...
-   [              171970, 6] Event 0x0303: 0x00018d10
-   [              171982, 6] Event 0x0303: 0x00000000
-   [              172212, 6] Event 0x0304: 0x00018d10
-   [              172224, 6] Event 0x0304: 0x00000000
-   [              172240, 6] Event 0x0304: 0x00000004
-   [              172782, 0] External interrupt exception
-   [              173528, 6] Event 0x0305: 0x00018d10
-   [              174822, 0] Return from exception
-   [              174944, 6] Terminated at address 0x00011364 (status:          0)
-   [              185912, 0] Terminated at address 0x00011364 (status:          0)
-   - ../src/optimsoc_trace_monitor_trace_monitor_0/verilog/trace_monitor.sv:94: Verilog $finish
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[0].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[0].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[1].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[1].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[2].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[2].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[3].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.ibus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   TOP.tb_system_2x2_cccc.u_system.gen_ct[3].u_ct.gen_cores[0].u_core.u_cpu.bus_gen.dbus_bridge: Wishbone bus IF is B3_REGISTERED_FEEDBACK
+   [               50602, 1] Terminated at address 0x00011364 (status:          0)
+   [               65212, 2] Terminated at address 0x00011364 (status:          0)
+   [              169848, 3] Terminated at address 0x00011364 (status:          0)
+   [              180834, 0] Terminated at address 0x00011364 (status:          0)
 
-The simulation is currently very verbose, the events are emitted by the library to debug the message passing protocol.
-More important is the output of tile 0 in ``stdout.000``:
+You can see that the cores in the tiles have terminated over a longer time frame.
+Core 0 exits as last after printing to the output in ``stdout.000``:
 
 ::
 
@@ -512,6 +501,136 @@ More important is the output of tile 0 in ``stdout.000``:
    [               78792, 0] Received from 2
    [              179834, 0] Received from 3
 
+Under the Hood: Simulation Tracing
+==================================
+
+So far we have used "printf-debuggging", the most popular way of debugging embedded programs.
+It is pretty simple to add, but not very performant or structured.
+We have introduced the concept of tracing before.
+In OpTiMSoC we make excessive use of software instrumentation and other tracing techniques.
+
+In this tutorial you will see how to use the tracing infrastructure of the verilator simulations to better understand what is happening.
+We want to have a look at the messages exchanged between tiles and how they relate to software calls.
+
+You must have ``babeltrace`` installed to use this tutorial.
+The OpTiMSoC simulations are capable of generating traces in the Common Trace Format (CTF).
+Just run the simulation from before again with tracing enabled:
+
+.. code:: sh
+
+   $OPTIMSOC/examples/sim/system_2x2_cccc/system_2x2_cccc_sim --meminit=hello_mp.vmem --trace
+
+You will see that a directory has been created, named in the form ``ctf-yyyymmdd-hhmmss``.
+The folder contains a timestamp so that you don't accidentally overwrite previous experiments.
+There you can find two subfolders: ``noc`` contains a trace of the packets transmitted in the network-on-chip, and ``sw`` are the infamous software traces.
+
+Let's have a look at the software trace first:
+
+.. code:: sh
+
+   babeltrace --clock-seconds ctf-yyyymmdd-hhmmss/sw/
+
+Babeltrace will print a full trace of all events from all cores:
+
+::
+
+   [0.000000024] (+?.?????????) 0 reset: { cpu_id = 0 }
+   [0.000000024] (+0.000000000) 0 reset: { cpu_id = 1 }
+   [0.000000024] (+0.000000000) 0 reset: { cpu_id = 2 }
+   [0.000000024] (+0.000000000) 0 reset: { cpu_id = 3 }
+   [0.000032746] (+0.000032722) 0 ep_create: { cpu_id = 0 }, { handle = 98848 }
+   [0.000032778] (+0.000000032) 0 ep_create: { cpu_id = 1 }, { handle = 98848 }
+   [0.000032806] (+0.000000028) 0 ep_create: { cpu_id = 2 }, { handle = 98848 }
+   [0.000032834] (+0.000000028) 0 ep_create: { cpu_id = 3 }, { handle = 98848 }
+   [0.000034918] (+0.000002084) 0 exception_enter: { cpu_id = 1 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   [0.000034946] (+0.000000028) 0 exception_enter: { cpu_id = 2 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   [0.000034974] (+0.000000028) 0 exception_enter: { cpu_id = 3 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   [0.000036982] (+0.000002008) 0 exception_leave: { cpu_id = 1 }
+   [0.000037010] (+0.000000028) 0 exception_leave: { cpu_id = 2 }
+   [0.000037038] (+0.000000028) 0 exception_leave: { cpu_id = 3 }
+   [0.000037140] (+0.000000102) 0 ep_get_enter: { cpu_id = 1 }, { domain = 0, node = 0, port = 0 }
+   [0.000037168] (+0.000000028) 0 ep_get_enter: { cpu_id = 2 }, { domain = 0, node = 0, port = 0 }
+   [0.000037196] (+0.000000028) 0 ep_get_enter: { cpu_id = 3 }, { domain = 0, node = 0, port = 0 }
+   [0.000037626] (+0.000000430) 0 exception_enter: { cpu_id = 0 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   [0.000039582] (+0.000001956) 0 exception_enter: { cpu_id = 1 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   [0.000040616] (+0.000001034) 0 exception_enter: { cpu_id = 2 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   [0.000041176] (+0.000000560) 0 exception_leave: { cpu_id = 1 }
+   [0.000041306] (+0.000000130) 0 ep_get_leave: { cpu_id = 1 }, { handle = 98848 }
+   [0.000041638] (+0.000000332) 0 exception_enter: { cpu_id = 3 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   ... (we've skipped some output here) ...
+   [0.000167144] (+0.000000258) 0 msg_data_enter: { cpu_id = 3 }, { handle = 99112, address = 0, size = 4 }
+   [0.000167686] (+0.000000542) 0 exception_enter: { cpu_id = 0 }, { cause = ( "INTERRUPT" : container = 8 ) }
+   [0.000168432] (+0.000000746) 0 msg_data_leave: { cpu_id = 3 }, { handle = 99112 }
+   [0.000169726] (+0.000001294) 0 exception_leave: { cpu_id = 0 }
+
+What you essentially see are two kinds of event messages.
+There are the ``exception_enter`` and ``exception_leave`` events that are helpful to understand the impact of the handling of the message passing on the software execution.
+All other events are emitted from the software actually and in the majority of cases represent the span of an interesting function call.
+
+For example lets first have a look cpu 1.
+At time 0.000037140 the event `ep_get_enter` is emitted, with the parameters to retrieve a remote endpoint.
+In the source code of the library we find the implementation of the function :c:func:`optimsoc_mp_endpoint_get` ends up in:
+
+.. code:: c
+
+   struct endpoint *control_get_endpoint(uint32_t domain, uint32_t node, uint32_t port) {
+     struct endpoint *ep;
+     while (!optimsoc_mp_simple_ctready(domain, 0));
+     trace_ep_get_req_begin(domain, node, port);
+
+Later in that function the `ep_get_leave` is emitted (time 0.000041306).
+Let us try to further understand what happens.
+For that we have a look at the second trace:
+
+.. code:: sh
+
+   babeltrace --clock-seconds ctf-yyyymmdd-hhmmss/sw/
+
+It generates output like this:
+
+::
+
+   [0.000034854] (+?.?????????) 0 mpbuffer_control_req: { link = 1, src = 1, dest = 0 }
+   [0.000034872] (+0.000000018) 0 mpbuffer_control_resp: { link = 5, src = 0, dest = 1 }, { status = 1 }
+   [0.000034882] (+0.000000010) 0 mpbuffer_control_req: { link = 1, src = 2, dest = 0 }
+   [0.000034900] (+0.000000018) 0 mpbuffer_control_resp: { link = 9, src = 0, dest = 2 }, { status = 1 }
+   [0.000034916] (+0.000000016) 0 mpbuffer_control_req: { link = 1, src = 3, dest = 0 }
+   [0.000034940] (+0.000000024) 0 mpbuffer_control_resp: { link = 13, src = 0, dest = 3 }, { status = 1 }
+   [0.000037588] (+0.000002648) 0 mp_getep_req: { link = 1, src = 1, dest = 0 }, { node = 0, port = 0 }
+   [0.000037616] (+0.000000028) 0 mp_getep_req: { link = 1, src = 2, dest = 0 }, { node = 0, port = 0 }
+   [0.000037650] (+0.000000034) 0 mp_getep_req: { link = 1, src = 3, dest = 0 }, { node = 0, port = 0 }
+   [0.000039566] (+0.000001916) 0 mp_getep_resp_ack: { link = 7, src = 0, dest = 1 }, { handle = 98848 }
+   [0.000040600] (+0.000001034) 0 mp_getep_resp_ack: { link = 11, src = 0, dest = 2 }, { handle = 98848 }
+   [0.000041622] (+0.000001022) 0 mp_getep_resp_ack: { link = 15, src = 0, dest = 3 }, { handle = 98848 }
+   [0.000044290] (+0.000002668) 0 mp_msgalloc_req: { link = 1, src = 1, dest = 0 }, { handle = 98848, size = 4 }
+   [0.000045328] (+0.000001038) 0 mp_msgalloc_req: { link = 1, src = 2, dest = 0 }, { handle = 98848, size = 4 }
+   [0.000045946] (+0.000000618) 0 mp_msgalloc_resp_ack: { link = 7, src = 0, dest = 1 }, { ptr = 1 }
+   [0.000046352] (+0.000000406) 0 mp_msgalloc_req: { link = 1, src = 3, dest = 0 }, { handle = 98848, size = 4 }
+   [0.000046990] (+0.000000638) 0 mp_msgalloc_resp_nack: { link = 11, src = 0, dest = 2 }
+   [0.000047976] (+0.000000986) 0 mp_msgalloc_resp_nack: { link = 15, src = 0, dest = 3 }
+   [0.000048418] (+0.000000442) 0 mp_msgdata: { link = 1, src = 1, dest = 0 }, { handle = 98848, address = 0, offset = 0 }
+   [0.000048996] (+0.000000578) 0 mp_msgcomplete: { link = 1, src = 1, dest = 0 }, { handle = 98848, address = 0, size = 4 }
+   [0.000058982] (+0.000009986) 0 mp_msgalloc_req: { link = 1, src = 2, dest = 0 }, { handle = 98848, size = 4 }
+   [0.000059974] (+0.000000992) 0 mp_msgalloc_req: { link = 1, src = 3, dest = 0 }, { handle = 98848, size = 4 }
+   [0.000060584] (+0.000000610) 0 mp_msgalloc_resp_ack: { link = 11, src = 0, dest = 2 }, { ptr = 1 }
+   [0.000061600] (+0.000001016) 0 mp_msgalloc_resp_nack: { link = 15, src = 0, dest = 3 }
+   [0.000063028] (+0.000001428) 0 mp_msgdata: { link = 1, src = 2, dest = 0 }, { handle = 98848, address = 1, offset = 0 }
+   [0.000063606] (+0.000000578) 0 mp_msgcomplete: { link = 1, src = 2, dest = 0 }, { handle = 98848, address = 1, size = 4 }
+   [0.000163576] (+0.000099970) 0 mp_msgalloc_req: { link = 1, src = 3, dest = 0 }, { handle = 98848, size = 4 }
+   [0.000165214] (+0.000001638) 0 mp_msgalloc_resp_ack: { link = 15, src = 0, dest = 3 }, { ptr = 1 }
+   [0.000167670] (+0.000002456) 0 mp_msgdata: { link = 1, src = 3, dest = 0 }, { handle = 98848, address = 0, offset = 0 }
+   [0.000168248] (+0.000000578) 0 mp_msgcomplete: { link = 1, src = 3, dest = 0 }, { handle = 98848, address = 0, size = 4 }
+
+The first messages are control messages that check if the message passing is properly setup on the remote.
+After that you can track the remote call to retrieve the endpoint handle:
+
+- At 0.000037140 we already observed how the software enters the function on core 1.
+- At 0.000037588 the network message relating to the function call to core 0.
+- At 0.000037626 we can see how the arrival of the message raises interrupt exception in the software trace at core 0.
+- At 0.000039566 the acknowledgement response network message including the handle to the endpoint is sent by core 0.
+- At 0.000039582 this acknowledgement leads to an interrupt exception in the software at core 1.
+- At 0.000041176 the interrupt routine completes after processing the message and updating the information.
+- At 0.000041306 the function call to retrieve the remote endpoint is left.
 
 Run Linux on OpTiMSoC
 =====================
@@ -579,8 +698,3 @@ If you have some time to spare, how about playing a round of pacman?
 
    # and run pacman
    /usr/games/pacman4linux
-
-
-
-This concludes our tutorial session, and hands over to you:
-modify the software as you wish, program it again, analyze the simulations and explore your first multicore SoC.
